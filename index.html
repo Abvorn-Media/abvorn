@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abvorn – The Fortress of Knowledge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #fff; --text: #111; --surface: #f4f4f4; --border: #e0e0e0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+        header { background: #000; padding: 20px 0; border-bottom: 4px solid #ec4899; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo-link { display: flex; align-items: center; text-decoration: none; }
+        .logo-img { max-height: 40px; }
+        .hero { background: #000; color: #fff; padding: 100px 0 80px; text-align: center; border-bottom: 1px solid #333; }
+        .hero h1 { font-family: 'Playfair Display', serif; font-size: 64px; margin: 0 0 20px; }
+        .hero p { font-size: 18px; opacity: 0.8; max-width: 600px; margin: 0 auto 30px; }
+        .niche-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; padding: 60px 0; }
+        .niche-card { border: 1px solid var(--border); padding: 20px; transition: box-shadow 0.2s; }
+        .niche-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .niche-card img { width: 100%; height: 200px; object-fit: cover; margin-bottom: 15px; }
+        .niche-card h2 { font-family: 'Playfair Display', serif; font-size: 24px; margin: 0 0 10px; }
+        .niche-card a { color: #2563eb; text-decoration: none; font-weight: 600; }
+        .ab-test-cta { display: inline-block; background: #ec4899; color: white; padding: 12px 30px; text-decoration: none; font-weight: bold; border-radius: 4px; }
+        footer { background: #000; color: #888; padding: 40px 0; text-align: center; }
+        footer a { color: #aaa; text-decoration: none; margin: 0 12px; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container header-content">
+        <a href="/" class="logo-link"><img src="https://abvorn.netlify.app/logo.png" alt="Abvorn" class="logo-img"></a>
+        <nav>
+            <a href="/store.html" style="color:#fff;text-decoration:none;margin-left:30px;">Store</a>
+            <a href="/about.html" style="color:#fff;text-decoration:none;margin-left:30px;">About</a>
+            <a href="/privacy.html" style="color:#fff;text-decoration:none;margin-left:30px;">Privacy</a>
+        </nav>
+    </div>
+</header>
+<section class="hero">
+    <h1>The Fortress of Knowledge</h1>
+    <p>Discover AI‑powered, expert‑curated product reviews and buying guides across a growing network of niche sites. We do the research so you can shop smarter.</p>
+    <a href="/go/start" class="ab-test-cta" id="main-cta">Explore Our Top Picks</a>
+</section>
+<section class="container">
+    <div class="niche-grid">
+        
+            <div class="niche-card">
+                <a href="/smart_home_security_systems/"><img src="https://images.pexels.com/photos/24346971/pexels-photo-24346971.jpeg?auto=compress&cs=tinysrgb&h=650&w=940" alt="Smart Home Security Systems"></a>
+                <h2><a href="/smart_home_security_systems/">Smart Home Security Systems</a></h2>
+                <p>...</p>
+            </div>
+            <div class="niche-card">
+                <a href="/sustainable_kitchen_appliances/"><img src="https://images.pexels.com/photos/7512869/pexels-photo-7512869.jpeg?auto=compress&cs=tinysrgb&h=650&w=940" alt="Sustainable Kitchen Appliances"></a>
+                <h2><a href="/sustainable_kitchen_appliances/">Sustainable Kitchen Appliances</a></h2>
+                <p>...</p>
+            </div>
+    </div>
+</section>
+<footer>
+    <p>&copy; 2026 Abvorn. All rights reserved.</p>
+    <div><a href="/privacy.html">Privacy Policy</a> | <a href="/about.html">About Us</a></div>
+</footer>
+<!-- A/B Test Snippet for CTA variations -->
+<script>
+(function() {
+    var variants = ['Explore Our Top Picks', 'See Today’s Best Deals'];
+    var chosen = variants[Math.floor(Math.random() * variants.length)];
+    document.getElementById('main-cta').innerText = chosen;
+    gtag && gtag('event', 'ab_test', { 'test': 'home_cta', 'variant': chosen });
+})();
+</script>
+</body>
+</html>
