@@ -1,20 +1,25 @@
 {
   "queue": [
     {
-      "slug": "sustainable_kitchen_appliances",
-      "niche": "sustainable kitchen appliances",
-      "stage": "products"
-    },
-    {
       "slug": "home_office_ergonomic_equipment",
       "niche": "home office ergonomic equipment",
-      "stage": "products"
+      "stage": "content",
+      "products": [
+        {
+          "title": "Top home office ergonomic equipment on ShareASale",
+          "price": "Check Price",
+          "image": "https://images.pexels.com/photos/31726663/pexels-photo-31726663.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "url": "https://www.shareasale.com/merchantsearch.cfm?keyword=home+office+ergonomic+equipment&affiliate_id=2995363",
+          "desc": "Browse best home office ergonomic equipment on ShareASale."
+        }
+      ]
     }
   ],
   "completed": [],
   "failed": [],
   "deployed": [
-    "smart_home_security_systems"
+    "smart_home_security_systems",
+    "sustainable_kitchen_appliances"
   ],
   "performance": {
     "TrendEngine": {
@@ -277,6 +282,16 @@
       "provider": "glm",
       "time": 10.380131244659424,
       "tokens": 792
+    },
+    {
+      "provider": "glm",
+      "time": 1.397862195968628,
+      "tokens": 477
+    },
+    {
+      "provider": "glm",
+      "time": 26.843528270721436,
+      "tokens": 3537
     }
   ]
 }
