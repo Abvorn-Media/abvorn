@@ -13,14 +13,31 @@
           "desc": "Browse best home office ergonomic equipment on ShareASale."
         }
       ]
+    },
+    {
+      "slug": "sustainable_kitchen_appliances",
+      "niche": "Sustainable Kitchen Appliances",
+      "stage": "start"
+    },
+    {
+      "slug": "smart_home_security_systems",
+      "niche": "Smart Home Security Systems",
+      "stage": "start"
+    },
+    {
+      "slug": "sustainable_kitchen_appliances",
+      "niche": "Sustainable Kitchen Appliances",
+      "stage": "start"
+    },
+    {
+      "slug": "smart_home_security_systems",
+      "niche": "Smart Home Security Systems",
+      "stage": "start"
     }
   ],
   "completed": [],
   "failed": [],
-  "deployed": [
-    "smart_home_security_systems",
-    "sustainable_kitchen_appliances"
-  ],
+  "deployed": [],
   "performance": {
     "TrendEngine": {
       "total_niches_found": 3
@@ -392,6 +409,11 @@
       "provider": "glm",
       "time": 4.216476202011108,
       "tokens": 547
+    },
+    {
+      "provider": "glm",
+      "time": 23.20407795906067,
+      "tokens": 1295
     }
   ]
 }
