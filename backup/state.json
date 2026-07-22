@@ -1,16 +1,17 @@
 {
   "queue": [],
   "completed": [
-    "home_office_ergonomic_equipment",
     "sustainable_kitchen_appliances",
-    "smart_home_security_systems",
+    "smart_home_security_systems"
+  ],
+  "failed": [],
+  "deployed": [
+    "home_office_ergonomic_equipment",
     "sustainable_kitchen_appliances",
     "smart_home_security_systems",
     "sustainable_kitchen_appliances",
     "smart_home_security_systems"
   ],
-  "failed": [],
-  "deployed": [],
   "performance": {
     "TrendEngine": {
       "total_niches_found": 3
