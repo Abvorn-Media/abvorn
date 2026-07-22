@@ -33,6 +33,16 @@
       "slug": "smart_home_security_systems",
       "niche": "Smart Home Security Systems",
       "stage": "start"
+    },
+    {
+      "slug": "sustainable_kitchen_appliances",
+      "niche": "Sustainable Kitchen Appliances",
+      "stage": "start"
+    },
+    {
+      "slug": "smart_home_security_systems",
+      "niche": "Smart Home Security Systems",
+      "stage": "start"
     }
   ],
   "completed": [],
@@ -414,6 +424,11 @@
       "provider": "glm",
       "time": 23.20407795906067,
       "tokens": 1295
+    },
+    {
+      "provider": "glm",
+      "time": 8.279205799102783,
+      "tokens": 652
     }
   ]
 }
