@@ -82,6 +82,43 @@ class AbvornState:
                     tokens INT,
                     created_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS opportunities (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    niche TEXT NOT NULL,
+                    score REAL NOT NULL,
+                    search_volume INT DEFAULT 0,
+                    buying_intent REAL DEFAULT 0.0,
+                    competition REAL DEFAULT 0.0,
+                    commission REAL DEFAULT 0.0,
+                    status TEXT DEFAULT 'pending',
+                    created_at TEXT NOT NULL,
+                    last_post_at TEXT
+                );
+                CREATE TABLE IF NOT EXISTS subscribers (
+                    email TEXT PRIMARY KEY,
+                    persona_id TEXT,
+                    niche TEXT,
+                    subscribed_at TEXT NOT NULL,
+                    last_open_at TEXT,
+                    last_click_at TEXT,
+                    sequence_step INT DEFAULT 0,
+                    total_conversions INT DEFAULT 0,
+                    total_revenue REAL DEFAULT 0.0,
+                    status TEXT DEFAULT 'active'
+                );
+                CREATE TABLE IF NOT EXISTS email_sequences (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    niche TEXT NOT NULL,
+                    persona_id TEXT,
+                    day INT NOT NULL,
+                    subject TEXT NOT NULL,
+                    body TEXT NOT NULL,
+                    lead_magnet TEXT,
+                    sent_count INT DEFAULT 0,
+                    open_count INT DEFAULT 0,
+                    click_count INT DEFAULT 0,
+                    created_at TEXT NOT NULL
+                );
             """)
 
     def close(self):
@@ -243,6 +280,61 @@ class AbvornState:
                 GROUP BY provider
             """)
             keys = ["provider", "calls", "avg_time_ms", "total_tokens"]
+            return [dict(zip(keys, row)) for row in c.fetchall()]
+
+    def add_opportunity(self, niche: str, score: float, search_volume: int = 0,
+                        buying_intent: float = 0.0, competition: float = 0.0,
+                        commission: float = 0.0):
+        with self._cursor() as c:
+            c.execute("""INSERT INTO opportunities (niche, score, search_volume, buying_intent,
+                        competition, commission, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                      (niche, score, search_volume, buying_intent, competition,
+                       commission, datetime.now().isoformat()))
+
+    def get_opportunities(self, status: str = "pending", limit: int = 20) -> list:
+        with self._cursor() as c:
+            c.execute("SELECT * FROM opportunities WHERE status=? ORDER BY score DESC LIMIT ?",
+                      (status, limit))
+            keys = ["id","niche","score","search_volume","buying_intent","competition",
+                    "commission","status","created_at","last_post_at"]
+            return [dict(zip(keys, row)) for row in c.fetchall()]
+
+    def update_opportunity_status(self, opp_id: int, status: str):
+        with self._cursor() as c:
+            c.execute("UPDATE opportunities SET status=?, last_post_at=? WHERE id=?",
+                      (status, datetime.now().isoformat(), opp_id))
+
+    def add_subscriber(self, email: str, persona_id: str, niche: str):
+        with self._cursor() as c:
+            c.execute("""INSERT OR IGNORE INTO subscribers (email, persona_id, niche, subscribed_at)
+                        VALUES (?, ?, ?, ?)""",
+                      (email, persona_id, niche, datetime.now().isoformat()))
+
+    def get_subscribers_for_niche(self, niche: str) -> list:
+        with self._cursor() as c:
+            c.execute("SELECT * FROM subscribers WHERE niche=? AND status='active'", (niche,))
+            keys = ["email","persona_id","niche","subscribed_at","last_open_at","last_click_at",
+                    "sequence_step","total_conversions","total_revenue","status"]
+            return [dict(zip(keys, row)) for row in c.fetchall()]
+
+    def add_email_sequence(self, niche: str, persona_id: str, day: int,
+                            subject: str, body: str, lead_magnet: str = ""):
+        with self._cursor() as c:
+            c.execute("""INSERT INTO email_sequences (niche, persona_id, day, subject, body,
+                        lead_magnet, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                      (niche, persona_id, day, subject, body, lead_magnet,
+                       datetime.now().isoformat()))
+
+    def get_email_sequences(self, niche: str, persona_id: str = None) -> list:
+        with self._cursor() as c:
+            if persona_id:
+                c.execute("SELECT * FROM email_sequences WHERE niche=? AND persona_id=? ORDER BY day",
+                          (niche, persona_id))
+            else:
+                c.execute("SELECT * FROM email_sequences WHERE niche=? ORDER BY day", (niche,))
+            keys = ["id","niche","persona_id","day","subject","body","lead_magnet",
+                    "sent_count","open_count","click_count","created_at"]
             return [dict(zip(keys, row)) for row in c.fetchall()]
 
     def import_legacy_json(self, json_path: Path):
