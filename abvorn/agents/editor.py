@@ -5,7 +5,8 @@ logger = logging.getLogger("abvorn.editor")
 
 def fact_check(draft: dict, research_data: list, router) -> dict:
     """FACT-CHECK stage: verify claims against research data."""
-    article = (draft.get("intro", "") + draft.get("article_html", ""))[:3000]
+    raw = (draft.get("intro", "") + draft.get("article_html", ""))[:3000]
+    article = re.sub(r'<[^>]+>', '', raw) if raw else ""
     research_text = json.dumps(research_data, indent=2)[:2000]
 
     prompt = f"""Fact-check this article against the research data.
@@ -47,8 +48,10 @@ Return JSON with:
 
 def polish(draft: dict, fact_check_result: dict, persona: dict, router) -> dict:
     """POLISH stage: refine tone, conversion architecture, schema."""
-    article = fact_check_result.get("revised_article") or draft.get("article_html", "")
-    intro = fact_check_result.get("revised_intro") or draft.get("intro", "")
+    raw_article = fact_check_result.get("revised_article") or draft.get("article_html", "")
+    raw_intro = fact_check_result.get("revised_intro") or draft.get("intro", "")
+    article = re.sub(r'<[^>]+>', '', raw_article)[:2000]
+    intro = re.sub(r'<[^>]+>', '', raw_intro)[:500]
     persona_name = persona.get("name", "reader") if persona else "reader"
 
     prompt = f"""Polish this buying guide for conversion. Your reader is "{persona_name}".
@@ -101,7 +104,6 @@ Return JSON:
 
 def build_schema(title, description, url, image, date_published, products, faqs):
     """Generate all schema markup for a page."""
-    import json as _json
     logo_url = url
     if url and url.count("/") >= 2:
         parts = url.split("/")
@@ -145,8 +147,8 @@ def build_schema(title, description, url, image, date_published, products, faqs)
         ]
     }
     return {
-        "article": _json.dumps(article),
-        "product": _json.dumps(product_schema),
-        "faq": _json.dumps(faq_schema),
-        "breadcrumb": _json.dumps(breadcrumb)
+        "article": json.dumps(article),
+        "product": json.dumps(product_schema),
+        "faq": json.dumps(faq_schema),
+        "breadcrumb": json.dumps(breadcrumb)
     }

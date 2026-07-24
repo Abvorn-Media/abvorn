@@ -26,6 +26,8 @@ class AIProvider:
     def call(self, messages: list, json_mode: bool = False) -> str:
         start = time.time()
         fmt = {"type": "json_object"} if json_mode else None
+        if self.client is None:
+            raise RuntimeError(f"{self.name}: no API key configured")
         try:
             resp = self.client.chat.completions.create(
                 model=self.model, messages=messages, response_format=fmt
@@ -36,7 +38,6 @@ class AIProvider:
             self.total_time += elapsed
             return resp.choices[0].message.content
         except Exception as e:
-            self.failures += 1
             logger.warning(f"{self.name} failed: {str(e)[:80]}")
             raise
 

@@ -8,7 +8,7 @@ logger = logging.getLogger("abvorn.pipeline")
 
 class ContentPipeline:
 
-    def __init__(self, state=None, router=None):
+    def __init__(self, state=None):
         self.state = state
 
     def run(self, niche: str, router, persona: dict = None,
@@ -56,11 +56,12 @@ class ContentPipeline:
         faqs = draft.get("faqs", [])
         faq_pairs = [(f.get("question", ""), f.get("answer", "")) for f in faqs if isinstance(f, dict)]
 
+        dummy_url = f"https://example.com/best-{niche.replace(' ', '-')}"
         schema = build_schema(
             title=draft.get("post_title", f"Best {niche}"),
             description=draft.get("meta_description", f"Best {niche} buying guide"),
-            url="",
-            image="",
+            url=dummy_url,
+            image=f"{dummy_url}/featured-image.jpg",
             date_published=datetime.now().isoformat(),
             products=products,
             faqs=faq_pairs
