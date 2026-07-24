@@ -83,10 +83,11 @@ Persona {
 ```
 
 ### 3.3 Persona Discovery
-For each niche, derive 2-5 candidate personas by analyzing:
-- Search intent data (who searches for this?)
-- Existing content gaps (who is underserved?)
-- Brain psychology frameworks (which desires apply?)
+For each niche, derive 2-5 candidate personas by:
+- **AI-driven analysis:** Query the LLM with the niche + brain psychology frameworks (Schwartz awareness levels, Whitman LF8, Cialdini principles, Hoffeld buying reasons) to generate realistic persona profiles
+- **Search intent data:** Analyze what searchers actually want (informational, commercial, transactional)
+- **Existing content gaps:** Identify underserved audience segments in competitor content
+- **Brain knowledge retrieval:** Query `KnowledgeRetriever` for psychology frameworks relevant to the niche
 
 ### 3.4 File: `abvorn/persona/engine.py`
 - `discover_personas(niche) → list[Persona]` — derive personas for a niche
@@ -356,12 +357,13 @@ abvorn/
 │   ├── __init__.py
 │   ├── engine.py
 │   └── registry.py
-├── factory/            # NEW — Content factory (replaces content/)
+├── factory/            # NEW — Content factory
 │   ├── __init__.py
-│   ├── pipeline.py     # Full persuasion pipeline
+│   ├── pipeline.py     # Full persuasion pipeline (new code)
 │   └── persuasion.py   # Modular prompt builders per stage
-├── content/            # MODIFIED — Repurpose as bridge to factory
-│   └── pipeline.py     # Thin wrapper calling factory
+├── content/            # KEPT EXISTING — legacy wrapper delegates to factory
+│   └── pipeline.py     # Thin wrapper calling factory for backward compat
+├── exploder/           # NEW — Multi-format adaptation
 ├── exploder/           # NEW — Multi-format adaptation
 │   ├── __init__.py
 │   ├── adapters.py     # Platform adapters
