@@ -1,0 +1,15 @@
+pypdf
+chromadb
+openai
+duckduckgo-search
+pytrends
+requests
+beautifulsoup4
+PyGithub
+google-auth
+google-api-python-client
+gspread
+Pillow
+textstat
+jinja2
+composio-core

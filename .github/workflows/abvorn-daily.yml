@@ -1,0 +1,64 @@
+name: Abvorn Daily Cycle
+
+on:
+  schedule:
+    # Twice daily: 06:00 UTC and 18:00 UTC
+    - cron: '0 6,18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  ABVORN_CACHE_DIR: /home/runner/.abvorn
+
+jobs:
+  cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore state cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.ABVORN_CACHE_DIR }}
+          key: abvorn-state-${{ github.run_id }}
+          restore-keys: |
+            abvorn-state-
+
+      - name: Run Abvorn cycle
+        env:
+          # All secrets that load_secrets() reads via userdata.get()
+          GLM_KEYS:              ${{ secrets.GLM_KEYS }}
+          DEEPSEEK_KEY:          ${{ secrets.DEEPSEEK_KEY }}
+          OPENAI_KEY:            ${{ secrets.OPENAI_KEY }}
+          PEXELS_KEY:            ${{ secrets.PEXELS_KEY }}
+          AMAZON_TAG:            ${{ secrets.AMAZON_TAG }}
+          SHAREASALE_ID:         ${{ secrets.SHAREASALE_ID }}
+          EBAY_CAMPID:           ${{ secrets.EBAY_CAMPID }}
+          GMAIL_USER:            ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD:    ${{ secrets.GMAIL_APP_PASSWORD }}
+          TELEGRAM_TOKEN:        ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID:      ${{ secrets.TELEGRAM_CHAT_ID }}
+          GA4_MEASUREMENT_ID:    ${{ secrets.GA4_MEASUREMENT_ID }}
+          GA4_API_SECRET:        ${{ secrets.GA4_API_SECRET }}
+          SHEET_ID:              ${{ secrets.SHEET_ID }}
+          APPS_SCRIPT_URL:       ${{ secrets.APPS_SCRIPT_URL }}
+          SITE_URL:              ${{ secrets.SITE_URL }}
+          GITHUB_TOKEN:          ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO:           ${{ secrets.GITHUB_REPO }}
+          COMPOSIO_KEY:          ${{ secrets.COMPOSIO_KEY }}
+          KILL_SWITCH_PASSWORD:  ${{ secrets.KILL_SWITCH_PASSWORD }}
+        run: python abvorn_cycle.py
