@@ -11,24 +11,15 @@ from github import Github, Auth, InputGitTreeElement
 from composio import ComposioToolSet, Action
 
 # ── SELF-SUFFICIENT SECRETS (works standalone or after Cell 1) ──
-def _load_secrets():
-    boardroom = Path('/content/drive/MyDrive/The_Synthetic_Boardroom')
-    secrets_file = boardroom / "secrets.json"
-    defaults = {"GITHUB_TOKEN":"","GITHUB_REPO":"","SITE_URL":"","COMPOSIO_KEY":"","GA4_MEASUREMENT_ID":"","AMAZON_TAG":"abvorn-20","TELEGRAM_TOKEN":"","TELEGRAM_CHAT_ID":""}
-    if secrets_file.exists():
-        try:
-            raw = secrets_file.read_bytes()
-            if raw.startswith(b'\xef\xbb\xbf'): raw = raw[3:]
-            data = json.loads(raw.decode('utf-8'))
-            for k, v in data.items(): defaults[k] = v
-        except: pass
-    return defaults
-
 try:
     _s = S  # from Cell 1 if running sequentially
 except NameError:
     _s = None
-S = _s if _s else _load_secrets()
+if _s:
+    S = _s
+else:
+    from abvorn.core.secrets import load_secrets
+    S = load_secrets()
 
 GITHUB_TOKEN = S["GITHUB_TOKEN"]
 GITHUB_REPO = S["GITHUB_REPO"]
@@ -87,9 +78,10 @@ def get_ga4_client():
         return None
 
 def pull_ga4_analytics():
-    """Pull real page views, active users, and duration from GA4."""
-    client = get_ga4_client()
-    if not client:
+    """Pull real page views, active users, and duration from GA4 via abvorn."""
+    from abvorn.deploy.analytics import pull_ga4_analytics as _pull_ga4
+    result = _pull_ga4(S)
+    if not result:
         print("   GA4: credentials not configured")
         print("   ── GA4 Setup Guide ──")
         print("   1. Go to https://console.cloud.google.com/ → create project (or use existing)")
@@ -99,37 +91,9 @@ def pull_ga4_analytics():
         print("   5. In Google Analytics → Admin → Property Access Management → add service account email as Viewer")
         print("   6. Find your Property ID in GA4 → Admin → Property Settings → Property ID → set as GA4_PROPERTY_ID")
         print("   ──────────────────────")
-        return {}
-    try:
-        from google.analytics.data_v1beta import RunReportRequest, Metric, DateRange, Dimension
-        request = RunReportRequest(
-            property=f"properties/{GA4_PROPERTY_ID}",
-            dimensions=[Dimension(name="pagePath")],
-            metrics=[Metric(name="screenPageViews"), Metric(name="activeUsers"), Metric(name="averageSessionDuration")],
-            date_ranges=[DateRange(start_date="28daysAgo", end_date="today")],
-            limit=50
-        )
-        response = client.run_report(request)
-        analytics = {}
-        for row in response.rows:
-            path = row.dimension_values[0].value
-            slug = path.strip("/").split("/")[0]
-            if not slug or slug in ("", "index.html", "store.html", "about.html", "contact.html", "privacy.html"):
-                continue
-            views = int(row.metric_values[0].value or 0)
-            users = int(row.metric_values[1].value or 0)
-            avg_duration = float(row.metric_values[2].value or 0)
-            if slug not in analytics:
-                analytics[slug] = {"views": 0, "users": 0, "avg_duration": 0, "pages": 0}
-            analytics[slug]["views"] += views
-            analytics[slug]["users"] += users
-            analytics[slug]["avg_duration"] = max(analytics[slug]["avg_duration"], avg_duration)
-            analytics[slug]["pages"] += 1
-        print(f"   GA4: pulled analytics for {len(analytics)} niches")
-        return analytics
-    except Exception as e:
-        print(f"   GA4 pull failed: {e}")
-        return {}
+    else:
+        print(f"   GA4: pulled analytics for {len(result)} niches")
+    return result
 
 g = Github(auth=Auth.Token(GITHUB_TOKEN)) if GITHUB_TOKEN else None
 repo = g.get_repo(GITHUB_REPO) if g else None

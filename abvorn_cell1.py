@@ -21,6 +21,11 @@ import chromadb
 from chromadb.utils import embedding_functions
 from pypdf import PdfReader
 
+from abvorn.core.secrets import load_secrets, get_boardroom_path, get_empire_path
+from abvorn.core.state import AbvornState
+from abvorn.core.models import ModelRouter
+from abvorn.agents.editor import build_schema
+
 drive.mount('/content/drive')
 
 BOARDROOM_DIR = pathlib.Path('/content/drive/MyDrive/The_Synthetic_Boardroom')
@@ -41,80 +46,18 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger("abvorn")
 
 # ── SECRETS ─────────────────────────────────────────────────────────────────
-def _parse_secrets_file():
-    """Try to parse secrets.json, falling back to regex extraction if JSON is broken."""
-    if not SECRETS_FILE.exists(): return {}
-    raw = SECRETS_FILE.read_bytes()
-    if raw.startswith(b'\xef\xbb\xbf'): raw = raw[3:]
-    text = raw.decode('utf-8')
-    # Try strict JSON first
-    try: return json.loads(text)
-    except: pass
-    # Fallback: line-by-line regex extraction for resilient loading
-    secrets = {}
-    for line in text.splitlines():
-        m = re.match(r'^\s*"[^"]+"\s*:', line)
-        if not m: continue
-        key_start = line.index('"') + 1
-        key_end = line.index('"', key_start)
-        key = line[key_start:key_end]
-        val_start = line.index(':', key_end) + 1
-        val = line[val_start:].strip().rstrip(',').strip()
-        if val.startswith('"') and val.endswith('"'):
-            val = val[1:-1]
-        elif val == 'null': val = None
-        elif val == 'true': val = True
-        elif val == 'false': val = False
-        elif val.startswith('[') and val.endswith(']'):
-            val = [v.strip().strip('"') for v in val[1:-1].split(',') if v.strip()]
-        secrets[key] = val
-    logger.warning(f"secrets.json recovered via regex ({len(secrets)} keys, may be incomplete)")
-    return secrets
-
-def load_secrets():
-    secrets = _parse_secrets_file()
-    # Load GA4 credentials from separate file (avoids JSON-inside-JSON corruption)
-    ga4_creds = ""
-    if GA4_CREDS_FILE.exists():
-        ga4_creds = GA4_CREDS_FILE.read_text().strip()
-    elif secrets.get("GA4_CREDENTIALS_JSON"):
-        ga4_creds = secrets["GA4_CREDENTIALS_JSON"]
-    def get_secret(key, default=""):
-        if key in secrets and secrets[key] and "YOUR_" not in str(secrets[key]):
-            return secrets[key]
+S = load_secrets()
+# Supplement with Colab userdata (takes priority over file/env)
+try:
+    for key in list(S.keys()):
         try:
             val = userdata.get(key)
-            if val and "YOUR_" not in val: return val
+            if val and "YOUR_" not in val: S[key] = val
         except: pass
-        return default
-    return {
-        "GLM_KEYS": [k.strip() for k in get_secret("GLM_KEYS", "").split(",") if k.strip()],
-        "DEEPSEEK_KEY": get_secret("DEEPSEEK_KEY"),
-        "OPENAI_KEY": get_secret("OPENAI_KEY"),
-        "PEXELS_KEY": get_secret("PEXELS_KEY"),
-        "AMAZON_TAG": get_secret("AMAZON_TAG"),
-        "SHAREASALE_ID": get_secret("SHAREASALE_ID"),
-        "EBAY_CAMPID": get_secret("EBAY_CAMPID"),
-        "GMAIL_USER": get_secret("GMAIL_USER", ""),
-        "GMAIL_APP_PASSWORD": get_secret("GMAIL_APP_PASSWORD"),
-        "TELEGRAM_TOKEN": get_secret("TELEGRAM_TOKEN"),
-        "TELEGRAM_CHAT_ID": get_secret("TELEGRAM_CHAT_ID"),
-        "GA4_MEASUREMENT_ID": get_secret("GA4_MEASUREMENT_ID"),
-        "GA4_API_SECRET": get_secret("GA4_API_SECRET"),
-        "GA4_CREDENTIALS_JSON": ga4_creds,
-        "SHEET_ID": get_secret("SHEET_ID"),
-        "APPS_SCRIPT_URL": get_secret("APPS_SCRIPT_URL"),
-        "SITE_URL": get_secret("SITE_URL", "https://abvorn-media.github.io/abvorn"),
-        "GITHUB_TOKEN": get_secret("GITHUB_TOKEN"),
-        "GITHUB_REPO": get_secret("GITHUB_REPO", "abvorn-media/abvorn"),
-        "COMPOSIO_KEY": get_secret("COMPOSIO_KEY"),
-        "KILL_SWITCH_PASSWORD": get_secret("KILL_SWITCH_PASSWORD"),
-        "QWEN_KEY": get_secret("QWEN_KEY"),
-        "GEMINI_KEY": get_secret("GEMINI_KEY"),
-        "GROQ_KEY": get_secret("GROQ_KEY"),
-    }
-
-S = load_secrets()
+except: pass
+# Load GA4 credentials from separate file if present
+if GA4_CREDS_FILE.exists():
+    S["GA4_CREDENTIALS_JSON"] = GA4_CREDS_FILE.read_text().strip()
 
 # ── SITE PATHS ──────────────────────────────────────────────────────────────
 SITE_URL = S["SITE_URL"]
@@ -207,6 +150,10 @@ Social media posts per platform:
 Append blog URL to all except TikTok/Pinterest."""
 
 # ── STATE MANAGEMENT ───────────────────────────────────────────────────────
+state_mgr = AbvornState(STATE_FILE.with_suffix('.db'))
+if STATE_FILE.exists():
+    state_mgr.import_legacy_json(STATE_FILE)
+
 _state_buffer = None
 _last_save = 0
 _state_lock = threading.RLock()
@@ -216,32 +163,21 @@ DEFAULT_STATE = {
     "performance": {}, "redirects": {}, "model_metrics": [], "email_schedule": [],
     "generals": {}, "enterprise_structure": {}, "cta_variants": {},
     "predictions": {}, "prediction_accuracy": {"total": 0, "correct": 0, "history": []},
-    "research_queue": [],
-    "rss_sources": [],
-    "persona_registry": {}
+    "research_queue": [], "rss_sources": [], "persona_registry": {}
 }
 
 def load_state():
     global _state_buffer
     with _state_lock:
         if _state_buffer is not None: return _state_buffer
-        if STATE_FILE.exists():
-            try:
-                _state_buffer = json.loads(STATE_FILE.read_text())
-            except:
-                _state_buffer = dict(DEFAULT_STATE)
-        else:
-            _state_buffer = dict(DEFAULT_STATE)
-        # Merge defaults for backward compatibility
-        for k, v in DEFAULT_STATE.items():
-            if k not in _state_buffer:
-                _state_buffer[k] = v
+        _state_buffer = state_mgr.get_meta("full_state", dict(DEFAULT_STATE))
         return _state_buffer
 
 def save_state(state):
     global _state_buffer, _last_save
     with _state_lock:
         _state_buffer = state
+        state_mgr.set_meta("full_state", state)
         if time.time() - _last_save > 2: _flush_state()
 
 def prune_state(state):
@@ -256,6 +192,7 @@ def _flush_state():
     with _state_lock:
         if _state_buffer is None: return
         _state_buffer = prune_state(_state_buffer)
+        state_mgr.set_meta("full_state", _state_buffer)
         tmp = STATE_FILE.with_suffix('.tmp')
         tmp.write_text(json.dumps(_state_buffer, indent=2))
         tmp.rename(STATE_FILE)
@@ -364,75 +301,22 @@ def retrieve_memory_facts(query, top_k=2):
     except: return []
 
 # ── AI CLIENTS ──────────────────────────────────────────────────────────────
-GLM_KEYS = S["GLM_KEYS"]
-deepseek_client = OpenAI(api_key=S["DEEPSEEK_KEY"], base_url="https://api.deepseek.com/v1") if S["DEEPSEEK_KEY"] else None
-openai_client = OpenAI(api_key=S["OPENAI_KEY"]) if S["OPENAI_KEY"] else None
-
-# Free-tier AI providers (all OpenAI-API compatible)
-qwen_client = OpenAI(api_key=S["QWEN_KEY"], base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1") if S["QWEN_KEY"] else None
-gemini_client = OpenAI(api_key=S["GEMINI_KEY"], base_url="https://generativelanguage.googleapis.com/v1beta/openai/") if S["GEMINI_KEY"] else None
-groq_client = OpenAI(api_key=S["GROQ_KEY"], base_url="https://api.groq.com/openai/v1") if S["GROQ_KEY"] else None
+router = ModelRouter(S)
 
 PEXELS_API_KEY = S["PEXELS_KEY"]
 
-# No more scraping config — Amazon uses search links only
 AFFILIATE_NETWORKS = [
     {"name":"Amazon","base_search_url":"https://www.amazon.com/s?k={query}","affiliate_param":"tag","affiliate_id":S["AMAZON_TAG"]},
     {"name":"ShareASale","base_search_url":"https://www.shareasale.com/merchantsearch.cfm?keyword={query}","affiliate_param":"affiliate_id","affiliate_id":S["SHAREASALE_ID"]},
     {"name":"eBay","base_search_url":"https://www.ebay.com/sch/i.html?_nkw={query}&mkcid=1&mkrid=711-53200-19255-0&siteid=0&campid={affiliate_id}&toolid=10001&customid=&mkevt=1","affiliate_id":S["EBAY_CAMPID"]},
 ]
 
-class GLMKeyPool:
-    def __init__(self, keys):
-        self.keys = [k for k in keys if k and "YOUR_GLM" not in k]
-        self.banned_until = defaultdict(float)
-    def get_client(self):
-        now = time.time()
-        valid = [k for k in self.keys if self.banned_until[k] < now]
-        if not valid: raise Exception("All GLM keys banned.")
-        return OpenAI(api_key=valid[0], base_url="https://open.bigmodel.cn/api/paas/v4/"), valid[0]
-    def ban_key(self, key, duration=60):
-        self.banned_until[key] = time.time() + duration
-
-glm_pool = GLMKeyPool(GLM_KEYS)
-_model_metrics_buffer = []
-
-def ask_ai(prompt, json_mode=False, use_soul=True, model_priority=['qwen','gemini','groq','deepseek','glm','openai']):
-    messages = [{"role": "system", "content": SOUL}] if use_soul else []
-    messages.append({"role": "user", "content": prompt})
-    fmt = {"type": "json_object"} if json_mode else None
-    for provider in model_priority:
-        key_used = None
-        try:
-            start = time.time()
-            if provider == 'qwen' and qwen_client:
-                resp = qwen_client.chat.completions.create(model="qwen3.5-flash", messages=messages, response_format=fmt)
-            elif provider == 'gemini' and gemini_client:
-                resp = gemini_client.chat.completions.create(model="gemini-2.0-flash", messages=messages, response_format=fmt)
-            elif provider == 'groq' and groq_client:
-                resp = groq_client.chat.completions.create(model="llama-3.3-70b-versatile", messages=messages, response_format=fmt)
-            elif provider == 'glm':
-                client, key_used = glm_pool.get_client()
-                resp = client.chat.completions.create(model="glm-4-plus", messages=messages, response_format=fmt)
-            elif provider == 'deepseek' and deepseek_client:
-                resp = deepseek_client.chat.completions.create(model="deepseek-chat", messages=messages, response_format=fmt)
-            elif provider == 'openai' and openai_client:
-                resp = openai_client.chat.completions.create(model="gpt-4o", messages=messages, response_format=fmt)
-            else: continue
-            elapsed = time.time() - start
-            _model_metrics_buffer.append({"provider": provider, "time": elapsed, "tokens": resp.usage.total_tokens if resp.usage else 0})
-            return resp.choices[0].message.content
-        except Exception as e:
-            logger.warning(f"AI {provider} failed: {str(e)[:80]}")
-            if provider == 'glm' and key_used: glm_pool.ban_key(key_used)
-    return None
+def ask_ai(prompt, json_mode=False, use_soul=True, model_priority=None):
+    system = SOUL if use_soul else None
+    return router.ask(prompt, system=system, json_mode=json_mode)
 
 def flush_model_metrics():
-    if _model_metrics_buffer:
-        state = load_state()
-        state.setdefault('model_metrics', []).extend(_model_metrics_buffer)
-        save_state(state)
-        _model_metrics_buffer.clear()
+    pass
 
 # ── UTILITIES ───────────────────────────────────────────────────────────────
 def strict_json(text):
@@ -654,36 +538,18 @@ def build_affiliate_url(query, network=None):
     url = net['base_search_url'].replace('{query}', query)
     return inject_affiliate_link(url, net)
 
-# ── SCHEMA MARKUP GENERATORS ───────────────────────────────────────────────
+# ── SCHEMA MARKUP GENERATORS (thin wrappers around abvorn build_schema) ──────
 def build_article_schema(title, description, url, image, date_published, author="Abvorn Editorial"):
-    return f'''{{
-  "@context": "https://schema.org",
-  "@type": "Article",
-  "headline": {json.dumps(title)},
-  "description": {json.dumps(description)},
-  "image": {json.dumps(image)},
-  "datePublished": {json.dumps(date_published)},
-  "dateModified": {json.dumps(date_published)},
-  "author": {{"@type": "Person", "name": {json.dumps(author)}}},
-  "publisher": {{"@type": "Organization", "name": "Abvorn", "logo": {{"@type": "ImageObject", "url": {json.dumps(LOGO_URL)}}}}}
-}}'''
+    s = build_schema(title, description, url, image, date_published, [], [])
+    return s.get("article", "{}")
 
 def build_product_schema(products):
-    items = []
-    for p in products:
-        items.append(f'''{{
-      "@type": "Product",
-      "name": {json.dumps(p.get('name', 'Product'))},
-      "description": {json.dumps(p.get('description', ''))},
-      "offers": {{"@type": "Offer", "price": {json.dumps(p.get('price', 'Check Price'))}, "priceCurrency": "USD"}}
-    }}''')
-    return f'{{"@context":"https://schema.org","@graph":[{",".join(items)}]}}'
+    s = build_schema("Products", "", "", "", "", products, [])
+    return s.get("product", "{}")
 
 def build_faq_schema(faqs):
-    items = []
-    for q, a in faqs:
-        items.append(f'{{"@type":"Question","name":{json.dumps(q)},"acceptedAnswer":{{"@type":"Answer","text":{json.dumps(a)}}}}}')
-    return f'{{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{",".join(items)}]}}'
+    s = build_schema("FAQ", "", "", "", "", [], faqs)
+    return s.get("faq", "{}")
 
 def build_breadcrumb_schema(items):
     elements = ",".join(f'{{"@type":"ListItem","position":{i+1},"name":{json.dumps(n)},"item":{json.dumps(u)}}}' for i, (n, u) in enumerate(items))

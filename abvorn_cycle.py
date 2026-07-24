@@ -1,14 +1,13 @@
 """Abvorn Cycle Runner — executes the full empire pipeline outside Colab.
 Designed for GitHub Actions (twice-daily cron) and local scheduling.
-Replaces google.colab with env-var-based mocks so the three cell files
-run unchanged on a standard Python runtime."""
+Uses the abvorn/ package directly instead of exec-injecting mocks into cell files."""
 
 import os, sys, types, pathlib, json, shutil, logging, re
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger("abvorn-cycle")
 
-# ── MOCK OBJECTS (injected into exec namespace, not sys.modules) ────────
+# ── MOCK OBJECTS (for optional cell file execution) ──────────────────────
 
 class _MockUserdata:
     @staticmethod
@@ -21,7 +20,6 @@ def _mock_mount(path, **kw):
 def _mock_auth_default():
     return None, None
 
-# These will be placed directly into the exec namespace
 colab_drive = types.ModuleType('drive')
 colab_drive.mount = _mock_mount
 
@@ -31,8 +29,6 @@ colab_auth = types.ModuleType('auth')
 colab_auth.default = _mock_auth_default
 
 # ── PATHS ───────────────────────────────────────────────────────────────────
-# Replicate the Drive directory structure locally so the cell code finds
-# /content/drive/MyDrive/The_Synthetic_Boardroom/ etc.
 
 DRIVE_BASE = pathlib.Path('/content/drive/MyDrive')
 BOARDROOM_DIR = DRIVE_BASE / 'The_Synthetic_Boardroom'
@@ -42,15 +38,12 @@ for d in [BOARDROOM_DIR, BOARDROOM_DIR / '6_Empire_Network',
     d.mkdir(parents=True, exist_ok=True)
 
 # ── STATE CACHE ─────────────────────────────────────────────────────────────
-# The ~/.abvorn directory is cached between GitHub Actions runs so that the
-# empire state, ChromaDB backup, and skills survive across cycles.
 
 CACHE_DIR = pathlib.Path(os.environ.get('ABVORN_CACHE_DIR',
                                         pathlib.Path.home() / '.abvorn'))
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 def _restore_cache():
-    """Copy cached state into the Drive-mirror paths before running cells."""
     for item in CACHE_DIR.iterdir():
         dest = BOARDROOM_DIR / item.name
         if item.is_dir():
@@ -60,7 +53,6 @@ def _restore_cache():
     logger.info(f"Cache restored from {CACHE_DIR}")
 
 def _save_cache():
-    """Copy Drive-mirror state back to cache dir for the next workflow run."""
     for item in BOARDROOM_DIR.iterdir():
         dest = CACHE_DIR / item.name
         if item.is_dir():
@@ -76,7 +68,6 @@ _COLAB_IMPORT_RE = re.compile(
 )
 
 def preprocess_cell(source: str) -> str:
-    """Strip Colab-specific syntax that would break in a standard Python env."""
     cleaned = []
     for line in source.splitlines():
         stripped = line.strip()
@@ -86,6 +77,63 @@ def preprocess_cell(source: str) -> str:
             continue
         cleaned.append(line)
     return '\n'.join(cleaned)
+
+# ── ABVORN PIPELINE (direct, no exec) ─────────────────────────────────────
+
+def run_pipeline_direct():
+    """Execute the full Abvorn pipeline using the abvorn package directly."""
+    from abvorn.core.secrets import load_secrets
+    from abvorn.core.state import AbvornState
+    from abvorn.core.models import ModelRouter
+    from abvorn.content.pipeline import ContentPipeline
+    from abvorn.deploy.analytics import pull_ga4_analytics, apply_analytics_feedback
+
+    secrets = load_secrets()
+    if not secrets:
+        logger.warning("No secrets found — running in mock/demo mode")
+        secrets = {"AMAZON_TAG": "abvorn-20"}
+
+    db_path = BOARDROOM_DIR / "empire_state.db"
+    state = AbvornState(db_path)
+
+    # Migrate legacy JSON state if present
+    legacy_json = BOARDROOM_DIR / "empire_state.json"
+    if legacy_json.exists():
+        state.import_legacy_json(legacy_json)
+
+    router = ModelRouter(secrets)
+    pipeline = ContentPipeline(state=state, router=router)
+
+    # Process queued niches
+    while True:
+        task = state.dequeue()
+        if not task:
+            logger.info("No queued tasks — pipeline idle")
+            break
+        niche_slug = task["niche_slug"]
+        niche_name = niche_slug.replace("_", " ").title()
+        logger.info(f"Processing task: {niche_slug} ({task['stage']})")
+
+        try:
+            result = pipeline.run(niche_name, router)
+            if result:
+                state.add_post(niche_slug, result.get("post_title", ""),
+                               filename=result.get("post_title", "").lower().replace(" ", "-")[:50] + ".html",
+                               quality_score=result.get("quality_score", 7.0))
+                state.upsert_niche(niche_slug, niche_name)
+                logger.info(f"  Done: {niche_slug}")
+            state.complete_queue_item(task["id"])
+        except Exception as e:
+            logger.exception(f"Pipeline failed for {niche_slug}")
+            state.fail_queue_item(task["id"])
+
+    # GA4 analytics feedback loop
+    analytics = pull_ga4_analytics(secrets)
+    if analytics:
+        apply_analytics_feedback(state, analytics)
+        logger.info(f"GA4 feedback applied for {len(analytics)} niches")
+
+    return state
 
 # ── MAIN ───────────────────────────────────────────────────────────────────
 
@@ -98,9 +146,11 @@ def main():
 
     _restore_cache()
 
-    # Build the namespace shared across all three cells.
-    # We provide mock objects for google.colab imports so the cells don't
-    # need the real Colab runtime.  The rest are ordinary Python globals.
+    # Run the abvorn pipeline directly
+    run_pipeline_direct()
+
+    # Optionally execute cell files for full environment setup (ChromaDB, etc.)
+    # These use mock objects to replace google.colab imports
     namespace = {
         '__name__': '__main__',
         '__builtins__': __builtins__,
@@ -114,7 +164,7 @@ def main():
         if not cell_path.exists():
             logger.error(f"Cell file not found: {cell_path}")
             continue
-        logger.info(f"─── Executing {cell_path} ───")
+        logger.info(f"─── Executing {cell_path} (environment setup) ───")
         raw = cell_path.read_text(encoding='utf-8')
         processed = preprocess_cell(raw)
         try:
@@ -123,10 +173,9 @@ def main():
             logger.warning(f"{cell_path} called sys.exit() — continuing")
         except Exception:
             logger.exception(f"{cell_path} raised an exception — continuing")
-            # Other cells may still do useful work
 
     _save_cache()
-    logger.info("Abvorn cycle complete. All three cells executed.")
+    logger.info("Abvorn cycle complete.")
 
 if __name__ == '__main__':
     main()
