@@ -61,4 +61,6 @@ jobs:
           GITHUB_REPO:           ${{ secrets.GITHUB_REPO }}
           COMPOSIO_KEY:          ${{ secrets.COMPOSIO_KEY }}
           KILL_SWITCH_PASSWORD:  ${{ secrets.KILL_SWITCH_PASSWORD }}
+          GA4_PROPERTY_ID:       ${{ secrets.GA4_PROPERTY_ID }}
+          GA4_CREDENTIALS_JSON:  ${{ secrets.GA4_CREDENTIALS_JSON }}
         run: python abvorn_cycle.py
