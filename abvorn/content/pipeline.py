@@ -10,6 +10,7 @@ class ContentPipeline:
 
     def __init__(self, state=None):
         self.state = state
+        self.brain = None
 
     def run(self, niche: str, router, persona: dict = None,
             existing_products: list = None) -> dict:
@@ -21,9 +22,15 @@ class ContentPipeline:
             logger.error(f"[PIPELINE] RESEARCH failed for {niche}")
             return None
 
+        # Brain context: query knowledge base
+        brain_context = {}
+        if self.brain:
+            brain_context = self.brain.query_for_pipeline(niche, "", persona)
+
         # Stage 2: OUTLINE
         logger.info(f"[PIPELINE] OUTLINE: {niche}")
-        outline = generate_outline(niche, products, persona or {}, router)
+        outline = generate_outline(niche, products, persona or {}, router,
+                                   knowledge_chunks=brain_context.get("chunks", []))
         if not outline or not outline.get("outline"):
             logger.warning(f"[PIPELINE] OUTLINE empty for {niche}, using default")
             outline = {"outline": ["H2: Introduction", "H2: Product Reviews", "H2: Buying Guide", "H2: FAQ", "H2: Conclusion"],
@@ -31,21 +38,22 @@ class ContentPipeline:
 
         # Stage 3: DRAFT
         logger.info(f"[PIPELINE] DRAFT: {niche}")
-        draft = write_draft(niche, products, outline, persona or {}, products, router)
+        draft = write_draft(niche, products, outline, persona or {}, products, router,
+                            brain_context=brain_context)
         if not draft:
             logger.error(f"[PIPELINE] DRAFT failed for {niche}")
             return None
 
         # Stage 4: FACT-CHECK
         logger.info(f"[PIPELINE] FACT-CHECK: {niche}")
-        fc_result = fact_check(draft, products, router)
+        fc_result = fact_check(draft, products, router, brain_context=brain_context)
         if fc_result and not fc_result.get("passed") and fc_result.get("issues"):
             for issue in fc_result["issues"][:3]:
                 logger.warning(f"  Fact-check issue [{issue.get('severity','low')}]: {issue.get('claim','')[:80]}")
 
         # Stage 5: POLISH
         logger.info(f"[PIPELINE] POLISH: {niche}")
-        polished = polish(draft, fc_result or {}, persona or {}, router)
+        polished = polish(draft, fc_result or {}, persona or {}, router, brain_context=brain_context)
 
         # Combine results
         final_intro = polished.get("revised_intro") or fc_result.get("revised_intro") or draft.get("intro", "")

@@ -13,7 +13,8 @@ CONTENT_ANGLES = {
     "seasonal": "Connect product to current event, season, or trend.",
 }
 
-def generate_outline(niche: str, products: list, persona: dict, router) -> dict:
+def generate_outline(niche: str, products: list, persona: dict, router,
+                     knowledge_chunks: list = None) -> dict:
     """OUTLINE stage: produce structured outline + angle selection."""
     product_names = [p.get("name", "") for p in products[:3]]
     persona_context = ""
@@ -25,9 +26,16 @@ Fears: {json.dumps(persona.get('fears', []))}
 Desires: {json.dumps(persona.get('desires', []))}
 Tone: {persona.get('tone_of_voice', 'conversational')}"""
 
+    expert_guidance = ""
+    if knowledge_chunks:
+        top = knowledge_chunks[0]["text"][:500] if knowledge_chunks else ""
+        if top:
+            expert_guidance = f"\n\nEXPERT GUIDANCE:\n{top}\n\nApply this principle when selecting your angle and outline."
+
     prompt = f"""You are a content strategist planning a buying guide for '{niche}'.
 Products: {json.dumps(product_names)}
 {persona_context}
+{expert_guidance}
 
 Available content angles and when to use them:
 {json.dumps(CONTENT_ANGLES, indent=2)}
@@ -57,7 +65,7 @@ Return JSON:
 
 
 def write_draft(niche: str, products: list, outline: dict, persona: dict,
-                research_data: list, router) -> dict:
+                research_data: list, router, brain_context: dict = None) -> dict:
     """DRAFT stage: write full article from outline + research."""
     product_json = json.dumps(products, indent=2)[:2000]
     outline_sections = "\n".join(outline.get("outline", []))
@@ -68,10 +76,30 @@ Tone: {persona.get('tone_of_voice', 'conversational and honest')}
 Pain points: {json.dumps(persona.get('frustrations', []))}
 Objections: {json.dumps(persona.get('objections', []))}"""
 
+    copywriting_guidance = ""
+    psych_guidance = ""
+    seo_guidance = ""
+    if brain_context:
+        copy_principles = brain_context.get("copywriting_principles", [])
+        if copy_principles:
+            texts = [c["text"][:300] for c in copy_principles[:2]]
+            copywriting_guidance = "\nCOPYWRITING PRINCIPLES:\n" + "\n---\n".join(texts)
+        psych_triggers = brain_context.get("psychology_triggers", [])
+        if psych_triggers:
+            texts = [c["text"][:300] for c in psych_triggers[:2]]
+            psych_guidance = "\nPSYCHOLOGY TRIGGERS:\n" + "\n---\n".join(texts)
+        seo_tactics = brain_context.get("seo_tactics", [])
+        if seo_tactics:
+            texts = [c["text"][:300] for c in seo_tactics[:2]]
+            seo_guidance = "\nSEO TACTICS:\n" + "\n---\n".join(texts)
+
     prompt = f"""Write a comprehensive buying guide for '{niche}'.
 
 PRODUCTS TO FEATURE:
 {product_json}
+{copywriting_guidance}
+{psych_guidance}
+{seo_guidance}
 
 OUTLINE TO FOLLOW:
 {outline_sections}
