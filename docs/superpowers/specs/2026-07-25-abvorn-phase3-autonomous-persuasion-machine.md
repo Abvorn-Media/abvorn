@@ -28,6 +28,14 @@ Each cycle targets one niche + one persona → produces one anchor asset → der
 | AdSense | Display ads on blog pages | Secondary |
 | Email nurture | Lead magnet → sequence → future conversions | Tertiary |
 
+### 1.3 Future SaaS Revenue (strategic direction)
+Each subsystem is designed as an independent capability that can be packaged and sold as a subscription SaaS product:
+- **Persona Discovery API** — "Give us a niche, get 5 buyer personas with psychology profiles"
+- **Content Factory API** — "Give us a product, get a conversion-optimized buying guide"
+- **Multi-Format Exploder API** — "Give us one article, get 8 platform-native adaptations"
+- **Affiliate Content Platform** — "Full autonomous affiliate machine as a service"
+- Architecture ensures clean module boundaries for future extraction
+
 ---
 
 ## 2. Subsystem 1: Opportunity Discovery
@@ -225,13 +233,34 @@ For Phase 3, email is **generated and staged for manual sending** via your email
 - AdSense integration: auto-ads code in `<head>`, manual ad units at natural break points (pre-content, mid-content, post-content)
 - SEO: canonical URLs, meta tags, Open Graph, Twitter Cards, schema.org markup
 
-### 7.2 Social Platform Deployment
-- X: API posting (tweet thread via Twitter API)
-- LinkedIn: API posting (article via LinkedIn API)
-- TikTok/IG/Pinterest: export as formatted drafts (manual publish or future API)
-- Medium: API posting via Medium API
+### 7.2 Social Platform Deployment (via Composio)
 
-### 7.3 Analytics
+All social platform posting goes through **Composio** (already in `requirements.txt` as `composio-core`). Composio handles:
+- OAuth authentication for X, LinkedIn, TikTok, Instagram, Pinterest, Medium
+- API rate limiting and retry logic
+- Platform API changes (Composio updates their integrations)
+- Unified interface across all platforms
+
+Each social action:
+1. Prepare content for the platform (from Exploder subsystem)
+2. Call Composio action with authenticated connection
+3. Verify post succeeded or capture failure reason
+4. Log performance data for feedback loop
+
+### 7.3 Composio Integration
+
+```python
+# Example: posting via Composio
+from composio import ComposioToolSet
+
+toolset = ComposioToolSet()
+response = toolset.execute_action(
+    action="X_CREATE_TWEET",
+    params={"text": "Your tweet content here"}
+)
+```
+
+### 7.4 Analytics
 - GA4 (existing): page views, user engagement, traffic sources
 - Affiliate: click tracking, conversion tracking per post/persona
 - AdSense: revenue per page, RPM
@@ -413,7 +442,35 @@ abvorn/
 
 ---
 
-## 12. Testing Strategy
+## 12. SaaS Packaging Architecture (Strategic)
+
+Each subsystem exposes a clean public API so individual capabilities can be extracted and sold:
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  SaaS Product 1: Persona Discovery API                     │
+│  POST /api/discover → { niche } → [{ persona }, ...]       │
+│  Subscription: $X/mo for Y personas/month                  │
+├────────────────────────────────────────────────────────────┤
+│  SaaS Product 2: Content Factory API                       │
+│  POST /api/generate → { niche, persona } → { article }     │
+│  Subscription: $Y/mo for Z articles/month                  │
+├────────────────────────────────────────────────────────────┤
+│  SaaS Product 3: Exploder API                              │
+│  POST /api/explode → { anchor, platforms } → { outputs }   │
+│  Subscription: $Z/mo for W explosions/month                │
+├────────────────────────────────────────────────────────────┤
+│  SaaS Product 4: Abvorn Full (white-label platform)        │
+│  Full autonomous machine per customer niche                │
+│  Subscription: $$$/mo per niche                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+Each subsystem's internal logic lives in `abvorn/`; the SaaS API layer would be a thin external service (Phase 4+).
+
+---
+
+## 13. Testing Strategy
 
 ### 12.1 Unit Tests
 - `tests/test_discovery.py` — opportunity scoring
