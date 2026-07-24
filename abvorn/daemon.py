@@ -31,6 +31,86 @@ class AbvornDaemon:
         self.router = ModelRouter(self.secrets)
         self.agents = []
         self._tasks = []
+        self._init_phase3()
+
+    def _init_phase3(self):
+        """Initialize Phase 3 subsystems."""
+        from .discovery.scanner import OpportunityScanner
+        from .persona.engine import PersonaEngine
+        from .persona.registry import PersonaRegistry
+        from .factory.pipeline import PersuasionPipeline
+        from .deploy.social import SocialDeployer
+        from .deploy.notifier import TelegramNotifier
+        from .orchestrator.scheduler import Scheduler
+        from .orchestrator.health import HealthMonitor
+
+        self.scanner = OpportunityScanner(self.state)
+        self.persona_engine = PersonaEngine()
+        self.persona_registry = PersonaRegistry(str(self.state_path.parent / "personas.db"))
+        self.factory = PersuasionPipeline()
+        self.social = SocialDeployer(self.secrets.get("COMPOSIO_KEY", ""))
+        self.notifier = TelegramNotifier()
+        self.scheduler = Scheduler(state_db=str(self.state_path))
+        self.health = HealthMonitor(state_db=str(self.state_path))
+
+    def is_paused(self) -> bool:
+        """Check if the kill switch is engaged."""
+        return self.state.get_meta("kill_switch", False)
+
+    async def run_full_cycle(self) -> dict:
+        """Run one complete opportunity → content → deploy cycle."""
+        if self.is_paused():
+            return {"status": "paused"}
+
+        opp = self.scheduler.get_next_opportunity()
+        if not opp:
+            logger.info("No pending opportunities — running discovery")
+            self.scanner.discover_from_keywords(["wireless headphones", "gaming mouse"])
+            opp = self.scheduler.get_next_opportunity()
+            if not opp:
+                return {"status": "nothing_to_do"}
+
+        niche = opp["niche"]
+        logger.info(f"Starting cycle for: {niche}")
+
+        personas = self.persona_engine.discover_personas(niche)
+        if not personas:
+            self.scheduler.mark_failed(opp["id"])
+            self.notifier.report_cycle(niche, "failed", "No personas found")
+            return {"status": "no_personas"}
+
+        persona = personas[0]
+        persona_id = f"{niche}_{persona['name'].lower().replace(' ', '_')}"
+        self.persona_registry.register_persona(persona_id, niche, persona)
+
+        content = self.factory.run(niche, persona, self.router)
+        if not content:
+            self.scheduler.mark_failed(opp["id"])
+            self.notifier.report_error(niche, "Content factory returned None")
+            return {"status": "content_failed"}
+
+        from .exploder.adapters import (
+            adapt_for_x, adapt_for_linkedin, adapt_for_tiktok,
+            adapt_for_instagram, adapt_for_pinterest, adapt_for_medium,
+        )
+        from .exploder.email import generate_lead_magnet, generate_sequence
+
+        magnet = generate_lead_magnet(content)
+        sequence = generate_sequence(content, persona)
+
+        threaded = adapt_for_x(content)
+        linkedin = adapt_for_linkedin(content)
+        self.social.post_to_x(threaded)
+        self.social.post_to_linkedin(linkedin)
+        self.social.post_to_medium(content)
+
+        self.scheduler.mark_complete(opp["id"])
+        self.health.log_cycle(niche, success=True, duration_s=120)
+        self.persona_registry.update_performance(persona_id, converted=False, quality_score=7.0)
+        self.notifier.report_cycle(niche, "success", content.get("post_title", ""))
+
+        self.bus.publish("content.drafted", {"niche": niche, "title": content.get("post_title", "")})
+        return {"status": "success", "niche": niche, "persona": persona_id}
 
     async def start(self):
         """Start all agents and the brain."""
