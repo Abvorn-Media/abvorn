@@ -44,3 +44,26 @@ def test_render_without_brand_uses_abvorn_defaults():
         files = deployer.prepare_files(content, Path(tmpdir))
         html = Path(files[0]).read_text(encoding="utf-8")
         assert "Abvorn" in html
+
+
+def test_render_with_brand_has_dna_class():
+    from pathlib import Path
+    import tempfile
+    deployer = GitHubDeployer("token", "owner/repo")
+    brand = BrandConfig(
+        brand_name="Clean Home",
+        brand_tagline="Expert cleaning advice",
+        logo_text="Clean Home",
+        logo_icon="\U0001f3e0",
+        primary_color="#41b3a3",
+        secondary_color="#e8a87c",
+        dna_profile=DNAProfile.WARM,
+        voice_rules={},
+        domain="",
+    )
+    content = {"post_title": "Best Vacuums", "article_html": "<p>Content</p>", "niche_slug": "best-vacuums"}
+    with tempfile.TemporaryDirectory() as tmpdir:
+        files = deployer.prepare_files(content, Path(tmpdir), brand=brand)
+        html = Path(files[0]).read_text(encoding="utf-8")
+        assert 'class="dna-warm"' in html
+

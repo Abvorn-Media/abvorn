@@ -102,7 +102,7 @@ TEMPLATE = """<!DOCTYPE html>
 {brand_css_vars}
 {adsense_script}
 </head>
-<body class="dna-{dna_profile}">
+<body class="{body_class}">
 <header class="site-header">
     <div class="header-inner">
         <a href="/" class="logo">{brand_logo_html}</a>
@@ -241,14 +241,14 @@ window.abvornSubscribeInline = function(e) {{
             trust_text = "Why you can trust Abvorn:"
             footer_text = f"&copy; {year} Abvorn. As an Amazon Associate we earn from qualifying purchases."
             brand_css_vars = ""
-            dna_profile = ""
+            body_class = ""
         else:
             brand_logo_html = f"{brand.logo_icon} {brand.logo_text}".strip()
             trust_text = f"Why you can trust {brand.brand_name}:"
             footer_text = f"&copy; {year} {brand.brand_name}. As an Amazon Associate we earn from qualifying purchases."
             dna_vars = DNA_CSS.get(brand.dna_profile, "")
             brand_css_vars = f"<style>:root{{--primary:{brand.primary_color};--secondary:{brand.secondary_color};{dna_vars}}}</style>"
-            dna_profile = brand.dna_profile.value
+            body_class = f"dna-{brand.dna_profile.value}"
 
         full_html = TEMPLATE.format(
             title=title, meta_desc=meta_desc, tags=tags_str,
@@ -261,7 +261,7 @@ window.abvornSubscribeInline = function(e) {{
             subscribe_section=subscribe_section,
             brand_logo_html=brand_logo_html, trust_text=trust_text,
             footer_text=footer_text, brand_css_vars=brand_css_vars,
-            dna_profile=dna_profile,
+            body_class=body_class,
         )
 
         post_dir = output_dir / safe_slug
