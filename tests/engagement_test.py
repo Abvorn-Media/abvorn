@@ -40,3 +40,45 @@ def test_filter_substantive_only():
 def test_no_key_returns_empty():
     mw = MentionWatcher(composio_key="", state=None)
     assert mw.poll() == []
+
+
+from abvorn.engagement.replier import ReplyGenerator, ReplyPoster
+
+
+def test_reply_generator_initializes():
+    rg = ReplyGenerator(router=None)
+    assert rg is not None
+
+
+def test_reply_generator_craft_returns_string():
+    rg = ReplyGenerator(router=None)
+    reply = rg.craft({"text": "Does this work with Samsung TVs?", "author": "user"}, {})
+    assert isinstance(reply, str)
+    assert len(reply) > 10
+
+
+def test_reply_generator_with_llm():
+    router = MagicMock()
+    router.ask.return_value = "Great question! Yes, it works with Samsung TVs from 2022 onwards."
+    rg = ReplyGenerator(router=router)
+    reply = rg.craft({"text": "Does this work with Samsung TVs?", "author": "user"},
+                     {"niche": "tv", "post_title": "Best TV 2026"})
+    assert "Samsung" in reply
+    router.ask.assert_called_once()
+
+
+def test_reply_poster_initializes():
+    rp = ReplyPoster(composio_key="test")
+    assert rp is not None
+
+
+def test_reply_poster_no_key():
+    rp = ReplyPoster(composio_key="")
+    result = rp.post({"tweet_id": "123"}, "Great question!")
+    assert result["status"] == "skipped"
+
+
+def test_reply_poster_returns_structure():
+    rp = ReplyPoster(composio_key="fake_key")
+    result = rp.post({"tweet_id": "123"}, "Thanks for asking!")
+    assert "status" in result
