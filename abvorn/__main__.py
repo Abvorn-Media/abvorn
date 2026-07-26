@@ -1,8 +1,17 @@
 """CLI entry point: python -m abvorn <command>"""
 
-import asyncio, logging, sys
-from .daemon import AbvornDaemon
+import asyncio, logging, sys, os
+
 from .brain.orchestrator import refresh_brain
+
+_DAEMON = None
+
+def _get_daemon():
+    global _DAEMON
+    if _DAEMON is None:
+        from .daemon import AbvornDaemon
+        _DAEMON = AbvornDaemon
+    return _DAEMON
 
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
@@ -25,8 +34,9 @@ def main():
     cmd = sys.argv[1]
 
     if cmd == "daemon":
+        DaemonCls = _get_daemon()
         async def run():
-            d = AbvornDaemon()
+            d = DaemonCls()
             await d.start()
             try:
                 while True:
@@ -36,9 +46,9 @@ def main():
         asyncio.run(run())
 
     elif cmd == "cycle":
-        from .daemon import AbvornDaemon
+        DaemonCls = _get_daemon()
         async def run_cycle():
-            d = AbvornDaemon()
+            d = DaemonCls()
             result = await d.run_full_cycle()
             print(f"Cycle result: {result.get('status')}")
             if result.get('niche'):
@@ -69,43 +79,42 @@ def main():
             print("Pipeline failed")
 
     elif cmd == "pause":
-        d = AbvornDaemon()
+        d = _get_daemon()()
         d.state.set_meta("kill_switch", True)
-        print("🔴 System PAUSED — kill switch engaged")
+        print("[PAUSED] System paused - kill switch engaged")
 
     elif cmd == "resume":
-        d = AbvornDaemon()
+        d = _get_daemon()()
         d.state.set_meta("kill_switch", False)
-        print("🟢 System RESUMED — kill switch disengaged")
+        print("[ACTIVE] System resumed - kill switch disengaged")
 
     elif cmd == "status":
-        d = AbvornDaemon()
+        d = _get_daemon()()
         paused = d.state.get_meta("kill_switch", False)
-        opportunities = d.state.get_opportunities("pending")
         niches = d.state.get_all_niches()
-        print(f"Status: {'PAUSED 🔴' if paused else 'ACTIVE 🟢'}")
-        print(f"  Pending opportunities: {len(opportunities)}")
+        print(f"Status: {'[PAUSED]' if paused else '[ACTIVE]'}")
         print(f"  Tracked niches: {len(niches)}")
         if niches:
             print(f"  Top niche: {niches[0].get('slug', 'N/A')} (score: {niches[0].get('ga4_score', 0)})")
 
     elif cmd == "health":
+        d = _get_daemon()()
         from .orchestrator.health import HealthMonitor
-        monitor = HealthMonitor()
+        monitor = HealthMonitor(state_db=str(d.state_path))
         status = monitor.check()
         stats = monitor.get_stats()
-        d = AbvornDaemon()
-        opps = d.state.get_opportunities("pending")
-        print(f"Health: {'OK \u2705' if status['healthy'] else 'ISSUES \u274c'}")
+        opps = len(d.state.get_all_niches())
+        print(f"Health: {'[OK]' if status['healthy'] else '[ISSUES]'}")
         print(f"  Cycles: {stats.get('total_cycles', 0)}")
         print(f"  Success rate: {stats.get('success_rate', 0):.0%}")
         print(f"  Avg duration: {stats.get('avg_duration_s', 0):.0f}s")
-        print(f"  Pending ops: {len(opps)}")
+        print(f"  Tracked niches: {opps}")
 
     elif cmd == "migrate":
         from .deploy.github import GitHubDeployer
         from .core.secrets import load_secrets
         from .sites.migration import BootstrapMigration
+        d = _get_daemon()()
         secrets = load_secrets()
         deployer = GitHubDeployer(
             token=secrets.get("GITHUB_TOKEN", ""),
