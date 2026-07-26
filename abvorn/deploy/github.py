@@ -47,7 +47,7 @@ class GitHubDeployer:
         self.branch = branch
         self.site_dir = Path(site_dir) if site_dir else Path("docs")
 
-    def prepare_files(self, content: dict, output_dir: Path, brand=None) -> list[str]:
+    def prepare_files(self, content: dict, output_dir: Path, brand=None, state=None) -> list[str]:
         """Generate HTML files for a content item."""
         slug = content.get("niche_slug", content.get("post_title", "post").lower().replace(" ", "-"))
         safe_slug = re.sub(r'[^a-z0-9-]', '', slug.lower())[:80]
@@ -92,6 +92,21 @@ class GitHubDeployer:
 <script type="application/ld+json">{schema_json}</script>
 </body>
 </html>"""
+
+        if brand and state:
+            try:
+                from ..persuasion.context import ContextParser
+                from ..persuasion.matcher import ProductMatcher
+                from ..persuasion.widget import PersuasionWidget
+                niche = content.get("niche", "") or ""
+                ctx = ContextParser().parse(content)
+                matcher = ProductMatcher(state)
+                recs = matcher.match(ctx)
+                widget_html = PersuasionWidget().render(ctx, recs, brand)
+                if widget_html:
+                    full_html = full_html.replace("</article>", widget_html + "\n</article>")
+            except Exception:
+                pass
 
         post_dir = output_dir / safe_slug
         post_dir.mkdir(parents=True, exist_ok=True)

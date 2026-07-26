@@ -96,3 +96,26 @@ def test_render_with_brand_has_dna_class():
         html = Path(files[0]).read_text(encoding="utf-8")
         assert 'class="dna-warm"' in html
 
+
+def test_page_includes_persuasion_when_brand_and_state():
+    from pathlib import Path
+    import tempfile
+    from unittest.mock import MagicMock
+    from abvorn.sites.model import BrandConfig, DNAProfile
+    deployer = GitHubDeployer(token="fake", repo="user/repo")
+    brand = BrandConfig(brand_name="Test", brand_tagline="", logo_text="T", logo_icon="T",
+                        primary_color="#000", secondary_color="#fff",
+                        dna_profile=DNAProfile.TECH, voice_rules={}, domain="")
+    state = MagicMock()
+    state.get_meta.return_value = (
+        '[{"name":"Sony WH-1000XM5","tagline":"Best ANC","price_range":"$349",'
+        '"affiliate_url":"https://amzn.to/sony","reason_to_buy":"Quietest on market"}]'
+    )
+    content = {"post_title": "Best TVs", "article_html": "<p>Content</p>", "niche_slug": "best-tvs",
+               "niche": "tv"}
+    with tempfile.TemporaryDirectory() as tmpdir:
+        files = deployer.prepare_files(content, Path(tmpdir), brand=brand, state=state)
+        html = Path(files[0]).read_text(encoding="utf-8")
+        assert "abvorn-persuasion" in html, "Persuasion widget not found in output"
+        assert "Sony" in html, "Product name not found in widget"
+
