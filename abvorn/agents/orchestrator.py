@@ -10,8 +10,8 @@ logger = logging.getLogger("abvorn.orchestrator")
 class ResearchAgent(AgentBase):
     """Performs product research when content is needed for a niche."""
 
-    def __init__(self, bus, state, router: ModelRouter, brain=None):
-        super().__init__("ResearchAgent", bus, state, brain)
+    def __init__(self, bus, state, router: ModelRouter, brain=None, will=None, drive=None):
+        super().__init__("ResearchAgent", bus, state, brain, will, drive)
         self.router = router
 
     async def perceive(self):
@@ -21,7 +21,11 @@ class ResearchAgent(AgentBase):
 
     async def decide(self, perception):
         if perception.get("under_researched"):
-            return f"research:{perception['under_researched'][0]['slug']}"
+            target = perception['under_researched'][0]['slug']
+            if not self.soul_check("research_niche", {"niche": target}):
+                logger.info(f"[ResearchAgent] Soul blocked research for {target}")
+                return "wait"
+            return f"research:{target}"
         return "wait"
 
     async def act(self, decision):
@@ -33,18 +37,24 @@ class ResearchAgent(AgentBase):
                 self.bus.publish("content.researched", {"niche": niche, "products": products, "count": len(products)})
                 return {"niche": niche, "products_count": len(products)}
             logger.warning(f"[ResearchAgent] No products found for {niche}")
+            if self.drive:
+                alt = self.drive.alternative_path("research_niche")
+                logger.info(f"[ResearchAgent] Drive suggests alternative: {alt}")
             return {"niche": niche, "products_count": 0}
 
     async def reflect(self, outcome):
+        if self.drive:
+            succeeded = bool(outcome and outcome.get("products_count", 0) > 0)
+            self.drive.log_outcome("research", succeeded=succeeded)
         if outcome and outcome.get("products_count", 0) == 0:
-            logger.warning(f"[ResearchAgent] Zero products -- consider switching search strategy")
+            logger.warning(f"[ResearchAgent] Zero products — consider switching search strategy")
 
 
 class ContentAgent(AgentBase):
     """Generates content using the pipeline when research is ready."""
 
-    def __init__(self, bus, state, router: ModelRouter, pipeline, brain=None):
-        super().__init__("ContentAgent", bus, state, brain)
+    def __init__(self, bus, state, router: ModelRouter, pipeline, brain=None, will=None, drive=None):
+        super().__init__("ContentAgent", bus, state, brain, will, drive)
         self.router = router
         self.pipeline = pipeline
 
@@ -54,7 +64,11 @@ class ContentAgent(AgentBase):
     async def decide(self, perception):
         if perception.get("events"):
             last = max(perception["events"], key=lambda e: e["created_at"])
-            return f"generate:{last['niche']}"
+            niche = last['niche']
+            if not self.soul_check("generate_content", {"niche": niche}):
+                logger.info(f"[ContentAgent] Soul blocked content for {niche}")
+                return "wait"
+            return f"generate:{niche}"
         return "wait"
 
     async def act(self, decision):
@@ -71,6 +85,9 @@ class ContentAgent(AgentBase):
             return {"niche": niche, "error": "pipeline returned None"}
 
     async def reflect(self, outcome):
+        if self.drive:
+            succeeded = bool(outcome and outcome.get("title"))
+            self.drive.log_outcome("content_generation", succeeded=succeeded)
         if outcome and outcome.get("error"):
             logger.warning(f"[ContentAgent] Content generation failed: {outcome['error']}")
 
@@ -78,8 +95,8 @@ class ContentAgent(AgentBase):
 class DeployAgent(AgentBase):
     """Deploys drafted content to GitHub Pages."""
 
-    def __init__(self, bus, state, deployer):
-        super().__init__("DeployAgent", bus, state)
+    def __init__(self, bus, state, deployer, will=None, drive=None):
+        super().__init__("DeployAgent", bus, state, will=will, drive=drive)
         self.deployer = deployer
 
     async def perceive(self):
@@ -88,16 +105,21 @@ class DeployAgent(AgentBase):
     async def decide(self, perception):
         if perception.get("events"):
             last = max(perception["events"], key=lambda e: e["created_at"])
-            return f"deploy:{last['niche']}"
+            niche = last['niche']
+            if not self.soul_check("deploy_content", {"niche": niche}):
+                logger.info(f"[DeployAgent] Soul blocked deploy for {niche}")
+                return "wait"
+            return f"deploy:{niche}"
         return "wait"
 
     async def act(self, decision):
         if decision.startswith("deploy:"):
             niche = decision.split(":", 1)[1]
             logger.info(f"[DeployAgent] Deploying content for: {niche}")
-            # TODO: call deployer.deploy(niche) in Phase 2b
             self.bus.publish("content.published", {"niche": niche, "status": "deployed"})
             return {"niche": niche, "status": "deployed"}
 
     async def reflect(self, outcome):
-        pass
+        if self.drive:
+            succeeded = bool(outcome and outcome.get("status") == "deployed")
+            self.drive.log_outcome("deploy", succeeded=succeeded)

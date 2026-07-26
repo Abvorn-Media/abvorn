@@ -36,8 +36,8 @@ PLATFORM_TONE = {
 class SocialAmbassador(AgentBase):
     """Posts to social media with warmth and personality. Safety-wrapped per-item."""
 
-    def __init__(self, bus, state, router, social: SocialDeployer, brain=None, notifier=None):
-        super().__init__("SocialAmbassador", bus, state, brain)
+    def __init__(self, bus, state, router, social: SocialDeployer, brain=None, notifier=None, will=None, drive=None):
+        super().__init__("SocialAmbassador", bus, state, brain, will, drive)
         self.router = router
         self.social = social
         self.notifier = notifier
@@ -96,6 +96,9 @@ class SocialAmbassador(AgentBase):
             posts = self._get_due_posts()
             results = []
             for p in posts[:3]:
+                if not self.soul_check("post_scheduled", {"niche": p.get("niche", ""), "platform": p.get("platform", "")}):
+                    results.append({"status": "soul_blocked", "platform": p.get("platform", "unknown")})
+                    continue
                 try:
                     result = await self._craft_and_post(p)
                     results.append(result)
@@ -110,12 +113,16 @@ class SocialAmbassador(AgentBase):
                 return {"action": "none"}
             ev = max(events, key=lambda e: e["created_at"])
             niche = ev.get("message", {}).get("niche", ev.get("niche", "general"))
+            if not self.soul_check("promote_new_content", {"niche": niche}):
+                return {"action": "soul_blocked", "decision": "promote_new_content"}
             return await self._promote_niche(niche)
 
         if decision == "engage":
             mentions = self._perception.get("mentions", [])
             if not mentions:
                 return {"action": "none"}
+            if not self.soul_check("engage_mentions", {"count": len(mentions)}):
+                return {"action": "soul_blocked", "decision": "engage"}
             results = []
             for m in mentions[:5]:
                 try:
@@ -141,6 +148,9 @@ class SocialAmbassador(AgentBase):
                         )
                     except Exception:
                         pass
+        if self.drive:
+            succeeded = bool(outcome and outcome.get("results") and any(r.get("status") == "posted" for r in outcome.get("results", [])))
+            self.drive.log_outcome("social_cycle", succeeded=succeeded)
 
     def _get_due_posts(self) -> list[dict]:
         try:

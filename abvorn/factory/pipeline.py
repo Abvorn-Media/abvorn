@@ -2,6 +2,7 @@
 
 import json, logging
 from . import persuasion
+from ..brand import format_voice_rules, BANNED_PHRASES
 
 logger = logging.getLogger("abvorn.factory")
 
@@ -27,12 +28,11 @@ PERSUASION FRAMEWORK:
 6. SCANNABLE: {persuasion.build_scannable_structure()}
 7. CONVERT: {persuasion.build_conversion_block()}
 
-WRITING RULES:
-- Every paragraph advances the reader toward a decision
-- Specific over general (real prices, real specs, real numbers)
-- Address objections before the reader raises them
-- Connect every feature back to a benefit for THIS persona
-- End with a clear, low-risk call to action
+ABVORN VOICE RULES:
+{format_voice_rules()}
+
+BANNED PHRASES (never use these):
+{chr(10).join('- ' + p for p in BANNED_PHRASES)}
 
 Return JSON:
 {{

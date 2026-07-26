@@ -12,8 +12,8 @@ HEARTBEAT_TIMEOUT = 60.0
 class SupervisorAgent(AgentBase):
     """Spans agents, monitors health, respawns on failure, processes Telegram commands."""
 
-    def __init__(self, bus, state=None, brain=None):
-        super().__init__("SupervisorAgent", bus, state, brain)
+    def __init__(self, bus, state=None, brain=None, will=None, drive=None):
+        super().__init__("SupervisorAgent", bus, state, brain, will, drive)
         self.registry: dict[str, dict] = {}
         self._register_self()
         self._pending_commands: list[dict] = []

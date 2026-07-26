@@ -41,6 +41,42 @@ class AIProvider:
             logger.warning(f"{self.name} failed: {str(e)[:80]}")
             raise
 
+    def call_with_metadata(self, messages: list, json_mode: bool = False, max_retries: int = 2) -> dict:
+        """Like call() but returns content + metadata dict with retry logic."""
+        import openai
+        last_error = None
+        for attempt in range(max_retries + 1):
+            try:
+                start = time.time()
+                fmt = {"type": "json_object"} if json_mode else None
+                if self.client is None:
+                    raise RuntimeError(f"{self.name}: no API key configured")
+                resp = self.client.chat.completions.create(
+                    model=self.model, messages=messages, response_format=fmt
+                )
+                elapsed = time.time() - start
+                self.total_calls += 1
+                tokens = resp.usage.total_tokens if resp.usage else 0
+                self.total_tokens += tokens
+                self.total_time += elapsed
+                return resp.choices[0].message.content, {
+                    "model": self.model,
+                    "tokens": tokens,
+                    "time_ms": int(elapsed * 1000),
+                    "provider": self.name,
+                    "success": True,
+                }
+            except openai.AuthenticationError:
+                raise
+            except Exception as e:
+                last_error = e
+                if attempt < max_retries:
+                    import time as t
+                    t.sleep(1 * (attempt + 1))
+                    continue
+        self.failures += 1
+        raise last_error
+
 
 class ModelRouter:
     def __init__(self, secrets: dict):
@@ -57,7 +93,7 @@ class ModelRouter:
                 self.providers.append(AIProvider(name, key, url, model))
 
     def ask(self, prompt: str, system: str = None, json_mode: bool = False,
-            model_hint: str = None) -> str:
+            model_hint: str = None, task: str = None) -> str:
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
@@ -65,6 +101,15 @@ class ModelRouter:
         if model_hint:
             for p in self.providers:
                 if model_hint in p.name and p.available:
+                    try:
+                        return p.call(messages, json_mode)
+                    except Exception:
+                        p.ban()
+        # If task is specified, try to match by TASK_MODELS hint
+        if task and task in TASK_MODELS:
+            hint = TASK_MODELS[task]
+            for p in self.providers:
+                if hint in p.name and p.available:
                     try:
                         return p.call(messages, json_mode)
                     except Exception:
@@ -86,20 +131,36 @@ class ModelRouter:
                  "available": p.available} for p in self.providers]
 
 
-class ModelCostTracker:
-    """Tracks per-call model costs via state DB. Attached to daemon lifecycle."""
+TASK_MODELS = {
+    "research": "haiku",
+    "social": "haiku",
+    "outline": "sonnet",
+    "draft": "sonnet",
+    "fact_check": "sonnet",
+    "polish": "sonnet",
+    "brain": "haiku",
+}
 
-    def __init__(self, state):
+
+class ModelCostTracker:
+    """Tracks per-call model costs. In-memory or state-backed."""
+
+    def __init__(self, state=None):
         self._state = state
         self._calls = []
+
+    @property
+    def session_calls(self):
+        return self._calls
 
     def record_call(self, provider: str, model: str, task: str,
                     tokens: int, time_ms: int, success: bool):
         entry = dict(provider=provider, model=model, task=task,
                      tokens=tokens, time_ms=time_ms, success=success)
         self._calls.append(entry)
-        self._state.set_meta(f"cost_log_{len(self._calls)}", entry)
-        self._state.set_meta("cost_call_count", len(self._calls))
+        if self._state:
+            self._state.set_meta(f"cost_log_{len(self._calls)}", entry)
+            self._state.set_meta("cost_call_count", len(self._calls))
 
     def get_stats(self) -> dict:
         total = len(self._calls)

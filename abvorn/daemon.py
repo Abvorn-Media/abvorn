@@ -12,6 +12,8 @@ from .core.secrets import load_secrets
 from .core.bus import AgentBus
 from .sites.registry import SiteRegistry
 from .monitor.error_reporter import ErrorReporter, DaemonGuard
+from .will import Will
+from .drive import Drive
 from .content.pipeline import ContentPipeline
 from .agents.orchestrator import ResearchAgent, ContentAgent, DeployAgent
 from .agents.supervisor import SupervisorAgent
@@ -80,6 +82,8 @@ class AbvornDaemon:
         self.env_mode = EnvMode()
         self.notifier._backup_manager = self.backup_manager
         self.notifier._env_mode = self.env_mode
+        self.will = Will(state=self.state, bus=self.bus)
+        self.drive = Drive("abvorn_daemon", mission=self.will.mission)
 
     def is_paused(self) -> bool:
         """Check if the kill switch is engaged."""
@@ -187,12 +191,12 @@ class AbvornDaemon:
         )
 
         self.agents = [
-            ResearchAgent(self.bus, self.state, self.router, brain),
-            ContentAgent(self.bus, self.state, self.router, pipeline, brain),
-            DeployAgent(self.bus, self.state, deployer),
+            ResearchAgent(self.bus, self.state, self.router, brain, will=self.will, drive=Drive("ResearchAgent", self.will.mission)),
+            ContentAgent(self.bus, self.state, self.router, pipeline, brain, will=self.will, drive=Drive("ContentAgent", self.will.mission)),
+            DeployAgent(self.bus, self.state, deployer, will=self.will, drive=Drive("DeployAgent", self.will.mission)),
         ]
 
-        self.supervisor = SupervisorAgent(self.bus, self.state, brain)
+        self.supervisor = SupervisorAgent(self.bus, self.state, brain, will=self.will, drive=Drive("SupervisorAgent", self.will.mission))
         self.supervisor.registry.update({
             a.name: {
                 "class": a.__class__.__name__,
@@ -208,21 +212,25 @@ class AbvornDaemon:
         for pname in active_platforms:
             vp = self._registry.voice_profile(pname)
             pagent = PlatformAgent(self.bus, self.state, self.router, pname,
-                                    voice_profile=vp, registry=self._registry, brain=brain)
+                                    voice_profile=vp, registry=self._registry, brain=brain,
+                                    will=self.will)
             self.supervisor.spawn_agent(pagent.name, PlatformAgent,
                                          self.bus, self.state, self.router,
                                          pname, voice_profile=vp,
-                                         registry=self._registry, brain=brain)
+                                         registry=self._registry, brain=brain,
+                                         will=self.will)
             self.agents.append(pagent)
 
         from .agents.ambassador import SocialAmbassador
         self.ambassador = SocialAmbassador(
             self.bus, self.state, self.router,
-            self.social, brain=brain, notifier=self.notifier
+            self.social, brain=brain, notifier=self.notifier,
+            will=self.will, drive=Drive("SocialAmbassador", self.will.mission),
         )
         self.supervisor.spawn_agent("SocialAmbassador", SocialAmbassador,
                                      self.bus, self.state, self.router,
-                                     self.social, brain=brain, notifier=self.notifier)
+                                     self.social, brain=brain, notifier=self.notifier,
+                                     will=self.will, drive=Drive("SocialAmbassador", self.will.mission))
         self.agents.append(self.ambassador)
 
         for agent in self.agents:

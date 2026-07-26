@@ -12,8 +12,8 @@ class PlatformAgent(AgentBase):
     """Template for per-platform content agents."""
 
     def __init__(self, bus, state, router, platform_name: str, voice_profile: dict = None,
-                 registry: PlatformRegistry = None, brain=None):
-        super().__init__(f"PlatformAgent_{platform_name}", bus, state, brain)
+                 registry: PlatformRegistry = None, brain=None, will=None):
+        super().__init__(f"PlatformAgent_{platform_name}", bus, state, brain, will=will)
         self.platform_name = platform_name
         self.router = router
         self.voice_profile = voice_profile or {}
@@ -31,7 +31,11 @@ class PlatformAgent(AgentBase):
         if perception.get("platform_events"):
             ev = max(perception["platform_events"], key=lambda e: e["id"])
             self._last_content_id = ev["id"]
-            return f"adapt:{ev['message'].get('niche', 'general')}"
+            niche = ev['message'].get('niche', 'general')
+            if not self.soul_check("adapt_content", {"niche": niche, "platform": self.platform_name}):
+                logger.info(f"[{self.name}] Soul blocked adaptation for {niche}")
+                return "wait"
+            return f"adapt:{niche}"
         return "wait"
 
     async def act(self, decision: str):
@@ -50,3 +54,6 @@ class PlatformAgent(AgentBase):
     async def reflect(self, outcome):
         if outcome and "platform" in outcome:
             logger.info(f"[{self.name}] Completed adaptation for {outcome.get('platform')} / {outcome.get('niche')}")
+        if self.drive:
+            succeeded = bool(outcome and "platform" in outcome)
+            self.drive.log_outcome("adapt", succeeded=succeeded)
