@@ -159,6 +159,28 @@ class AbvornDaemon:
             self.social.post(content, platform)
             logger.info(f"Deployed to {platform}")
 
+        # Deploy content to site
+        try:
+            from .agents.orchestrator import SiteDeployer
+            site_dep = SiteDeployer(GitHubDeployer(
+                token=self.secrets.get("GITHUB_TOKEN", ""),
+                repo=self.secrets.get("GITHUB_REPO", ""),
+            ), self.state)
+            site_dep.deploy_content(niche, content)
+            all_niches = self.state.get_all_niches()
+            all_slugs = [n["slug"] for n in all_niches]
+            all_posts = []
+            for s in all_slugs:
+                all_posts.extend(self.state.get_posts_for_niche(s))
+            site_dep.deploy_root_index(niches=all_niches, posts=all_posts)
+            site_dep.deploy_homepage(niches=all_slugs, posts=all_posts)
+            for slug in all_slugs:
+                niche_posts = [p for p in all_posts if p.get("niche_slug") == slug]
+                site_dep.deploy_category_page(slug, posts=niche_posts, all_categories=all_slugs)
+            logger.info(f"Deployed {niche} to site")
+        except Exception as e:
+            logger.warning(f"Site deploy failed (non-fatal): {e}")
+
         self.scheduler.mark_complete(opp["id"])
         self.health.log_cycle(niche, success=True, duration_s=120)
         self.persona_registry.update_performance(persona_id, converted=False, quality_score=7.0)
@@ -189,6 +211,24 @@ class AbvornDaemon:
             token=self.secrets.get("GITHUB_TOKEN", ""),
             repo=self.secrets.get("GITHUB_REPO", ""),
         )
+
+        # Deploy site structure on startup
+        try:
+            from .agents.orchestrator import SiteDeployer
+            site_deployer = SiteDeployer(deployer, self.state)
+            all_niches = self.state.get_all_niches()
+            all_slugs = [n["slug"] for n in all_niches]
+            all_posts = []
+            for n in all_slugs:
+                all_posts.extend(self.state.get_posts_for_niche(n))
+            site_deployer.deploy_root_index(niches=all_niches, posts=all_posts)
+            site_deployer.deploy_homepage(niches=all_slugs, posts=all_posts)
+            for slug in all_slugs:
+                niche_posts = [p for p in all_posts if p.get("niche_slug") == slug]
+                site_deployer.deploy_category_page(slug, posts=niche_posts, all_categories=all_slugs)
+            logger.info("Site structure deployed at startup")
+        except Exception as e:
+            logger.warning(f"Site deploy at startup failed (non-fatal): {e}")
 
         self.agents = [
             ResearchAgent(self.bus, self.state, self.router, brain, will=self.will, drive=Drive("ResearchAgent", self.will.mission)),

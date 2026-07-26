@@ -130,7 +130,7 @@ class GitHubDeployer:
                 base_sha = ref.object.sha
                 base_tree = repo.get_git_tree(base_sha)
             blob = repo.create_git_blob(html_content, "utf-8")
-            repo_path = str(self.site_dir.name / output_path)
+            repo_path = (str(self.site_dir) + "/" + output_path).replace("\\", "/")
             element = InputGitTreeElement(repo_path, "100644", "blob", sha=blob.sha)
             new_tree = repo.create_git_tree([element], base_tree)
             parent = repo.get_git_commit(base_sha)
@@ -168,7 +168,7 @@ class GitHubDeployer:
                 base_tree = repo.get_git_tree(base_sha)
 
             blob = repo.create_git_blob(content, "utf-8")
-            relative_path = str(self.site_dir.name / niche_slug / "index.html")
+            relative_path = (str(self.site_dir) + "/" + niche_slug + "/index.html").replace("\\", "/")
             element = InputGitTreeElement(relative_path, "100644", "blob", sha=blob.sha)
             new_tree = repo.create_git_tree([element], base_tree)
 
