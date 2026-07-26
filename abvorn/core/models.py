@@ -87,6 +87,7 @@ class ModelRouter:
             ("groq", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile"),
             ("deepseek", secrets.get("DEEPSEEK_KEY"), "https://api.deepseek.com/v1", "deepseek-chat"),
             ("openai", secrets.get("OPENAI_KEY"), None, "gpt-4o"),
+            ("glm", secrets.get("GLM_KEYS"), "https://open.bigmodel.cn/api/paas/v4/", "glm-4-flash"),
         ]
         for name, key, url, model in configs:
             if key and "YOUR_" not in key:

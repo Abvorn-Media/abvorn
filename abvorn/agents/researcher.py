@@ -1,5 +1,5 @@
 import json, re, logging
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 logger = logging.getLogger("abvorn.researcher")
 

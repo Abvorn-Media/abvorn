@@ -14,6 +14,9 @@ build/
 .superpowers/
 LongCat-Video/
 
+# SaaS product landing pages — local only, not for public repo
+saas-products/
+
 # Sensitive company docs — not for public repo
 docs/company.md
 docs/soul.md

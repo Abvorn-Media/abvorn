@@ -173,7 +173,6 @@ class AbvornDaemon:
             for s in all_slugs:
                 all_posts.extend(self.state.get_posts_for_niche(s))
             site_dep.deploy_root_index(niches=all_niches, posts=all_posts)
-            site_dep.deploy_homepage(niches=all_slugs, posts=all_posts)
             for slug in all_slugs:
                 niche_posts = [p for p in all_posts if p.get("niche_slug") == slug]
                 site_dep.deploy_category_page(slug, posts=niche_posts, all_categories=all_slugs)
@@ -222,7 +221,6 @@ class AbvornDaemon:
             for n in all_slugs:
                 all_posts.extend(self.state.get_posts_for_niche(n))
             site_deployer.deploy_root_index(niches=all_niches, posts=all_posts)
-            site_deployer.deploy_homepage(niches=all_slugs, posts=all_posts)
             for slug in all_slugs:
                 niche_posts = [p for p in all_posts if p.get("niche_slug") == slug]
                 site_deployer.deploy_category_page(slug, posts=niche_posts, all_categories=all_slugs)

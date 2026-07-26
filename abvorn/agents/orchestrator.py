@@ -100,12 +100,22 @@ body{color:#1f2937;background:#fff;line-height:1.6}
 a{color:#2563eb;text-decoration:none}
 a:hover{text-decoration:underline}
 nav{background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:10}
-nav .inner{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:56px;gap:32px}
-nav .logo{font-weight:700;font-size:1.1rem;color:#1f2937;text-decoration:none}
+nav .inner{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:56px;justify-content:space-between}
+nav .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1.1rem;color:#1f2937;text-decoration:none}
+nav .logo img{height:28px;width:auto}
 nav .logo:hover{text-decoration:none}
-nav .nav-link{font-size:.9rem;color:#6b7280;text-decoration:none;padding:4px 0;border-bottom:2px solid transparent}
-nav .nav-link:hover{color:#1f2937;border-bottom-color:#2563eb;text-decoration:none}
-nav .nav-link.current{color:#1f2937;border-bottom-color:#2563eb}
+.nav-links{display:flex;align-items:center;gap:24px}
+.dropdown{position:relative}
+.dropdown-btn{background:none;border:none;cursor:pointer;font-size:.9rem;color:#6b7280;padding:4px 0;border-bottom:2px solid transparent;font-family:inherit;display:flex;align-items:center;gap:4px}
+.dropdown-btn:hover{color:#1f2937;border-bottom-color:#2563eb}
+.dropdown-btn::after{content:'';display:inline-block;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #6b7280;margin-left:4px}
+.dropdown-menu{display:none;position:absolute;top:100%;left:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.08);min-width:200px;padding:8px;z-index:20;max-height:400px;overflow-y:auto}
+.dropdown:hover .dropdown-menu{display:block}
+.dropdown-menu a{display:block;padding:8px 12px;font-size:.9rem;color:#374151;border-radius:4px;text-decoration:none}
+.dropdown-menu a:hover{background:#f3f4f6;color:#2563eb;text-decoration:none}
+.nav-link{font-size:.9rem;color:#6b7280;text-decoration:none;padding:4px 0;border-bottom:2px solid transparent;white-space:nowrap}
+.nav-link:hover{color:#1f2937;border-bottom-color:#2563eb;text-decoration:none}
+.nav-link.current{color:#1f2937;border-bottom-color:#2563eb}
 h1{font-size:2rem;font-weight:700;letter-spacing:-0.02em;line-height:1.2}
 h2{font-size:1.4rem;font-weight:600;margin-bottom:24px;letter-spacing:-0.01em}
 .hero{padding:64px 0 48px}
@@ -143,8 +153,43 @@ article .content ul{padding-left:24px;margin:12px 0}
 article .content li{margin:6px 0;color:#374151}
 footer{padding:40px 0;border-top:1px solid #e5e7eb;text-align:center}
 footer p{font-size:.85rem;color:#9ca3af;margin-bottom:4px}
+.social{margin-top:16px;display:flex;gap:20px;justify-content:center}
+.social a{color:#9ca3af;text-decoration:none;display:flex;align-items:center}
+.social a:hover{color:#1f2937}
+.social svg{width:22px;height:22px;fill:currentColor}
+.story-section{padding:48px 0;background:#f9fafb;border-top:1px solid #e5e7eb}
+.story-section .container{max-width:680px;margin:0 auto;padding:0 24px}
+.story-section h2{font-size:1.3rem;font-weight:600;margin-bottom:12px;text-align:center}
+.story-section p{font-size:1rem;color:#555;line-height:1.7;margin-bottom:12px}
+.story-section .trust-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin:24px 0;list-style:none}
+.story-section .trust-item{padding:16px;background:#fff;border-radius:8px;border:1px solid #e5e7eb}
+.story-section .trust-item strong{display:block;font-size:.95rem;color:#1f2937;margin-bottom:4px}
+.story-section .trust-item span{font-size:.85rem;color:#6b7280}
 @media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}}
 """
+
+SVG_TIKTOK = '<svg viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>'
+SVG_INSTAGRAM = '<svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>'
+SVG_X = '<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>'
+SOCIAL_HTML = '<div class="social"><a href="https://www.tiktok.com/@abvorn" target="_blank" aria-label="TikTok">' + SVG_TIKTOK + '</a><a href="https://www.instagram.com/abvorn/" target="_blank" aria-label="Instagram">' + SVG_INSTAGRAM + '</a><a href="https://x.com/Abvorn" target="_blank" aria-label="X">' + SVG_X + '</a></div>'
+
+STORY_HTML = """<section class="story-section">
+<div class="container">
+<h2>Why Abvorn?</h2>
+<p>Most buying advice is paid, not earned. Sponsored placements, undisclosed commissions, and recycled press releases masquerading as reviews. We started Abvorn to fix that.</p>
+<p>Every recommendation here comes from real testing, real research, and real opinions. We buy the products, we test them head-to-head, and we tell you which one to buy — no favours, no sponsorships, no compromises.</p>
+<ul class="trust-list">
+<li class="trust-item"><strong>Independent</strong><span>Zero sponsor influence. We buy what we test.</span></li>
+<li class="trust-item"><strong>Transparent</strong><span>We show our work. Every pick has a reason.</span></li>
+<li class="trust-item"><strong>Expert-led</strong><span>Specialist reviewers who know their categories.</span></li>
+<li class="trust-item"><strong>Reader-first</strong><span>We recommend what we'd buy our own family.</span></li>
+</ul>
+<p style="text-align:center;font-size:.9rem;color:#888"><em>Buy with confidence.</em></p>
+</div>
+</section>"""
+
+SITE_BASE = "/abvorn"
+FORCE_LOGO = f'<link rel="icon" type="image/png" href="{SITE_BASE}/assets/favicon.png"><link rel="apple-touch-icon" href="{SITE_BASE}/assets/logo.png">'
 
 class SiteDeployer:
     """Generates Wirecutter-style HTML pages and deploys to GitHub Pages."""
@@ -155,8 +200,14 @@ class SiteDeployer:
 
     def _nav_html(self, current: str = "", categories: list = None) -> str:
         cats = categories or []
-        links = "".join(f'<a class="nav-link{f" current" if c == current else ""}" href="/{c}/">{c.replace("-"," ").title()}</a>' for c in cats)
-        return f'<nav><div class="inner"><a class="logo" href="/">Tech & Gadgets</a>{links}</div></nav>'
+        featured = cats[:4]
+        rest = cats[4:]
+        b = SITE_BASE
+        featured_links = "".join(f'<a class="nav-link" href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in featured)
+        more_items = "".join(f'<a href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in rest)
+        dropdown = f'<div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu">{more_items}</div></div>' if rest else ""
+        links = featured_links + dropdown
+        return f'<nav><div class="inner"><a class="logo" href="{b}/"><img src="{b}/assets/logo.png" alt="Abvorn">Abvorn</a><div class="nav-links">{links}</div></div></nav>'
 
     def deploy_root_index(self, niches: list = None, posts: list = None) -> bool:
         try:
@@ -170,29 +221,32 @@ class SiteDeployer:
                     cnt = n.get("total_posts", 0)
                     if cnt:
                         count = f'<div class="cat-count">{cnt} review{"s" if cnt!=1 else ""}</div>'
-                cats += f'<a class="cat-card" href="/{slug}/"><div class="cat-name">{slug.replace("-"," ").title()}</div>{count}</a>'
+                cats += f'<a class="cat-card" href="{SITE_BASE}/{slug}/"><div class="cat-name">{slug.replace("-"," ").title()}</div>{count}</a>'
 
             recent = ""
             for p in posts[:6]:
                 title = p.get("title") or p.get("post_title", "")
                 slug = p.get("slug") or p.get("niche_slug", "")
-                recent += f'<div class="post-card"><div class="post-title"><a href="/{slug}/">{title}</a></div><div class="post-meta">{slug.replace("-"," ").title()}</div></div>'
+                recent += f'<div class="post-card"><div class="post-title"><a href="{SITE_BASE}/{slug}/">{title}</a></div><div class="post-meta">{slug.replace("-"," ").title()}</div></div>'
 
             html = f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tech & Gadgets — Expert Reviews for Smart Shoppers</title>
-<meta name="description" content="Independent, expert reviews of the best tech products. We test and compare so you can buy with confidence.">
+<title>Abvorn — Product Reviews & Buying Guides</title>
+<meta name="description" content="Independent, expert reviews across every category. We test so you can buy with confidence.">
+{FORCE_LOGO}
 <style>{CSS_SHARED}</style>
 </head><body>
-{self._nav_html("home", niches)}
+{self._nav_html("home", [n if isinstance(n,str) else n.get("slug","") for n in niches]) if niches else f'<nav><div class="inner"><a class="logo" href="{SITE_BASE}/"><img src="{SITE_BASE}/assets/logo.png" alt="Abvorn">Abvorn</a></div></nav>'}
 
 <section class="hero">
 <div class="container">
-<h1>The best tech, reviewed.</h1>
-<p>We test hundreds of products so you don't have to. Independent, honest, data-driven reviews across every category.</p>
+<h1>The best products, reviewed.</h1>
+<p>We test hundreds of products across dozens of categories so you don't have to. Independent, honest, data-driven.</p>
 </div>
 </section>
+
+{STORY_HTML}
 
 <section class="section">
 <div class="container">
@@ -208,75 +262,15 @@ class SiteDeployer:
 </div>
 </section>
 
-<div class="container"><div class="affiliate-banner">When you buy through our links, we may earn a commission. As an Amazon Associate we earn from qualifying purchases.</div></div>
+<div class="container"><div class="affiliate-banner">When you buy through our links, we may earn a commission. Our opinions are our own.</div></div>
 
-<footer><p>Tech & Gadgets is part of the Abvorn network.</p><p>Independent reviews. Honest recommendations.</p></footer>
+<footer><p>Abvorn · Independent reviews · Honest recommendations</p>{SOCIAL_HTML}</footer>
 </body></html>"""
             self.deployer.deploy_html(html, "index.html")
             logger.info("[SiteDeployer] Deployed Wirecutter-style root index")
             return True
         except Exception as e:
             logger.error(f"[SiteDeployer] Root index failed: {e}")
-            return False
-
-    def deploy_homepage(self, site_slug: str = "tech-gadgets",
-                         niches: list = None, posts: list = None) -> bool:
-        try:
-            niches = niches or []
-            posts = posts or []
-            cat_list = "".join(f'<a class="cat-card" href="/{n}/"><div class="cat-name">{n.replace("-"," ").title()}</div></a>' for n in niches)
-
-            # Build top-picks section from recent posts
-            picks = ""
-            for i, p in enumerate(posts[:3]):
-                title = p.get("title") or p.get("post_title", "")
-                slug = p.get("slug") or p.get("niche_slug", "")
-                rank_class = ["", "budget", "upgrade"][i] if i < 3 else ""
-                rank_label = ["Our pick", "Budget pick", "Upgrade pick"][i] if i < 3 else f"#{i+1}"
-                picks += f"""<div class="pick-card">
-<div class="rank {rank_class}">{i+1}</div>
-<div class="info">
-<div class="badge {rank_class}">{rank_label}</div>
-<h3>{title}</h3>
-<p>A detailed look at why this stands above the competition in our testing.</p>
-<a href="/{slug}/">Read the review →</a>
-</div></div>"""
-
-            html = f"""<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tech & Gadgets — Reviews</title>
-<meta name="description" content="Expert reviews across tech categories.">
-<style>{CSS_SHARED}</style>
-</head><body>
-{self._nav_html("", niches)}
-
-<section class="hero">
-<div class="container">
-<h1>Our latest reviews</h1>
-<p>Every product tested head-to-head. No fluff, just what you need to know.</p>
-</div>
-</section>
-
-<section class="section">
-<div class="container">
-<div class="section-title">Top Picks</div>
-{picks or '<div style="color:#9ca3af">No reviews yet — first one coming soon</div>'}
-
-<div class="section-title" style="margin-top:48px">Categories</div>
-<div class="grid-3">{cat_list or '<div style="color:#9ca3af">No categories yet</div>'}</div>
-</div>
-</section>
-
-<div class="container"><div class="affiliate-banner">When you buy through our links, we may earn a commission.</div></div>
-
-<footer><p>Tech & Gadgets · Independent reviews · Part of the Abvorn network</p></footer>
-</body></html>"""
-            self.deployer.deploy_html(html, f"{site_slug}/index.html")
-            logger.info(f"[SiteDeployer] Deployed site homepage for {site_slug}")
-            return True
-        except Exception as e:
-            logger.error(f"[SiteDeployer] Homepage failed: {e}")
             return False
 
     def deploy_category_page(self, niche: str, posts: list = None, all_categories: list = None) -> bool:
@@ -295,18 +289,22 @@ class SiteDeployer:
 <div class="badge {rank_class}">{rank_label}</div>
 <h3>{title}</h3>
 <p>In-depth testing and honest comparison. See why this made our list.</p>
-<a href="/{slug}/">Read full review →</a>
+<a href="{b}/{slug}/">Read full review →</a>
 </div></div>"""
 
-            nav_links = "".join(f'<a class="nav-link{f" current" if c == niche else ""}" href="/{c}/">{c.replace("-"," ").title()}</a>' for c in all_categories)
+            b = SITE_BASE
+            nav_links = "".join(f'<a class="nav-link" href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in all_categories[:4])
+            more_items = "".join(f'<a href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in all_categories[4:])
+            dropdown = f'<div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu">{more_items}</div></div>' if all_categories[4:] else ""
             html = f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Best {niche.replace("-"," ").title()} — Tech & Gadgets</title>
+<title>Best {niche.replace("-"," ").title()} — Abvorn</title>
 <meta name="description" content="The best {niche.replace('-',' ')} reviewed and compared. Our expert picks after hours of testing.">
+{FORCE_LOGO}
 <style>{CSS_SHARED}</style>
 </head><body>
-<nav><div class="inner"><a class="logo" href="/">Tech & Gadgets</a>{nav_links}</div></nav>
+<nav><div class="inner"><a class="logo" href="{b}/"><img src="{b}/assets/logo.png" alt="Abvorn">Abvorn</a><div class="nav-links">{nav_links}{dropdown}</div></div></nav>
 
 <section class="hero">
 <div class="container">
@@ -324,7 +322,7 @@ class SiteDeployer:
 
 <div class="container"><div class="affiliate-banner">We earn from qualifying purchases.</div></div>
 
-<footer><p>Tech & Gadgets · Independent reviews</p></footer>
+<footer><p>Abvorn · Independent reviews</p>{SOCIAL_HTML}</footer>
 </body></html>"""
             self.deployer.deploy_html(html, f"{niche}/index.html")
             logger.info(f"[SiteDeployer] Deployed category page for {niche}")
@@ -342,15 +340,19 @@ class SiteDeployer:
             meta_desc = content.get("meta_description", "")[:160]
             product_name = content.get("product_name", "")
 
-            nav_links = "".join(f'<a class="nav-link{f" current" if c == niche else ""}" href="/{c}/">{c.replace("-"," ").title()}</a>' for c in all_categories)
+            b = SITE_BASE
+            nav_links = "".join(f'<a class="nav-link" href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in all_categories[:4])
+            more_items = "".join(f'<a href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in all_categories[4:])
+            dropdown = f'<div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu">{more_items}</div></div>' if all_categories[4:] else ""
             html = f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{post_title} — Tech & Gadgets</title>
+<title>{post_title} — Abvorn</title>
 <meta name="description" content="{meta_desc}">
+{FORCE_LOGO}
 <style>{CSS_SHARED}</style>
 </head><body>
-<nav><div class="inner"><a class="logo" href="/">Tech & Gadgets</a>{nav_links}</div></nav>
+<nav><div class="inner"><a class="logo" href="{b}/"><img src="{b}/assets/logo.png" alt="Abvorn">Abvorn</a><div class="nav-links">{nav_links}{dropdown}</div></div></nav>
 
 <article>
 <h1>{post_title}</h1>
@@ -360,7 +362,7 @@ class SiteDeployer:
 <div class="affiliate-banner">We earn a commission if you buy through our links, at no extra cost to you. Our opinions are our own.</div>
 </article>
 
-<footer><p>Tech & Gadgets · Independent reviews since 2026</p></footer>
+<footer><p>Abvorn · Independent reviews since 2026</p>{SOCIAL_HTML}</footer>
 </body></html>"""
             self.deployer.deploy_html(html, f"{niche}/index.html")
             logger.info(f"[SiteDeployer] Deployed article for {niche}")
