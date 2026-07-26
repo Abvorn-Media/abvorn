@@ -34,6 +34,7 @@ class TelegramNotifier:
         "/deploy [niche]": "Trigger a deploy for a specific niche",
         "/sites": "List all sites and their niches",
         "/site <slug>": "Show site details",
+        "/errors": "Show error report from bug detector",
         "/help": "Show this help message",
     }
 
@@ -237,7 +238,13 @@ class TelegramNotifier:
                     return "\n".join(lines)
             return f"• Site '{arg}' not found"
 
-        return f"⚠ Unknown command: {base_cmd}\nUse /help to see available commands."
+        if base_cmd == "/errors":
+            reporter = getattr(self, '_error_reporter', None)
+            if reporter:
+                return reporter.format_report()
+            return "\U0001f6a8 <b>Error Reporter</b>\nNot available"
+
+        return f"\u26a0 Unknown command: {base_cmd}\nUse /help to see available commands."
 
     def check_commands(self, bot_token: str = None, chat_id: str = None,
                        supervisor=None, health=None, scheduler=None,

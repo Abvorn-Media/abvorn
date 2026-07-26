@@ -11,6 +11,7 @@ from .core.models import ModelRouter, ModelCostTracker
 from .core.secrets import load_secrets
 from .core.bus import AgentBus
 from .sites.registry import SiteRegistry
+from .monitor.error_reporter import ErrorReporter, DaemonGuard
 from .content.pipeline import ContentPipeline
 from .agents.orchestrator import ResearchAgent, ContentAgent, DeployAgent
 from .agents.supervisor import SupervisorAgent
@@ -70,6 +71,9 @@ class AbvornDaemon:
         self.notifier._trend_scanner = self.trend_scanner
         self.site_registry = SiteRegistry(self.state)
         self.notifier._site_registry = self.site_registry
+        self.error_reporter = ErrorReporter(self.state, notifier=self.notifier)
+        self.daemon_guard = DaemonGuard(self.error_reporter)
+        self.notifier._error_reporter = self.error_reporter
 
     def is_paused(self) -> bool:
         """Check if the kill switch is engaged."""
