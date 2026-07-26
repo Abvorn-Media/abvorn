@@ -105,6 +105,14 @@ ModelRouter with task routing, cost tracker per call, retry logic, ban fallback 
 **Module:** `abvorn/core/models.py`
 **Tests:** 10
 
+### 15. Autonomous Affiliate Network
+Multiple sites, one brain. Each niche gets its own branded destination — per-site identity (name, colors, logo), audience-driven design DNA (TECH/WARM/PREMIUM profiles), contextual sister-site cross-links, site-filtered analytics, and per-site Telegram commands. Root directory lists all sites.
+
+**Module:** `abvorn/sites/`, `abvorn/deploy/site_deployer.py`, `abvorn/deploy/crosslinker.py`, `abvorn/deploy/dashboard.py`
+**Classes:** `Site`, `BrandConfig`, `DNAProfile`, `SiteRegistry`, `BrandEngine`, `SiteAwareDeployer`, `CrossLinker`, `NetworkDashboard`, `BootstrapMigration`
+**Tests:** 48
+**Moat:** A portfolio that compounds collectively.
+
 ---
 
 ## Tier 1 — Active Build
@@ -132,14 +140,14 @@ SignalSnapshotter + VelocityTracker + ScoreBooster boost TrendScanner scores by 
 **Tests:** 6
 **Moat:** Not chasing waves. Surfing them before they form.
 
-### Autonomous Affiliate Network
-Multiple sites, one brain. Each niche gets its own branded destination — per-site identity (name, colors, logo), audience-driven design DNA (TECH/WARM/PREMIUM profiles), contextual sister-site cross-links, site-filtered analytics, and per-site Telegram commands. Root directory lists all sites.
+### Real-Time Persuasion Layer
+Embedded on every blog post: a context-aware assistant that recommends products. Knows article, persona, and buying stage.
 
-**Module:** `abvorn/sites/`, `abvorn/deploy/site_deployer.py`, `abvorn/deploy/crosslinker.py`, `abvorn/deploy/dashboard.py`
-**Classes:** `Site`, `BrandConfig`, `DNAProfile`, `SiteRegistry`, `BrandEngine`, `SiteAwareDeployer`, `CrossLinker`, `NetworkDashboard`, `BootstrapMigration`
-**Tests:** 44
-**Status:** Building (active, 11/12 tasks complete)
-**Moat:** A portfolio that compounds collectively.
+**Module:** `abvorn/persuasion/`
+**Classes:** `ContextParser`, `ProductMatcher`, `PersuasionWidget`, `BuyingStageDetector`
+**Tests:** (pending)
+**Status:** Building (design phase)
+**Moat:** Converts traffic competitors can't.
 
 ---
 
@@ -157,10 +165,6 @@ Full pipeline in every major language. Per-language personas, SEO, platform depl
 ### Multi-Modal Content Factory
 Beyond text: comparison images, video scripts, audio narration, infographics, social clips. One cycle → full media suite.
 **Moat:** Full content studio, autonomous, per post.
-
-### Real-Time Persuasion Layer
-Embedded on every blog post: a context-aware assistant that recommends products. Knows article, persona, and buying stage.
-**Moat:** Converts traffic competitors can't.
 
 ### Continuous Strategy Engine
 Daemon monitors roadmap, competitors, market shifts. Proposes new advancement directions.
