@@ -1,74 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tech & Gadgets — Expert Reviews for Smart Shoppers</title>
-<meta name="description" content="In-depth reviews, buying guides, and comparisons for the latest tech gadgets. Make smarter purchase decisions.">
-<meta property="og:site_name" content="Tech & Gadgets">
-<link rel="canonical" href="https://Abvorn-Media.github.io/abvorn/">
+<meta name="description" content="Independent, expert reviews of the best tech products. We test and compare so you can buy with confidence.">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --primary: #1a73e8; --secondary: #34a853; --bg: #ffffff; --surface: #f8fafc; --border: #e2e8f0; --text: #0a2540; --text-secondary: #475569; --font-sans: 'Inter', -apple-system, sans-serif; }
-html { font-size: 16px; -webkit-font-smoothing: antialiased; }
-body { font-family: var(--font-sans); color: var(--text); background: var(--bg); line-height: 1.6; }
-.container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
-h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
-h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 24px; }
-p { color: var(--text-secondary); }
-a { color: var(--primary); text-decoration: none; }
-.hero { padding: 80px 0 60px; text-align: center; background: linear-gradient(180deg, var(--surface) 0%, #fff 100%); }
-.hero h1 { margin-bottom: 16px; }
-.hero p { font-size: 1.15rem; max-width: 500px; margin: 0 auto 0; }
-.section { padding: 60px 0; }
-.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
-.card { padding: 32px; border: 1px solid var(--border); border-radius: 12px; transition: box-shadow .2s; }
-.card:hover { box-shadow: 0 4px 24px rgba(0,0,0,.06); }
-.card h3 { font-size: 1.1rem; margin-bottom: 8px; }
-.card p { font-size: .9rem; margin-bottom: 16px; }
-.card .tag { display: inline-block; background: var(--surface); border: 1px solid var(--border); padding: 4px 12px; border-radius: 100px; font-size: .8rem; color: var(--text-secondary); }
-footer { padding: 40px 0; border-top: 1px solid var(--border); text-align: center; }
-footer p { font-size: .875rem; color: #94a3b8; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+body{color:#1f2937;background:#fff;line-height:1.6}
+.container{max-width:1080px;margin:0 auto;padding:0 24px}
+a{color:#2563eb;text-decoration:none}
+a:hover{text-decoration:underline}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:10}
+nav .inner{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:56px;gap:32px}
+nav .logo{font-weight:700;font-size:1.1rem;color:#1f2937;text-decoration:none}
+nav .logo:hover{text-decoration:none}
+nav .nav-link{font-size:.9rem;color:#6b7280;text-decoration:none;padding:4px 0;border-bottom:2px solid transparent}
+nav .nav-link:hover{color:#1f2937;border-bottom-color:#2563eb;text-decoration:none}
+nav .nav-link.current{color:#1f2937;border-bottom-color:#2563eb}
+h1{font-size:2rem;font-weight:700;letter-spacing:-0.02em;line-height:1.2}
+h2{font-size:1.4rem;font-weight:600;margin-bottom:24px;letter-spacing:-0.01em}
+.hero{padding:64px 0 48px}
+.hero h1{margin-bottom:12px}
+.hero p{font-size:1.1rem;color:#6b7280;max-width:600px}
+.pick-card{display:flex;gap:32px;padding:32px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:24px;align-items:flex-start}
+.pick-card .rank{flex-shrink:0;width:48px;height:48px;background:#2563eb;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem}
+.pick-card .rank.budget{background:#059669}
+.pick-card .rank.upgrade{background:#7c3aed}
+.pick-card .info{flex:1}
+.pick-card .info h3{font-size:1.2rem;font-weight:600;margin-bottom:4px}
+.pick-card .info .price{color:#059669;font-weight:600;font-size:.95rem;margin-bottom:8px}
+.pick-card .info p{font-size:.95rem;color:#6b7280;margin-bottom:12px}
+.pick-card .info .badge{display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:.75rem;font-weight:600;padding:2px 10px;border-radius:100px;margin-right:8px}
+.pick-card .info .badge.budget{background:#d1fae5;color:#065f46}
+.pick-card .info .badge.upgrade{background:#ede9fe;color:#5b21b6}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
+.cat-card{padding:24px;border:1px solid #e5e7eb;border-radius:8px;transition:box-shadow .2s,transform .15s}
+.cat-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06);transform:translateY(-2px);text-decoration:none}
+.cat-card .cat-name{font-weight:600;font-size:1.05rem;color:#1f2937;margin-bottom:4px}
+.cat-card .cat-count{font-size:.85rem;color:#9ca3af}
+.post-card{padding:20px;border:1px solid #e5e7eb;border-radius:8px;transition:box-shadow .2s}
+.post-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.post-card .post-title{font-weight:600;margin-bottom:4px;color:#1f2937}
+.post-card .post-meta{font-size:.85rem;color:#9ca3af}
+.section{padding:48px 0}
+.section-title{font-size:1.1rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:24px}
+.affiliate-banner{background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:16px 20px;font-size:.85rem;color:#92400e;margin:32px 0;text-align:center}
+article{max-width:720px;margin:0 auto;padding:32px 0}
+article h1{font-size:1.8rem;margin-bottom:8px}
+article .meta{color:#6b7280;font-size:.9rem;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid #e5e7eb}
+article .content p{margin:16px 0;font-size:1.05rem;color:#374151}
+article .content h2{margin:32px 0 12px;font-size:1.25rem}
+article .content ul{padding-left:24px;margin:12px 0}
+article .content li{margin:6px 0;color:#374151}
+footer{padding:40px 0;border-top:1px solid #e5e7eb;text-align:center}
+footer p{font-size:.85rem;color:#9ca3af;margin-bottom:4px}
+@media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}}
 </style>
-</head>
-<body>
+</head><body>
+<nav><div class="inner"><a class="logo" href="/">Tech & Gadgets</a></div></nav>
+
 <section class="hero">
 <div class="container">
-  <h1>Tech &amp; Gadgets</h1>
-  <p>Expert reviews, honest comparisons, and buying guides for today's smartest tech. No fluff, just what you need to know before you buy.</p>
+<h1>The best tech, reviewed.</h1>
+<p>We test hundreds of products so you don't have to. Independent, honest, data-driven reviews across every category.</p>
 </div>
 </section>
+
 <section class="section">
 <div class="container">
-  <h2>Latest Reviews</h2>
-  <div class="card-grid">
-    <div class="card">
-      <h3>Best Wireless Headphones</h3>
-      <p>We tested 15 pairs across every price bracket. Here are the ones worth your money in 2026.</p>
-      <span class="tag">Audio</span>
-    </div>
-    <div class="card">
-      <h3>Top Gaming Mice 2026</h3>
-      <p>From budget to pro: sensor accuracy, build quality, and real-world latency tested.</p>
-      <span class="tag">Gaming</span>
-    </div>
-    <div class="card">
-      <h3>4K Monitor Buying Guide</h3>
-      <p>OLED, IPS, Mini-LED — which panel is right for your setup? We break down the tradeoffs.</p>
-      <span class="tag">Displays</span>
-    </div>
-    <div class="card">
-      <h3>Laptop Comparison: Ultrabooks</h3>
-      <p>Battery life, performance, portability — the top 8 ultrabooks compared head-to-head.</p>
-      <span class="tag">Laptops</span>
-    </div>
-  </div>
+<div class="section-title">All Categories</div>
+<div class="grid-3"><div style="color:#9ca3af">Categories coming soon</div></div>
 </div>
 </section>
-<footer>
+
+<section class="section">
 <div class="container">
-  <p>Tech &amp; Gadgets is a publication of Abvorn Media. &copy; 2026. As an Amazon Associate we earn from qualifying purchases.</p>
+<div class="section-title">Latest Reviews</div>
+<div class="grid-3"><div style="color:#9ca3af">Reviews coming soon</div></div>
 </div>
-</footer>
-</body>
-</html>
+</section>
+
+<div class="container"><div class="affiliate-banner">When you buy through our links, we may earn a commission. As an Amazon Associate we earn from qualifying purchases.</div></div>
+
+<footer><p>Tech & Gadgets is part of the Abvorn network.</p><p>Independent reviews. Honest recommendations.</p></footer>
+</body></html>
