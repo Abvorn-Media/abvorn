@@ -100,6 +100,33 @@ class GitHubDeployer:
         logger.info(f"Prepared: {index_file}")
         return [str(index_file)]
 
+    def deploy_html(self, html_content: str, output_path: str) -> dict:
+        """Push a raw HTML string to a specific path in the repo."""
+        from github import Github, InputGitTreeElement
+        try:
+            g = Github(self.token)
+            repo = g.get_repo(self.repo)
+            try:
+                ref = repo.get_git_ref(f"heads/{self.branch}")
+                base_sha = ref.object.sha
+                base_tree = repo.get_git_tree(base_sha)
+            except Exception:
+                ref = repo.get_git_ref("heads/main")
+                base_sha = ref.object.sha
+                base_tree = repo.get_git_tree(base_sha)
+            blob = repo.create_git_blob(html_content, "utf-8")
+            repo_path = str(self.site_dir.name / output_path)
+            element = InputGitTreeElement(repo_path, "100644", "blob", sha=blob.sha)
+            new_tree = repo.create_git_tree([element], base_tree)
+            parent = repo.get_git_commit(base_sha)
+            commit = repo.create_git_commit(f"deploy: {output_path}", new_tree, [parent])
+            ref.edit(commit.sha)
+            logger.info(f"Deployed: {output_path}")
+            return {"status": "success", "commit": commit.sha}
+        except Exception as e:
+            logger.error(f"deploy_html failed for {output_path}: {e}")
+            return {"status": "error", "message": str(e)}
+
     def deploy(self, niche_slug: str) -> dict:
         """Push generated files to GitHub using PyGithub."""
         from github import Github

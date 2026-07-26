@@ -19,6 +19,7 @@ def main():
         print("  resume         Resume the autonomous system")
         print("  status         Show system status and kill switch state")
         print("  health         Run health check and report stats")
+        print("  migrate        Bootstrap initial site from existing content")
         sys.exit(1)
 
     cmd = sys.argv[1]
@@ -95,11 +96,25 @@ def main():
         stats = monitor.get_stats()
         d = AbvornDaemon()
         opps = d.state.get_opportunities("pending")
-        print(f"Health: {'OK ✅' if status['healthy'] else 'ISSUES ❌'}")
+        print(f"Health: {'OK \u2705' if status['healthy'] else 'ISSUES \u274c'}")
         print(f"  Cycles: {stats.get('total_cycles', 0)}")
         print(f"  Success rate: {stats.get('success_rate', 0):.0%}")
         print(f"  Avg duration: {stats.get('avg_duration_s', 0):.0f}s")
         print(f"  Pending ops: {len(opps)}")
+
+    elif cmd == "migrate":
+        from .deploy.github import GitHubDeployer
+        from .core.secrets import load_secrets
+        from .sites.migration import BootstrapMigration
+        secrets = load_secrets()
+        deployer = GitHubDeployer(
+            token=secrets.get("GITHUB_TOKEN", ""),
+            repo=secrets.get("GITHUB_REPO", ""),
+        )
+        migration = BootstrapMigration(d.state, deployer)
+        results = migration.run()
+        for r in results:
+            print(f"  {r}")
 
     else:
         print(f"Unknown command: {cmd}")
