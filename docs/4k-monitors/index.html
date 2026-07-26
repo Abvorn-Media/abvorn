@@ -12,8 +12,20 @@ a{color:#2563eb;text-decoration:none}
 a:hover{text-decoration:underline}
 nav{background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:10}
 nav .inner{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:56px;gap:32px}
-nav .logo{font-weight:700;font-size:1.1rem;color:#1f2937;text-decoration:none;display:flex;align-items:center;gap:6px}
-nav .logo .tag{font-size:.65rem;color:#9ca3af;font-weight:400;background:#f3f4f6;padding:2px 8px;border-radius:4px}
+nav .logo{font-weight:700;font-size:1.1rem;color:#1f2937;text-decoration:none}
+nav .inner{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:56px;gap:0}
+nav .left{display:flex;align-items:center;gap:24px}
+nav .right{margin-left:auto}
+.dropdown{position:relative}
+.dropdown-btn{background:none;border:none;cursor:pointer;font-size:.9rem;color:#6b7280;padding:4px 0;border-bottom:2px solid transparent;font-family:inherit;display:flex;align-items:center;gap:4px}
+.dropdown-btn:hover{color:#1f2937;border-bottom-color:#2563eb}
+.dropdown-btn::after{content:'';display:inline-block;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #6b7280;margin-left:4px}
+.dropdown-menu{display:none;position:absolute;top:100%;left:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.08);min-width:200px;padding:8px;z-index:20;max-height:400px;overflow-y:auto}
+.dropdown:hover .dropdown-menu{display:block}
+.dropdown-menu a{display:block;padding:8px 12px;font-size:.9rem;color:#374151;border-radius:4px;text-decoration:none}
+.dropdown-menu a:hover{background:#f3f4f6;color:#2563eb;text-decoration:none}
+.nav-link{font-size:.9rem;color:#6b7280;text-decoration:none;padding:4px 0;border-bottom:2px solid transparent}
+.nav-link:hover{color:#1f2937;border-bottom-color:#2563eb;text-decoration:none}
 nav .logo:hover{text-decoration:none}
 nav .nav-link{font-size:.9rem;color:#6b7280;text-decoration:none;padding:4px 0;border-bottom:2px solid transparent}
 nav .nav-link:hover{color:#1f2937;border-bottom-color:#2563eb;text-decoration:none}
@@ -58,7 +70,7 @@ footer p{font-size:.85rem;color:#9ca3af;margin-bottom:4px}
 @media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}}
 </style>
 </head><body>
-<nav><div class="inner"><a class="logo" href="/">Abvorn</a><a class="nav-link" href="/wireless-headphones/">Wireless Headphones</a><a class="nav-link" href="/gaming-mice/">Gaming Mice</a><a class="nav-link current" href="/4k-monitors/">4K Monitors</a><a class="nav-link" href="/laptops/">Laptops</a><a class="nav-link" href="/streaming-devices/">Streaming Devices</a><a class="nav-link" href="/mechanical-keyboards/">Mechanical Keyboards</a><a class="nav-link" href="/wireless-earbuds/">Wireless Earbuds</a><a class="nav-link" href="/fitness-trackers/">Fitness Trackers</a><a class="nav-link" href="/webcams/">Webcams</a><a class="nav-link" href="/smart-home/">Smart Home</a></div></nav>
+<nav><div class="inner"><div class="left"><a class="logo" href="/">Abvorn</a><a class="nav-link" href="/wireless-headphones/">Wireless Headphones</a><a class="nav-link" href="/gaming-mice/">Gaming Mice</a><a class="nav-link" href="/4k-monitors/">4K Monitors</a><a class="nav-link" href="/laptops/">Laptops</a></div><div class="right"><div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu"><a href="/streaming-devices/">Streaming Devices</a><a href="/mechanical-keyboards/">Mechanical Keyboards</a><a href="/wireless-earbuds/">Wireless Earbuds</a><a href="/fitness-trackers/">Fitness Trackers</a><a href="/webcams/">Webcams</a><a href="/smart-home/">Smart Home</a></div></div></div></div></nav>
 
 <section class="hero">
 <div class="container">
