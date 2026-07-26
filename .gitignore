@@ -12,3 +12,12 @@ Thumbs.db
 dist/
 build/
 .superpowers/
+LongCat-Video/
+
+# Sensitive company docs — not for public repo
+docs/company.md
+docs/soul.md
+docs/SETUP.md
+docs/plans/
+docs/specs/
+docs/superpowers/
