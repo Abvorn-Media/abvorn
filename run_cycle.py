@@ -81,12 +81,14 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
 </div>
 </div>"""
 
-LEAD_FORM_HTML = """
+def lead_form_html(form_url=""):
+    url = form_url or "#"
+    return f"""
 <section class="lead-capture">
 <div class="container">
 <h2>Get our free buying guides</h2>
 <p>Get expert buying advice and exclusive deals delivered to your inbox.</p>
-<form action="{form_url}" method="POST" target="_blank">
+<form action="{url}" method="POST" target="_blank">
 <input type="email" name="email" placeholder="your@email.com" required>
 <input type="hidden" name="source" value="abvorn-hq">
 <button type="submit">Subscribe →</button>
@@ -280,7 +282,7 @@ def nav_html(categories, current=""):
     return f'<nav><div class="inner"><a class="logo" href="{b}/"><img src="{b}/assets/logo.png" alt="Abvorn">Abvorn</a><div class="nav-links">{featured_links}{dd}</div></div></nav>'
 
 
-def build_root_index(state, posts):
+def build_root_index(state, posts, form_url=""):
     niches = state["niches"]
     all_slugs = [n["slug"] for n in niches]
     b = SITE_BASE
@@ -315,7 +317,7 @@ def build_root_index(state, posts):
 <div class="grid-3">{recent or '<div style="color:#9ca3af">Reviews coming soon</div>'}</div>
 </div></section>
 <div class="container"><div class="affiliate-banner">When you buy through our links, we may earn a commission. Our opinions are our own.</div></div>
-{LEAD_FORM_HTML}
+{lead_form_html(form_url)}
 <footer><p>Abvorn · Independent reviews · Honest recommendations</p>{SOCIAL_HTML}</footer>
 </body></html>"""
 
@@ -361,7 +363,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 </body></html>"""
 
 
-def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag=""):
+def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url=""):
     b = SITE_BASE
     t = amazon_tag or "viraltestco-20"
     product_cards = ""
@@ -390,7 +392,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 </article>
 {product_cards}
 <div class="container">{cta}</div>
-{LEAD_FORM_HTML}
+{lead_form_html(form_url)}
 <div class="container"><div class="affiliate-banner">We earn a commission if you buy through our links, at no extra cost to you. Our opinions are our own.</div></div>
 <footer><p>Abvorn · Independent reviews since 2026</p>{SOCIAL_HTML}</footer>
 </body></html>"""
@@ -493,7 +495,7 @@ Return ONLY the HTML."""
 
 
 # ─── Document writer ────────────────────────────────────────────────────
-def write_files(niche_slug, articles, state, pexels_key="", amazon_tag=""):
+def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_url=""):
     """Write all HTML files to docs/ directory."""
     all_slugs = [n["slug"] for n in state["niches"]]
     niche_name = next((n["name"] for n in state["niches"] if n["slug"] == niche_slug), niche_slug.replace("-", " ").title())
@@ -508,7 +510,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag=""):
     docs.mkdir(exist_ok=True)
 
     # Write root index
-    (docs / "index.html").write_text(build_root_index(state, all_posts), encoding="utf-8")
+    (docs / "index.html").write_text(build_root_index(state, all_posts, form_url), encoding="utf-8")
     print(f"  Written: docs/index.html")
 
     # Write category pages (post slugs point to reviews/{slug} for article pages)
@@ -526,7 +528,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag=""):
             (post_dir / "index.html").write_text(
                 build_article_page(slug, niche_name, a["post_title"], a["article_html"],
                                    a["intro"], a["product_name"], a["meta_description"],
-                                   all_slugs, a.get("products"), pexels_key, amazon_tag),
+                                   all_slugs, a.get("products"), pexels_key, amazon_tag, form_url),
                 encoding="utf-8"
             )
             print(f"  Written: docs/reviews/{slug}/index.html (article)")
@@ -594,7 +596,8 @@ def main(forced_niche=None, force=False):
     articles = {niche_slug: [draft]}
     write_files(niche_slug, articles, state,
                 pexels_key=secrets.get("PEXELS_KEY", ""),
-                amazon_tag=secrets.get("AMAZON_TAG", "viraltestco-20"))
+                amazon_tag=secrets.get("AMAZON_TAG", "viraltestco-20"),
+                form_url=secrets.get("APPS_SCRIPT_URL", ""))
 
     # 5. UPDATE STATE
     niche["posts"] += 1
