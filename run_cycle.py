@@ -196,7 +196,9 @@ def build_root_index(state, posts):
     for p in posts[:6]:
         title = p.get("title", "")
         slug = p.get("slug", "")
-        recent += f'<div class="post-card"><div class="post-title"><a href="{b}/{slug}/">{title}</a></div><div class="post-meta">{slug.replace("-"," ").title()}</div></div>'
+        # Map niche slug to reviews path for article pages
+        link_slug = f"reviews/{slug}" if "/" not in slug else slug
+        recent += f'<div class="post-card"><div class="post-title"><a href="{b}/{link_slug}/">{title}</a></div><div class="post-meta">{slug.replace("-"," ").title()}</div></div>'
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -229,6 +231,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs):
     post_rows = ""
     for i, p in enumerate(posts[:5]):
         title = p.get("title", "")
+        review_slug = p.get("slug", f"reviews/{niche_slug}")
         rank_labels = ["Our pick", "Budget pick", "Upgrade pick", "Also great", "Also great"]
         rank_classes = ["", "budget", "upgrade", "", ""]
         ri = i if i < 5 else 4
@@ -238,7 +241,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs):
 <div class="badge {rank_classes[ri]}">{rank_labels[ri]}</div>
 <h3>{title}</h3>
 <p>In-depth testing and honest comparison. See why this made our list.</p>
-<a href="{b}/{niche_slug}/">Read full review →</a>
+<a href="{b}/{review_slug}/">Read full review →</a>
 </div></div>"""
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -398,24 +401,28 @@ def write_files(niche_slug, articles, state):
     (docs / "index.html").write_text(build_root_index(state, all_posts), encoding="utf-8")
     print(f"  Written: docs/index.html")
 
-    # Write category pages
+    # Write category pages (post slugs point to reviews/{slug} for article pages)
     for n in state["niches"]:
-        niche_posts = [{"title": a.get("post_title", ""), "slug": n["slug"]} for a in articles.get(n["slug"], [])]
+        niche_posts = [{"title": a.get("post_title", ""), "slug": f"reviews/{n['slug']}"} for a in articles.get(n["slug"], [])]
         cat_dir = docs / n["slug"]
         cat_dir.mkdir(exist_ok=True)
         (cat_dir / "index.html").write_text(build_category_page(n["slug"], n["name"], niche_posts, all_slugs), encoding="utf-8")
 
-    # Write article pages
+    # Write article pages (under docs/reviews/{slug}/ to avoid overwriting category page)
     for slug, post_list in articles.items():
-        for a in post_list:
-            post_dir = docs / slug
-            post_dir.mkdir(exist_ok=True)
+        for i, a in enumerate(post_list):
+            post_dir = docs / "reviews" / slug
+            post_dir.mkdir(parents=True, exist_ok=True)
             (post_dir / "index.html").write_text(
                 build_article_page(slug, niche_name, a["post_title"], a["article_html"],
                                    a["intro"], a["product_name"], a["meta_description"], all_slugs),
                 encoding="utf-8"
             )
-            print(f"  Written: docs/{slug}/index.html (article)")
+            print(f"  Written: docs/reviews/{slug}/index.html (article)")
+            # Update the post slug in all_posts for root index links
+            for p in all_posts:
+                if p.get("title") == a.get("post_title") and p.get("slug") == slug:
+                    p["slug"] = f"reviews/{slug}"
 
 
 # ─── Main ────────────────────────────────────────────────────────────────
