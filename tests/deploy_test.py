@@ -46,6 +46,35 @@ def test_render_without_brand_uses_abvorn_defaults():
         assert "Abvorn" in html
 
 
+"""Tests for SiteAwareDeployer."""
+from unittest.mock import MagicMock, patch
+from abvorn.deploy.site_deployer import SiteAwareDeployer
+from abvorn.sites.model import Site
+
+
+def test_site_aware_deployer_looks_up_site():
+    state = MagicMock()
+    state.get_meta.return_value = (
+        '[{"site_id":"s1","slug":"tech-gadgets","name":"Tech & Gadgets",'
+        '"tagline":"","logo_text":"TG","logo_icon":"T","primary_color":"#000",'
+        '"secondary_color":"#fff","voice_rules":{},"niches":["tv"],'
+        '"domain":"","status":"active","created_at":""}]'
+    )
+    inner = MagicMock()
+    inner.render_page.return_value = "<html></html>"
+    deployer = SiteAwareDeployer(inner, state)
+    deployer.deploy_niche("tv", {"title":"Test","content":"<p>Test</p>"})
+    assert inner.render_page.called
+
+def test_site_aware_deployer_no_site_found():
+    state = MagicMock()
+    state.get_meta.return_value = "[]"
+    inner = MagicMock()
+    deployer = SiteAwareDeployer(inner, state)
+    result = deployer.deploy_niche("unknown", {"title":"Test","content":"<p>Test</p>"})
+    assert result is False
+
+
 def test_render_with_brand_has_dna_class():
     from pathlib import Path
     import tempfile
