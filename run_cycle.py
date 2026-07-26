@@ -3,7 +3,7 @@
 Reads secrets from env vars (GITHUB_ prefixed) or falls back to secrets.json.
 Picks the niche with fewest posts, generates content, writes to docs/, updates state.
 """
-import os, sys, json, logging, re, html as html_mod
+import os, sys, json, logging, re, html as html_mod, requests as http_requests
 from pathlib import Path
 from datetime import datetime
 
@@ -20,6 +20,9 @@ def get_secrets():
         "GLM_KEYS": os.environ.get("GLM_KEYS", ""),
         "GITHUB_TOKEN": os.environ.get("GITHUB_TOKEN", ""),
         "GITHUB_REPO": os.environ.get("GITHUB_REPO", "Abvorn-Media/abvorn"),
+        "PEXELS_KEY": os.environ.get("PEXELS_KEY", ""),
+        "AMAZON_TAG": os.environ.get("AMAZON_TAG", "viraltestco-20"),
+        "APPS_SCRIPT_URL": os.environ.get("APPS_SCRIPT_URL", ""),
     }
     # If any key is missing, try local secrets.json
     if not any(v for v in keys.values()):
@@ -30,6 +33,74 @@ def get_secrets():
             pass
     return keys
 
+
+# ─── Image & affiliate helpers ──────────────────────────────────────────
+
+def fetch_product_image(query, pexels_key):
+    """Search Pexels for a product image, return URL."""
+    if not pexels_key:
+        return ""
+    try:
+        r = http_requests.get(f"https://api.pexels.com/v1/search?query={query}&per_page=3",
+            headers={"Authorization": pexels_key}, timeout=10)
+        if r.status_code == 200:
+            photos = r.json().get("photos", [])
+            if photos:
+                return photos[0]["src"]["medium"]
+    except Exception:
+        pass
+    return ""
+
+def amazon_link(query, tag=""):
+    """Generate Amazon affiliate search link."""
+    q = query.replace(" ", "+")
+    t = tag or "viraltestco-20"
+    return f"https://www.amazon.com/s?k={q}&tag={t}"
+
+def product_card_html(product, pexels_key="", amazon_tag=""):
+    """HTML for a product card with image + affiliate buy button."""
+    name = product.get("name", "Product")
+    price = product.get("price", "Check price")
+    features = product.get("features", [])
+    summary = product.get("description", "")
+    aff_query = product.get("affiliate_query", name.replace(" ", "+"))
+    aff_url = amazon_link(aff_query, amazon_tag)
+    img = ""
+    if pexels_key:
+        img = fetch_product_image(name, pexels_key)
+    img_tag = f'<img src="{img}" alt="{name}" loading="lazy">' if img else ""
+    features_html = "".join(f"<li>{f}</li>" for f in features[:4])
+    return f"""<div class="product-card">
+{img_tag}
+<div class="product-card-body">
+<h3>{name}</h3>
+<div class="price">{price}</div>
+<p>{summary}</p>
+{"<ul>" + features_html + "</ul>" if features_html else ""}
+<a class="buy-btn" href="{aff_url}" target="_blank" rel="sponsored">Check Price on Amazon →</a>
+</div>
+</div>"""
+
+LEAD_FORM_HTML = """
+<section class="lead-capture">
+<div class="container">
+<h2>Get our free buying guides</h2>
+<p>Get expert buying advice and exclusive deals delivered to your inbox.</p>
+<form action="{form_url}" method="POST" target="_blank">
+<input type="email" name="email" placeholder="your@email.com" required>
+<input type="hidden" name="source" value="abvorn-hq">
+<button type="submit">Subscribe →</button>
+</form>
+<p style="font-size:.8rem;margin-top:12px;opacity:.7">No spam. Unsubscribe anytime.</p>
+</div>
+</section>"""
+
+CTA_BANNER = """
+<div class="cta-banner">
+<h3>Ready to buy?</h3>
+<p>We've done the research. Now get the best price on Amazon.</p>
+<a class="buy-btn" href="https://www.amazon.com/s?k={query}&tag={tag}" target="_blank" rel="sponsored">Shop all picks on Amazon →</a>
+</div>"""
 
 # ─── State management ───────────────────────────────────────────────────
 STATE_FILE = Path("cycle_state.json")
@@ -154,7 +225,29 @@ footer p{font-size:.85rem;color:#9ca3af;margin-bottom:4px}
 .story-section .trust-item{padding:16px;background:#fff;border-radius:8px;border:1px solid #e5e7eb}
 .story-section .trust-item strong{display:block;font-size:.95rem;color:#1f2937;margin-bottom:4px}
 .story-section .trust-item span{font-size:.85rem;color:#6b7280}
-@media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}}
+.product-card{display:flex;gap:24px;padding:24px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:20px;align-items:flex-start}
+.product-card img{width:160px;height:160px;object-fit:cover;border-radius:8px;flex-shrink:0}
+.product-card-body{flex:1}
+.product-card-body h3{font-size:1.15rem;font-weight:600;margin-bottom:4px}
+.product-card-body .price{color:#059669;font-weight:600;font-size:.95rem;margin-bottom:8px}
+.product-card-body p{font-size:.95rem;color:#6b7280;margin-bottom:8px}
+.product-card-body ul{padding-left:20px;margin:8px 0;font-size:.9rem;color:#555}
+.product-card-body li{margin:4px 0}
+.buy-btn{display:inline-block;padding:10px 24px;background:#ff9900;color:#1f2937;border-radius:8px;font-weight:600;font-size:.95rem;margin-top:8px;text-decoration:none}
+.buy-btn:hover{background:#e88e00;text-decoration:none}
+.lead-capture{background:#1f2937;color:#fff;padding:48px 24px;text-align:center}
+.lead-capture h2{font-size:1.4rem;margin-bottom:8px;color:#fff}
+.lead-capture p{font-size:1rem;margin-bottom:20px;opacity:.9;color:#fff}
+.lead-capture form{display:flex;gap:12px;max-width:480px;margin:0 auto;flex-wrap:wrap;justify-content:center}
+.lead-capture input{padding:12px 16px;border-radius:8px;border:none;font-size:1rem;flex:1;min-width:220px}
+.lead-capture button{padding:12px 28px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer}
+.lead-capture button:hover{background:#1d4ed8}
+.cta-banner{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;padding:32px 24px;border-radius:12px;text-align:center;margin:32px 0}
+.cta-banner h3{font-size:1.2rem;margin-bottom:8px;color:#fff}
+.cta-banner p{font-size:.95rem;margin-bottom:16px;opacity:.9;color:#fff}
+.cta-banner .buy-btn{background:#fff;color:#1f2937}
+.cta-banner .buy-btn:hover{background:#f3f4f6}
+@media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}.product-card{flex-direction:column}.product-card img{width:100%;height:auto}}
 """
 
 SVG_TIKTOK = '<svg viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>'
@@ -222,12 +315,14 @@ def build_root_index(state, posts):
 <div class="grid-3">{recent or '<div style="color:#9ca3af">Reviews coming soon</div>'}</div>
 </div></section>
 <div class="container"><div class="affiliate-banner">When you buy through our links, we may earn a commission. Our opinions are our own.</div></div>
+{LEAD_FORM_HTML}
 <footer><p>Abvorn · Independent reviews · Honest recommendations</p>{SOCIAL_HTML}</footer>
 </body></html>"""
 
 
-def build_category_page(niche_slug, niche_name, posts, all_slugs):
+def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=""):
     b = SITE_BASE
+    t = affiliate_tag or "viraltestco-20"
     post_rows = ""
     for i, p in enumerate(posts[:5]):
         title = p.get("title", "")
@@ -241,7 +336,8 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs):
 <div class="badge {rank_classes[ri]}">{rank_labels[ri]}</div>
 <h3>{title}</h3>
 <p>In-depth testing and honest comparison. See why this made our list.</p>
-<a href="{b}/{review_slug}/">Read full review →</a>
+<a class="buy-btn" href="https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}" target="_blank" rel="sponsored">Check Price</a>
+<a href="{b}/{review_slug}/" style="margin-left:12px">Read full review →</a>
 </div></div>"""
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -265,8 +361,16 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs):
 </body></html>"""
 
 
-def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs):
+def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag=""):
     b = SITE_BASE
+    t = amazon_tag or "viraltestco-20"
+    product_cards = ""
+    if products:
+        product_cards = '<section class="section"><div class="container"><div class="section-title">Products Mentioned</div>'
+        for prod in products:
+            product_cards += product_card_html(prod, pexels_key, t)
+        product_cards += "</div></section>"
+    cta = CTA_BANNER.replace("{query}", niche_slug.replace("-", "+")).replace("{tag}", t)
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -279,10 +383,15 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 <article>
 <h1>{html_mod.escape(post_title)}</h1>
 <div class="meta">{html_mod.escape(product_name)} · Updated 2026</div>
+<div class="content">
 {intro}
-<div class="content">{article_html}</div>
-<div class="affiliate-banner">We earn a commission if you buy through our links, at no extra cost to you. Our opinions are our own.</div>
+{article_html}
+</div>
 </article>
+{product_cards}
+<div class="container">{cta}</div>
+{LEAD_FORM_HTML}
+<div class="container"><div class="affiliate-banner">We earn a commission if you buy through our links, at no extra cost to you. Our opinions are our own.</div></div>
 <footer><p>Abvorn · Independent reviews since 2026</p>{SOCIAL_HTML}</footer>
 </body></html>"""
 
@@ -379,11 +488,12 @@ Return ONLY the HTML."""
         "intro": intro_html,
         "article_html": article_html,
         "product_name": products[0].get("name", ""),
+        "products": products,
     }
 
 
 # ─── Document writer ────────────────────────────────────────────────────
-def write_files(niche_slug, articles, state):
+def write_files(niche_slug, articles, state, pexels_key="", amazon_tag=""):
     """Write all HTML files to docs/ directory."""
     all_slugs = [n["slug"] for n in state["niches"]]
     niche_name = next((n["name"] for n in state["niches"] if n["slug"] == niche_slug), niche_slug.replace("-", " ").title())
@@ -406,7 +516,7 @@ def write_files(niche_slug, articles, state):
         niche_posts = [{"title": a.get("post_title", ""), "slug": f"reviews/{n['slug']}"} for a in articles.get(n["slug"], [])]
         cat_dir = docs / n["slug"]
         cat_dir.mkdir(exist_ok=True)
-        (cat_dir / "index.html").write_text(build_category_page(n["slug"], n["name"], niche_posts, all_slugs), encoding="utf-8")
+        (cat_dir / "index.html").write_text(build_category_page(n["slug"], n["name"], niche_posts, all_slugs, amazon_tag), encoding="utf-8")
 
     # Write article pages (under docs/reviews/{slug}/ to avoid overwriting category page)
     for slug, post_list in articles.items():
@@ -415,7 +525,8 @@ def write_files(niche_slug, articles, state):
             post_dir.mkdir(parents=True, exist_ok=True)
             (post_dir / "index.html").write_text(
                 build_article_page(slug, niche_name, a["post_title"], a["article_html"],
-                                   a["intro"], a["product_name"], a["meta_description"], all_slugs),
+                                   a["intro"], a["product_name"], a["meta_description"],
+                                   all_slugs, a.get("products"), pexels_key, amazon_tag),
                 encoding="utf-8"
             )
             print(f"  Written: docs/reviews/{slug}/index.html (article)")
@@ -481,7 +592,9 @@ def main(forced_niche=None, force=False):
     # 4. WRITE FILES
     print(f"\n--- WRITE: {niche_slug} ---")
     articles = {niche_slug: [draft]}
-    write_files(niche_slug, articles, state)
+    write_files(niche_slug, articles, state,
+                pexels_key=secrets.get("PEXELS_KEY", ""),
+                amazon_tag=secrets.get("AMAZON_TAG", "viraltestco-20"))
 
     # 5. UPDATE STATE
     niche["posts"] += 1
