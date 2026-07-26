@@ -84,3 +84,34 @@ class ModelRouter:
         return [{"name": p.name, "calls": p.total_calls, "tokens": p.total_tokens,
                  "time": round(p.total_time, 2), "failures": p.failures,
                  "available": p.available} for p in self.providers]
+
+
+class ModelCostTracker:
+    """Tracks per-call model costs via state DB. Attached to daemon lifecycle."""
+
+    def __init__(self, state):
+        self._state = state
+        self._calls = []
+
+    def record_call(self, provider: str, model: str, task: str,
+                    tokens: int, time_ms: int, success: bool):
+        entry = dict(provider=provider, model=model, task=task,
+                     tokens=tokens, time_ms=time_ms, success=success)
+        self._calls.append(entry)
+        self._state.set_meta(f"cost_log_{len(self._calls)}", entry)
+        self._state.set_meta("cost_call_count", len(self._calls))
+
+    def get_stats(self) -> dict:
+        total = len(self._calls)
+        successful = sum(1 for c in self._calls if c.get("success"))
+        failed = total - successful
+        total_tokens = sum(c.get("tokens", 0) for c in self._calls)
+        rate_per_1k = 0.002
+        estimated_cost = (total_tokens / 1000) * rate_per_1k
+        return dict(
+            total_calls=total,
+            successful=successful,
+            failed=failed,
+            total_tokens=total_tokens,
+            estimated_cost_usd=round(estimated_cost, 4),
+        )

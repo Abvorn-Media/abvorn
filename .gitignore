@@ -1,2 +1,14 @@
 __pycache__/
 *.pyc
+*.pyo
+venv/
+.env
+.pytest_cache/
+*.db
+*.log
+.DS_Store
+Thumbs.db
+*.egg-info/
+dist/
+build/
+.superpowers/

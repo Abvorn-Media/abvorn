@@ -44,6 +44,8 @@ def main():
     checks.append(check("abvorn.persuasion.widget", lambda: __import__("abvorn.persuasion.widget")))
     checks.append(check("abvorn.persuasion.tracker", lambda: __import__("abvorn.persuasion.tracker")))
     checks.append(check("abvorn.monitor.error_reporter", lambda: __import__("abvorn.monitor.error_reporter")))
+    checks.append(check("abvorn.monitor.backup", lambda: __import__("abvorn.monitor.backup")))
+    checks.append(check("abvorn.monitor.env", lambda: __import__("abvorn.monitor.env")))
 
     # 3. Secrets
     print("\nSecrets:")
