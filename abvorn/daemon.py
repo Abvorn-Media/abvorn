@@ -74,6 +74,12 @@ class AbvornDaemon:
         self.error_reporter = ErrorReporter(self.state, notifier=self.notifier)
         self.daemon_guard = DaemonGuard(self.error_reporter)
         self.notifier._error_reporter = self.error_reporter
+        from .monitor.backup import BackupManager
+        from .monitor.env import EnvMode
+        self.backup_manager = BackupManager()
+        self.env_mode = EnvMode()
+        self.notifier._backup_manager = self.backup_manager
+        self.notifier._env_mode = self.env_mode
 
     def is_paused(self) -> bool:
         """Check if the kill switch is engaged."""

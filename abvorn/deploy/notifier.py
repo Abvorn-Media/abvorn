@@ -35,6 +35,10 @@ class TelegramNotifier:
         "/sites": "List all sites and their niches",
         "/site <slug>": "Show site details",
         "/errors": "Show error report from bug detector",
+        "/backup": "Create manual state DB backup",
+        "/backups": "List available backups",
+        "/backup-restore <name>": "Restore state DB from backup",
+        "/env": "Show current environment mode",
         "/help": "Show this help message",
     }
 
@@ -243,6 +247,33 @@ class TelegramNotifier:
             if reporter:
                 return reporter.format_report()
             return "\U0001f6a8 <b>Error Reporter</b>\nNot available"
+
+        if base_cmd == "/backup":
+            bm = getattr(self, '_backup_manager', None)
+            if bm:
+                name = bm.create("manual")
+                return f"\U0001f4be <b>Backup created</b>\n{name}"
+            return "\U0001f4be <b>Backup</b>\nNot available"
+
+        if base_cmd == "/backups":
+            bm = getattr(self, '_backup_manager', None)
+            if bm:
+                return bm.format_list()
+            return "\U0001f4be <b>Backups</b>\nNot available"
+
+        if base_cmd == "/backup-restore":
+            if not arg:
+                return "\u26a0 Usage: <code>/backup-restore [name]</code>"
+            bm = getattr(self, '_backup_manager', None)
+            if bm and bm.restore(arg):
+                return f"\u2705 <b>Restored from:</b> {arg}"
+            return f"\u274c <b>Restore failed.</b> Backup '{arg}' not found."
+
+        if base_cmd == "/env":
+            env = getattr(self, '_env_mode', None)
+            if env:
+                return env.format_status()
+            return "<b>Environment</b>\nNot configured (defaults to development)"
 
         return f"\u26a0 Unknown command: {base_cmd}\nUse /help to see available commands."
 
