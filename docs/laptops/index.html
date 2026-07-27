@@ -3,7 +3,7 @@
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Best Laptops — Abvorn</title>
 <meta name="description" content="The best laptops reviewed and compared. Our expert picks after hours of testing.">
-<link rel="icon" type="image/png" href="/abvorn/assets/favicon.png">
+<link rel="icon" type="image/svg+xml" href="/abvorn/assets/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 
@@ -129,7 +129,7 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 .buy-btn:hover{background:var(--primary-dark);text-decoration:none;box-shadow:0 2px 8px rgba(212,99,62,.35);transform:translateY(-1px);color:#fff}
 .buy-btn-secondary{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(26,138,122,.25)}
 .buy-btn-secondary:hover{background:var(--accent-dark);color:#fff;box-shadow:0 2px 8px rgba(26,138,122,.35)}
-.lead-capture{background:var(--text);color:#fff;padding:clamp(40px,6vw,64px) 24px;text-align:center}
+.lead-capture{background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;padding:clamp(40px,6vw,64px) 24px;text-align:center}
 .lead-capture h2{font-size:1.4rem;margin-bottom:8px;color:#fff}
 .lead-capture p{font-size:1rem;margin-bottom:20px;opacity:.9;color:#fff}
 .lead-capture form{display:flex;gap:12px;max-width:480px;margin:0 auto;flex-wrap:wrap;justify-content:center}
@@ -159,15 +159,45 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 @media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}.product-card{flex-direction:column}.product-card img{width:100%;height:auto}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 .comments-section{max-width:720px;margin:48px auto;padding:0 24px}.comments-section h2{font-size:1.2rem;margin-bottom:4px}.comments-section .subtitle{font-size:.85rem;color:var(--text-muted);margin-bottom:24px}.comment-form{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}.comment-form input,.comment-form textarea{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;font-family:var(--font-body);background:var(--bg);color:var(--text);transition:border-color .15s}.comment-form input:focus,.comment-form textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(212,99,62,.12)}.comment-form textarea{resize:vertical;min-height:80px}.comment-form button{align-self:flex-start}.comment{border-bottom:1px solid var(--border);padding:16px 0}.comment:first-of-type{padding-top:0}.comment .author{font-weight:600;font-size:.9rem;color:var(--text)}.comment .time{font-weight:400;color:var(--text-muted);font-size:.8rem;margin-left:8px}.comment .body{margin-top:4px;font-size:.95rem;color:var(--text-secondary);line-height:1.5}.no-comments{color:var(--text-muted);font-size:.9rem;padding:16px 0}
-.hero-img{width:100%;max-width:1080px;height:auto;border-radius:var(--radius-md);margin:24px auto;display:block;box-shadow:var(--shadow-md)}.reactions-bar{display:flex;gap:12px;margin:24px 0;padding-top:16px}.reaction-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:100px;background:var(--bg);cursor:pointer;font-size:.9rem;color:var(--text-secondary);transition:all .15s;font-family:var(--font-body)}.reaction-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.active{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.loved{border-color:#c0392b;color:#c0392b;background:#fde8e4}.reaction-count{font-weight:600;min-width:12px}
+ .hero-img{width:100%;max-width:1080px;height:auto;border-radius:var(--radius-md);margin:24px auto;display:block;box-shadow:var(--shadow-md)}.reactions-bar{display:flex;gap:12px;margin:24px 0;padding-top:16px}.reaction-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:100px;background:var(--bg);cursor:pointer;font-size:.9rem;color:var(--text-secondary);transition:all .15s;font-family:var(--font-body)}.reaction-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.active{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.loved{border-color:#c0392b;color:#c0392b;background:#fde8e4}.reaction-count{font-weight:600;min-width:12px}
+.carousel{position:relative;width:100%;max-width:900px;margin:0 auto 24px;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg);aspect-ratio:1200/630;background:var(--bg-alt)}
+.carousel-track{display:flex;transition:transform .6s cubic-bezier(.4,0,.2,1);will-change:transform;height:100%}
+.carousel-slide{flex:0 0 100%;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.carousel-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.carousel-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(42,39,36,.6) 0%,transparent 60%);display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(32px,5vw,56px);color:#fff}
+.carousel-overlay h3{font-family:var(--font-display);font-size:clamp(1.3rem,3vw,2rem);font-weight:700;color:#fff;margin-bottom:4px}
+.carousel-overlay p{font-size:clamp(.9rem,1.5vw,1.1rem);opacity:.9;max-width:450px;margin-bottom:12px;color:#fff}
+.carousel-overlay .carousel-badge{display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:#fff;padding:4px 14px;border-radius:100px;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;width:fit-content}
+.carousel-overlay a{display:inline-flex;align-items:center;gap:6px;color:#fff;font-weight:600;font-size:.95rem;text-decoration:none;padding:10px 24px;background:rgba(255,255,255,.2);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:8px;border:1px solid rgba(255,255,255,.25);transition:all .2s;width:fit-content}
+.carousel-overlay a:hover{background:rgba(255,255,255,.3);text-decoration:none;color:#fff}
+.carousel-dots{position:absolute;bottom:16px;right:24px;display:flex;gap:8px;z-index:3}
+.carousel-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.4);border:none;cursor:pointer;transition:all .3s;padding:0}
+.carousel-dot.active{background:#fff;transform:scale(1.3)}
+.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:3;background:rgba(255,255,255,.15);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.2);color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:all .2s;opacity:0}
+.carousel:hover .carousel-arrow{opacity:1}
+.carousel-arrow:hover{background:rgba(255,255,255,.25)}
+.carousel-arrow.prev{left:16px}
+.carousel-arrow.next{right:16px}
+@media(max-width:640px){.carousel-arrow{display:none}.carousel-overlay{padding:24px}.carousel-overlay h3{font-size:1.1rem}.carousel-dots{bottom:12px;right:16px}}
 </style>
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
 <nav><div class="inner"><a class="logo" href="/abvorn/">Abvorn</a><button class="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="main-nav">☰</button><div class="nav-links" id="main-nav"><a class="nav-link" href="/abvorn/wireless-headphones/">Wireless Headphones</a><a class="nav-link" href="/abvorn/gaming-mice/">Gaming Mice</a><a class="nav-link" href="/abvorn/4k-monitors/">4K Monitors</a><a class="nav-link" href="/abvorn/laptops/">Laptops</a><div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu"><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/how-we-test/">How We Test</a></div></div></div></div></nav>
-<section class="hero" id="main"><div class="container">
+<section class="hero" id="main" style="padding-bottom:0"><div class="container">
+<div class="carousel" role="region" aria-label="Featured products">
+<div class="carousel-track"><div class="carousel-slide">
+<img src="/abvorn/assets/laptops.svg" alt="Best Laptops 2026" loading="eager">
+<div class="carousel-overlay">
+<div class="carousel-badge">Our Pick</div>
+<h3>Best Laptops 2026</h3>
+<p>Expert tested and reviewed. See why this made our list.</p>
+<a href="/abvorn/laptops/">Read Full Review →</a>
+</div></div></div>
+<button class="carousel-arrow prev" aria-label="Previous">‹</button><button class="carousel-arrow next" aria-label="Next">›</button>
+<div class="carousel-dots"><button class="carousel-dot active" data-slide="0" aria-label="Slide 1"></button></div></div>
 <h1>The Best Laptops</h1>
 <p>We tested the top contenders to find the ones worth your money.</p>
-<a class="featured-pick" href="/abvorn/reviews/laptops/"><span class="fp-badge">Our pick</span><span class="fp-title">Best Laptops</span><span class="fp-arrow">→</span></a>
+<a class="featured-pick" href="/abvorn/reviews/laptops/"><span class="fp-badge">Our pick</span><span class="fp-title">Best Laptops 2026</span><span class="fp-arrow">→</span></a>
 </div></section>
 <section class="section"><div class="container">
 <div class="section-title">Our Top Picks</div>
@@ -175,12 +205,13 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 <div class="rank ">1</div>
 <div class="info">
 <div class="badge ">Our pick</div>
-<h3>Best Laptops <span class="tested-badge">Tested</span></h3>
+<h3>Best Laptops 2026 <span class="tested-badge">Tested</span></h3>
 <p>In-depth testing and honest comparison. See why this made our list.</p>
 <a class="buy-btn" href="https://www.amazon.com/s?k=laptops&tag=viraltestco-20" target="_blank" rel="sponsored">Check Price</a>
-<a href="/abvorn/reviews/laptops/" style="margin-left:12px">Read full review →</a>
+<a href="/abvorn/laptops/" style="margin-left:12px">Read full review →</a>
 </div></div>
 </div></section>
 <div class="container"><div class="affiliate-banner">We earn from qualifying purchases.</div></div>
 <footer><p>Abvorn · Independent reviews</p><div class="social"><a href="https://www.tiktok.com/@abvorn" target="_blank" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a><a href="https://www.instagram.com/abvorn/" target="_blank" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a><a href="https://x.com/Abvorn" target="_blank" aria-label="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a></div></footer>
-<script>(function(){var h=document.querySelector(".hamburger");if(h){h.addEventListener("click",function(){var n=document.querySelector(".nav-links");n.classList.toggle("open");h.setAttribute("aria-expanded",n.classList.contains("open"))})}var d=document.querySelector(".dropdown-btn");if(d){d.addEventListener("click",function(e){e.preventDefault();this.closest(".dropdown").classList.toggle("open")})}})();</script></body></html>
+<script>(function(){var h=document.querySelector(".hamburger");if(h){h.addEventListener("click",function(){var n=document.querySelector(".nav-links");n.classList.toggle("open");h.setAttribute("aria-expanded",n.classList.contains("open"))})}var d=document.querySelector(".dropdown-btn");if(d){d.addEventListener("click",function(e){e.preventDefault();this.closest(".dropdown").classList.toggle("open")})}})();</script>
+<script>(function(){var c=document.querySelector('.carousel');if(!c)return;var t=c.querySelector('.carousel-track');if(!t)return;var s=t.querySelectorAll('.carousel-slide');if(s.length<2)return;var dots=c.querySelectorAll('.carousel-dot');var prev=c.querySelector('.carousel-arrow.prev');var next=c.querySelector('.carousel-arrow.next');var i=0,n=s.length;var go=function(idx){i=((idx%n)+n)%n;t.style.transform='translateX(-'+(i*100)+'%)';dots.forEach(function(d){d.classList.toggle('active',parseInt(d.dataset.slide)===i)})};dots.forEach(function(d){d.addEventListener('click',function(){go(parseInt(this.dataset.slide))})});if(prev){prev.addEventListener('click',function(){go(i-1)})}if(next){next.addEventListener('click',function(){go(i+1)})};var iv=setInterval(function(){go(i+1)},5000);c.addEventListener('mouseenter',function(){clearInterval(iv)});c.addEventListener('mouseleave',function(){iv=setInterval(function(){go(i+1)},5000)})})();</script></body></html>

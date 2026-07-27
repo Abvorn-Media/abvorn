@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#faf6f1;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#e8dfd6;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="accentBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b6fba;stop-opacity:0.08"/>
+      <stop offset="100%" style="stop-color:#8b6fba;stop-opacity:0.02"/>
+    </linearGradient>
+    <linearGradient id="productGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b6fba;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#8b6fba;stop-opacity:0.05"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="12" flood-color="#8b6fba" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="30" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#accentBg)"/>
+
+  <!-- Accent circles -->
+  <circle cx="950" cy="100" r="350" fill="#8b6fba" opacity="0.04"/>
+  <circle cx="250" cy="500" r="250" fill="#8b6fba" opacity="0.03"/>
+  <circle cx="600" cy="315" r="180" fill="#8b6fba" opacity="0.02"/>
+
+  <!-- Product silhouette area -->
+  <g filter="url(#shadow)">
+    <path d="M400,200 A100,100 0 1,1 600,200 L600,350 A100,100 0 1,1 400,350 Z" fill="url(#productGlow)" stroke="#8b6fba" stroke-width="3" opacity="0.8"/>
+  </g>
+
+  <!-- Rating badge -->
+  <g transform="translate(60, 60)">
+    <rect width="100" height="32" rx="16" fill="#faf6f1" stroke="#e3dbd4" stroke-width="1" opacity="0.9"/>
+    <text x="50" y="21" font-family="'Trebuchet MS',Arial,sans-serif" font-size="13" font-weight="700" fill="#8b6fba" text-anchor="middle">★ 4.8 / 5.0</text>
+  </g>
+
+  <!-- Category badge -->
+  <g transform="translate(60, 100)">
+    <rect width="105" height="28" rx="14" fill="#8b6fba"/>
+    <text x="52.5" y="19" font-family="'Trebuchet MS',Arial,sans-serif" font-size="11" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing="1">1080p+ HD</text>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="520" font-family="Georgia,'Times New Roman',serif" font-size="52" font-weight="700" fill="#2a2724" text-anchor="middle" letter-spacing="-1">Best Webcams</text>
+
+  <!-- Divider -->
+  <rect x="540" y="540" width="120" height="3" rx="2" fill="#8b6fba"/>
+
+  <!-- Subtitle -->
+  <text x="600" y="575" font-family="'Trebuchet MS',Arial,sans-serif" font-size="18" fill="#6b6560" text-anchor="middle" letter-spacing="1">EXPERT TESTED · HONEST REVIEWS</text>
+</svg>

@@ -24,6 +24,7 @@ def get_secrets():
         "AMAZON_TAG": os.environ.get("AMAZON_TAG", "viraltestco-20"),
         "APPS_SCRIPT_URL": os.environ.get("APPS_SCRIPT_URL", ""),
         "GA_MEASUREMENT_ID": os.environ.get("GA_MEASUREMENT_ID", ""),
+        "GOOGLE_CLIENT_ID": os.environ.get("GOOGLE_CLIENT_ID", ""),
     }
     # If any key is missing, try local secrets.json
     if not any(v for v in keys.values()):
@@ -279,7 +280,7 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 .buy-btn:hover{background:var(--primary-dark);text-decoration:none;box-shadow:0 2px 8px rgba(212,99,62,.35);transform:translateY(-1px);color:#fff}
 .buy-btn-secondary{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(26,138,122,.25)}
 .buy-btn-secondary:hover{background:var(--accent-dark);color:#fff;box-shadow:0 2px 8px rgba(26,138,122,.35)}
-.lead-capture{background:var(--text);color:#fff;padding:clamp(40px,6vw,64px) 24px;text-align:center}
+.lead-capture{background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;padding:clamp(40px,6vw,64px) 24px;text-align:center}
 .lead-capture h2{font-size:1.4rem;margin-bottom:8px;color:#fff}
 .lead-capture p{font-size:1rem;margin-bottom:20px;opacity:.9;color:#fff}
 .lead-capture form{display:flex;gap:12px;max-width:480px;margin:0 auto;flex-wrap:wrap;justify-content:center}
@@ -309,7 +310,26 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 @media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}.product-card{flex-direction:column}.product-card img{width:100%;height:auto}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 .comments-section{max-width:720px;margin:48px auto;padding:0 24px}.comments-section h2{font-size:1.2rem;margin-bottom:4px}.comments-section .subtitle{font-size:.85rem;color:var(--text-muted);margin-bottom:24px}.comment-form{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}.comment-form input,.comment-form textarea{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;font-family:var(--font-body);background:var(--bg);color:var(--text);transition:border-color .15s}.comment-form input:focus,.comment-form textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(212,99,62,.12)}.comment-form textarea{resize:vertical;min-height:80px}.comment-form button{align-self:flex-start}.comment{border-bottom:1px solid var(--border);padding:16px 0}.comment:first-of-type{padding-top:0}.comment .author{font-weight:600;font-size:.9rem;color:var(--text)}.comment .time{font-weight:400;color:var(--text-muted);font-size:.8rem;margin-left:8px}.comment .body{margin-top:4px;font-size:.95rem;color:var(--text-secondary);line-height:1.5}.no-comments{color:var(--text-muted);font-size:.9rem;padding:16px 0}
-.hero-img{width:100%;max-width:1080px;height:auto;border-radius:var(--radius-md);margin:24px auto;display:block;box-shadow:var(--shadow-md)}.reactions-bar{display:flex;gap:12px;margin:24px 0;padding-top:16px}.reaction-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:100px;background:var(--bg);cursor:pointer;font-size:.9rem;color:var(--text-secondary);transition:all .15s;font-family:var(--font-body)}.reaction-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.active{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.loved{border-color:#c0392b;color:#c0392b;background:#fde8e4}.reaction-count{font-weight:600;min-width:12px}
+ .hero-img{width:100%;max-width:1080px;height:auto;border-radius:var(--radius-md);margin:24px auto;display:block;box-shadow:var(--shadow-md)}.reactions-bar{display:flex;gap:12px;margin:24px 0;padding-top:16px}.reaction-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:100px;background:var(--bg);cursor:pointer;font-size:.9rem;color:var(--text-secondary);transition:all .15s;font-family:var(--font-body)}.reaction-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.active{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.loved{border-color:#c0392b;color:#c0392b;background:#fde8e4}.reaction-count{font-weight:600;min-width:12px}
+.carousel{position:relative;width:100%;max-width:900px;margin:0 auto 24px;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg);aspect-ratio:1200/630;background:var(--bg-alt)}
+.carousel-track{display:flex;transition:transform .6s cubic-bezier(.4,0,.2,1);will-change:transform;height:100%}
+.carousel-slide{flex:0 0 100%;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.carousel-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.carousel-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(42,39,36,.6) 0%,transparent 60%);display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(32px,5vw,56px);color:#fff}
+.carousel-overlay h3{font-family:var(--font-display);font-size:clamp(1.3rem,3vw,2rem);font-weight:700;color:#fff;margin-bottom:4px}
+.carousel-overlay p{font-size:clamp(.9rem,1.5vw,1.1rem);opacity:.9;max-width:450px;margin-bottom:12px;color:#fff}
+.carousel-overlay .carousel-badge{display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:#fff;padding:4px 14px;border-radius:100px;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;width:fit-content}
+.carousel-overlay a{display:inline-flex;align-items:center;gap:6px;color:#fff;font-weight:600;font-size:.95rem;text-decoration:none;padding:10px 24px;background:rgba(255,255,255,.2);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:8px;border:1px solid rgba(255,255,255,.25);transition:all .2s;width:fit-content}
+.carousel-overlay a:hover{background:rgba(255,255,255,.3);text-decoration:none;color:#fff}
+.carousel-dots{position:absolute;bottom:16px;right:24px;display:flex;gap:8px;z-index:3}
+.carousel-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.4);border:none;cursor:pointer;transition:all .3s;padding:0}
+.carousel-dot.active{background:#fff;transform:scale(1.3)}
+.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:3;background:rgba(255,255,255,.15);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.2);color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:all .2s;opacity:0}
+.carousel:hover .carousel-arrow{opacity:1}
+.carousel-arrow:hover{background:rgba(255,255,255,.25)}
+.carousel-arrow.prev{left:16px}
+.carousel-arrow.next{right:16px}
+@media(max-width:640px){.carousel-arrow{display:none}.carousel-overlay{padding:24px}.carousel-overlay h3{font-size:1.1rem}.carousel-dots{bottom:12px;right:16px}}
 """
 
 SVG_TIKTOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>'
@@ -332,7 +352,7 @@ STORY_HTML = """<section class="story-section">
 </section>"""
 
 
-HEAD_HTML = lambda title, desc: f'<title>{title}</title>\n<meta name="description" content="{desc}">\n<link rel="icon" type="image/png" href="{SITE_BASE}/assets/favicon.png">\n{FONT_LINK}\n'
+HEAD_HTML = lambda title, desc: f'<title>{title}</title>\n<meta name="description" content="{desc}">\n<link rel="icon" type="image/svg+xml" href="{SITE_BASE}/assets/favicon.svg">\n{FONT_LINK}\n'
 NAV_SCRIPT = '<script>(function(){var h=document.querySelector(".hamburger");if(h){h.addEventListener("click",function(){var n=document.querySelector(".nav-links");n.classList.toggle("open");h.setAttribute("aria-expanded",n.classList.contains("open"))})}var d=document.querySelector(".dropdown-btn");if(d){d.addEventListener("click",function(e){e.preventDefault();this.closest(".dropdown").classList.toggle("open")})}})();</script>'
 import os
 
@@ -350,6 +370,25 @@ def nav_html(categories, current=""):
     more_items += f'<a href="{b}/how-we-test/">How We Test</a>'
     dd = f'<div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu">{more_items}</div></div>' if rest or True else ""
     return f'<nav><div class="inner"><a class="logo" href="{b}/">Abvorn</a><button class="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="main-nav">☰</button><div class="nav-links" id="main-nav">{featured_links}{dd}</div></div></nav>'
+
+
+def home_carousel_html(b, niches):
+    slides = ""
+    for i, n in enumerate(niches[:5]):
+        slides += f"""<div class="carousel-slide">
+<img src="{b}/assets/{n["slug"]}.svg" alt="{n["name"]}" loading="{ 'eager' if i==0 else 'lazy' }">
+<div class="carousel-overlay">
+<div class="carousel-badge" style="background:var(--accent)">{n["posts"]} reviews</div>
+<h3>{n["name"]}</h3>
+<p>Expert-tested buying guides and honest reviews.</p>
+<a href="{b}/{n["slug"]}/">Browse Reviews →</a>
+</div></div>"""
+    dots = "".join(f'<button class="carousel-dot{" active" if i==0 else ""}" data-slide="{i}" aria-label="Slide {i+1}"></button>' for i in range(min(len(niches),5)))
+    arrows = """<button class="carousel-arrow prev" aria-label="Previous">‹</button><button class="carousel-arrow next" aria-label="Next">›</button>"""
+    return f"""<div class="carousel" role="region" aria-label="Featured categories">
+<div class="carousel-track">{slides}</div>
+{arrows}
+<div class="carousel-dots">{dots}</div></div>"""
 
 
 def build_root_index(state, posts, form_url=""):
@@ -382,7 +421,8 @@ def build_root_index(state, posts, form_url=""):
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
 {nav_html(all_slugs)}
-<section class="hero" id="main"><div class="container">
+<section class="hero" id="main" style="padding-bottom:0"><div class="container">
+{home_carousel_html(b, niches[:5])}
 <h1>The best products, reviewed.</h1>
 <p>We test hundreds of products across dozens of categories so you don't have to. Independent, honest, data-driven.</p>
 {hero_featured}
@@ -399,7 +439,42 @@ def build_root_index(state, posts, form_url=""):
 <div class="container"><div class="affiliate-banner">When you buy through our links, we may earn a commission. Our opinions are our own.</div></div>
 {lead_form_html(form_url)}
 <footer><p>Abvorn · Independent reviews · Honest recommendations</p>{SOCIAL_HTML}</footer>
-{NAV_SCRIPT}</body></html>"""
+{NAV_SCRIPT}
+{CAROUSEL_JS}</body></html>"""
+
+
+def carousel_html(b, niche_slug, posts):
+    """Build a sleek product carousel from the category SVGs and posts."""
+    slides = ""
+    for i, p in enumerate(posts[:4]):
+        title = p.get("title", f"Best {niche_slug.replace('-',' ')}")
+        review_slug = p.get("slug", f"reviews/{niche_slug}")
+        rank_labels = ["Our Pick", "Budget Pick", "Upgrade Pick", "Also Great"]
+        label = rank_labels[i] if i < 4 else "Top Pick"
+        slides += f"""<div class="carousel-slide">
+<img src="{b}/assets/{niche_slug}.svg" alt="{title}" loading="{ 'eager' if i==0 else 'lazy' }">
+<div class="carousel-overlay">
+<div class="carousel-badge">{label}</div>
+<h3>{html_mod.escape(title)}</h3>
+<p>Expert tested and reviewed. See why this made our list.</p>
+<a href="{b}/{review_slug}/">Read Full Review →</a>
+</div></div>"""
+    if not slides:
+        slides = f"""<div class="carousel-slide">
+<img src="{b}/assets/{niche_slug}.svg" alt="{niche_slug}">
+<div class="carousel-overlay">
+<h3>Best {niche_slug.replace('-',' ')}</h3>
+<p>Reviews being researched. Check back soon.</p>
+</div></div>"""
+    dots = "".join(f'<button class="carousel-dot{" active" if i==0 else ""}" data-slide="{i}" aria-label="Slide {i+1}"></button>' for i in range(max(len(posts[:4]),1)))
+    arrows = """<button class="carousel-arrow prev" aria-label="Previous">‹</button><button class="carousel-arrow next" aria-label="Next">›</button>"""
+    return f"""<div class="carousel" role="region" aria-label="Featured products">
+<div class="carousel-track">{slides}</div>
+{arrows}
+<div class="carousel-dots">{dots}</div></div>"""
+
+
+CAROUSEL_JS = """<script>(function(){var c=document.querySelector('.carousel');if(!c)return;var t=c.querySelector('.carousel-track');if(!t)return;var s=t.querySelectorAll('.carousel-slide');if(s.length<2)return;var dots=c.querySelectorAll('.carousel-dot');var prev=c.querySelector('.carousel-arrow.prev');var next=c.querySelector('.carousel-arrow.next');var i=0,n=s.length;var go=function(idx){i=((idx%n)+n)%n;t.style.transform='translateX(-'+(i*100)+'%)';dots.forEach(function(d){d.classList.toggle('active',parseInt(d.dataset.slide)===i)})};dots.forEach(function(d){d.addEventListener('click',function(){go(parseInt(this.dataset.slide))})});if(prev){prev.addEventListener('click',function(){go(i-1)})}if(next){next.addEventListener('click',function(){go(i+1)})};var iv=setInterval(function(){go(i+1)},5000);c.addEventListener('mouseenter',function(){clearInterval(iv)});c.addEventListener('mouseleave',function(){iv=setInterval(function(){go(i+1)},5000)})})();</script>"""
 
 
 def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=""):
@@ -430,7 +505,8 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
 {nav_html(all_slugs)}
-<section class="hero" id="main"><div class="container">
+<section class="hero" id="main" style="padding-bottom:0"><div class="container">
+{carousel_html(b, niche_slug, posts[:4])}
 <h1>The Best {niche_name}</h1>
 <p>We tested the top contenders to find the ones worth your money.</p>
 {f'<a class="featured-pick" href="{b}/reviews/{niche_slug}/"><span class="fp-badge">Our pick</span><span class="fp-title">{html_mod.escape(posts[0].get("title","Read our review"))}</span><span class="fp-arrow">→</span></a>' if posts else ''}
@@ -441,7 +517,8 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 </div></section>
 <div class="container"><div class="affiliate-banner">We earn from qualifying purchases.</div></div>
 <footer><p>Abvorn · Independent reviews</p>{SOCIAL_HTML}</footer>
-{NAV_SCRIPT}</body></html>"""
+{NAV_SCRIPT}
+{CAROUSEL_JS}</body></html>"""
 
 
 SHARE_HTML_T = """<div class="share-buttons" style="display:flex;gap:8px;margin:32px 0;padding-top:24px;border-top:1px solid var(--border);align-items:center;flex-wrap:wrap">
@@ -452,7 +529,7 @@ SHARE_HTML_T = """<div class="share-buttons" style="display:flex;gap:8px;margin:
 <a href="mailto:?subject=TITLE_T&body=URL_T" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem;color:var(--text-secondary);text-decoration:none;transition:all .15s" aria-label="Share via Email"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg> Email</a>
 </div>"""
 
-def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img=""):
+def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id=""):
     b = SITE_BASE
     t = amazon_tag or "viraltestco-20"
     article_url = f"https://Abvorn-Media.github.io/abvorn/reviews/{niche_slug}/"
@@ -478,10 +555,45 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     if products and len(products) > 0:
         p0 = products[0]
         verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(p0.get('name', product_name))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
+COMMENTS_JS = """<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+(function(){var k='abvorn_comments_'+location.pathname.replace(/\\//g,'_');var c=JSON.parse(localStorage.getItem(k)||'[]');var l=document.getElementById('comments-list');var cu=null;function r(){if(!l)return;if(!c.length){l.innerHTML='<div class=\"no-comments\">No comments yet. Start the conversation!</div>';return}l.innerHTML=c.map(function(e){var a=e.avatar?'<img src=\"'+e.avatar+'\" width=\"20\" height=\"20\" style=\"border-radius:50%;vertical-align:middle;margin-right:4px;display:inline-block\">':'';return'<div class=\"comment\"><div class=\"author\">'+a+htmlEncode(e.name)+' <span class=\"time\">'+new Date(e.date).toLocaleDateString()+'</span></div><div class=\"body\">'+htmlEncode(e.text)+'</div></div>'}).join('')}
+function htmlEncode(s){var d=document.createElement('div');d.appendChild(document.createTextNode(s));return d.innerHTML}
+window.handleCredentialResponse=function(r){var p=JSON.parse(atob(r.credential.split('.')[1]));cu={name:p.name,email:p.email,avatar:p.picture,sub:p.sub};var ui=document.getElementById('user-info');var si=document.getElementById('sign-in-prompt');var ct=document.getElementById('comment-text');var pb=document.getElementById('post-comment-btn');ui.style.display='flex';document.getElementById('user-avatar').src=p.picture;document.getElementById('user-name').textContent=p.name;si.style.display='none';ct.disabled=false;ct.style.opacity='1';pb.disabled=false;pb.style.opacity='1'}
+window.signOut=function(){cu=null;document.getElementById('user-info').style.display='none';document.getElementById('sign-in-prompt').style.display='block';document.getElementById('comment-text').disabled=true;document.getElementById('comment-text').style.opacity='.5';document.getElementById('post-comment-btn').disabled=true;document.getElementById('post-comment-btn').style.opacity='.5'}
+window.postComment=function(){var t=document.getElementById('comment-text');if(!cu||!t||!t.value.trim())return;var n=cu.name||'Anonymous';c.unshift({name:n,email:cu.email||'',avatar:cu.avatar||'',text:t.value.trim(),date:new Date().toISOString()});localStorage.setItem(k,JSON.stringify(c));t.value='';r()};r()})();
+window.toggleReaction=function(type,btn){var k='abvorn_r_'+type+'_'+location.pathname;var d=JSON.parse(localStorage.getItem(k)||'{"active":false,"count":0}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')};
+</script>"""
+
+
+def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id=""):
+    b = SITE_BASE
+    t = amazon_tag or "viraltestco-20"
+    article_url = f"https://Abvorn-Media.github.io/abvorn/reviews/{niche_slug}/"
+    share = SHARE_HTML_T.replace("TITLE_T", html_mod.escape(post_title)).replace("URL_T", article_url)
+    product_cards = ""
+    if products:
+        product_cards = '<section class="section"><div class="container"><div class="section-title">Products Mentioned</div>'
+        for prod in products:
+            product_cards += product_card_html(prod, pexels_key, t)
+        product_cards += "</div></section>"
+    cta = CTA_BANNER.replace("{query}", niche_slug.replace("-", "+")).replace("{tag}", t)
+    matrix_rows = ""
+    if products:
+        for i, prod in enumerate(products):
+            use_cases = ["Best Overall", "Best Value", "Premium Pick"]
+            uc = use_cases[i] if i < len(use_cases) else "Also Great"
+            why = prod.get("description", "Top-rated product after extensive testing.")
+            matrix_rows += f"<tr><td>{uc}</td><td>{html_mod.escape(prod.get('name','Product'))}</td><td>{html_mod.escape(why)}</td></tr>"
+    matrix_html = f'<div class="decision-matrix"><table><thead><tr><th>Use Case</th><th>Product</th><th>Why</th></tr></thead><tbody>{matrix_rows}</tbody></table></div>' if matrix_rows else ""
+    verdict_html = ""
+    if products and len(products) > 0:
+        p0 = products[0]
+        verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(p0.get('name', product_name))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-{HEAD_HTML(html_mod.escape(post_title) + ' — Abvorn', html_mod.escape(meta_desc)[:160])}
+{HEAD_HTML(html_mod.escape(post_title) + ' - Abvorn', html_mod.escape(meta_desc)[:160])}
 <link rel="canonical" href="{article_url}">
 {ANALYTICS_HTML}
 <style>{CSS_SHARED}</style>
@@ -491,7 +603,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 {hero_img}
 <article id="main">
 <h1>{html_mod.escape(post_title)}</h1>
-<div class="meta">{html_mod.escape(product_name)} · Updated 2026 · <span class="tested-badge" style="margin-left:0">Tested</span></div>
+<div class="meta">By <strong>Abvorn Review Team</strong> - {html_mod.escape(product_name)} - Updated 2026 <span class="tested-badge" style="margin-left:8px">Tested</span></div>
 {matrix_html}
 {verdict_html}
 <div class="content">
@@ -513,27 +625,32 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 
 <section class="comments-section">
 <h2>Share Your Thoughts</h2>
-<p class="subtitle">Join the conversation — your email stays private, only your name appears.</p>
-<div class="comment-form">
-<input type="text" id="comment-name" placeholder="Your name" maxlength="50" aria-label="Your name">
-<textarea id="comment-text" placeholder="What do you think? Share your experience..." rows="3" aria-label="Your comment"></textarea>
-<button class="buy-btn" onclick="postComment()">Post Comment</button>
+<p class="subtitle">Join the conversation - sign in with Google to comment.</p>
+<div class="comment-form" id="comment-form-area">
+<div id="user-info" style="display:none;align-items:center;gap:10px;margin-bottom:12px">
+<img id="user-avatar" src="" alt="" width="36" height="36" style="border-radius:50%">
+<span id="user-name" style="font-weight:600;font-size:.9rem;color:var(--text)"></span>
+<button class="buy-btn" style="padding:4px 12px;font-size:.8rem" onclick="signOut()">Sign out</button>
+</div>
+<div id="sign-in-prompt" style="margin-bottom:16px">
+ <div id="g_id_onload" data-client_id="{google_client_id or "YOUR_GOOGLE_CLIENT_ID"}" data-context="signin" data-ux_mode="popup" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
+<div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-text="signin_with" data-size="medium"></div>
+</div>
+<textarea id="comment-text" placeholder="What do you think? Share your experience..." rows="3" aria-label="Your comment" disabled style="opacity:.5"></textarea>
+<button class="buy-btn" onclick="postComment()" id="post-comment-btn" disabled style="opacity:.5">Post Comment</button>
 </div>
 <div id="comments-list"></div>
 </section>
 
-<script>
-(function(){{var k='abvorn_comments_'+location.pathname.replace(/\\//g,'_');var c=JSON.parse(localStorage.getItem(k)||'[]');var l=document.getElementById('comments-list');function r(){{if(!l)return;if(!c.length){{l.innerHTML='<div class="no-comments">No comments yet. Start the conversation!</div>';return}}l.innerHTML=c.map(function(e){{return'<div class="comment"><div class="author">'+e.name+' <span class="time">'+new Date(e.date).toLocaleDateString()+'</span></div><div class="body">'+e.text+'</div></div>'}}).join('')}}
-window.postComment=function(){{var n=document.getElementById('comment-name');var t=document.getElementById('comment-text');if(!n||!t||!n.value.trim()||!t.value.trim())return;c.unshift({{name:n.value.trim(),text:t.value.trim(),date:new Date().toISOString()}});localStorage.setItem(k,JSON.stringify(c));n.value='';t.value='';r()}};r()}})();
-window.toggleReaction=function(type,btn){{var k='abvorn_r_'+type+'_'+location.pathname;var d=JSON.parse(localStorage.getItem(k)||'{{"active":false,"count":0}}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')}};
-</script>
+{COMMENTS_JS}
 
 {product_cards}
 <div class="container">{cta}</div>
 {lead_form_html(form_url)}
 <div class="container"><div class="affiliate-banner">We earn a commission if you buy through our links, at no extra cost to you. Our opinions are our own.</div></div>
-<footer><p>Abvorn · Independent reviews since 2026</p>{SOCIAL_HTML}</footer>
-{NAV_SCRIPT}</body></html>"""
+<footer><p>Abvorn - Independent reviews since 2026</p>{SOCIAL_HTML}</footer>
+{NAV_SCRIPT}
+{CAROUSEL_JS}</body></html>"""
 
 
 # ─── AI Research (skip DDGS, use AI knowledge directly) ──────────────────
@@ -644,6 +761,7 @@ def build_methodology_page(all_slugs, form_url=""):
 <a class="skip-link" href="#main">Skip to content</a>
 {nav_html(all_slugs)}
 <section class="hero" id="main"><div class="container">
+<img src="{b}/assets/hero-home.svg" alt="Abvorn testing" style="width:100%;max-width:900px;height:auto;border-radius:var(--radius-md);margin-bottom:24px;display:block;box-shadow:var(--shadow-md)">
 <h1>How We Test</h1>
 <p>Every recommendation on Abvorn is earned through real testing — not press releases or affiliate quotas.</p>
 </div></section>
@@ -669,11 +787,12 @@ def build_methodology_page(all_slugs, form_url=""):
 </div></section>
 {lead_form_html(form_url)}
 <footer><p>Abvorn · Independent reviews since 2026</p>{SOCIAL_HTML}</footer>
-{NAV_SCRIPT}</body></html>"""
+{NAV_SCRIPT}
+{CAROUSEL_JS}</body></html>"""
 
 
 # ─── Document writer ────────────────────────────────────────────────────
-def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_url="", hero_images=None):
+def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_url="", hero_images=None, google_client_id=""):
     """Write all HTML files to docs/ directory."""
     all_slugs = [n["slug"] for n in state["niches"]]
     hero_images = hero_images or {}
@@ -708,7 +827,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
             (post_dir / "index.html").write_text(
                 build_article_page(slug, niche_name, a["post_title"], a["article_html"],
                                    a["intro"], a["product_name"], a["meta_description"],
-                                   all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html),
+                                   all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id),
                 encoding="utf-8"
             )
             print(f"  Written: docs/reviews/{slug}/index.html (article)")
@@ -830,7 +949,8 @@ def main(forced_niche=None, force=False):
                 pexels_key=secrets.get("PEXELS_KEY", ""),
                 amazon_tag=secrets.get("AMAZON_TAG", "viraltestco-20"),
                 form_url=secrets.get("APPS_SCRIPT_URL", ""),
-                hero_images=hero_images)
+                hero_images=hero_images,
+                google_client_id=secrets.get("GOOGLE_CLIENT_ID", ""))
 
     # 5. UPDATE STATE
     niche["posts"] += 1

@@ -1,0 +1,28 @@
+import run_cycle
+import json, os
+
+state = json.load(open("cycle_state.json"))
+secrets = run_cycle.get_secrets()
+all_slugs = [n["slug"] for n in state["niches"]]
+posts = []
+for n in state["niches"]:
+    slug = n["slug"]
+    for i in range(n["posts"]):
+        posts.append({"title": f'Best {n["name"]} 2026', "slug": slug, "niche": slug})
+
+# Root index
+home = run_cycle.build_root_index(state, posts, secrets.get("APPS_SCRIPT_URL",""))
+open("docs/index.html","w",encoding="utf-8").write(home)
+print("Root index written")
+
+# Category pages
+for n in state["niches"]:
+    slug = n["slug"]
+    niche_posts = [p for p in posts if p.get("niche") == slug]
+    cat = run_cycle.build_category_page(slug, n["name"], niche_posts, all_slugs, secrets.get("AMAZON_TAG",""))
+    cat_dir = f"docs/{slug}"
+    os.makedirs(cat_dir, exist_ok=True)
+    open(f"{cat_dir}/index.html","w",encoding="utf-8").write(cat)
+    print(f"{slug}/index.html written")
+
+print("Done!")
