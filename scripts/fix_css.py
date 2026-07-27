@@ -1,10 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Best 4K Monitors — Abvorn</title>
-<meta name="description" content="The best 4k monitors reviewed and compared. Our expert picks after hours of testing.">
-<link rel="icon" type="image/png" href="/abvorn/assets/favicon.png">
-<style>
+"""Fix CSS in homepage and all category pages to use premium design."""
+from pathlib import Path
+
+CSS_SHARED = """
 :root{--primary:#1a56db;--primary-dark:#1648c0;--primary-light:#dbeafe;--accent:#ff9900;--accent-dark:#e88e00;--green:#059669;--green-light:#d1fae5;--purple:#7c3aed;--purple-light:#ede9fe;--bg:#fff;--bg-alt:#f8fafc;--text:#0f172a;--text-secondary:#475569;--text-muted:#64748b;--border:#e2e8f0;--shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.06);--shadow-lg:0 8px 24px rgba(0,0,0,.08);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--font-display:Georgia,'Times New Roman',serif;--font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
 @media(prefers-color-scheme:dark){:root{--bg:#0b1120;--bg-alt:#131c31;--text:#e2e8f0;--text-secondary:#94a3b8;--text-muted:#64748b;--border:#1e293b}}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -106,20 +103,49 @@ footer p{font-size:.85rem;color:var(--text-muted)}
 }
 @media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
-</style>
+"""
 
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
-</head><body>
-<nav><div class="inner"><a class="logo" href="/abvorn/"><img src="/abvorn/assets/logo.png" alt="Abvorn">Abvorn</a><div class="nav-links"><a class="nav-link" href="/abvorn/wireless-headphones/">Wireless Headphones</a><a class="nav-link" href="/abvorn/gaming-mice/">Gaming Mice</a><a class="nav-link" href="/abvorn/4k-monitors/">4K Monitors</a><a class="nav-link" href="/abvorn/laptops/">Laptops</a><div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu"><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/smart-home/">Smart Home</a></div></div></div></div></nav>
-<section class="hero"><div class="container">
-<h1>The Best 4K Monitors</h1>
-<p>We tested the top contenders to find the ones worth your money.</p>
-</div></section>
-<section class="section"><div class="container">
-<div class="section-title">Our Top Picks</div>
-<div style="color:#9ca3af;padding:32px;text-align:center">Reviews for this category are being researched. Check back soon.</div>
-</div></section>
-<div class="container"><div class="affiliate-banner">We earn from qualifying purchases.</div></div>
-<footer><p>Abvorn · Independent reviews</p><div class="social"><a href="https://www.tiktok.com/@abvorn" target="_blank" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a><a href="https://www.instagram.com/abvorn/" target="_blank" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a><a href="https://x.com/Abvorn" target="_blank" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a></div></footer>
-</body></html>
+def update_file(filepath):
+    html = filepath.read_text(encoding="utf-8")
+    # Replace old CSS block (between <style> and </style>)
+    import re
+    new_html = re.sub(r'<style>.*?</style>', f'<style>{CSS_SHARED}</style>', html, count=1, flags=re.DOTALL)
+    
+    fixes = [
+        ('color:#888', 'color:var(--text-muted)'),
+        ('color:#9ca3af', 'color:var(--text-muted)'),
+        ('color:#555', 'color:var(--text-secondary)'),
+        ('color:#374151', 'color:var(--text)'),
+        ('color:#6b7280', 'color:var(--text-secondary)'),
+        ('color:#1f2937', 'color:var(--text)'),
+        ('color:#2563eb', 'color:var(--primary)'),
+        ('color:#92400e', 'color:#92400e'),
+    ]
+    
+    if new_html != html:
+        filepath.write_text(new_html, encoding="utf-8")
+        return True
+    return False
+
+def main():
+    docs = Path("docs")
+    updated = 0
+    
+    # Homepage
+    hp = docs / "index.html"
+    if hp.exists() and update_file(hp):
+        updated += 1
+        print(f"  Updated: {hp}")
+    
+    # Category pages
+    for niche_dir in sorted(docs.iterdir()):
+        if niche_dir.is_dir() and niche_dir.name != "reviews" and niche_dir.name != "assets":
+            idx = niche_dir / "index.html"
+            if idx.exists() and update_file(idx):
+                updated += 1
+                print(f"  Updated: {idx}")
+    
+    print(f"\nDone! Updated {updated} files with premium CSS.")
+
+if __name__ == "__main__":
+    main()
