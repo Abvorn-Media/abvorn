@@ -61,7 +61,7 @@ if GA4_CREDS_FILE.exists():
 
 # ── SITE PATHS ──────────────────────────────────────────────────────────────
 SITE_URL = S["SITE_URL"]
-LOGO_URL = f"{SITE_URL}/logo.png"
+LOGO_URL = f"{SITE_URL}/"
 GA4_MEASUREMENT_ID = S["GA4_MEASUREMENT_ID"]
 GA4_API_SECRET = S["GA4_API_SECRET"]
 GMAIL_USER = S["GMAIL_USER"]

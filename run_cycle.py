@@ -23,6 +23,7 @@ def get_secrets():
         "PEXELS_KEY": os.environ.get("PEXELS_KEY", ""),
         "AMAZON_TAG": os.environ.get("AMAZON_TAG", "viraltestco-20"),
         "APPS_SCRIPT_URL": os.environ.get("APPS_SCRIPT_URL", ""),
+        "GA_MEASUREMENT_ID": os.environ.get("GA_MEASUREMENT_ID", ""),
     }
     # If any key is missing, try local secrets.json
     if not any(v for v in keys.values()):
@@ -281,6 +282,8 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 }
 @media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}.product-card{flex-direction:column}.product-card img{width:100%;height:auto}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+.comments-section{max-width:720px;margin:48px auto;padding:0 24px}.comments-section h2{font-size:1.2rem;margin-bottom:4px}.comments-section .subtitle{font-size:.85rem;color:var(--text-muted);margin-bottom:24px}.comment-form{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}.comment-form input,.comment-form textarea{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;font-family:var(--font-body);background:var(--bg);color:var(--text);transition:border-color .15s}.comment-form input:focus,.comment-form textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.1)}.comment-form textarea{resize:vertical;min-height:80px}.comment-form button{align-self:flex-start}.comment{border-bottom:1px solid var(--border);padding:16px 0}.comment:first-of-type{padding-top:0}.comment .author{font-weight:600;font-size:.9rem;color:var(--text)}.comment .time{font-weight:400;color:var(--text-muted);font-size:.8rem;margin-left:8px}.comment .body{margin-top:4px;font-size:.95rem;color:var(--text-secondary);line-height:1.5}.no-comments{color:var(--text-muted);font-size:.9rem;padding:16px 0}
+.hero-img{width:100%;max-width:1080px;height:auto;border-radius:var(--radius-md);margin:24px auto;display:block;box-shadow:var(--shadow-md)}.reactions-bar{display:flex;gap:12px;margin:24px 0;padding-top:16px}.reaction-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:100px;background:var(--bg);cursor:pointer;font-size:.9rem;color:var(--text-secondary);transition:all .15s;font-family:var(--font-body)}.reaction-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.active{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.loved{border-color:#e74c3c;color:#e74c3c;background:#fef2f2}.reaction-count{font-weight:600;min-width:12px}
 """
 
 SVG_TIKTOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>'
@@ -304,7 +307,12 @@ STORY_HTML = """<section class="story-section">
 
 
 NAV_SCRIPT = '<script>(function(){var h=document.querySelector(".hamburger");if(h){h.addEventListener("click",function(){var n=document.querySelector(".nav-links");n.classList.toggle("open");h.setAttribute("aria-expanded",n.classList.contains("open"))})}var d=document.querySelector(".dropdown-btn");if(d){d.addEventListener("click",function(e){e.preventDefault();this.closest(".dropdown").classList.toggle("open")})}})();</script>'
-ANALYTICS_HTML = '<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag(\'js\',new Date());gtag(\'config\',\'G-XXXXXXXXXX\');</script>'
+import os
+
+ANALYTICS_HTML = ''
+_ga_id = os.environ.get("GA_MEASUREMENT_ID", "")
+if _ga_id:
+    ANALYTICS_HTML = f'<script async src="https://www.googletagmanager.com/gtag/js?id={_ga_id}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments)}};gtag(\'js\',new Date());gtag(\'config\',\'{_ga_id}\');</script>'
 
 def nav_html(categories, current=""):
     b = SITE_BASE
@@ -313,7 +321,7 @@ def nav_html(categories, current=""):
     featured_links = "".join(f'<a class="nav-link" href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in featured)
     more_items = "".join(f'<a href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in rest)
     dd = f'<div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu">{more_items}</div></div>' if rest else ""
-    return f'<nav><div class="inner"><a class="logo" href="{b}/"><img src="{b}/assets/logo.png" alt="Abvorn">Abvorn</a><button class="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="main-nav">☰</button><div class="nav-links" id="main-nav">{featured_links}{dd}</div></div></nav>'
+    return f'<nav><div class="inner"><a class="logo" href="{b}/">Abvorn</a><button class="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="main-nav">☰</button><div class="nav-links" id="main-nav">{featured_links}{dd}</div></div></nav>'
 
 
 def build_root_index(state, posts, form_url=""):
@@ -412,7 +420,7 @@ SHARE_HTML_T = """<div class="share-buttons" style="display:flex;gap:8px;margin:
 <a href="mailto:?subject=TITLE_T&body=URL_T" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem;color:var(--text-secondary);text-decoration:none;transition:all .15s" aria-label="Share via Email"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg> Email</a>
 </div>"""
 
-def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url=""):
+def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img=""):
     b = SITE_BASE
     t = amazon_tag or "viraltestco-20"
     article_url = f"https://Abvorn-Media.github.io/abvorn/reviews/{niche_slug}/"
@@ -436,6 +444,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
 {nav_html(all_slugs)}
+{hero_img}
 <article id="main">
 <h1>{html_mod.escape(post_title)}</h1>
 <div class="meta">{html_mod.escape(product_name)} · Updated 2026</div>
@@ -443,8 +452,36 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 {intro}
 {article_html}
 </div>
+<div class="reactions-bar">
+<button class="reaction-btn" onclick="toggleReaction('like',this)" aria-label="Like">
+<span class="reaction-icon">&#x1F44D;</span>
+<span class="reaction-count">0</span>
+</button>
+<button class="reaction-btn" onclick="toggleReaction('love',this)" aria-label="Love">
+<span class="reaction-icon">&#x2764;&#xFE0F;</span>
+<span class="reaction-count">0</span>
+</button>
+</div>
 {share}
 </article>
+
+<section class="comments-section">
+<h2>Share Your Thoughts</h2>
+<p class="subtitle">Join the conversation — your email stays private, only your name appears.</p>
+<div class="comment-form">
+<input type="text" id="comment-name" placeholder="Your name" maxlength="50" aria-label="Your name">
+<textarea id="comment-text" placeholder="What do you think? Share your experience..." rows="3" aria-label="Your comment"></textarea>
+<button class="buy-btn" onclick="postComment()">Post Comment</button>
+</div>
+<div id="comments-list"></div>
+</section>
+
+<script>
+(function(){{var k='abvorn_comments_'+location.pathname.replace(/\\//g,'_');var c=JSON.parse(localStorage.getItem(k)||'[]');var l=document.getElementById('comments-list');function r(){{if(!l)return;if(!c.length){{l.innerHTML='<div class="no-comments">No comments yet. Start the conversation!</div>';return}}l.innerHTML=c.map(function(e){{return'<div class="comment"><div class="author">'+e.name+' <span class="time">'+new Date(e.date).toLocaleDateString()+'</span></div><div class="body">'+e.text+'</div></div>'}}).join('')}}
+window.postComment=function(){{var n=document.getElementById('comment-name');var t=document.getElementById('comment-text');if(!n||!t||!n.value.trim()||!t.value.trim())return;c.unshift({{name:n.value.trim(),text:t.value.trim(),date:new Date().toISOString()}});localStorage.setItem(k,JSON.stringify(c));n.value='';t.value='';r()}};r()}})();
+window.toggleReaction=function(type,btn){{var k='abvorn_r_'+type+'_'+location.pathname;var d=JSON.parse(localStorage.getItem(k)||'{{"active":false,"count":0}}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')}};
+</script>
+
 {product_cards}
 <div class="container">{cta}</div>
 {lead_form_html(form_url)}
@@ -550,9 +587,10 @@ Return ONLY the HTML."""
 
 
 # ─── Document writer ────────────────────────────────────────────────────
-def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_url=""):
+def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_url="", hero_images=None):
     """Write all HTML files to docs/ directory."""
     all_slugs = [n["slug"] for n in state["niches"]]
+    hero_images = hero_images or {}
     niche_name = next((n["name"] for n in state["niches"] if n["slug"] == niche_slug), niche_slug.replace("-", " ").title())
 
     # Collect all posts across niches
@@ -580,10 +618,11 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
         for i, a in enumerate(post_list):
             post_dir = docs / "reviews" / slug
             post_dir.mkdir(parents=True, exist_ok=True)
+            hero_img_html = hero_images.get(slug, "")
             (post_dir / "index.html").write_text(
                 build_article_page(slug, niche_name, a["post_title"], a["article_html"],
                                    a["intro"], a["product_name"], a["meta_description"],
-                                   all_slugs, a.get("products"), pexels_key, amazon_tag, form_url),
+                                   all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html),
                 encoding="utf-8"
             )
             print(f"  Written: docs/reviews/{slug}/index.html (article)")
@@ -591,6 +630,26 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
             for p in all_posts:
                 if p.get("title") == a.get("post_title") and p.get("slug") == slug:
                     p["slug"] = f"reviews/{slug}"
+
+    # Write RSS feed and sitemap
+    items = []
+    for p in all_posts:
+        title = p.get("title", "")
+        slug_path = p.get("slug", "")
+        items.append({"title": title, "slug": slug_path,
+                      "date": datetime.date.today().isoformat() if 'datetime' in dir() else "2025-01-01"})
+    rss_xml = '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Abvorn Reviews</title><link>https://abvorn.com</link><description>Product reviews you can trust</description>'
+    for it in items:
+        rss_xml += f'<item><title>{it["title"]}</title><link>https://abvorn.com/{it["slug"]}</link><guid>https://abvorn.com/{it["slug"]}</guid><pubDate>{it["date"]}</pubDate></item>'
+    rss_xml += '</channel></rss>'
+    (docs / "feed.xml").write_text(rss_xml, encoding="utf-8")
+    sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    sitemap += '<url><loc>https://abvorn.com/</loc></url>\n'
+    for it in items:
+        sitemap += f'<url><loc>https://abvorn.com/{it["slug"]}</loc></url>\n'
+    sitemap += '</urlset>'
+    (docs / "sitemap.xml").write_text(sitemap, encoding="utf-8")
+    print(f"  Written: docs/feed.xml, docs/sitemap.xml")
 
 
 # ─── Main ────────────────────────────────────────────────────────────────
@@ -646,13 +705,40 @@ def main(forced_niche=None, force=False):
         sys.exit(1)
     print(f"Article HTML: {len(draft.get('article_html',''))} chars")
 
+    # 3.5 GENERATE IMAGES
+    print(f"\n--- IMAGES: {niche_slug} ---")
+    hero_images = {}
+    try:
+        from abvorn.images.generator import ImageGenerator
+        from abvorn.images.resizer import ImageResizer
+        gen = ImageGenerator(backend="composite")
+        resizer = ImageResizer()
+        product_name = draft.get("product_name", niche_name)
+        headline = draft.get("post_title", f"Best {niche_name}")
+        img_bytes = gen.generate(product_name, niche_slug, headline, "buying_guide")
+        if img_bytes:
+            assets_dir = Path("docs") / "assets"
+            assets_dir.mkdir(exist_ok=True)
+            img_path = assets_dir / f"{niche_slug}.png"
+            img_path.write_bytes(img_bytes)
+            hero_images[niche_slug] = f'<img class="hero-img" src="/abvorn/assets/{niche_slug}.png" alt="{headline}" width="1200" height="630">'
+            print(f"  Generated: assets/{niche_slug}.png ({len(img_bytes)} bytes)")
+            # Also generate social-sized versions
+            social = resizer.social(img_bytes, "og", niche_slug)
+            if social:
+                (assets_dir / f"{niche_slug}-og.png").write_bytes(social)
+                print(f"  Generated: assets/{niche_slug}-og.png")
+    except Exception as e:
+        print(f"  Image generation skipped: {e}")
+
     # 4. WRITE FILES
     print(f"\n--- WRITE: {niche_slug} ---")
     articles = {niche_slug: [draft]}
     write_files(niche_slug, articles, state,
                 pexels_key=secrets.get("PEXELS_KEY", ""),
                 amazon_tag=secrets.get("AMAZON_TAG", "viraltestco-20"),
-                form_url=secrets.get("APPS_SCRIPT_URL", ""))
+                form_url=secrets.get("APPS_SCRIPT_URL", ""),
+                hero_images=hero_images)
 
     # 5. UPDATE STATE
     niche["posts"] += 1

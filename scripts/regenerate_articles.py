@@ -116,6 +116,7 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 }
 @media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}.product-card{flex-direction:column}.product-card img{width:100%;height:auto}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+.comments-section{max-width:720px;margin:48px auto;padding:0 24px}.comments-section h2{font-size:1.2rem;margin-bottom:4px}.comments-section .subtitle{font-size:.85rem;color:var(--text-muted);margin-bottom:24px}.comment-form{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}.comment-form input,.comment-form textarea{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;font-family:var(--font-body);background:var(--bg);color:var(--text);transition:border-color .15s}.comment-form input:focus,.comment-form textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.1)}.comment-form textarea{resize:vertical;min-height:80px}.comment-form button{align-self:flex-start}.comment{border-bottom:1px solid var(--border);padding:16px 0}.comment:first-of-type{padding-top:0}.comment .author{font-weight:600;font-size:.9rem;color:var(--text)}.comment .time{font-weight:400;color:var(--text-muted);font-size:.8rem;margin-left:8px}.comment .body{margin-top:4px;font-size:.95rem;color:var(--text-secondary);line-height:1.5}.no-comments{color:var(--text-muted);font-size:.9rem;padding:16px 0}
 """
 
 SVG_TIKTOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>'
@@ -198,7 +199,7 @@ def make_nav_html(current_slug=None):
     featured_links = "".join(f'<a class="nav-link" href="{SITE_BASE}/{c}/">{c.replace("-"," ").title()}</a>' for c in featured)
     more_items = "".join(f'<a href="{SITE_BASE}/{c}/">{c.replace("-"," ").title()}</a>' for c in rest)
     dropdown = f'<div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu">{more_items}</div></div>' if rest else ""
-    return f'<nav><div class="inner"><a class="logo" href="{SITE_BASE}/"><img src="{SITE_BASE}/assets/logo.png" alt="Abvorn">Abvorn</a><button class="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="main-nav">☰</button><div class="nav-links" id="main-nav">{featured_links}{dropdown}</div></div></nav>'
+    return f'<nav><div class="inner"><a class="logo" href="{SITE_BASE}/">Abvorn</a><button class="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="main-nav">☰</button><div class="nav-links" id="main-nav">{featured_links}{dropdown}</div></div></nav>'
 
 def make_product_cards(products, niche):
     """Generate product cards HTML with real affiliate links."""
@@ -242,7 +243,7 @@ def regenerate_article(niche, existing_html, products=None):
 <title>{title}</title>
 <meta name="description" content="{meta_desc}">
 <link rel="icon" type="image/png" href="{SITE_BASE}/assets/favicon.png">
-<link rel="apple-touch-icon" href="{SITE_BASE}/assets/logo.png">
+<!-- apple-touch-icon removed -->
 <link rel="canonical" href="https://Abvorn-Media.github.io/abvorn/reviews/{niche}/">
 {ANALYTICS_SCRIPT}
 <style>{CSS_SHARED}</style>
@@ -257,6 +258,22 @@ def regenerate_article(niche, existing_html, products=None):
 
 <div class="affiliate-banner">We earn a commission if you buy through our links, at no extra cost to you. Our opinions are our own.</div>
 </article>
+
+<section class="comments-section">
+<h2>Share Your Thoughts</h2>
+<p class="subtitle">Join the conversation — your email stays private, only your name appears.</p>
+<div class="comment-form">
+<input type="text" id="comment-name" placeholder="Your name" maxlength="50" aria-label="Your name">
+<textarea id="comment-text" placeholder="What do you think? Share your experience..." rows="3" aria-label="Your comment"></textarea>
+<button class="buy-btn" onclick="postComment()">Post Comment</button>
+</div>
+<div id="comments-list"></div>
+</section>
+
+<script>
+(function(){{var k='abvorn_comments_'+location.pathname.replace(/\\//g,'_');var c=JSON.parse(localStorage.getItem(k)||'[]');var l=document.getElementById('comments-list');function r(){{if(!l)return;if(!c.length){{l.innerHTML='<div class="no-comments">No comments yet. Start the conversation!</div>';return}}l.innerHTML=c.map(function(e){{return'<div class="comment"><div class="author">'+e.name+' <span class="time">'+new Date(e.date).toLocaleDateString()+'</span></div><div class="body">'+e.text+'</div></div>'}}).join('')}}
+window.postComment=function(){{var n=document.getElementById('comment-name');var t=document.getElementById('comment-text');if(!n||!t||!n.value.trim()||!t.value.trim())return;c.unshift({{name:n.value.trim(),text:t.value.trim(),date:new Date().toISOString()}});localStorage.setItem(k,JSON.stringify(c));n.value='';t.value='';r()}};r()}})();
+</script>
 
 <section class="section">
 <div class="container">
@@ -307,7 +324,7 @@ def main():
 
         niche = niche_dir.name
         print(f"Regenerating {niche}...")
-        existing = index_file.read_text(encoding="utf-8")
+        existing = index_file.read_text(encoding="utf-8", errors="replace")
         new_html = regenerate_article(niche, existing)
         if new_html:
             index_file.write_text(new_html, encoding="utf-8")
