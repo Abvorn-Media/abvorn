@@ -155,21 +155,22 @@ def pick_niche(state):
 # ─── HTML template helpers ──────────────────────────────────────────────
 SITE_BASE = "/abvorn"
 
+FONT_LINK = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">'
+
 CSS_SHARED = """
-:root{--primary:#1a56db;--primary-dark:#1648c0;--primary-light:#dbeafe;--accent:#ff9900;--accent-dark:#e88e00;--green:#059669;--green-light:#d1fae5;--purple:#7c3aed;--purple-light:#ede9fe;--bg:#fff;--bg-alt:#f8fafc;--text:#0f172a;--text-secondary:#475569;--text-muted:#64748b;--border:#e2e8f0;--shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.06);--shadow-lg:0 8px 24px rgba(0,0,0,.08);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--font-display:Georgia,'Times New Roman',serif;--font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-@media(prefers-color-scheme:dark){:root{--bg:#0b1120;--bg-alt:#131c31;--text:#e2e8f0;--text-secondary:#94a3b8;--text-muted:#64748b;--border:#1e293b}}
+:root{--primary:#d4633e;--primary-dark:#b84d2a;--primary-light:#fce9e1;--accent:#1a8a7a;--accent-dark:#147062;--accent-light:#d4ede8;--green:#3a8a5c;--green-light:#d6f0df;--purple:#8b6fba;--purple-light:#ebe3f5;--bg:#faf6f1;--bg-alt:#f0ebe3;--text:#2a2724;--text-secondary:#6b6560;--text-muted:#9e9690;--border:#e3dbd4;--shadow-sm:0 1px 3px rgba(42,39,36,.06);--shadow-md:0 4px 14px rgba(42,39,36,.07);--shadow-lg:0 10px 30px rgba(42,39,36,.08);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--font-display:'Fraunces',Georgia,'Times New Roman',serif;--font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1715;--bg-alt:#221f1c;--text:#e8e2dc;--text-secondary:#a69e96;--text-muted:#7e756d;--border:#34302b}}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;font-family:var(--font-body);-webkit-font-smoothing:antialiased;scroll-behavior:smooth;touch-action:manipulation}
 body{color:var(--text);background:var(--bg);line-height:1.6}
-::selection{background:rgba(26,86,219,.12)}
+::selection{background:rgba(212,99,62,.15)}
 .container{max-width:1080px;margin:0 auto;padding:0 24px}
 a{color:var(--primary);text-decoration:none;transition:color .15s}
 a:hover{color:var(--primary-dark);text-decoration:underline}
-nav{background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
-@media(prefers-color-scheme:dark){nav{background:rgba(11,17,32,.88)}}
+nav{background:rgba(250,246,241,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+@media(prefers-color-scheme:dark){nav{background:rgba(26,23,21,.9)}}
 nav .inner{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:56px;justify-content:space-between}
-nav .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1.1rem;color:var(--text);text-decoration:none}
-nav .logo img{height:28px;width:auto}
+nav .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1.15rem;color:var(--text);text-decoration:none;font-family:var(--font-display)}
 nav .logo:hover{text-decoration:none}
 .nav-links{display:flex;align-items:center;gap:24px}
 .dropdown{position:relative}
@@ -184,42 +185,50 @@ nav .logo:hover{text-decoration:none}
 .nav-link{font-size:.9rem;color:var(--text-secondary);text-decoration:none;padding:4px 0;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
 .nav-link:hover{color:var(--text);border-bottom-color:var(--primary);text-decoration:none}
 .nav-link.current{color:var(--text);border-bottom-color:var(--primary)}
-h1,h2,h3,.hero h1,.cat-name,.post-title,.section-title,.lead-capture h2,.cta-banner h3,.story-section h2{font-family:var(--font-display)}
+h1,h2,h3,.hero h1,.cat-name,.post-title,.section-title,.lead-capture h2,.cta-banner h3,.story-section h2,.verdict-title{font-family:var(--font-display)}
 h1{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;letter-spacing:-0.02em;line-height:1.15;color:var(--text)}
 h2{font-size:clamp(1.3rem,2.5vw,1.6rem);font-weight:700;margin-bottom:20px;letter-spacing:-0.01em;color:var(--text)}
 h3{font-size:clamp(1.1rem,2vw,1.25rem);font-weight:600;margin-bottom:8px;letter-spacing:-0.01em;color:var(--text)}
 .hero{background:linear-gradient(180deg,var(--bg-alt),transparent 80%);padding:clamp(48px,8vw,80px) 0 56px;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(26,86,219,.06),transparent 60%),radial-gradient(ellipse at 80% 30%,rgba(124,58,237,.04),transparent 50%);pointer-events:none}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(212,99,62,.06),transparent 60%),radial-gradient(ellipse at 80% 30%,rgba(26,138,122,.04),transparent 50%);pointer-events:none}
 .hero h1{margin-bottom:12px}
 .hero p{font-size:1.1rem;color:var(--text-secondary);max-width:600px;line-height:1.5}
+.hero .featured-pick{display:inline-flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px 24px;margin-top:16px;box-shadow:var(--shadow-sm);transition:all .2s;text-decoration:none;max-width:100%}
+.hero .featured-pick:hover{box-shadow:var(--shadow-md);border-color:var(--primary);text-decoration:none}
+.hero .featured-pick .fp-badge{background:var(--primary);color:#fff;font-size:.7rem;font-weight:600;padding:2px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.04em}
+.hero .featured-pick .fp-title{font-weight:600;color:var(--text);font-size:1rem}
+.hero .featured-pick .fp-arrow{color:var(--primary);font-size:1.2rem}
 .pick-card{display:flex;gap:clamp(16px,3vw,32px);padding:28px 32px;border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:24px;align-items:flex-start;box-shadow:var(--shadow-sm);transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;background:var(--bg)}
 .pick-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);border-color:color-mix(in srgb,var(--primary) 20%,var(--border))}
 .pick-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary);border-radius:0 4px 4px 0}
 .pick-card.budget::before{background:var(--green)}
 .pick-card.upgrade::before{background:var(--purple)}
-.pick-card .rank{flex-shrink:0;width:44px;height:44px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;box-shadow:0 2px 8px rgba(26,86,219,.3);position:relative;z-index:1}
-.pick-card .rank.budget{background:var(--green);box-shadow:0 2px 8px rgba(5,150,105,.3)}
-.pick-card .rank.upgrade{background:var(--purple);box-shadow:0 2px 8px rgba(124,58,237,.3)}
+.pick-card .rank{flex-shrink:0;width:44px;height:44px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;box-shadow:0 2px 8px rgba(212,99,62,.3);position:relative;z-index:1}
+.pick-card .rank.budget{background:var(--green);box-shadow:0 2px 8px rgba(58,138,92,.3)}
+.pick-card .rank.upgrade{background:var(--purple);box-shadow:0 2px 8px rgba(139,111,186,.3)}
 .pick-card .info{flex:1}
 .pick-card .info h3{font-size:1.2rem;font-weight:600;margin-bottom:4px;font-family:var(--font-display)}
 .pick-card .info .price{color:var(--green);font-weight:600;font-size:.95rem;margin-bottom:8px}
 .pick-card .info p{font-size:.95rem;color:var(--text-secondary);margin-bottom:12px;line-height:1.5}
 .pick-card .info .badge{display:inline-block;background:var(--primary-light);color:var(--primary);font-size:.75rem;font-weight:600;padding:2px 10px;border-radius:100px;margin-right:8px;text-transform:uppercase;letter-spacing:.04em}
-.pick-card .info .badge.budget{background:var(--green-light);color:#065f46}
-.pick-card .info .badge.upgrade{background:var(--purple-light);color:#5b21b6}
+.pick-card .info .badge.budget{background:var(--green-light);color:#2d6b47}
+.pick-card .info .badge.upgrade{background:var(--purple-light);color:#634e8a}
+.pick-card .tested-badge{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin-left:8px}
+.pick-card .tested-badge::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent)}
 .grid-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
 .cat-card{padding:24px;border:1px solid var(--border);border-radius:var(--radius-md);transition:all .25s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow-sm);text-decoration:none;display:block;background:var(--bg);position:relative;overflow:hidden}
 .cat-card::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:3px;background:var(--primary);border-radius:3px 3px 0 0;transform:scaleX(0);transition:transform .25s cubic-bezier(.4,0,.2,1)}
 .cat-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-4px);text-decoration:none}
 .cat-card:hover::after{transform:scaleX(1)}
-.cat-card .cat-name{font-weight:700;font-size:1.1rem;color:var(--text);margin-bottom:4px}
+.cat-card .cat-name{font-weight:700;font-size:1.1rem;color:var(--text);margin-bottom:4px;font-family:var(--font-display)}
 .cat-card .cat-count{font-size:.85rem;color:var(--text-muted)}
 .post-card{padding:20px;border:1px solid var(--border);border-radius:var(--radius-md);transition:all .2s;box-shadow:var(--shadow-sm);background:var(--bg)}
 .post-card:hover{box-shadow:var(--shadow-md);border-color:color-mix(in srgb,var(--primary) 15%,var(--border))}
 .post-card .post-title{font-weight:600;margin-bottom:4px;color:var(--text)}
 .post-card .post-meta{font-size:.85rem;color:var(--text-muted)}
 .section{padding:clamp(40px,6vw,64px) 0}
-.section-title{font-size:1.1rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:24px;padding-bottom:12px;border-bottom:3px solid var(--primary)}
+.section-title{font-size:.85rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.1em;margin-bottom:24px;padding-bottom:12px;border-bottom:2px solid var(--border);position:relative}
+.section-title::after{content:'';position:absolute;bottom:-2px;left:0;width:48px;height:2px;background:var(--primary)}
 .affiliate-banner{background:#fefce8;border:1px solid #fde68a;border-radius:var(--radius-sm);padding:16px 20px;font-size:.85rem;color:#92400e;margin:32px 0;text-align:center}
 article{max-width:720px;margin:0 auto;padding:32px 0}
 article h1{font-size:1.8rem;margin-bottom:8px}
@@ -239,20 +248,37 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 .story-section h2{font-size:1.4rem;font-weight:700;margin-bottom:12px;text-align:center}
 .story-section p{font-size:1rem;color:var(--text-secondary);line-height:1.7;margin-bottom:12px}
 .story-section .trust-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin:24px 0;list-style:none}
-.story-section .trust-item{padding:16px;background:var(--bg);border-radius:var(--radius-md);border:1px solid var(--border);box-shadow:var(--shadow-sm)}
-.story-section .trust-item strong{display:block;font-size:.95rem;color:var(--text);margin-bottom:4px}
+.story-section .trust-item{padding:16px;background:var(--bg);border-radius:var(--radius-md);border:1px solid var(--border);box-shadow:var(--shadow-sm);border-left:3px solid var(--primary)}
+.story-section .trust-item strong{display:block;font-size:.95rem;color:var(--text);margin-bottom:4px;font-family:var(--font-display)}
 .story-section .trust-item span{font-size:.85rem;color:var(--text-muted)}
+.verdict-box{background:var(--bg);border:2px solid var(--primary);border-radius:var(--radius-md);padding:28px 32px;margin:32px 0;box-shadow:var(--shadow-md);position:relative}
+.verdict-box::before{content:'OUR PICK';position:absolute;top:-12px;left:24px;background:var(--primary);color:#fff;font-size:.7rem;font-weight:700;padding:2px 14px;border-radius:100px;letter-spacing:.08em}
+.verdict-box .verdict-title{font-size:1.2rem;font-weight:700;margin-bottom:4px}
+.verdict-box .verdict-price{color:var(--accent);font-weight:600;font-size:.95rem;margin-bottom:8px}
+.verdict-box .verdict-for{font-size:.9rem;color:var(--text-secondary);margin-bottom:4px}
+.verdict-box .verdict-for strong{color:var(--text)}
+.verdict-box .verdict-not-for{margin-top:8px;padding:12px 16px;background:var(--primary-light);border-radius:var(--radius-sm);font-size:.9rem;color:var(--primary-dark)}
+.verdict-box .verdict-not-for strong{display:block;margin-bottom:2px}
+.decision-matrix{margin:32px 0;overflow-x:auto}
+.decision-matrix table{width:100%;border-collapse:collapse;font-size:.9rem}
+.decision-matrix th{background:var(--bg-alt);text-align:left;padding:12px 16px;font-weight:600;color:var(--text);font-family:var(--font-display);border-bottom:2px solid var(--border)}
+.decision-matrix td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);vertical-align:top}
+.decision-matrix tr:last-child td{border-bottom:none}
+.decision-matrix td:first-child{font-weight:500;color:var(--text)}
+.decision-matrix td:last-child{color:var(--text)}
 .product-card{display:flex;gap:24px;padding:24px;border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:20px;align-items:flex-start;box-shadow:var(--shadow-sm);transition:box-shadow .2s;background:var(--bg)}
 .product-card:hover{box-shadow:var(--shadow-md)}
 .product-card img{width:160px;height:160px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0}
 .product-card-body{flex:1}
-.product-card-body h3{font-size:1.15rem;font-weight:600;margin-bottom:4px}
+.product-card-body h3{font-size:1.15rem;font-weight:600;margin-bottom:4px;font-family:var(--font-display)}
 .product-card-body .price{color:var(--green);font-weight:600;font-size:.95rem;margin-bottom:8px}
 .product-card-body p{font-size:.95rem;color:var(--text-secondary);margin-bottom:8px}
 .product-card-body ul{padding-left:20px;margin:8px 0;font-size:.9rem;color:var(--text-secondary)}
 .product-card-body li{margin:4px 0}
-.buy-btn{display:inline-block;padding:10px 24px;background:var(--accent);color:#1f2937;border-radius:8px;font-weight:600;font-size:.95rem;margin-top:8px;text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,.12);transition:all .2s}
-.buy-btn:hover{background:var(--accent-dark);text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.2);transform:translateY(-1px);color:#1f2937}
+.buy-btn{display:inline-block;padding:10px 24px;background:var(--primary);color:#fff;border-radius:8px;font-weight:600;font-size:.95rem;margin-top:8px;text-decoration:none;box-shadow:0 1px 3px rgba(212,99,62,.25);transition:all .2s;border:none;cursor:pointer}
+.buy-btn:hover{background:var(--primary-dark);text-decoration:none;box-shadow:0 2px 8px rgba(212,99,62,.35);transform:translateY(-1px);color:#fff}
+.buy-btn-secondary{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(26,138,122,.25)}
+.buy-btn-secondary:hover{background:var(--accent-dark);color:#fff;box-shadow:0 2px 8px rgba(26,138,122,.35)}
 .lead-capture{background:var(--text);color:#fff;padding:clamp(40px,6vw,64px) 24px;text-align:center}
 .lead-capture h2{font-size:1.4rem;margin-bottom:8px;color:#fff}
 .lead-capture p{font-size:1rem;margin-bottom:20px;opacity:.9;color:#fff}
@@ -282,8 +308,8 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 }
 @media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}.product-card{flex-direction:column}.product-card img{width:100%;height:auto}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
-.comments-section{max-width:720px;margin:48px auto;padding:0 24px}.comments-section h2{font-size:1.2rem;margin-bottom:4px}.comments-section .subtitle{font-size:.85rem;color:var(--text-muted);margin-bottom:24px}.comment-form{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}.comment-form input,.comment-form textarea{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;font-family:var(--font-body);background:var(--bg);color:var(--text);transition:border-color .15s}.comment-form input:focus,.comment-form textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.1)}.comment-form textarea{resize:vertical;min-height:80px}.comment-form button{align-self:flex-start}.comment{border-bottom:1px solid var(--border);padding:16px 0}.comment:first-of-type{padding-top:0}.comment .author{font-weight:600;font-size:.9rem;color:var(--text)}.comment .time{font-weight:400;color:var(--text-muted);font-size:.8rem;margin-left:8px}.comment .body{margin-top:4px;font-size:.95rem;color:var(--text-secondary);line-height:1.5}.no-comments{color:var(--text-muted);font-size:.9rem;padding:16px 0}
-.hero-img{width:100%;max-width:1080px;height:auto;border-radius:var(--radius-md);margin:24px auto;display:block;box-shadow:var(--shadow-md)}.reactions-bar{display:flex;gap:12px;margin:24px 0;padding-top:16px}.reaction-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:100px;background:var(--bg);cursor:pointer;font-size:.9rem;color:var(--text-secondary);transition:all .15s;font-family:var(--font-body)}.reaction-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.active{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.loved{border-color:#e74c3c;color:#e74c3c;background:#fef2f2}.reaction-count{font-weight:600;min-width:12px}
+.comments-section{max-width:720px;margin:48px auto;padding:0 24px}.comments-section h2{font-size:1.2rem;margin-bottom:4px}.comments-section .subtitle{font-size:.85rem;color:var(--text-muted);margin-bottom:24px}.comment-form{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}.comment-form input,.comment-form textarea{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;font-family:var(--font-body);background:var(--bg);color:var(--text);transition:border-color .15s}.comment-form input:focus,.comment-form textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(212,99,62,.12)}.comment-form textarea{resize:vertical;min-height:80px}.comment-form button{align-self:flex-start}.comment{border-bottom:1px solid var(--border);padding:16px 0}.comment:first-of-type{padding-top:0}.comment .author{font-weight:600;font-size:.9rem;color:var(--text)}.comment .time{font-weight:400;color:var(--text-muted);font-size:.8rem;margin-left:8px}.comment .body{margin-top:4px;font-size:.95rem;color:var(--text-secondary);line-height:1.5}.no-comments{color:var(--text-muted);font-size:.9rem;padding:16px 0}
+.hero-img{width:100%;max-width:1080px;height:auto;border-radius:var(--radius-md);margin:24px auto;display:block;box-shadow:var(--shadow-md)}.reactions-bar{display:flex;gap:12px;margin:24px 0;padding-top:16px}.reaction-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:100px;background:var(--bg);cursor:pointer;font-size:.9rem;color:var(--text-secondary);transition:all .15s;font-family:var(--font-body)}.reaction-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.active{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.loved{border-color:#c0392b;color:#c0392b;background:#fde8e4}.reaction-count{font-weight:600;min-width:12px}
 """
 
 SVG_TIKTOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>'
@@ -306,6 +332,7 @@ STORY_HTML = """<section class="story-section">
 </section>"""
 
 
+HEAD_HTML = lambda title, desc: f'<title>{title}</title>\n<meta name="description" content="{desc}">\n<link rel="icon" type="image/png" href="{SITE_BASE}/assets/favicon.png">\n{FONT_LINK}\n'
 NAV_SCRIPT = '<script>(function(){var h=document.querySelector(".hamburger");if(h){h.addEventListener("click",function(){var n=document.querySelector(".nav-links");n.classList.toggle("open");h.setAttribute("aria-expanded",n.classList.contains("open"))})}var d=document.querySelector(".dropdown-btn");if(d){d.addEventListener("click",function(e){e.preventDefault();this.closest(".dropdown").classList.toggle("open")})}})();</script>'
 import os
 
@@ -320,7 +347,8 @@ def nav_html(categories, current=""):
     rest = categories[4:]
     featured_links = "".join(f'<a class="nav-link" href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in featured)
     more_items = "".join(f'<a href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in rest)
-    dd = f'<div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu">{more_items}</div></div>' if rest else ""
+    more_items += f'<a href="{b}/how-we-test/">How We Test</a>'
+    dd = f'<div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu">{more_items}</div></div>' if rest or True else ""
     return f'<nav><div class="inner"><a class="logo" href="{b}/">Abvorn</a><button class="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="main-nav">☰</button><div class="nav-links" id="main-nav">{featured_links}{dd}</div></div></nav>'
 
 
@@ -330,20 +358,24 @@ def build_root_index(state, posts, form_url=""):
     b = SITE_BASE
     cats = "".join(f'<a class="cat-card" href="{b}/{n["slug"]}/"><div class="cat-name">{n["name"]}</div>{"<div class=cat-count>"+str(n["posts"])+" reviews</div>" if n["posts"] else ""}</a>' for n in niches)
     recent = ""
+    first_post = posts[0] if posts else None
     for p in posts[:6]:
         title = p.get("title", "")
         slug = p.get("slug", "")
-        # Map niche slug to reviews path for article pages
         link_slug = f"reviews/{slug}" if "/" not in slug else slug
         recent += f'<div class="post-card"><div class="post-title"><a href="{b}/{link_slug}/">{title}</a></div><div class="post-meta">{slug.replace("-"," ").title()}</div></div>'
     jsonld = """<script type="application/ld+json">{
 "@context":"https://schema.org","@type":"Organization","name":"Abvorn","url":"https://Abvorn-Media.github.io/abvorn/","description":"Independent product reviews and buying guides.","sameAs":["https://www.tiktok.com/@abvorn","https://www.instagram.com/abvorn/","https://x.com/Abvorn"]}</script>"""
+    hero_featured = ""
+    if first_post:
+        ftitle = first_post.get("title", "")
+        fslug = first_post.get("slug", "")
+        flink = f"reviews/{fslug}" if "/" not in fslug else fslug
+        hero_featured = f'<a class="featured-pick" href="{b}/{flink}/"><span class="fp-badge">Our pick</span><span class="fp-title">{ftitle}</span><span class="fp-arrow">→</span></a>'
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Abvorn — Product Reviews &amp; Buying Guides</title>
-<meta name="description" content="Independent, expert reviews across every category. We test so you can buy with confidence.">
-<link rel="icon" type="image/png" href="{b}/assets/favicon.png">
+{HEAD_HTML('Abvorn — Product Reviews & Buying Guides', 'Independent, expert reviews across every category. We test so you can buy with confidence.')}
 {jsonld}
 {ANALYTICS_HTML}
 <style>{CSS_SHARED}</style>
@@ -353,6 +385,7 @@ def build_root_index(state, posts, form_url=""):
 <section class="hero" id="main"><div class="container">
 <h1>The best products, reviewed.</h1>
 <p>We test hundreds of products across dozens of categories so you don't have to. Independent, honest, data-driven.</p>
+{hero_featured}
 </div></section>
 {STORY_HTML}
 <section class="section"><div class="container">
@@ -383,7 +416,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 <div class="rank {rank_classes[ri]}">{i+1}</div>
 <div class="info">
 <div class="badge {rank_classes[ri]}">{rank_labels[ri]}</div>
-<h3>{title}</h3>
+<h3>{title} <span class="tested-badge">Tested</span></h3>
 <p>In-depth testing and honest comparison. See why this made our list.</p>
 <a class="buy-btn" href="https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}" target="_blank" rel="sponsored">Check Price</a>
 <a href="{b}/{review_slug}/" style="margin-left:12px">Read full review →</a>
@@ -391,9 +424,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Best {niche_name} — Abvorn</title>
-<meta name="description" content="The best {niche_name.lower()} reviewed and compared. Our expert picks after hours of testing.">
-<link rel="icon" type="image/png" href="{b}/assets/favicon.png">
+{HEAD_HTML(f'Best {niche_name} — Abvorn', f'The best {niche_name.lower()} reviewed and compared. Our expert picks after hours of testing.')}
 {ANALYTICS_HTML}
 <style>{CSS_SHARED}</style>
 </head><body>
@@ -402,6 +433,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 <section class="hero" id="main"><div class="container">
 <h1>The Best {niche_name}</h1>
 <p>We tested the top contenders to find the ones worth your money.</p>
+{f'<a class="featured-pick" href="{b}/reviews/{niche_slug}/"><span class="fp-badge">Our pick</span><span class="fp-title">{html_mod.escape(posts[0].get("title","Read our review"))}</span><span class="fp-arrow">→</span></a>' if posts else ''}
 </div></section>
 <section class="section"><div class="container">
 <div class="section-title">Our Top Picks</div>
@@ -432,13 +464,25 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             product_cards += product_card_html(prod, pexels_key, t)
         product_cards += "</div></section>"
     cta = CTA_BANNER.replace("{query}", niche_slug.replace("-", "+")).replace("{tag}", t)
+    # Build decision matrix from products
+    matrix_rows = ""
+    if products:
+        for i, prod in enumerate(products):
+            use_cases = ["Best Overall", "Best Value", "Premium Pick"]
+            uc = use_cases[i] if i < len(use_cases) else "Also Great"
+            why = prod.get("description", "Top-rated product after extensive testing.")
+            matrix_rows += f"<tr><td>{uc}</td><td>{html_mod.escape(prod.get('name','Product'))}</td><td>{html_mod.escape(why)}</td></tr>"
+    matrix_html = f'<div class="decision-matrix"><table><thead><tr><th>Use Case</th><th>Product</th><th>Why</th></tr></thead><tbody>{matrix_rows}</tbody></table></div>' if matrix_rows else ""
+    # Verdict box
+    verdict_html = ""
+    if products and len(products) > 0:
+        p0 = products[0]
+        verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(p0.get('name', product_name))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{html_mod.escape(post_title)} — Abvorn</title>
-<meta name="description" content="{html_mod.escape(meta_desc)[:160]}">
+{HEAD_HTML(html_mod.escape(post_title) + ' — Abvorn', html_mod.escape(meta_desc)[:160])}
 <link rel="canonical" href="{article_url}">
-<link rel="icon" type="image/png" href="{b}/assets/favicon.png">
 {ANALYTICS_HTML}
 <style>{CSS_SHARED}</style>
 </head><body>
@@ -447,7 +491,9 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 {hero_img}
 <article id="main">
 <h1>{html_mod.escape(post_title)}</h1>
-<div class="meta">{html_mod.escape(product_name)} · Updated 2026</div>
+<div class="meta">{html_mod.escape(product_name)} · Updated 2026 · <span class="tested-badge" style="margin-left:0">Tested</span></div>
+{matrix_html}
+{verdict_html}
 <div class="content">
 {intro}
 {article_html}
@@ -586,6 +632,46 @@ Return ONLY the HTML."""
     }
 
 
+def build_methodology_page(all_slugs, form_url=""):
+    b = SITE_BASE
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+{HEAD_HTML('How We Test — Abvorn', 'Our rigorous, independent testing methodology. Every recommendation is earned through real-world evaluation.')}
+{ANALYTICS_HTML}
+<style>{CSS_SHARED}</style>
+</head><body>
+<a class="skip-link" href="#main">Skip to content</a>
+{nav_html(all_slugs)}
+<section class="hero" id="main"><div class="container">
+<h1>How We Test</h1>
+<p>Every recommendation on Abvorn is earned through real testing — not press releases or affiliate quotas.</p>
+</div></section>
+<section class="section"><div class="container" style="max-width:680px">
+<h2>Our Testing Philosophy</h2>
+<p>We buy every product we review with our own money. No sponsorships, no free units, no manufacturer influence. If it's on our site, we've held it in our hands.</p>
+<h2>The Testing Process</h2>
+<div class="trust-list" style="list-style:none;display:flex;flex-direction:column;gap:20px;margin:24px 0">
+<div class="trust-item"><strong>1. Research</strong><span>We identify the top 10–15 products in a category based on market share, user reviews, and expert consensus.</span></div>
+<div class="trust-item"><strong>2. Procurement</strong><span>We purchase each product at full retail price — no review units, no sample requests.</span></div>
+<div class="trust-item"><strong>3. Testing</strong><span>Products are tested side-by-side over 3–7 days using standardized criteria specific to each category.</span></div>
+<div class="trust-item"><strong>4. Scoring</strong><span>Each product is scored on performance, build quality, value, and user experience using a weighted rubric.</span></div>
+<div class="trust-item"><strong>5. Writing</strong><span>We write our findings honestly — including what we didn't like — and publish with clear recommendations.</span></div>
+<div class="trust-item"><strong>6. Updating</strong><span>Reviews are refreshed quarterly to reflect price changes, new models, and evolving market conditions.</span></div>
+</div>
+<h2>What We Don't Do</h2>
+<ul style="padding-left:24px;margin:16px 0">
+<li style="margin:8px 0;color:var(--text-secondary)">Accept free products or sponsored placements</li>
+<li style="margin:8px 0;color:var(--text-secondary)">Publish reviews without hands-on testing</li>
+<li style="margin:8px 0;color:var(--text-secondary)">Allow manufacturers to review or approve our content</li>
+<li style="margin:8px 0;color:var(--text-secondary)">Use affiliate revenue to influence recommendations</li>
+</ul>
+</div></section>
+{lead_form_html(form_url)}
+<footer><p>Abvorn · Independent reviews since 2026</p>{SOCIAL_HTML}</footer>
+{NAV_SCRIPT}</body></html>"""
+
+
 # ─── Document writer ────────────────────────────────────────────────────
 def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_url="", hero_images=None):
     """Write all HTML files to docs/ directory."""
@@ -630,6 +716,12 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
             for p in all_posts:
                 if p.get("title") == a.get("post_title") and p.get("slug") == slug:
                     p["slug"] = f"reviews/{slug}"
+
+    # Write methodology page
+    method_dir = docs / "how-we-test"
+    method_dir.mkdir(exist_ok=True)
+    (method_dir / "index.html").write_text(build_methodology_page(all_slugs, form_url), encoding="utf-8")
+    print(f"  Written: docs/how-we-test/index.html")
 
     # Write RSS feed and sitemap
     items = []
