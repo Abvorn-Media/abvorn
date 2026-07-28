@@ -53,6 +53,7 @@ jobs:
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
           AMAZON_TAG: ${{ secrets.AMAZON_TAG }}
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
+          OPENWEB_NINJA_KEY: ${{ secrets.OPENWEB_NINJA_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
         run: |

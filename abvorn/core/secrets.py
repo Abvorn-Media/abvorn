@@ -46,6 +46,7 @@ def load_secrets() -> dict:
         "SHEET_ID": "SHEET_ID",
         "COMPOSIO_KEY": "COMPOSIO_KEY",
         "PEXELS_KEY": "PEXELS_KEY",
+        "OPENWEB_NINJA_KEY": "OPENWEB_NINJA_KEY",
     }
     for env_key, secrets_key in env_map.items():
         val = os.environ.get(env_key)

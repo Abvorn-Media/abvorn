@@ -25,14 +25,17 @@ def get_secrets():
         "APPS_SCRIPT_URL": os.environ.get("APPS_SCRIPT_URL", ""),
         "GA_MEASUREMENT_ID": os.environ.get("GA_MEASUREMENT_ID", ""),
         "GOOGLE_CLIENT_ID": os.environ.get("GOOGLE_CLIENT_ID", ""),
+        "OPENWEB_NINJA_KEY": os.environ.get("OPENWEB_NINJA_KEY", ""),
     }
-    # If any key is missing, try local secrets.json
-    if not any(v for v in keys.values()):
-        try:
-            from abvorn.core.secrets import load_secrets
-            return load_secrets()
-        except Exception:
-            pass
+    # Merge with local secrets.json (boardroom) to fill in missing keys
+    try:
+        from abvorn.core.secrets import load_secrets
+        boardroom = load_secrets()
+        for k in keys:
+            if not keys[k]:
+                keys[k] = boardroom.get(k, "")
+    except Exception:
+        pass
     return keys
 
 
@@ -59,25 +62,102 @@ def amazon_link(query, tag=""):
     t = tag or "viraltestco-20"
     return f"https://www.amazon.com/s?k={q}&tag={t}"
 
+
+# ─── Open Web Ninja API — real Amazon product data ────────────────
+PRODUCTS_CACHE_FILE = "products_cache.json"
+
+def load_product_cache():
+    try:
+        with open(PRODUCTS_CACHE_FILE) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_product_cache(cache):
+    with open(PRODUCTS_CACHE_FILE, "w") as f:
+        json.dump(cache, f, indent=2)
+
+def fetch_real_products(niche, api_key):
+    """Fetch real Amazon products via Open Web Ninja. Uses local cache to stay within 100 req/month."""
+    if not api_key:
+        return None
+    cache = load_product_cache()
+    if niche in cache:
+        return cache[niche]
+    try:
+        response = http_requests.get(
+            "https://api.openwebninja.com/realtime-amazon-data/search",
+            params={"query": niche.replace("-", " "), "page": 1},
+            headers={"X-API-Key": api_key},
+            timeout=15
+        )
+        if response.status_code == 200:
+            data = response.json()
+            products = data.get("data", {}).get("products", [])
+            if products:
+                result = []
+                for p in products[:5]:
+                    result.append({
+                        "name": p.get("product_title", "").split(",")[0].strip(),
+                        "price": p.get("product_price", ""),
+                        "original_price": p.get("product_original_price", ""),
+                        "rating": p.get("product_star_rating", ""),
+                        "ratings_count": p.get("product_num_ratings", 0),
+                        "image": p.get("product_photo", ""),
+                        "url": p.get("product_url", ""),
+                        "asin": p.get("asin", ""),
+                        "description": p.get("product_title", ""),
+                        "features": [],
+                        "is_best_seller": p.get("is_best_seller", False),
+                        "is_amazon_choice": p.get("is_amazon_choice", False),
+                        "sales_volume": p.get("sales_volume", ""),
+                    })
+                cache[niche] = result
+                save_product_cache(cache)
+                return result
+        else:
+            print(f"Open Web Ninja returned {response.status_code}: {response.text[:200]}")
+    except Exception as e:
+        print(f"Open Web Ninja API error: {e}")
+    return None
+
+def affiliate_url(product_url, tag=""):
+    """Append Amazon affiliate tag to a product URL."""
+    t = tag or "viraltestco-20"
+    sep = "&" if "?" in product_url else "?"
+    return f"{product_url}{sep}tag={t}"
+
 def product_card_html(product, pexels_key="", amazon_tag=""):
-    """HTML for a product card with image + affiliate buy button."""
+    """HTML for a product card with real Amazon image + affiliate buy button."""
     name = product.get("name", "Product")
     price = product.get("price", "Check price")
     features = product.get("features", [])
     summary = product.get("description", "")
-    aff_query = product.get("affiliate_query", name.replace(" ", "+"))
-    aff_url = amazon_link(aff_query, amazon_tag)
+    product_url = product.get("url", "")
+    product_image = product.get("image", "")
+    # Build affiliate URL: prefer real product URL, fall back to search link
+    if product_url:
+        aff_url = affiliate_url(product_url, amazon_tag)
+    else:
+        aff_query = product.get("affiliate_query", name.replace(" ", "+"))
+        aff_url = amazon_link(aff_query, amazon_tag)
+    # Product image: Amazon image > Pexels > gradient placeholder
     img = ""
-    if pexels_key:
-        img = fetch_product_image(name, pexels_key)
-    img_tag = f'<img src="{img}" alt="{name}" loading="lazy">' if img else ""
+    if product_image:
+        img = f'<img src="{product_image}" alt="{html_mod.escape(name)}" loading="lazy" style="width:160px;height:160px;object-fit:contain;background:#fff;border-radius:var(--radius-sm)">'
+    elif pexels_key:
+        img_url = fetch_product_image(name, pexels_key)
+        if img_url:
+            img = f'<img src="{img_url}" alt="{html_mod.escape(name)}" loading="lazy">'
+    if not img:
+        img = '<div style="width:160px;height:160px;background:linear-gradient(135deg,var(--bg-alt),var(--border));border-radius:var(--radius-sm);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.8rem">Product</div>'
     features_html = "".join(f"<li>{f}</li>" for f in features[:4])
     return f"""<div class="product-card">
-{img_tag}
+{img}
 <div class="product-card-body">
-<h3>{name}</h3>
-<div class="price">{price}</div>
-<p>{summary}</p>
+<h3>{html_mod.escape(name)}</h3>
+<div class="price">{html_mod.escape(price)}</div>
+<p>{html_mod.escape(summary)}</p>
 {"<ul>" + features_html + "</ul>" if features_html else ""}
 <a class="buy-btn" href="{aff_url}" target="_blank" rel="sponsored">Check Price on Amazon →</a>
 </div>
@@ -240,6 +320,9 @@ article .content ul{padding-left:24px;margin:12px 0}
 article .content li{margin:6px 0;color:var(--text)}
 footer{padding:48px 0;border-top:1px solid var(--border);text-align:center}
 footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
+.footer-links{display:flex;justify-content:center;gap:24px;margin:12px 0;flex-wrap:wrap}
+.footer-links a{font-size:.8rem;color:var(--text-muted);text-decoration:none;transition:color .15s}
+.footer-links a:hover{color:var(--primary);text-decoration:underline}
 .social{margin-top:16px;display:flex;gap:20px;justify-content:center}
 .social a{color:var(--text-muted);text-decoration:none;display:flex;align-items:center;transition:color .15s}
 .social a:hover{color:var(--text)}
@@ -311,25 +394,27 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 .comments-section{max-width:720px;margin:48px auto;padding:0 24px}.comments-section h2{font-size:1.2rem;margin-bottom:4px}.comments-section .subtitle{font-size:.85rem;color:var(--text-muted);margin-bottom:24px}.comment-form{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}.comment-form input,.comment-form textarea{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;font-family:var(--font-body);background:var(--bg);color:var(--text);transition:border-color .15s}.comment-form input:focus,.comment-form textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(212,99,62,.12)}.comment-form textarea{resize:vertical;min-height:80px}.comment-form button{align-self:flex-start}.comment{border-bottom:1px solid var(--border);padding:16px 0}.comment:first-of-type{padding-top:0}.comment .author{font-weight:600;font-size:.9rem;color:var(--text)}.comment .time{font-weight:400;color:var(--text-muted);font-size:.8rem;margin-left:8px}.comment .body{margin-top:4px;font-size:.95rem;color:var(--text-secondary);line-height:1.5}.no-comments{color:var(--text-muted);font-size:.9rem;padding:16px 0}
  .hero-img{width:100%;max-width:1080px;height:auto;border-radius:var(--radius-md);margin:24px auto;display:block;box-shadow:var(--shadow-md)}.reactions-bar{display:flex;gap:12px;margin:24px 0;padding-top:16px}.reaction-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:100px;background:var(--bg);cursor:pointer;font-size:.9rem;color:var(--text-secondary);transition:all .15s;font-family:var(--font-body)}.reaction-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.active{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}.reaction-btn.loved{border-color:#c0392b;color:#c0392b;background:#fde8e4}.reaction-count{font-weight:600;min-width:12px}
-.carousel{position:relative;width:100%;max-width:900px;margin:0 auto 24px;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg);aspect-ratio:1200/630;background:var(--bg-alt)}
-.carousel-track{display:flex;transition:transform .6s cubic-bezier(.4,0,.2,1);will-change:transform;height:100%}
-.carousel-slide{flex:0 0 100%;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.carousel{position:relative;width:100%;height:90vh;min-height:520px;max-height:960px;overflow:hidden;background:var(--bg-alt)}
+.carousel-track{display:flex;transition:transform .8s cubic-bezier(.4,0,.2,1);will-change:transform;height:100%}
+.carousel-slide{flex:0 0 100%;position:relative;overflow:hidden}
 .carousel-slide img{width:100%;height:100%;object-fit:cover;display:block}
-.carousel-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(42,39,36,.6) 0%,transparent 60%);display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(32px,5vw,56px);color:#fff}
-.carousel-overlay h3{font-family:var(--font-display);font-size:clamp(1.3rem,3vw,2rem);font-weight:700;color:#fff;margin-bottom:4px}
-.carousel-overlay p{font-size:clamp(.9rem,1.5vw,1.1rem);opacity:.9;max-width:450px;margin-bottom:12px;color:#fff}
-.carousel-overlay .carousel-badge{display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:#fff;padding:4px 14px;border-radius:100px;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;width:fit-content}
-.carousel-overlay a{display:inline-flex;align-items:center;gap:6px;color:#fff;font-weight:600;font-size:.95rem;text-decoration:none;padding:10px 24px;background:rgba(255,255,255,.2);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:8px;border:1px solid rgba(255,255,255,.25);transition:all .2s;width:fit-content}
-.carousel-overlay a:hover{background:rgba(255,255,255,.3);text-decoration:none;color:#fff}
-.carousel-dots{position:absolute;bottom:16px;right:24px;display:flex;gap:8px;z-index:3}
-.carousel-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.4);border:none;cursor:pointer;transition:all .3s;padding:0}
-.carousel-dot.active{background:#fff;transform:scale(1.3)}
-.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:3;background:rgba(255,255,255,.15);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.2);color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:all .2s;opacity:0}
+.carousel-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,.75) 0%,rgba(0,0,0,.3) 45%,transparent 70%);display:flex;flex-direction:column;justify-content:center;padding:clamp(48px,8vw,96px);color:#fff}
+.carousel-overlay .carousel-badge{display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:#fff;padding:6px 16px;border-radius:100px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;width:fit-content}
+.carousel-overlay h3{font-family:var(--font-display);font-size:clamp(1.6rem,4vw,3.2rem);font-weight:700;color:#fff;margin-bottom:10px;letter-spacing:-.02em;max-width:720px;line-height:1.1}
+.carousel-overlay p{font-size:clamp(1rem,1.8vw,1.2rem);opacity:.92;max-width:540px;margin-bottom:24px;color:#fff;line-height:1.5}
+.carousel-overlay a{display:inline-flex;align-items:center;gap:8px;color:#fff;font-weight:600;font-size:.95rem;text-decoration:none;padding:14px 32px;background:var(--primary);border-radius:8px;transition:all .2s;width:fit-content;box-shadow:0 2px 12px rgba(212,99,62,.35)}
+.carousel-overlay a:hover{background:var(--primary-dark);text-decoration:none;color:#fff;transform:translateY(-2px);box-shadow:0 4px 24px rgba(212,99,62,.45)}
+.carousel-dots{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:5}
+.carousel-dot{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.3);border:2px solid rgba(255,255,255,.6);cursor:pointer;transition:all .35s;padding:0}
+.carousel-dot.active{background:#fff;border-color:#fff;transform:scale(1.25)}
+.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:5;background:rgba(0,0,0,.25);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);color:#fff;width:52px;height:52px;border-radius:50%;cursor:pointer;font-size:1.6rem;display:flex;align-items:center;justify-content:center;transition:all .25s;opacity:0;font-family:Georgia,serif;line-height:1;padding-bottom:2px}
 .carousel:hover .carousel-arrow{opacity:1}
-.carousel-arrow:hover{background:rgba(255,255,255,.25)}
-.carousel-arrow.prev{left:16px}
-.carousel-arrow.next{right:16px}
-@media(max-width:640px){.carousel-arrow{display:none}.carousel-overlay{padding:24px}.carousel-overlay h3{font-size:1.1rem}.carousel-dots{bottom:12px;right:16px}}
+.carousel-arrow:hover{background:rgba(0,0,0,.45);transform:translateY(-50%) scale(1.06)}
+.carousel-arrow.prev{left:24px}
+.carousel-arrow.next{right:24px}
+@media(max-width:768px){.carousel{height:70vh;min-height:400px;max-height:none}.carousel-overlay{padding:32px 24px;justify-content:flex-end}.carousel-overlay h3{font-size:1.5rem;max-width:100%}.carousel-overlay p{font-size:.95rem;max-width:100%}.carousel-arrow{width:40px;height:40px;font-size:1.2rem}.carousel-arrow.prev{left:12px}.carousel-arrow.next{right:12px}}
+@media(max-width:480px){.carousel{height:60vh;min-height:320px}.carousel-overlay h3{font-size:1.25rem}.carousel-overlay .carousel-badge{font-size:.65rem;padding:4px 12px}.carousel-dots{bottom:16px;gap:8px}.carousel-dot{width:10px;height:10px}}
+@media(prefers-reduced-motion:reduce){.carousel-track{transition:none}}
 """
 
 SVG_TIKTOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>'
@@ -375,8 +460,9 @@ def nav_html(categories, current=""):
 def home_carousel_html(b, niches):
     slides = ""
     for i, n in enumerate(niches[:5]):
+        img_src = carousel_img(n["slug"], b)
         slides += f"""<div class="carousel-slide">
-<img src="{b}/assets/{n["slug"]}.svg" alt="{n["name"]}" loading="{ 'eager' if i==0 else 'lazy' }">
+<img src="{img_src}" alt="{n["name"]}" loading="{ 'eager' if i==0 else 'lazy' }">
 <div class="carousel-overlay">
 <div class="carousel-badge" style="background:var(--accent)">{n["posts"]} reviews</div>
 <h3>{n["name"]}</h3>
@@ -438,21 +524,30 @@ def build_root_index(state, posts, form_url=""):
 </div></section>
 <div class="container"><div class="affiliate-banner">When you buy through our links, we may earn a commission. Our opinions are our own.</div></div>
 {lead_form_html(form_url)}
-<footer><p>Abvorn · Independent reviews · Honest recommendations</p>{SOCIAL_HTML}</footer>
+<footer><p>Abvorn &middot; Independent reviews &middot; Honest recommendations</p><div class="footer-links"><a href="{b}/privacy/">Privacy</a><a href="{b}/terms/">Terms</a><a href="{b}/disclaimer/">Disclaimer</a><a href="{b}/about/">About</a></div>{SOCIAL_HTML}</footer>
 {NAV_SCRIPT}
 {CAROUSEL_JS}</body></html>"""
 
 
+def carousel_img(niche_slug, b):
+    """Pick real hero JPG if uploaded, else fall back to generated SVG."""
+    hero_path = f"docs/assets/hero/{niche_slug}.jpg"
+    if os.path.exists(hero_path):
+        return f"{b}/assets/hero/{niche_slug}.jpg"
+    return f"{b}/assets/{niche_slug}.svg"
+
+
 def carousel_html(b, niche_slug, posts):
-    """Build a sleek product carousel from the category SVGs and posts."""
+    """Build a full-bleed hero carousel from product data."""
     slides = ""
     for i, p in enumerate(posts[:4]):
         title = p.get("title", f"Best {niche_slug.replace('-',' ')}")
         review_slug = p.get("slug", f"reviews/{niche_slug}")
         rank_labels = ["Our Pick", "Budget Pick", "Upgrade Pick", "Also Great"]
         label = rank_labels[i] if i < 4 else "Top Pick"
+        img_src = carousel_img(niche_slug, b)
         slides += f"""<div class="carousel-slide">
-<img src="{b}/assets/{niche_slug}.svg" alt="{title}" loading="{ 'eager' if i==0 else 'lazy' }">
+<img src="{img_src}" alt="{title}" loading="{ 'eager' if i==0 else 'lazy' }">
 <div class="carousel-overlay">
 <div class="carousel-badge">{label}</div>
 <h3>{html_mod.escape(title)}</h3>
@@ -460,8 +555,9 @@ def carousel_html(b, niche_slug, posts):
 <a href="{b}/{review_slug}/">Read Full Review →</a>
 </div></div>"""
     if not slides:
+        img_src = carousel_img(niche_slug, b)
         slides = f"""<div class="carousel-slide">
-<img src="{b}/assets/{niche_slug}.svg" alt="{niche_slug}">
+<img src="{img_src}" alt="{niche_slug}">
 <div class="carousel-overlay">
 <h3>Best {niche_slug.replace('-',' ')}</h3>
 <p>Reviews being researched. Check back soon.</p>
@@ -516,7 +612,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 {post_rows or '<div style="color:var(--text-muted);padding:32px;text-align:center">Reviews for this category are being researched. Check back soon.</div>'}
 </div></section>
 <div class="container"><div class="affiliate-banner">We earn from qualifying purchases.</div></div>
-<footer><p>Abvorn · Independent reviews</p>{SOCIAL_HTML}</footer>
+<footer><p>Abvorn &middot; Independent reviews</p><div class="footer-links"><a href="{b}/privacy/">Privacy</a><a href="{b}/terms/">Terms</a><a href="{b}/disclaimer/">Disclaimer</a><a href="{b}/about/">About</a></div>{SOCIAL_HTML}</footer>
 {NAV_SCRIPT}
 {CAROUSEL_JS}</body></html>"""
 
@@ -554,7 +650,9 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     verdict_html = ""
     if products and len(products) > 0:
         p0 = products[0]
-        verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(p0.get('name', product_name))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
+        p0_url = p0.get("url", "")
+        p0_aff = affiliate_url(p0_url, t) if p0_url else f"https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}"
+        verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(p0.get('name', product_name))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="{p0_aff}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
 COMMENTS_JS = """<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 (function(){var k='abvorn_comments_'+location.pathname.replace(/\\//g,'_');var c=JSON.parse(localStorage.getItem(k)||'[]');var l=document.getElementById('comments-list');var cu=null;function r(){if(!l)return;if(!c.length){l.innerHTML='<div class=\"no-comments\">No comments yet. Start the conversation!</div>';return}l.innerHTML=c.map(function(e){var a=e.avatar?'<img src=\"'+e.avatar+'\" width=\"20\" height=\"20\" style=\"border-radius:50%;vertical-align:middle;margin-right:4px;display:inline-block\">':'';return'<div class=\"comment\"><div class=\"author\">'+a+htmlEncode(e.name)+' <span class=\"time\">'+new Date(e.date).toLocaleDateString()+'</span></div><div class=\"body\">'+htmlEncode(e.text)+'</div></div>'}).join('')}
@@ -589,7 +687,9 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     verdict_html = ""
     if products and len(products) > 0:
         p0 = products[0]
-        verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(p0.get('name', product_name))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
+        p0_url = p0.get("url", "")
+        p0_aff = affiliate_url(p0_url, t) if p0_url else f"https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}"
+        verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(p0.get('name', product_name))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="{p0_aff}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -648,13 +748,25 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 <div class="container">{cta}</div>
 {lead_form_html(form_url)}
 <div class="container"><div class="affiliate-banner">We earn a commission if you buy through our links, at no extra cost to you. Our opinions are our own.</div></div>
-<footer><p>Abvorn - Independent reviews since 2026</p>{SOCIAL_HTML}</footer>
+<footer><p>Abvorn &middot; Independent reviews since 2026</p><div class="footer-links"><a href="{b}/privacy/">Privacy</a><a href="{b}/terms/">Terms</a><a href="{b}/disclaimer/">Disclaimer</a><a href="{b}/about/">About</a></div>{SOCIAL_HTML}</footer>
 {NAV_SCRIPT}
 {CAROUSEL_JS}</body></html>"""
 
 
+
 # ─── AI Research (skip DDGS, use AI knowledge directly) ──────────────────
 def research_products(niche, router):
+    secrets = get_secrets()
+    api_key = secrets.get("OPENWEB_NINJA_KEY", "")
+
+    # Try real Amazon data first via Open Web Ninja
+    real_products = fetch_real_products(niche, api_key)
+    if real_products:
+        print(f"  Real products from Amazon API: {[p['name'] for p in real_products]}")
+        return real_products
+
+    # Fallback: AI-generated product data
+    print(f"  Amazon API unavailable, using AI fallback for {niche}")
     prompt = f"""You are a product expert. For the niche '{niche}', recommend exactly 3 specific real products with brand and model names. Use your knowledge of real products available on Amazon.
 
 Return a JSON array. Each product must have:
@@ -786,7 +898,7 @@ def build_methodology_page(all_slugs, form_url=""):
 </ul>
 </div></section>
 {lead_form_html(form_url)}
-<footer><p>Abvorn · Independent reviews since 2026</p>{SOCIAL_HTML}</footer>
+<footer><p>Abvorn &middot; Independent reviews since 2026</p><div class="footer-links"><a href="{b}/privacy/">Privacy</a><a href="{b}/terms/">Terms</a><a href="{b}/disclaimer/">Disclaimer</a><a href="{b}/about/">About</a></div>{SOCIAL_HTML}</footer>
 {NAV_SCRIPT}
 {CAROUSEL_JS}</body></html>"""
 
