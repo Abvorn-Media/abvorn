@@ -181,6 +181,51 @@ def lead_form_html(form_url=""):
 </div>
 </section>"""
 
+def build_comparison_page(niche_slug, niche_name, post_title, products, all_slugs, amazon_tag=""):
+    b = SITE_BASE
+    t = amazon_tag or os.environ.get("AMAZON_TAG", "viraltestco-20")
+    rows = ""
+    for i, prod in enumerate(products[:6]):
+        name = html_mod.escape(prod.get("name", "Product"))
+        price = prod.get("price", "N/A")
+        desc = html_mod.escape(prod.get("description", ""))
+        aff = affiliate_url(prod.get("url", ""), t) or f"https://www.amazon.com/s?k={name.replace(' ','+')}&tag={t}"
+        specs = prod.get("specs", {})
+        spec_cells = ""
+        for key in ["Weight", "Battery", "Rating", "Warranty"]:
+            val = specs.get(key.lower(), "-")
+            spec_cells += f"<td>{html_mod.escape(str(val))}</td>"
+        rows += f"""<tr><td><strong>{i+1}. {name}</strong><br><small>{desc[:80]}</small></td><td>{price}</td>{spec_cells}<td><a class="buy-btn" href="{aff}" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr>"""
+    bread = breadcrumb_schema([
+        ("Abvorn", "/"),
+        (f"Best {niche_name}", f"/{niche_slug}/"),
+        ("Comparison", f"/comparisons/{niche_slug}/"),
+    ])
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+{HEAD_HTML(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}. Compare specs, prices, and features.')}
+<link rel="canonical" href="{b}/comparisons/{niche_slug}/">
+{bread}
+{ANALYTICS_HTML}
+<style>{CSS_SHARED}</style>
+</head><body>
+<a class="skip-link" href="#main">Skip to content</a>
+{nav_html(all_slugs)}
+<section class="hero" id="main" style="padding:24px 16px"><div class="container">
+<h1>{html_mod.escape(post_title)}</h1>
+<p>We put the top {niche_name.lower()} head-to-head. Here's how they stack up.</p>
+</div></section>
+<section class="section"><div class="container">
+<div style="overflow-x:auto"><table class="comparison-table">
+<thead><tr><th>Product</th><th>Price</th><th>Weight</th><th>Battery</th><th>Rating</th><th>Warranty</th><th>Buy</th></tr></thead>
+<tbody>{rows}</tbody>
+</table></div>
+</div></section>
+<div class="container"><div class="affiliate-banner">We earn from qualifying purchases.</div></div>
+<footer><p>Abvorn &middot; Independent reviews</p><div class="footer-links"><a href="{b}/privacy/">Privacy</a><a href="{b}/terms/">Terms</a><a href="{b}/disclaimer/">Disclaimer</a><a href="{b}/about/">About</a></div>{SOCIAL_HTML}</footer>
+{NAV_SCRIPT}</body></html>"""
+
 CTA_BANNER = """
 <div class="cta-banner">
 <h3>Ready to buy?</h3>
@@ -239,6 +284,42 @@ def pick_niche(state):
 _SITE_URL = os.environ.get("SITE_URL", "https://Abvorn-Media.github.io/abvorn").rstrip("/")
 _SITE_BASE_PATH = os.environ.get("SITE_BASE_PATH", "/abvorn").rstrip("/")
 SITE_BASE = _SITE_BASE_PATH or ""
+
+# ── Schema generators ───────────────────────────────────────────────────
+def breadcrumb_schema(items: list) -> str:
+    """Generate BreadcrumbList JSON-LD. items = [(name, url), ...]"""
+    item_list = ",".join(
+        f'{{"@type":"ListItem","position":{i+1},"name":"{esc_json(name)}","item":"{_SITE_URL}{url}"}}'
+        for i, (name, url) in enumerate(items)
+    )
+    return f'<script type="application/ld+json">{{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{item_list}]}}</script>'
+
+def faq_schema(questions: list) -> str:
+    """Generate FAQPage JSON-LD. questions = [(q, a), ...]"""
+    items = ",".join(
+        f'{{"@type":"Question","name":"{esc_json(q)}","acceptedAnswer":{{"@type":"Answer","text":"{esc_json(a)}"}}}}'
+        for q, a in questions
+    )
+    return f'<script type="application/ld+json">{{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{items}]}}</script>'
+
+def esc_json(s: str) -> str:
+    return s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ").replace("\r", "")
+
+def _get_price_floor(niche_slug: str) -> str:
+    """Rough price floor by niche for FAQ content. No API call needed."""
+    floors = {
+        "wireless-headphones": "50",
+        "gaming-mice": "30",
+        "4k-monitors": "300",
+        "laptops": "500",
+        "streaming-devices": "30",
+        "mechanical-keyboards": "60",
+        "wireless-earbuds": "40",
+        "fitness-trackers": "50",
+        "webcams": "40",
+        "smart-home": "30",
+    }
+    return floors.get(niche_slug, "50")
 
 FONT_LINK = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">'
 
@@ -424,7 +505,8 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 SVG_TIKTOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>'
 SVG_INSTAGRAM = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>'
 SVG_X = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>'
-SOCIAL_HTML = '<div class="social"><a href="https://www.tiktok.com/@abvorn" target="_blank" aria-label="TikTok">' + SVG_TIKTOK + '</a><a href="https://www.instagram.com/abvorn/" target="_blank" aria-label="Instagram">' + SVG_INSTAGRAM + '</a><a href="https://x.com/Abvorn" target="_blank" aria-label="X">' + SVG_X + '</a></div>'
+SVG_YOUTUBE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
+SOCIAL_HTML = '<div class="social"><a href="https://www.youtube.com/@Abvorn-Media" target="_blank" aria-label="YouTube">' + SVG_YOUTUBE + '</a><a href="https://www.tiktok.com/@abvorn" target="_blank" aria-label="TikTok">' + SVG_TIKTOK + '</a><a href="https://www.instagram.com/abvorn/" target="_blank" aria-label="Instagram">' + SVG_INSTAGRAM + '</a><a href="https://x.com/Abvorn" target="_blank" aria-label="X">' + SVG_X + '</a></div>'
 STORY_HTML = """<section class="story-section">
 <div class="container">
 <h2>Why Abvorn?</h2>
@@ -596,10 +678,23 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 <a class="buy-btn" href="https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}" target="_blank" rel="sponsored">Check Price</a>
 <a href="{b}/{review_slug}/" style="margin-left:12px">Read full review →</a>
 </div></div>"""
+    bread = breadcrumb_schema([("Abvorn", "/"), (f"Best {niche_name}", f"/{niche_slug}/")])
+    faq = faq_schema([
+        (f"What is the best {niche_name.lower()}?",
+         f"After extensive testing, we recommend {posts[0].get('title', 'our top pick')} as the best {niche_name.lower()} for most people.") if posts else
+        (f"How do you test {niche_name.lower()}?",
+         "We buy each product with our own money, test it for at least a week in real-world conditions, and compare it head-to-head against competitors."),
+        (f"How much should I spend on {niche_name.lower()}?",
+         f"Good {niche_name.lower()} start around ${_get_price_floor(niche_slug)}. Our picks range from budget-friendly to premium, so there's an option for every budget."),
+        (f"What should I look for when buying {niche_name.lower()}?",
+         "Focus on build quality, performance metrics that matter for your use case, warranty coverage, and verified user reviews. We cover all of this in our detailed reviews."),
+    ])
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {HEAD_HTML(f'Best {niche_name} — Abvorn', f'The best {niche_name.lower()} reviewed and compared. Our expert picks after hours of testing.')}
+{bread}
+{faq}
 {ANALYTICS_HTML}
 <style>{CSS_SHARED}</style>
 </head><body>
@@ -640,7 +735,7 @@ window.toggleReaction=function(type,btn){var k='abvorn_r_'+type+'_'+location.pat
 </script>"""
 
 
-def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id=""):
+def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None):
     b = SITE_BASE
     t = amazon_tag or os.environ.get("AMAZON_TAG", "viraltestco-20")
     article_url = f"{_SITE_URL}/reviews/{niche_slug}/"
@@ -666,11 +761,24 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         p0_url = p0.get("url", "")
         p0_aff = affiliate_url(p0_url, t) if p0_url else f"https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}"
         verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(p0.get('name', product_name))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="{p0_aff}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
+    bread = breadcrumb_schema([
+        ("Abvorn", "/"),
+        (f"Best {niche_name}", f"/{niche_slug}/"),
+        (html_mod.escape(post_title)[:60], f"/reviews/{niche_slug}/"),
+    ])
+    related_html = ""
+    if related_niches:
+        cards = "".join(
+            f'<a class="cat-card" href="{b}/{r["slug"]}/"><div class="cat-name">{r["name"]}</div><div class="cat-count">{r.get("posts", 0)} reviews</div></a>'
+            for r in related_niches
+        )
+        related_html = f'<section class="section"><div class="container"><div class="section-title">Related Categories</div><div class="grid-3">{cards}</div></div></section>'
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {HEAD_HTML(html_mod.escape(post_title) + ' - Abvorn', html_mod.escape(meta_desc)[:160])}
 <link rel="canonical" href="{article_url}">
+{bread}
 {ANALYTICS_HTML}
 <style>{CSS_SHARED}</style>
 </head><body>
@@ -680,6 +788,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 <article id="main">
 <h1>{html_mod.escape(post_title)}</h1>
 <div class="meta">By <strong>Abvorn Review Team</strong> - {html_mod.escape(product_name)} - Updated 2026 <span class="tested-badge" style="margin-left:8px">Tested</span></div>
+{cta}
 {matrix_html}
 {verdict_html}
 <div class="content">
@@ -699,26 +808,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 {share}
 </article>
 
-<section class="comments-section">
-<h2>Share Your Thoughts</h2>
-<p class="subtitle">Join the conversation - sign in with Google to comment.</p>
-<div class="comment-form" id="comment-form-area">
-<div id="user-info" style="display:none;align-items:center;gap:10px;margin-bottom:12px">
-<img id="user-avatar" src="" alt="" width="36" height="36" style="border-radius:50%">
-<span id="user-name" style="font-weight:600;font-size:.9rem;color:var(--text)"></span>
-<button class="buy-btn" style="padding:4px 12px;font-size:.8rem" onclick="signOut()">Sign out</button>
-</div>
-<div id="sign-in-prompt" style="margin-bottom:16px">
- <div id="g_id_onload" data-client_id="{google_client_id or "YOUR_GOOGLE_CLIENT_ID"}" data-context="signin" data-ux_mode="popup" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
-<div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-text="signin_with" data-size="medium"></div>
-</div>
-<textarea id="comment-text" placeholder="What do you think? Share your experience..." rows="3" aria-label="Your comment" disabled style="opacity:.5"></textarea>
-<button class="buy-btn" onclick="postComment()" id="post-comment-btn" disabled style="opacity:.5">Post Comment</button>
-</div>
-<div id="comments-list"></div>
-</section>
-
-{COMMENTS_JS}
+{related_html}
 
 {product_cards}
 <div class="container">{cta}</div>
@@ -906,16 +996,33 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
         cat_dir.mkdir(exist_ok=True)
         (cat_dir / "index.html").write_text(build_category_page(n["slug"], n["name"], niche_posts, all_slugs, amazon_tag), encoding="utf-8")
 
+    # Write comparison pages
+    comp_dir = docs / "comparisons"
+    comp_dir.mkdir(exist_ok=True)
+    for n in state["niches"]:
+        prods = []
+        for a in articles.get(n["slug"], []):
+            prods.extend(a.get("products", []))
+        if prods:
+            title = f"Best {n['name']} Compared"
+            (comp_dir / f"{n['slug']}.html").write_text(
+                build_comparison_page(n["slug"], n["name"], title, prods, all_slugs, amazon_tag),
+                encoding="utf-8"
+            )
+            print(f"  Written: comparisons/{n['slug']}.html")
+
     # Write article pages (under docs/reviews/{slug}/ to avoid overwriting category page)
     for slug, post_list in articles.items():
         for i, a in enumerate(post_list):
             post_dir = docs / "reviews" / slug
             post_dir.mkdir(parents=True, exist_ok=True)
             hero_img_html = hero_images.get(slug, "")
+            related = [n for n in state["niches"] if n["slug"] != slug][:4]
             (post_dir / "index.html").write_text(
                 build_article_page(slug, niche_name, a["post_title"], a["article_html"],
                                    a["intro"], a["product_name"], a["meta_description"],
-                                   all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id),
+                                   all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
+                                   related_niches=related),
                 encoding="utf-8"
             )
             print(f"  Written: docs/reviews/{slug}/index.html (article)")
