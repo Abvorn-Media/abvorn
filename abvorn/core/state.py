@@ -245,6 +245,84 @@ class AbvornState:
             keys = ["provider", "calls", "avg_time_ms", "total_tokens"]
             return [dict(zip(keys, row)) for row in c.fetchall()]
 
+    def get_opportunities(self, status: str = "pending", limit: int = 10) -> list:
+        with self._cursor() as c:
+            c.execute("""
+                SELECT * FROM queue WHERE stage=? ORDER BY priority DESC, created_at ASC LIMIT ?
+            """, (status, limit))
+            keys = ["id", "niche_slug", "stage", "priority", "payload", "created_at"]
+            rows = []
+            for row in c.fetchall():
+                item = dict(zip(keys, row))
+                if isinstance(item.get("payload"), str):
+                    item["payload"] = json.loads(item["payload"])
+                rows.append(item)
+            return rows
+
+    def add_opportunity(self, niche: str, score: float = 0.0, payload: dict = None):
+        self.enqueue(niche, "pending", priority=max(1, int(score * 10)), payload=payload or {})
+
+    def update_opportunity_status(self, opp_id: int, status: str):
+        with self._cursor() as c:
+            c.execute("UPDATE queue SET stage=? WHERE id=?", (status, opp_id))
+
+    def get_cta_stats(self) -> list:
+        with self._cursor() as c:
+            c.execute("""
+                SELECT json_extract(payload, '$.cta_id') as cta_id,
+                       json_extract(payload, '$.niche') as niche,
+                       json_extract(payload, '$.cta_text') as cta_text,
+                       json_extract(payload, '$.cta_type') as cta_type,
+                       json_extract(payload, '$.impressions') as impressions,
+                       json_extract(payload, '$.clicks') as clicks,
+                       json_extract(payload, '$.conversions') as conversions
+                FROM queue
+                WHERE stage='cta_tracked'
+            """)
+            rows = []
+            for row in c.fetchall():
+                impressions = int(row[4] or 0)
+                clicks = int(row[5] or 0)
+                rows.append({
+                    "cta_id": row[0],
+                    "niche": row[1],
+                    "cta_text": row[2],
+                    "cta_type": row[3],
+                    "impressions": impressions,
+                    "clicks": clicks,
+                    "conversions": int(row[6] or 0),
+                    "click_rate": clicks / impressions if impressions > 0 else 0,
+                })
+            return rows
+
+    def get_cta_summary(self) -> dict:
+        stats = self.get_cta_stats()
+        total_impressions = sum(s["impressions"] for s in stats)
+        total_clicks = sum(s["clicks"] for s in stats)
+        total_conversions = sum(s["conversions"] for s in stats)
+        return {
+            "total_ctas": len(stats),
+            "overall_click_rate": total_clicks / total_impressions if total_impressions > 0 else 0,
+            "total_conversions": total_conversions,
+            "total_impressions": total_impressions,
+            "total_clicks": total_clicks,
+        }
+
+    def get_all_intel_patterns(self) -> list:
+        with self._cursor() as c:
+            c.execute("""
+                SELECT payload FROM queue WHERE stage='intel_pattern' ORDER BY created_at DESC LIMIT 50
+            """)
+            patterns = []
+            for row in c.fetchall():
+                try:
+                    data = json.loads(row[0]) if isinstance(row[0], str) else row[0]
+                    if isinstance(data, dict):
+                        patterns.append(data)
+                except (json.JSONDecodeError, TypeError):
+                    pass
+            return patterns
+
     def import_legacy_json(self, json_path: Path):
         if not json_path.exists():
             return

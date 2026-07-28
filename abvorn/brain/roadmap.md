@@ -1,5 +1,5 @@
 # Abvorn Advancement Roadmap
-
+> **DOC-004** — Living prioritization document. Tracks shipped, active, and future concepts.
 > Living document. Updated as we build, learn, and evolve.
 > Every entry is a potential 10x moat. Prioritization changes with context.
 
@@ -112,6 +112,22 @@ Multiple sites, one brain. Each niche gets its own branded destination — per-s
 **Classes:** `Site`, `BrandConfig`, `DNAProfile`, `SiteRegistry`, `BrandEngine`, `SiteAwareDeployer`, `CrossLinker`, `NetworkDashboard`, `BootstrapMigration`
 **Tests:** 48
 **Moat:** A portfolio that compounds collectively.
+
+### 16. Social Domination Engine
+Full pipeline: RSS content intelligence → viral script generation → Pexels asset fetching → cinematic brand filtering → audio voiceover scripts → self-learning hook analytics → Composio publishing or export. Runs as a scheduled daemon loop every 4 hours.
+
+**Module:** `abvorn/domination/`
+**Classes:** `DominationOrchestrator`, `ContentIntelligence`, `ViralScriptGenerator`, `PexelsAssetFetcher`, `CinematicFilter`, `AudioSystem`, `SelfLearningEngine`, `SocialPublisher`, `APIBudget`
+**Tests:** (pending)
+**Moat:** Every blog post automatically becomes a multi-platform social campaign with branded assets.
+
+### 17. API Budget System
+Tracks monthly API usage (Pexels, Open Web Ninja, Composio) against configurable limits. Blocks calls when quota exhausted. Persists per-month to `~/.abvorn/budget/usage.json`.
+
+**Module:** `abvorn/domination/budget.py`
+**Class:** `APIBudget`
+**Tests:** (pending)
+**Moat:** Prevents surprise bills and keeps the system running on fallbacks when quotas run out.
 
 ---
 

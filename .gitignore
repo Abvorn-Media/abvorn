@@ -16,6 +16,9 @@ LongCat-Video/
 
 # SaaS product landing pages — local only, not for public repo
 saas-products/
+cycle_state.json
+products_cache.json
+personas.db
 
 # Sensitive company docs — not for public repo
 docs/company.md

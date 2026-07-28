@@ -21,7 +21,7 @@ def get_secrets():
         "GITHUB_TOKEN": os.environ.get("GITHUB_TOKEN", ""),
         "GITHUB_REPO": os.environ.get("GITHUB_REPO", "Abvorn-Media/abvorn"),
         "PEXELS_KEY": os.environ.get("PEXELS_KEY", ""),
-        "AMAZON_TAG": os.environ.get("AMAZON_TAG", "viraltestco-20"),
+        "AMAZON_TAG": os.environ.get("AMAZON_TAG", ""),
         "APPS_SCRIPT_URL": os.environ.get("APPS_SCRIPT_URL", ""),
         "GA_MEASUREMENT_ID": os.environ.get("GA_MEASUREMENT_ID", ""),
         "GOOGLE_CLIENT_ID": os.environ.get("GOOGLE_CLIENT_ID", ""),
@@ -59,8 +59,8 @@ def fetch_product_image(query, pexels_key):
 def amazon_link(query, tag=""):
     """Generate Amazon affiliate search link."""
     q = query.replace(" ", "+")
-    t = tag or "viraltestco-20"
-    return f"https://www.amazon.com/s?k={q}&tag={t}"
+    t = tag or os.environ.get("AMAZON_TAG", "")
+    return f"https://www.amazon.com/s?k={q}&tag={t}" if t else f"https://www.amazon.com/s?k={q}"
 
 
 # ─── Open Web Ninja API — real Amazon product data ────────────────
@@ -116,14 +116,16 @@ def fetch_real_products(niche, api_key):
                 save_product_cache(cache)
                 return result
         else:
-            print(f"Open Web Ninja returned {response.status_code}: {response.text[:200]}")
+            logger.warning(f"Open Web Ninja returned {response.status_code} (body suppressed)")
     except Exception as e:
-        print(f"Open Web Ninja API error: {e}")
+        logger.warning(f"Open Web Ninja API error: {e}")
     return None
 
 def affiliate_url(product_url, tag=""):
     """Append Amazon affiliate tag to a product URL."""
-    t = tag or "viraltestco-20"
+    t = tag or os.environ.get("AMAZON_TAG", "")
+    if not t:
+        return product_url
     sep = "&" if "?" in product_url else "?"
     return f"{product_url}{sep}tag={t}"
 
@@ -234,7 +236,9 @@ def pick_niche(state):
 
 
 # ─── HTML template helpers ──────────────────────────────────────────────
-SITE_BASE = "/abvorn"
+_SITE_URL = os.environ.get("SITE_URL", "https://Abvorn-Media.github.io/abvorn").rstrip("/")
+_SITE_BASE_PATH = os.environ.get("SITE_BASE_PATH", "/abvorn").rstrip("/")
+SITE_BASE = _SITE_BASE_PATH or ""
 
 FONT_LINK = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">'
 
@@ -490,7 +494,7 @@ def build_root_index(state, posts, form_url=""):
         link_slug = f"reviews/{slug}" if "/" not in slug else slug
         recent += f'<div class="post-card"><div class="post-title"><a href="{b}/{link_slug}/">{title}</a></div><div class="post-meta">{slug.replace("-"," ").title()}</div></div>'
     jsonld = """<script type="application/ld+json">{
-"@context":"https://schema.org","@type":"Organization","name":"Abvorn","url":"https://Abvorn-Media.github.io/abvorn/","description":"Independent product reviews and buying guides.","sameAs":["https://www.tiktok.com/@abvorn","https://www.instagram.com/abvorn/","https://x.com/Abvorn"]}</script>"""
+"@context":"https://schema.org","@type":"Organization","name":"Abvorn","url":"_SITE_URL/","description":"Independent product reviews and buying guides.","sameAs":["https://www.tiktok.com/@abvorn","https://www.instagram.com/abvorn/","https://x.com/Abvorn"]}</script>""".replace("_SITE_URL", _SITE_URL)
     hero_featured = ""
     if first_post:
         ftitle = first_post.get("title", "")
@@ -575,7 +579,7 @@ CAROUSEL_JS = """<script>(function(){var c=document.querySelector('.carousel');i
 
 def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=""):
     b = SITE_BASE
-    t = affiliate_tag or "viraltestco-20"
+    t = affiliate_tag or os.environ.get("AMAZON_TAG", "")
     post_rows = ""
     for i, p in enumerate(posts[:5]):
         title = p.get("title", "")
@@ -625,34 +629,6 @@ SHARE_HTML_T = """<div class="share-buttons" style="display:flex;gap:8px;margin:
 <a href="mailto:?subject=TITLE_T&body=URL_T" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem;color:var(--text-secondary);text-decoration:none;transition:all .15s" aria-label="Share via Email"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg> Email</a>
 </div>"""
 
-def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id=""):
-    b = SITE_BASE
-    t = amazon_tag or "viraltestco-20"
-    article_url = f"https://Abvorn-Media.github.io/abvorn/reviews/{niche_slug}/"
-    share = SHARE_HTML_T.replace("TITLE_T", html_mod.escape(post_title)).replace("URL_T", article_url)
-    product_cards = ""
-    if products:
-        product_cards = '<section class="section"><div class="container"><div class="section-title">Products Mentioned</div>'
-        for prod in products:
-            product_cards += product_card_html(prod, pexels_key, t)
-        product_cards += "</div></section>"
-    cta = CTA_BANNER.replace("{query}", niche_slug.replace("-", "+")).replace("{tag}", t)
-    # Build decision matrix from products
-    matrix_rows = ""
-    if products:
-        for i, prod in enumerate(products):
-            use_cases = ["Best Overall", "Best Value", "Premium Pick"]
-            uc = use_cases[i] if i < len(use_cases) else "Also Great"
-            why = prod.get("description", "Top-rated product after extensive testing.")
-            matrix_rows += f"<tr><td>{uc}</td><td>{html_mod.escape(prod.get('name','Product'))}</td><td>{html_mod.escape(why)}</td></tr>"
-    matrix_html = f'<div class="decision-matrix"><table><thead><tr><th>Use Case</th><th>Product</th><th>Why</th></tr></thead><tbody>{matrix_rows}</tbody></table></div>' if matrix_rows else ""
-    # Verdict box
-    verdict_html = ""
-    if products and len(products) > 0:
-        p0 = products[0]
-        p0_url = p0.get("url", "")
-        p0_aff = affiliate_url(p0_url, t) if p0_url else f"https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}"
-        verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(p0.get('name', product_name))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="{p0_aff}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
 COMMENTS_JS = """<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 (function(){var k='abvorn_comments_'+location.pathname.replace(/\\//g,'_');var c=JSON.parse(localStorage.getItem(k)||'[]');var l=document.getElementById('comments-list');var cu=null;function r(){if(!l)return;if(!c.length){l.innerHTML='<div class=\"no-comments\">No comments yet. Start the conversation!</div>';return}l.innerHTML=c.map(function(e){var a=e.avatar?'<img src=\"'+e.avatar+'\" width=\"20\" height=\"20\" style=\"border-radius:50%;vertical-align:middle;margin-right:4px;display:inline-block\">':'';return'<div class=\"comment\"><div class=\"author\">'+a+htmlEncode(e.name)+' <span class=\"time\">'+new Date(e.date).toLocaleDateString()+'</span></div><div class=\"body\">'+htmlEncode(e.text)+'</div></div>'}).join('')}
@@ -666,8 +642,8 @@ window.toggleReaction=function(type,btn){var k='abvorn_r_'+type+'_'+location.pat
 
 def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id=""):
     b = SITE_BASE
-    t = amazon_tag or "viraltestco-20"
-    article_url = f"https://Abvorn-Media.github.io/abvorn/reviews/{niche_slug}/"
+    t = amazon_tag or os.environ.get("AMAZON_TAG", "viraltestco-20")
+    article_url = f"{_SITE_URL}/reviews/{niche_slug}/"
     share = SHARE_HTML_T.replace("TITLE_T", html_mod.escape(post_title)).replace("URL_T", article_url)
     product_cards = ""
     if products:

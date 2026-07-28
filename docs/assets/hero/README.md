@@ -1,4 +1,5 @@
 # Product Images — Upload Guide
+> **SITE-006** — Instructions for hero image upload vs AI fallback logic.
 
 ## Where to Upload
 

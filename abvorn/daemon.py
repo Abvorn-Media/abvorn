@@ -30,6 +30,7 @@ from .deploy.notifier import TelegramNotifier
 from .orchestrator.scheduler import Scheduler
 from .orchestrator.health import HealthMonitor
 from .platform import adapters, registry  # noqa: F401 — registers all platforms
+from .domination import DominationOrchestrator
 
 STATE_DB = Path.home() / ".abvorn" / "state.db"
 BUS_DB = Path.home() / ".abvorn" / "bus.db"
@@ -47,6 +48,13 @@ class AbvornDaemon:
         self.router = ModelRouter(self.secrets)
         self.agents = []
         self._tasks = []
+        self._phase3_inited = False
+
+    def _ensure_phase3(self):
+        """Lazy init of Phase 3 subsystems. Only runs once."""
+        if self._phase3_inited:
+            return
+        self._phase3_inited = True
         self._init_phase3()
 
     def _init_phase3(self):
@@ -84,6 +92,14 @@ class AbvornDaemon:
         self.notifier._env_mode = self.env_mode
         self.will = Will(state=self.state, bus=self.bus)
         self.drive = Drive("abvorn_daemon", mission=self.will.mission)
+        rss_path = Path(__file__).resolve().parent.parent / "docs" / "feed.xml"
+        self.domination = DominationOrchestrator(
+            rss_path=str(rss_path) if rss_path.exists() else "",
+            pexels_key=self.secrets.get("PEXELS_KEY", ""),
+            composio_key=self.secrets.get("COMPOSIO_KEY", ""),
+            db_path=str(self.state_path.parent / "domination.db"),
+        )
+        self._phase3_inited = True
 
     def is_paused(self) -> bool:
         """Check if the kill switch is engaged."""
@@ -91,6 +107,7 @@ class AbvornDaemon:
 
     async def run_full_cycle(self) -> dict:
         """Run one complete opportunity → content → deploy cycle."""
+        self._ensure_phase3()
         if self.is_paused():
             return {"status": "paused"}
 
@@ -188,6 +205,26 @@ class AbvornDaemon:
         self.bus.publish("content.drafted", {"niche": niche, "title": content.get("post_title", "")})
         return {"status": "success", "niche": niche, "persona": persona_id}
 
+    async def run_domination_cycle(self) -> dict:
+        """Run one social domination cycle — RSS → scripts → assets → publish."""
+        self._ensure_phase3()
+        if self.is_paused():
+            return {"status": "paused"}
+        try:
+            result = await asyncio.to_thread(self.domination.run_cycle)
+            if result.get("status") == "complete":
+                title = result.get("title", "")
+                niche = result.get("niche", "")
+                self.health.log_cycle(niche, success=True, duration_s=60)
+                self.notifier.report_cycle(niche, "success", title)
+                self.bus.publish("domination.cycle", {"niche": niche, "title": title})
+                logger.info(f"Domination cycle complete: {title[:60]}")
+            return result
+        except Exception as e:
+            logger.error(f"Domination cycle failed: {e}")
+            self.notifier.report_error("domination", str(e))
+            return {"status": "failed", "error": str(e)}
+
     async def start(self):
         """Start all agents and the brain."""
         self.running = True
@@ -284,11 +321,22 @@ class AbvornDaemon:
         telegram_task = asyncio.create_task(self._telegram_poll_loop())
         self._tasks.append(telegram_task)
 
+        domination_task = asyncio.create_task(self._domination_loop())
+        self._tasks.append(domination_task)
+
         logger.info(f"Daemon running with {len(self.agents)} agents")
 
     async def _bus_loop(self):
         while self.running:
             events = self.bus.get_recent_events()
+            for evt in events:
+                topic = evt.get("topic", "")
+                payload = evt.get("payload", {})
+                if topic == "domination.signal" and not self.is_paused():
+                    self._ensure_phase3()
+                    asyncio.create_task(self.run_domination_cycle())
+                elif topic == "cycle.signal" and not self.is_paused():
+                    asyncio.create_task(self.run_full_cycle())
             await asyncio.sleep(10)
 
     async def _telegram_poll_loop(self):
@@ -303,6 +351,21 @@ class AbvornDaemon:
             except Exception as e:
                 logger.debug(f"Telegram poll error (non-fatal): {e}")
             await asyncio.sleep(5)
+
+    async def _domination_loop(self):
+        """Run domination cycle every 4 hours (or on bus signal)."""
+        while self.running:
+            last_run = self.state.get_meta("domination_last_run", "")
+            if last_run:
+                last_time = datetime.fromisoformat(last_run)
+                elapsed = datetime.now() - last_time
+                if elapsed < timedelta(hours=4):
+                    await asyncio.sleep(600)
+                    continue
+            result = await self.run_domination_cycle()
+            if result.get("status") == "complete":
+                self.state.set_meta("domination_last_run", datetime.now().isoformat())
+            await asyncio.sleep(14400)
 
     async def stop(self):
         """Graceful shutdown of all agents."""
