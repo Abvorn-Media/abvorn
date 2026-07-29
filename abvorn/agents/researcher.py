@@ -3,13 +3,38 @@ from ddgs import DDGS
 
 logger = logging.getLogger("abvorn.researcher")
 
+def _get_tavily():
+    """Lazy-init Tavily client from secrets/environ."""
+    try:
+        from abvorn.core.secrets import load_secrets
+        from abvorn.core.tavily import TavilyClient
+        s = load_secrets()
+        return TavilyClient(s.get("TAVILY_KEY", ""))
+    except Exception:
+        return TavilyClient()
+
+
 def research_niche(niche: str, router=None) -> list:
     """RESEARCH stage: search web for real products in this niche.
+
+    Uses Tavily first (better results for AI), falls back to DDGS.
     
     Returns list of dicts: [{name, price, rating, features, pros, cons, summary, source_url}]
     """
     products = []
-    # 1. Try web search for real products
+    # 1. Try Tavily (AI-native search, structured results)
+    tavily = _get_tavily()
+    if tavily.available:
+        try:
+            logger.info(f"Tavily research for '{niche}'")
+            products = tavily.extract_products(niche, router)
+            if products:
+                logger.info(f"Tavily found {len(products)} products for '{niche}'")
+                return products
+        except Exception as e:
+            logger.warning(f"Tavily research failed for '{niche}': {e}")
+
+    # 2. Fallback: DDGS web search
     try:
         with DDGS() as ddgs:
             results = list(ddgs.text(f"best {niche} 2025 2026 buying guide", max_results=8))
@@ -33,7 +58,7 @@ Return a JSON array of objects with keys: name, price, rating, features (array),
                     elif isinstance(parsed, dict):
                         products = [parsed]
     except Exception as e:
-        logger.warning(f"Web research failed for '{niche}': {e}")
+        logger.warning(f"DDGS research failed for '{niche}': {e}")
 
     # 2. Fallback: AI knowledge-based product generation
     if not products and router:

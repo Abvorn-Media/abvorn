@@ -64,4 +64,6 @@ jobs:
           KILL_SWITCH_PASSWORD:  ${{ secrets.KILL_SWITCH_PASSWORD }}
           GA4_PROPERTY_ID:       ${{ secrets.GA4_PROPERTY_ID }}
           GA4_CREDENTIALS_JSON:  ${{ secrets.GA4_CREDENTIALS_JSON }}
-        run: python abvorn_cycle.py
+          TAVILY_KEY:            ${{ secrets.TAVILY_KEY }}
+          CEREBRAS_KEY:          ${{ secrets.CEREBRAS_KEY }}
+        run: python run_cycle.py

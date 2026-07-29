@@ -1,30 +1,56 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
 venv/
 .env
 .pytest_cache/
-*.db
-*.log
-.DS_Store
-Thumbs.db
 *.egg-info/
 dist/
 build/
-.superpowers/
-LongCat-Video/
 
-# SaaS product landing pages — local only, not for public repo
-saas-products/
+# OS
+.DS_Store
+Thumbs.db
+
+# Data files
+*.db
+*.log
 cycle_state.json
 products_cache.json
 personas.db
 
-# Sensitive company docs — not for public repo
+# SaaS product landing pages — local only, not for public repo
+saas-products/
+
+# Sensitive company docs — expose full strategy publicly
 docs/company.md
 docs/soul.md
 docs/SETUP.md
+docs/abvorn-ecosystem.md
 docs/plans/
 docs/specs/
 docs/superpowers/
+
+# Internal task docs
+TASK_AUDIT_SYNC.md
+.opencode/commands/abvorn-mission.md
+
+# Node
 node_modules/
+
+# Mobile server
+mobile_server/
+
+# ChromaDB / vector stores
+.ndc_chroma/
+
+# Agents & skills
+.agents/
+.superpowers/
+LongCat-Video/
+
+# Stale test/sandbox files
+test_new_*.py
+tests/test_tavily.py
+_gen_images.py

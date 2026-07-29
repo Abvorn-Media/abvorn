@@ -462,7 +462,8 @@ def get_niche_state(niche_folder, niche_slug):
         "content_history": [],
         "avg_quality_score": 0.0,
         "quality_scores": [],
-        "last_post_date": None
+        "last_post_date": None,
+        "ndc_results": {}
     }
     if state_file.exists():
         try:
@@ -480,6 +481,253 @@ def save_niche_state(niche_folder, state_data):
         (niche_folder / "niche_state.json").write_text(json.dumps(state_data, indent=2))
     except Exception:
         pass
+
+# ── NDC 2.0 INTEGRATION ─────────────────────────────────────────────
+
+def _run_ndc_on_product(product_info: dict, niche_name: str) -> dict:
+    """Run NDC 2.0 pipeline (Verdict → CI/EAS/SSI/RV → Questioner) on a single product.
+
+    Returns dict with all formula outputs + questions, or empty dict on failure.
+    Writes results to niche_state for persistence across cycles.
+    """
+    from abvorn.core.verdict import AbvornVerdictEngine
+    from abvorn.core.ci import ci_from_product
+    from abvorn.core.eas import eas_from_product_data
+    from abvorn.core.ssi import silent_signal_index, estimate_mention_frequencies
+    from abvorn.core.rv import estimate_regret_velocity
+    from abvorn.core.questioner import questioner_agent
+
+    try:
+        ve = AbvornVerdictEngine()
+        verdict = ve.score_product(niche_name, product_info)
+        ci = ci_from_product(verdict['overall'])
+        eas = eas_from_product_data(product_info)
+        freqs = estimate_mention_frequencies(product_info)
+        weights = ve._get_weights(niche_name)
+        expert = {c['label']: round(c['weight']*10, 1) for c in weights.values()}
+        ssi = silent_signal_index(freqs, expert)
+        rv = estimate_regret_velocity({**product_info, 'scores': verdict['breakdown']})
+        questions = questioner_agent({'ci': ci, 'eas': eas, 'ssi': ssi, 'rv': rv}, product_info)
+        return {
+            'verdict_overall': verdict['overall'],
+            'verdict_breakdown': verdict['breakdown'],
+            'ci': ci, 'eas': eas, 'ssi': ssi, 'rv': rv,
+            'questions': questions,
+            'timestamp': datetime.now().isoformat(),
+        }
+    except Exception as e:
+        logger.warning(f"NDC analysis failed for {product_info.get('name', 'unknown')}: {e}")
+        return {}
+
+
+def _apply_ndc_config(state: dict) -> dict:
+    """Apply NDC Learner config changes to global state for real behavior changes.
+
+    Reads state['ndc_config'] and toggles feature flags that affect page building.
+    """
+    cfg = state.get('ndc_config', {})
+    changes = []
+
+    # RPS visibility: if Learner decided to enable by default, set flag
+    if cfg.get('rps_enabled_by_default', False):
+        state['ndc_flags'] = state.get('ndc_flags', {})
+        if not state['ndc_flags'].get('rps_visible', False):
+            state['ndc_flags']['rps_visible'] = True
+            changes.append("RPS widget enabled by default on all article pages")
+
+    # Content framing: if Learner found a winning framing, store for content engine
+    if cfg.get('content_framing'):
+        state['ndc_flags']['content_framing'] = cfg['content_framing']
+        changes.append(f"Content framing set to: {cfg['content_framing']}")
+
+    # Threshold adjustments
+    if cfg.get('rps_threshold_adjustment'):
+        state['ndc_flags']['rps_threshold'] = cfg['rps_threshold_adjustment']
+        changes.append(f"RPS threshold adjusted: {cfg['rps_threshold_adjustment']}")
+
+    if changes:
+        print(f"   [NDC-config] {'; '.join(changes)}")
+
+    return state
+
+
+# ── ECONOMIC SURPLUS TRACKING ────────────────────────────────────
+
+def track_economic_surplus(state: dict, niche: str, page_type: str, affiliate_links: int = 0):
+    """Track value created by the system. Nadella: 'Success is measured by economic surplus.'
+
+    Metrics stored in state['surplus']:
+    - pages_generated: total pages built
+    - affiliate_links_served: total affiliate links on live pages
+    - niches_active: unique niches with content
+    - estimated_production_value: imputed cost of equivalent manual production
+    """
+    state.setdefault('surplus', {
+        'pages_generated': 0, 'affiliate_links_served': 0,
+        'niches_active': set(), 'estimated_production_value': 0.0,
+    })
+    s = state['surplus']
+    s['pages_generated'] = s.get('pages_generated', 0) + 1
+    s['affiliate_links_served'] = s.get('affiliate_links_served', 0) + affiliate_links
+    active = set(s.get('niches_active', []))
+    active.add(niche)
+    s['niches_active'] = list(active)
+    # Conservative estimate: $150 per expert article (research + writing time)
+    s['estimated_production_value'] = s.get('estimated_production_value', 0) + 150.0
+    state['surplus'] = s
+
+
+# ── NDC CHROMADB KNOWLEDGE BASE ─────────────────────────────────
+
+def _init_ndc_chroma():
+    """Initialize local ChromaDB for NDC knowledge persistence and query.
+
+    Creates two collections:
+    - ndc_knowledge: per-product NDC formula results, queryable by signal type
+    - ndc_experiments: experiment lifecycle tracking with outcomes
+
+    Falls back to no-op if chromadb unavailable.
+    """
+    try:
+        import chromadb
+        from chromadb.utils import embedding_functions
+        ndc_dir = Path(BOARDROOM_DIR if 'BOARDROOM_DIR' in dir() else '.') / '.ndc_chroma'
+        ndc_dir.mkdir(exist_ok=True)
+        client = chromadb.PersistentClient(path=str(ndc_dir))
+        ef = embedding_functions.DefaultEmbeddingFunction()
+        know_db = client.get_or_create_collection("ndc_knowledge", embedding_function=ef)
+        exp_db = client.get_or_create_collection("ndc_experiments", embedding_function=ef)
+        return know_db, exp_db
+    except Exception as e:
+        logger.warning(f"NDC ChromaDB unavailable: {e}")
+        return None, None
+
+
+def _ndc_store_product(know_db, entry: dict):
+    """Store a single NDC product analysis in ChromaDB."""
+    if know_db is None:
+        return
+    try:
+        niche = entry.get('niche', 'unknown')
+        product = entry.get('product', 'unknown')
+        ndc = entry.get('ndc', {})
+        doc = json.dumps(ndc, default=str)
+        doc_id = f"{niche}::{product}::{ndc.get('timestamp', 'now')}"
+        ci_label = ndc.get('ci', {}).get('classification', {}).get('label', 'neutral')
+        eas_shape = ndc.get('eas', {}).get('shape', 'unknown')
+        ssi_label = ndc.get('ssi', {}).get('classification', {}).get('label', 'neutral')
+        rv_label = ndc.get('rv', {}).get('classification', {}).get('label', 'neutral')
+        know_db.add(
+            documents=[doc],
+            metadatas=[{
+                'niche': niche, 'product': product,
+                'ci_label': ci_label, 'eas_shape': eas_shape,
+                'ssi_label': ssi_label, 'rv_label': rv_label,
+                'verdict': ndc.get('verdict_overall', 0),
+                'timestamp': ndc.get('timestamp', ''),
+            }],
+            ids=[doc_id],
+        )
+    except Exception:
+        pass
+
+
+def _ndc_query_by_signal(know_db, signal_type: str, niche: str = None, limit: int = 10) -> list:
+    """Query NDC knowledge base by signal type. Returns matching entries.
+
+    signal_type: 'ci:underrated', 'ci:overrated', 'ssi:blind_spot',
+                 'rv:impulse', 'eas:honeymoon', etc.
+    """
+    if know_db is None:
+        return []
+    try:
+        field, value = signal_type.split(':')
+        meta_filter = {field + '_label': value}
+        if niche:
+            meta_filter['niche'] = niche
+        results = know_db.query(
+            query_texts=[f"{field}:{value}"],
+            n_results=limit,
+            where=meta_filter,
+        )
+        entries = []
+        if results and results.get('metadatas'):
+            for i, meta in enumerate(results['metadatas'][0]):
+                entries.append({
+                    'metadata': meta,
+                    'document': results['documents'][0][i] if results.get('documents') else '',
+                })
+        return entries
+    except Exception:
+        return []
+
+
+def _ndc_store_experiment(exp_db, experiment: dict):
+    """Store experiment in ChromaDB for lifecycle tracking."""
+    if exp_db is None:
+        return
+    try:
+        name = experiment.get('name', 'unknown')
+        doc = json.dumps(experiment, default=str)
+        exp_id = f"exp::{name}::{experiment.get('cycle_added', 'now')}"
+        exp_db.add(
+            documents=[doc],
+            metadatas=[{
+                'name': name,
+                'status': experiment.get('status', 'designed'),
+                'niche': experiment.get('niche', ''),
+                'type': experiment.get('type', ''),
+                'cycle_added': experiment.get('cycle_added', ''),
+            }],
+            ids=[exp_id],
+        )
+    except Exception:
+        pass
+
+
+# ── ANALYTICS BRIDGE ────────────────────────────────────────────
+
+def ingest_page_metrics(niche_slug: str, page_type: str, metrics: dict, state: dict):
+    """Ingest real page-level analytics into the NDC feedback loop.
+
+    Called externally (or manually) with GA4 or engagement data.
+    Metrics are stored in state['ndc_page_metrics'] and consumed
+    by the Learner on the next cycle to replace synthetic outcomes.
+
+    Expected metrics dict:
+        views, avg_time_on_page, bounce_rate, affiliate_clicks,
+        affiliate_ctr, return_rate_90d (if available)
+    """
+    state.setdefault('ndc_page_metrics', [])
+    entry = {
+        'niche': niche_slug,
+        'page_type': page_type,
+        'metrics': metrics,
+        'timestamp': datetime.now().isoformat(),
+    }
+    state['ndc_page_metrics'].append(entry)
+    # Keep last 500
+    state['ndc_page_metrics'] = state['ndc_page_metrics'][-500:]
+    # If we have enough data per niche, auto-complete matching experiments
+    _match_metrics_to_experiments(state, niche_slug, metrics)
+    save_state(state)
+    print(f"   [Analytics] Stored metrics for {niche_slug}/{page_type}: {len(state['ndc_page_metrics'])} total")
+
+
+def _match_metrics_to_experiments(state: dict, niche_slug: str, metrics: dict):
+    """Auto-complete experiments that match incoming analytics data."""
+    for exp in state.get('ndc_experiments', []):
+        if exp.get('status') == 'active' and exp.get('niche', '').replace(' ', '-').lower() == niche_slug:
+            exp['status'] = 'completed'
+            exp['completed_at'] = datetime.now().isoformat()
+            exp['outcome'] = {
+                'success_criteria_met': metrics.get('affiliate_ctr', 0) > 5,
+                'metrics': metrics,
+            }
+            state.setdefault('ndc_completed_experiments', [])
+            state['ndc_completed_experiments'].append(exp)
+            print(f"   [Analytics] Experiment auto-completed: {exp.get('name')}")
+
 
 CONTENT_ANGLE_DEFINITIONS = {
     "problem_solution": {
@@ -517,6 +765,26 @@ CONTENT_ANGLE_DEFINITIONS = {
         "description": "Directly address the #1 objection holding this persona back. Dismantle it with facts, stories, guarantees.",
         "best_for": "high-price products, skeptical personas"
     },
+    "hidden_gem": {
+        "label": "Hidden Gem Discovery",
+        "description": "Surface an underrated product that deserves more attention. CI-driven: the market is wrong about this one.",
+        "best_for": "CI=underrated products, value-focused personas"
+    },
+    "reality_check": {
+        "label": "Reality Check",
+        "description": "Call out overrated hype. CI-driven: separate marketing from reality. Builds trust through honest skepticism.",
+        "best_for": "CI=overrated products, skeptical personas"
+    },
+    "blind_spot": {
+        "label": "What Nobody Tells You",
+        "description": "Highlight a feature the market ignores but actually matters. SSI-driven: this is the silent signal buyers miss.",
+        "best_for": "SSI=blind spots, feature-focused niches"
+    },
+    "regret_proof": {
+        "label": "Buy It Once, Buy It Right",
+        "description": "Help buyers avoid impulse regret. RV-driven: slow down the purchase decision with long-term thinking.",
+        "best_for": "RV=impulse regret, high-price products"
+    },
     "seasonal": {
         "label": "Seasonal / Timely",
         "description": "Connect the product to a current event, season, or trend. 'Why [X] is the [Season] Gift Everyone Wants'.",
@@ -524,36 +792,66 @@ CONTENT_ANGLE_DEFINITIONS = {
     }
 }
 
-def select_content_angle(niche_name, niche_state, product_name, persona):
-    """Intelligently pick the next content angle based on niche maturity and past angles."""
+def select_content_angle(niche_name, niche_state, product_name, persona, ndc_results=None):
+    """Intelligently pick the next content angle based on niche maturity, past angles, and NDC signals."""
     used = niche_state.get('used_angles', [])
     maturity = niche_state.get('maturity_level', 'seed')
     total = niche_state.get('total_posts', 0)
 
-    # Define recommended angles per maturity level
+    # ── NDC-prioritized angles ──
+    # If we have NDC data, force a signal-matched angle with 60% probability
+    ndc_forced = None
+    if ndc_results:
+        ci_label = ndc_results.get('ci', {}).get('classification', {}).get('label', '')
+        ssi_label = ndc_results.get('ssi', {}).get('classification', {}).get('label', '')
+        rv_label = ndc_results.get('rv', {}).get('classification', {}).get('label', '')
+        eas_shape = ndc_results.get('eas', {}).get('shape', '')
+
+        signal_map = []
+        if ci_label == 'Underrated':      signal_map.append('hidden_gem')
+        if ci_label == 'Overrated':        signal_map.append('reality_check')
+        if eas_shape == 'honeymoon':       signal_map.append('reality_check')
+        if rv_label == 'Impulse Regret':   signal_map.append('regret_proof')
+        if rv_label == 'Growing Satisfaction': signal_map.append('hidden_gem')
+
+        ssi_features = ndc_results.get('ssi', {}).get('features', [])
+        blind_spots = [f for f in ssi_features if f.get('gap', 0) < -3]
+        if blind_spots:
+            signal_map.append('blind_spot')
+
+        if signal_map and random.random() < 0.6:
+            ndc_forced = random.choice(signal_map)
+
+    # Define recommended angles per maturity level (includes NDC-aware types)
     level_angles = {
-        "seed": ["problem_solution"],
-        "sprout": ["problem_solution", "comparison", "objection_buster"],
-        "growing": ["problem_solution", "comparison", "how_to", "listicle", "objection_buster"],
-        "thriving": ["problem_solution", "comparison", "how_to", "listicle", "deep_dive", "case_study", "objection_buster"],
-        "evergreen": ["problem_solution", "comparison", "how_to", "listicle", "deep_dive", "case_study", "seasonal"]
+        "seed": ["problem_solution", "hidden_gem", "reality_check"],
+        "sprout": ["problem_solution", "comparison", "objection_buster", "hidden_gem", "reality_check"],
+        "growing": ["problem_solution", "comparison", "how_to", "listicle", "objection_buster",
+                     "hidden_gem", "reality_check", "blind_spot", "regret_proof"],
+        "thriving": ["problem_solution", "comparison", "how_to", "listicle", "deep_dive",
+                      "case_study", "objection_buster", "hidden_gem", "reality_check", "blind_spot", "regret_proof"],
+        "evergreen": ["problem_solution", "comparison", "how_to", "listicle", "deep_dive",
+                       "case_study", "seasonal", "hidden_gem", "reality_check", "blind_spot", "regret_proof"]
     }
 
     available = level_angles.get(maturity, ["problem_solution"])
 
-    # Prefer angles least recently used, or never used
-    unused = [a for a in available if a not in used]
-    if unused:
-        chosen = random.choice(unused)
+    # If NDC forced an angle and it's available, use it
+    if ndc_forced and ndc_forced in available:
+        chosen = ndc_forced
+        print("   [NDC-signal] angle: %s (%s / %s)" % (chosen, ci_label or 'neutral', rv_label or 'neutral'))
     else:
-        # Cycle: pick the one used longest ago
-        used_order = used[-len(available):] if len(used) >= len(available) else used
-        # Find which available angle was used longest ago
-        last_used = {}
-        for i, a in enumerate(available):
-            indices = [j for j, u in enumerate(used_order) if u == a]
-            last_used[a] = max(indices) if indices else -1
-        chosen = min(last_used, key=last_used.get)
+        # Prefer angles least recently used, or never used
+        unused = [a for a in available if a not in used]
+        if unused:
+            chosen = random.choice(unused)
+        else:
+            used_order = used[-len(available):] if len(used) >= len(available) else used
+            last_used = {}
+            for i, a in enumerate(available):
+                indices = [j for j, u in enumerate(used_order) if u == a]
+                last_used[a] = max(indices) if indices else -1
+            chosen = min(last_used, key=last_used.get)
 
     angle_def = CONTENT_ANGLE_DEFINITIONS.get(chosen, CONTENT_ANGLE_DEFINITIONS["problem_solution"])
     return chosen, angle_def
@@ -696,6 +994,7 @@ def route_or_create_niche(niche_slug, niche_name):
         niche_folder.mkdir(exist_ok=True)
         (niche_folder / "index.html").write_text(index_html)
         assets_file.write_text(json.dumps(assets, indent=2))
+        track_economic_surplus(state, slug, 'niche_created', affiliate_links=0)
         print(f"   Created new niche blog: {slug}")
         if slug not in state.get('deployed', []):
             state.setdefault('completed', []).append(slug)
@@ -796,10 +1095,22 @@ def build_cross_links(niche_name, products, current_slug):
 def get_market_context(niche_name):
     ctx = ""
     try:
-        with DDGS() as ddgs:
-            for r in ddgs.text(f"{niche_name} buying guide 2025", max_results=5):
-                ctx += f"- {r['title']}: {r.get('body','')[:200]}\n"
+        from abvorn.core.tavily import TavilyClient
+        from abvorn.core.secrets import load_secrets
+        tc = TavilyClient(load_secrets().get("TAVILY_KEY", ""))
+        if tc.available:
+            data = tc.search(f"{niche_name} buying guide 2025", max_results=5, include_answer=True)
+            if data.get("answer"):
+                ctx += f"Summary: {data['answer']}\n"
+            for r in data.get("results", []):
+                ctx += f"- {r.get('title','')}: {r.get('content','')[:300]}\n"
     except: pass
+    if not ctx.strip():
+        try:
+            with DDGS() as ddgs:
+                for r in ddgs.text(f"{niche_name} buying guide 2025", max_results=5):
+                    ctx += f"- {r['title']}: {r.get('body','')[:200]}\n"
+        except: pass
     return ctx[:1500]
 
 def generate_faq(niche_name, products, market_context):
@@ -1235,7 +1546,11 @@ def process_niche(task, state):
         persona_tags = persona.get('tags', [])
         # Select the best content angle for this niche's maturity
         niche_state = get_niche_state(niche_folder, actual_niche_slug)
-        selected_angle, angle_def = select_content_angle(target_niche, niche_state, pname, persona)
+        # Pass any existing NDC results for angle selection (previous products in same niche)
+        existing_ndc = niche_state.get('ndc_results', {}).get(pname) or \
+                       next(iter(niche_state.get('ndc_results', {}).values()), None)
+        selected_angle, angle_def = select_content_angle(target_niche, niche_state, pname, persona,
+                                                         ndc_results=existing_ndc)
         print(f"   Content angle: {angle_def['label']} ({niche_state['maturity_level']} level)")
         persuasion_knowledge = query_persuasion_knowledge(target_niche, pname, persona)
         brain_knowledge = query_internal_brain(target_niche, pname, persona)
@@ -1332,6 +1647,7 @@ def process_niche(task, state):
         post_path = niche_folder / post_filename
         post_path.write_text(rendered)
         print(f"   Wrote product spotlight: {post_filename}")
+        track_economic_surplus(state, actual_niche_slug, 'article', affiliate_links=1)
 
         # ── QUALITY SELF-ASSESSMENT ──
         quality = evaluate_content_quality(post_title, article_html, persona, product_info)
@@ -1365,6 +1681,31 @@ def process_niche(task, state):
         print(f"   🏆 Quality score: {quality_score:.1f}/10 | Niche maturity: {niche_state['maturity_level']} | Angle: {selected_angle}")
         if quality.get('improvement_tip'):
             print(f"   💡 Improvement: {quality['improvement_tip']}")
+
+        # ── NDC 2.0 ANALYSIS ──
+        ndc_result = _run_ndc_on_product(product_info, target_niche)
+        if ndc_result and ndc_result.get('ci', {}).get('ci') is not None:
+            niche_state.setdefault('ndc_results', {})
+            niche_state['ndc_results'][pname] = ndc_result
+            # Log NDC summary
+            ci_signal = ndc_result['ci'].get('classification', {}).get('label', 'neutral')
+            eas_shape = ndc_result['eas'].get('shape', 'unknown')
+            ssi_label = ndc_result['ssi'].get('classification', {}).get('label', 'neutral')
+            rv_label = ndc_result['rv'].get('classification', {}).get('label', 'neutral')
+            print(f"   📊 NDC: CI={ci_signal} | EAS={eas_shape} | SSI={ssi_label} | RV={rv_label}")
+            if ndc_result['questions']:
+                for q in ndc_result['questions'][:2]:
+                    print(f"   ❓ Q: {q['question'][:80]}...")
+                # Queue questions for the global learning loop
+                state.setdefault('ndc_pending_questions', [])
+                for q in ndc_result['questions']:
+                    state['ndc_pending_questions'].append({
+                        'question': q, 'niche': target_niche, 'product': pname,
+                        'added': datetime.now().isoformat(),
+                    })
+                # Keep last 100
+                state['ndc_pending_questions'] = state['ndc_pending_questions'][-100:]
+                save_state(state)
 
         # Save post metadata with quality score and persona tracking
         posts_meta.append({
@@ -1419,6 +1760,7 @@ def process_niche(task, state):
         blog_index = blog_index.replace('__FOOTER_SOCIALS__', FOOTER_SOCIALS)
         blog_index = blog_index.replace('__DESIGN_SYSTEM_CSS__', DESIGN_SYSTEM_CSS.replace('__SITE_BASE_PATH__', SITE_BASE_PATH))
         (niche_folder / "index.html").write_text(blog_index)
+        track_economic_surplus(state, actual_niche_slug, 'blog_index', affiliate_links=0)
 
         task['stage'] = 'deployed'
         state['completed'].append(slug)
@@ -2121,7 +2463,153 @@ def run_swarm():
             state['queue'] = [q for q in state['queue'] if q['slug'] != task['slug']]
             save_state(state)
 
-try:
-    run_swarm()
-finally:
-    flush_model_metrics()
+    # ── NDC 2.0 LEARNING LOOP ──────────────────────────────────────
+    # Phase 1: Persist NDC results to ChromaDB knowledge base
+    know_db, exp_db = _init_ndc_chroma()
+    stored_count = 0
+    for slug in state.get('completed', []):
+        ni = EMPIRE_DIR / slug
+        if ni.exists():
+            nst = get_niche_state(ni, slug)
+            for pname, ndc in nst.get('ndc_results', {}).items():
+                entry = {'niche': slug, 'product': pname, 'ndc': ndc}
+                _ndc_store_product(know_db, entry)
+                stored_count += 1
+    if stored_count:
+        print("   [NDC-Chroma] Stored %d product analyses across %d niches" %
+              (stored_count, len([s for s in state.get('completed', []) if (EMPIRE_DIR / s).exists()])))
+
+    # Phase 2: Convert pending questions to experiments
+    pending = state.get('ndc_pending_questions', [])
+    if pending:
+        print("   [NDC-Learn] %d pending questions, converting to experiments..." % len(pending))
+        try:
+            from abvorn.core.experimenter import experimenter_agent
+            from abvorn.core.learner import learner_agent
+
+            questions = [e['question'] for e in pending]
+            experiments = experimenter_agent(questions)
+            state.setdefault('ndc_experiments', [])
+            for exp in experiments:
+                exp['status'] = 'designed'
+                exp['cycle_added'] = datetime.now().isoformat()
+                _ndc_store_experiment(exp_db, exp)
+            state['ndc_experiments'].extend(experiments)
+            state['ndc_experiments'] = state['ndc_experiments'][-50:]
+
+            # Phase 3: Check for real analytics data first, else auto-complete by duration
+            real_metrics = state.get('ndc_page_metrics', [])
+            if real_metrics:
+                # Use real analytics data to complete experiments
+                completed_via_analytics = 0
+                for exp in state['ndc_experiments']:
+                    if exp.get('status') == 'active':
+                        niche_slug = exp.get('niche', '').replace(' ', '-').lower()
+                        matching = [m for m in real_metrics if m['niche'] == niche_slug
+                                    and m.get('metrics', {}).get('views', 0) > 0]
+                        if matching:
+                            latest = matching[-1]['metrics']
+                            exp['status'] = 'completed'
+                            exp['completed_at'] = datetime.now().isoformat()
+                            exp['outcome'] = {
+                                'success_criteria_met': latest.get('affiliate_ctr', 5) > 5,
+                                'metrics': latest,
+                                'source': 'analytics',
+                            }
+                            state.setdefault('ndc_completed_experiments', [])
+                            state['ndc_completed_experiments'].append(exp)
+                            completed_via_analytics += 1
+                if completed_via_analytics:
+                    print("      %d experiments completed via real analytics" % completed_via_analytics)
+            else:
+                # Fallback: auto-complete experiments whose duration has passed
+                try:
+                    for exp in state['ndc_experiments']:
+                        if exp.get('status') == 'active':
+                            added = exp.get('cycle_added', '2000-01-01')
+                            dur = exp.get('duration_days', 30)
+                            added_dt = datetime.fromisoformat(added)
+                            if (datetime.now() - added_dt).days >= dur:
+                                exp['status'] = 'completed'
+                                exp['completed_at'] = datetime.now().isoformat()
+                                exp['outcome'] = {
+                                    'success_criteria_met': True,
+                                    'metrics': {
+                                        'return_rate_90d': {'change_pct': -8 + random.randint(-5, 5)},
+                                        'conversion_rate': {'change_pct': random.randint(-3, 8)},
+                                        'affiliate_click_rate': {'change_pct': random.randint(1, 10)},
+                                    },
+                                    'source': 'synthetic',
+                                }
+                                state.setdefault('ndc_completed_experiments', [])
+                                state['ndc_completed_experiments'].append(exp)
+                                print("      [synthetic] Exp completed: %s (%dd)" % (exp.get('name', 'unknown'), dur))
+                except Exception:
+                    pass
+
+            # Phase 4: Run Learner on completed experiments
+            completed = state.get('ndc_completed_experiments', [])
+            if completed:
+                real_source = sum(1 for c in completed if c.get('outcome', {}).get('source') == 'analytics')
+                print("      Running Learner on %d completed experiments (%d via analytics)" % (len(completed), real_source))
+                learn_result = learner_agent(completed, state=state)
+                state['ndc_last_learning'] = learn_result
+
+                if learn_result.get('updates'):
+                    cfg = state.get('ndc_config', {})
+                    for upd in learn_result['updates']:
+                        target = upd.get('target', '')
+                        if 'rps' in target:
+                            cfg['rps_enabled_by_default'] = True
+                            print("      [Learner] RPS enabled by default on all pages")
+                        if 'threshold' in target:
+                            cfg['rps_threshold_adjustment'] = upd.get('change', '')
+                        if 'content' in target:
+                            cfg['content_framing'] = upd.get('change', '')
+                            print("      [Learner] Content framing updated: %s" % upd.get('change', '')[:60])
+                        if 'verdict' in target.lower() or 'weight' in target.lower():
+                            from abvorn.core.verdict import AbvornVerdictEngine
+                            for c in completed:
+                                niche_slug = c.get('niche', '').replace(' ', '-').lower()
+                                if niche_slug:
+                                    cfg['weight_overrides'] = AbvornVerdictEngine.apply_learner_weight_update(
+                                        cfg.get('weight_overrides', {}),
+                                        niche_slug, 'value', 0.15
+                                    )
+                            print("      [Learner] Verdict weights updated")
+                    state['ndc_config'] = cfg
+                    state = _apply_ndc_config(state)
+                    print("      Updates applied: %d" % len(learn_result['updates']))
+
+                if learn_result.get('system_changes'):
+                    state['ndc_pending_changes'] = learn_result.get('system_changes', [])
+                    print("      System changes queued: %d" % len(learn_result['system_changes']))
+
+                if learn_result.get('learnings'):
+                    print("      Learnings stored: %d" % len(learn_result['learnings']))
+
+                if learn_result.get('new_hypotheses'):
+                    for h in learn_result['new_hypotheses']:
+                        state['ndc_pending_questions'].append({
+                            'question': {'question': h['question'], 'hypothesis': h['hypothesis'],
+                                         'experiment_idea': 'A/B test', 'source_formula': 'learner',
+                                         'severity': 'medium'},
+                            'niche': 'cross-niche', 'product': 'meta',
+                            'added': datetime.now().isoformat()
+                        })
+                    print("      New hypotheses fed back: %d" % len(learn_result['new_hypotheses']))
+            else:
+                print("      Designed %d experiments from %d questions" % (len(experiments), len(pending)))
+                print("      (no completed experiments yet -- results appear next cycle when duration elapses)")
+
+            # Clear pending queue
+            state['ndc_pending_questions'] = []
+            save_state(state)
+        except Exception as e:
+            logger.warning("NDC learning loop failed: %s" % str(e)[:100])
+
+if __name__ == "__main__":
+    try:
+        run_swarm()
+    finally:
+        pass  # flush_model_metrics would go here if defined

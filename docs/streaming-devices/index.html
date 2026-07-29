@@ -4,8 +4,21 @@
 <title>Best Streaming Devices — Abvorn</title>
 <meta name="description" content="The best streaming devices reviewed and compared. Our expert picks after hours of testing.">
 <link rel="icon" type="image/svg+xml" href="/abvorn/assets/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/abvorn/assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/abvorn/assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/abvorn/assets/apple-touch-icon.png">
+<link rel="manifest" href="/abvorn/assets/site.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta property="og:title" content="Best Streaming Devices — Abvorn">
+<meta property="og:description" content="The best streaming devices reviewed and compared by our experts.">
+<meta property="og:url" content="https://Abvorn-Media.github.io/abvorn/streaming-devices/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Best Streaming Devices — Abvorn">
+<meta name="twitter:description" content="The best streaming devices reviewed and compared by our experts.">
 
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Abvorn","item":"https://Abvorn-Media.github.io/abvorn/"},{"@type":"ListItem","position":2,"name":"Best Streaming Devices","item":"https://Abvorn-Media.github.io/abvorn/streaming-devices/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do you test streaming devices?","acceptedAnswer":{"@type":"Answer","text":"We buy each product with our own money, test it for at least a week in real-world conditions, and compare it head-to-head against competitors."}},{"@type":"Question","name":"How much should I spend on streaming devices?","acceptedAnswer":{"@type":"Answer","text":"Good streaming devices start around $30. Our picks range from budget-friendly to premium, so there's an option for every budget."}},{"@type":"Question","name":"What should I look for when buying streaming devices?","acceptedAnswer":{"@type":"Answer","text":"Focus on build quality, performance metrics that matter for your use case, warranty coverage, and verified user reviews. We cover all of this in our detailed reviews."}}]}</script>
 
 <style>
 :root{--primary:#d4633e;--primary-dark:#b84d2a;--primary-light:#fce9e1;--accent:#1a8a7a;--accent-dark:#147062;--accent-light:#d4ede8;--green:#3a8a5c;--green-light:#d6f0df;--purple:#8b6fba;--purple-light:#ebe3f5;--bg:#faf6f1;--bg-alt:#f0ebe3;--text:#2a2724;--text-secondary:#6b6560;--text-muted:#9e9690;--border:#e3dbd4;--shadow-sm:0 1px 3px rgba(42,39,36,.06);--shadow-md:0 4px 14px rgba(42,39,36,.07);--shadow-lg:0 10px 30px rgba(42,39,36,.08);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--font-display:'Fraunces',Georgia,'Times New Roman',serif;--font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
@@ -184,6 +197,58 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 @media(max-width:768px){.carousel{height:70vh;min-height:400px;max-height:none}.carousel-overlay{padding:32px 24px;justify-content:flex-end}.carousel-overlay h3{font-size:1.5rem;max-width:100%}.carousel-overlay p{font-size:.95rem;max-width:100%}.carousel-arrow{width:40px;height:40px;font-size:1.2rem}.carousel-arrow.prev{left:12px}.carousel-arrow.next{right:12px}}
 @media(max-width:480px){.carousel{height:60vh;min-height:320px}.carousel-overlay h3{font-size:1.25rem}.carousel-overlay .carousel-badge{font-size:.65rem;padding:4px 12px}.carousel-dots{bottom:16px;gap:8px}.carousel-dot{width:10px;height:10px}}
 @media(prefers-reduced-motion:reduce){.carousel-track{transition:none}}
+
+/* ── Abvorn Verdict Card ────────────────────────────────────────── */
+.abvorn-verdict{border:2px solid var(--border);border-radius:var(--radius-lg);padding:28px 32px;margin:32px 0;background:linear-gradient(135deg,var(--bg),var(--bg-alt));box-shadow:var(--shadow-md);position:relative;overflow:hidden}
+.abvorn-verdict::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--primary),var(--accent))}
+.av-badge{display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:#fff;font-size:.7rem;font-weight:700;padding:4px 14px;border-radius:100px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
+.av-badge::before{content:'\01F525';font-size:.8rem}
+.av-score-row{display:flex;align-items:center;gap:20px;margin-bottom:20px}
+.av-score{display:flex;align-items:baseline;gap:2px}
+.av-number{font-size:3rem;font-weight:700;font-family:var(--font-display);color:var(--text);line-height:1;letter-spacing:-.03em}
+.av-outof{font-size:1.2rem;color:var(--text-muted);font-weight:600}
+.av-label-row{display:flex;flex-direction:column;gap:2px}
+.av-label{font-size:1.1rem;font-weight:700;color:var(--accent);font-family:var(--font-display)}
+.av-product{font-size:.85rem;color:var(--text-secondary)}
+.av-breakdown{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.av-bar-row{display:flex;align-items:center;gap:12px}
+.av-bar-label{flex:0 0 140px;font-size:.82rem;font-weight:600;color:var(--text-secondary);text-align:right}
+.av-bar-track{flex:1;height:8px;background:var(--border);border-radius:100px;overflow:hidden}
+.av-bar-fill{height:100%;border-radius:100px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.av-bar-score{flex:0 0 36px;font-size:.85rem;font-weight:700;color:var(--text);text-align:right}
+.av-summary{font-size:.95rem;color:var(--text-secondary);line-height:1.5;margin-bottom:20px;padding:16px;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--accent);font-style:italic}
+.av-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.av-detail-link{font-size:.9rem;color:var(--text-muted);text-decoration:none;font-weight:600}
+.av-detail-link:hover{color:var(--primary);text-decoration:none}
+.av-score-cell{text-align:center;min-width:80px}
+.av-compact-score{display:block;font-size:1.3rem;font-weight:700;font-family:var(--font-display);color:var(--text);line-height:1}
+.av-compact-label{display:block;font-size:.65rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+@media(max-width:640px){.av-score-row{flex-direction:column;align-items:flex-start;gap:8px}.av-bar-label{flex:0 0 100px;font-size:.75rem}.abvorn-verdict{padding:20px 16px}}
+
+/* ── Regret Probability Score ───────────────────────────────────── */
+.rps-container{border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px 28px;margin:24px 0;background:var(--bg);box-shadow:var(--shadow-sm)}
+.rps-badge{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+.rps-badge::before{content:'\01F52E';font-size:.8rem}
+.rps-header{border-left:4px solid var(--accent);padding-left:16px;margin-bottom:16px}
+.rps-score{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.rps-number{font-size:2.2rem;font-weight:700;font-family:var(--font-display);line-height:1;letter-spacing:-.03em}
+.rps-product-name{font-size:.9rem;color:var(--text-secondary);font-weight:500}
+.rps-section-title{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.rps-reasons{margin-bottom:16px}
+.rps-reason{padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:8px;font-size:.88rem;line-height:1.5;border-left:3px solid}
+.rps-reason.rps-mismatch{background:#fef2f2;border-color:#c0392b;color:#7f1d1d}
+.rps-reason.rps-notice{background:#fffbeb;border-color:#d4a03e;color:#78350f}
+.rps-tip{font-size:.85rem;color:var(--text-secondary);padding:12px;background:var(--bg-alt);border-radius:var(--radius-sm);margin-bottom:16px;line-height:1.4}
+.rps-alt-title{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}
+.rps-alt-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;text-decoration:none;transition:all .15s;background:var(--bg-alt)}
+.rps-alt-item:hover{text-decoration:none;border-color:var(--primary);box-shadow:var(--shadow-sm)}
+.rps-alt-name{flex:1;font-weight:600;color:var(--text);font-size:.9rem}
+.rps-alt-prob{font-size:.78rem;font-weight:600;white-space:nowrap}
+.rps-alt-price{font-size:.8rem;color:var(--text-muted)}
+.rps-footer{font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.rps-reset{background:none;border:1px solid var(--border);border-radius:100px;padding:4px 12px;font-size:.75rem;color:var(--text-muted);cursor:pointer;font-family:inherit;transition:all .15s}
+.rps-reset:hover{border-color:var(--primary);color:var(--primary)}
+@media(prefers-color-scheme:dark){.rps-reason.rps-mismatch{background:rgba(192,57,43,.12);color:#fca5a5}.rps-reason.rps-notice{background:rgba(212,160,62,.12);color:#fcd34d}}
 </style>
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -207,6 +272,6 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 <div style="color:var(--text-muted);padding:32px;text-align:center">Reviews for this category are being researched. Check back soon.</div>
 </div></section>
 <div class="container"><div class="affiliate-banner">We earn from qualifying purchases.</div></div>
-<footer><p>Abvorn &middot; Independent reviews</p><div class="footer-links"><a href="/abvorn/privacy/">Privacy</a><a href="/abvorn/terms/">Terms</a><a href="/abvorn/disclaimer/">Disclaimer</a><a href="/abvorn/about/">About</a></div><div class="social"><a href="https://www.tiktok.com/@abvorn" target="_blank" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a><a href="https://www.instagram.com/abvorn/" target="_blank" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a><a href="https://x.com/Abvorn" target="_blank" aria-label="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a></div></footer>
+<footer><p>Abvorn &middot; Independent reviews</p><div class="footer-links"><a href="/abvorn/privacy/">Privacy</a><a href="/abvorn/terms/">Terms</a><a href="/abvorn/disclaimer/">Disclaimer</a><a href="/abvorn/about/">About</a></div><div class="social"><a href="https://www.youtube.com/@Abvorn-Media" target="_blank" aria-label="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a><a href="https://www.tiktok.com/@abvorn" target="_blank" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a><a href="https://www.instagram.com/abvorn/" target="_blank" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a><a href="https://x.com/Abvorn" target="_blank" aria-label="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a></div></footer>
 <script>(function(){var h=document.querySelector(".hamburger");if(h){h.addEventListener("click",function(){var n=document.querySelector(".nav-links");n.classList.toggle("open");h.setAttribute("aria-expanded",n.classList.contains("open"))})}var d=document.querySelector(".dropdown-btn");if(d){d.addEventListener("click",function(e){e.preventDefault();this.closest(".dropdown").classList.toggle("open")})}})();</script>
 <script>(function(){var c=document.querySelector('.carousel');if(!c)return;var t=c.querySelector('.carousel-track');if(!t)return;var s=t.querySelectorAll('.carousel-slide');if(s.length<2)return;var dots=c.querySelectorAll('.carousel-dot');var prev=c.querySelector('.carousel-arrow.prev');var next=c.querySelector('.carousel-arrow.next');var i=0,n=s.length;var go=function(idx){i=((idx%n)+n)%n;t.style.transform='translateX(-'+(i*100)+'%)';dots.forEach(function(d){d.classList.toggle('active',parseInt(d.dataset.slide)===i)})};dots.forEach(function(d){d.addEventListener('click',function(){go(parseInt(this.dataset.slide))})});if(prev){prev.addEventListener('click',function(){go(i-1)})}if(next){next.addEventListener('click',function(){go(i+1)})};var iv=setInterval(function(){go(i+1)},5000);c.addEventListener('mouseenter',function(){clearInterval(iv)});c.addEventListener('mouseleave',function(){iv=setInterval(function(){go(i+1)},5000)})})();</script></body></html>

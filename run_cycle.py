@@ -26,6 +26,8 @@ def get_secrets():
         "GA_MEASUREMENT_ID": os.environ.get("GA_MEASUREMENT_ID", ""),
         "GOOGLE_CLIENT_ID": os.environ.get("GOOGLE_CLIENT_ID", ""),
         "OPENWEB_NINJA_KEY": os.environ.get("OPENWEB_NINJA_KEY", ""),
+        "TAVILY_KEY": os.environ.get("TAVILY_KEY", ""),
+        "CEREBRAS_KEY": os.environ.get("CEREBRAS_KEY", ""),
     }
     # Merge with local secrets.json (boardroom) to fill in missing keys
     try:
@@ -185,6 +187,11 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
     b = SITE_BASE
     t = amazon_tag or os.environ.get("AMAZON_TAG", "viraltestco-20")
     rows = ""
+    try:
+        from abvorn.core.verdict import AbvornVerdictEngine
+        engine = AbvornVerdictEngine()
+    except Exception:
+        engine = None
     for i, prod in enumerate(products[:6]):
         name = html_mod.escape(prod.get("name", "Product"))
         price = prod.get("price", "N/A")
@@ -195,7 +202,15 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
         for key in ["Weight", "Battery", "Rating", "Warranty"]:
             val = specs.get(key.lower(), "-")
             spec_cells += f"<td>{html_mod.escape(str(val))}</td>"
-        rows += f"""<tr><td><strong>{i+1}. {name}</strong><br><small>{desc[:80]}</small></td><td>{price}</td>{spec_cells}<td><a class="buy-btn" href="{aff}" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr>"""
+        # Abvorn Verdict score column
+        score_cell = '<td class="av-score-cell">—</td>'
+        if engine:
+            try:
+                v = engine.score_product(niche_slug, prod)
+                score_cell = f'<td class="av-score-cell"><span class="av-compact-score">{v["overall"]}</span><span class="av-compact-label">{v["label"]}</span></td>'
+            except Exception:
+                pass
+        rows += f"""<tr><td><strong>{i+1}. {name}</strong><br><small>{desc[:80]}</small></td>{score_cell}<td>{price}</td>{spec_cells}<td><a class="buy-btn" href="{aff}" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr>"""
     bread = breadcrumb_schema([
         ("Abvorn", "/"),
         (f"Best {niche_name}", f"/{niche_slug}/"),
@@ -204,7 +219,8 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-{HEAD_HTML(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}. Compare specs, prices, and features.')}
+{HEAD_HTML(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}. Compare specs, prices, and Abvorn Verdict scores.')}
+{OG_META(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}.', f'{_SITE_URL}/comparisons/{niche_slug}/')}
 <link rel="canonical" href="{b}/comparisons/{niche_slug}/">
 {bread}
 {ANALYTICS_HTML}
@@ -218,7 +234,7 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
 </div></section>
 <section class="section"><div class="container">
 <div style="overflow-x:auto"><table class="comparison-table">
-<thead><tr><th>Product</th><th>Price</th><th>Weight</th><th>Battery</th><th>Rating</th><th>Warranty</th><th>Buy</th></tr></thead>
+<thead><tr><th>Product</th><th>Abvorn Score</th><th>Price</th><th>Weight</th><th>Battery</th><th>Rating</th><th>Warranty</th><th>Buy</th></tr></thead>
 <tbody>{rows}</tbody>
 </table></div>
 </div></section>
@@ -500,6 +516,58 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 @media(max-width:768px){.carousel{height:70vh;min-height:400px;max-height:none}.carousel-overlay{padding:32px 24px;justify-content:flex-end}.carousel-overlay h3{font-size:1.5rem;max-width:100%}.carousel-overlay p{font-size:.95rem;max-width:100%}.carousel-arrow{width:40px;height:40px;font-size:1.2rem}.carousel-arrow.prev{left:12px}.carousel-arrow.next{right:12px}}
 @media(max-width:480px){.carousel{height:60vh;min-height:320px}.carousel-overlay h3{font-size:1.25rem}.carousel-overlay .carousel-badge{font-size:.65rem;padding:4px 12px}.carousel-dots{bottom:16px;gap:8px}.carousel-dot{width:10px;height:10px}}
 @media(prefers-reduced-motion:reduce){.carousel-track{transition:none}}
+
+/* ── Abvorn Verdict Card ────────────────────────────────────────── */
+.abvorn-verdict{border:2px solid var(--border);border-radius:var(--radius-lg);padding:28px 32px;margin:32px 0;background:linear-gradient(135deg,var(--bg),var(--bg-alt));box-shadow:var(--shadow-md);position:relative;overflow:hidden}
+.abvorn-verdict::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--primary),var(--accent))}
+.av-badge{display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:#fff;font-size:.7rem;font-weight:700;padding:4px 14px;border-radius:100px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
+.av-badge::before{content:'\\01F525';font-size:.8rem}
+.av-score-row{display:flex;align-items:center;gap:20px;margin-bottom:20px}
+.av-score{display:flex;align-items:baseline;gap:2px}
+.av-number{font-size:3rem;font-weight:700;font-family:var(--font-display);color:var(--text);line-height:1;letter-spacing:-.03em}
+.av-outof{font-size:1.2rem;color:var(--text-muted);font-weight:600}
+.av-label-row{display:flex;flex-direction:column;gap:2px}
+.av-label{font-size:1.1rem;font-weight:700;color:var(--accent);font-family:var(--font-display)}
+.av-product{font-size:.85rem;color:var(--text-secondary)}
+.av-breakdown{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.av-bar-row{display:flex;align-items:center;gap:12px}
+.av-bar-label{flex:0 0 140px;font-size:.82rem;font-weight:600;color:var(--text-secondary);text-align:right}
+.av-bar-track{flex:1;height:8px;background:var(--border);border-radius:100px;overflow:hidden}
+.av-bar-fill{height:100%;border-radius:100px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.av-bar-score{flex:0 0 36px;font-size:.85rem;font-weight:700;color:var(--text);text-align:right}
+.av-summary{font-size:.95rem;color:var(--text-secondary);line-height:1.5;margin-bottom:20px;padding:16px;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--accent);font-style:italic}
+.av-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.av-detail-link{font-size:.9rem;color:var(--text-muted);text-decoration:none;font-weight:600}
+.av-detail-link:hover{color:var(--primary);text-decoration:none}
+.av-score-cell{text-align:center;min-width:80px}
+.av-compact-score{display:block;font-size:1.3rem;font-weight:700;font-family:var(--font-display);color:var(--text);line-height:1}
+.av-compact-label{display:block;font-size:.65rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+@media(max-width:640px){.av-score-row{flex-direction:column;align-items:flex-start;gap:8px}.av-bar-label{flex:0 0 100px;font-size:.75rem}.abvorn-verdict{padding:20px 16px}}
+
+/* ── Regret Probability Score ───────────────────────────────────── */
+.rps-container{border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px 28px;margin:24px 0;background:var(--bg);box-shadow:var(--shadow-sm)}
+.rps-badge{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+.rps-badge::before{content:'\\01F52E';font-size:.8rem}
+.rps-header{border-left:4px solid var(--accent);padding-left:16px;margin-bottom:16px}
+.rps-score{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.rps-number{font-size:2.2rem;font-weight:700;font-family:var(--font-display);line-height:1;letter-spacing:-.03em}
+.rps-product-name{font-size:.9rem;color:var(--text-secondary);font-weight:500}
+.rps-section-title{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.rps-reasons{margin-bottom:16px}
+.rps-reason{padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:8px;font-size:.88rem;line-height:1.5;border-left:3px solid}
+.rps-reason.rps-mismatch{background:#fef2f2;border-color:#c0392b;color:#7f1d1d}
+.rps-reason.rps-notice{background:#fffbeb;border-color:#d4a03e;color:#78350f}
+.rps-tip{font-size:.85rem;color:var(--text-secondary);padding:12px;background:var(--bg-alt);border-radius:var(--radius-sm);margin-bottom:16px;line-height:1.4}
+.rps-alt-title{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}
+.rps-alt-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;text-decoration:none;transition:all .15s;background:var(--bg-alt)}
+.rps-alt-item:hover{text-decoration:none;border-color:var(--primary);box-shadow:var(--shadow-sm)}
+.rps-alt-name{flex:1;font-weight:600;color:var(--text);font-size:.9rem}
+.rps-alt-prob{font-size:.78rem;font-weight:600;white-space:nowrap}
+.rps-alt-price{font-size:.8rem;color:var(--text-muted)}
+.rps-footer{font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.rps-reset{background:none;border:1px solid var(--border);border-radius:100px;padding:4px 12px;font-size:.75rem;color:var(--text-muted);cursor:pointer;font-family:inherit;transition:all .15s}
+.rps-reset:hover{border-color:var(--primary);color:var(--primary)}
+@media(prefers-color-scheme:dark){.rps-reason.rps-mismatch{background:rgba(192,57,43,.12);color:#fca5a5}.rps-reason.rps-notice{background:rgba(212,160,62,.12);color:#fcd34d}}
 """
 
 SVG_TIKTOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>'
@@ -523,7 +591,25 @@ STORY_HTML = """<section class="story-section">
 </section>"""
 
 
-HEAD_HTML = lambda title, desc: f'<title>{title}</title>\n<meta name="description" content="{desc}">\n<link rel="icon" type="image/svg+xml" href="{SITE_BASE}/assets/favicon.svg">\n{FONT_LINK}\n'
+HEAD_HTML = lambda title, desc: f'''<title>{title}</title>
+<meta name="description" content="{desc}">
+<link rel="icon" type="image/svg+xml" href="{SITE_BASE}/assets/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="{SITE_BASE}/assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="{SITE_BASE}/assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="{SITE_BASE}/assets/apple-touch-icon.png">
+<link rel="manifest" href="{SITE_BASE}/assets/site.webmanifest">
+{FONT_LINK}'''
+
+def OG_META(title, desc, url, image="", og_type="website"):
+    img_tag = f'\n<meta property="og:image" content="{image}"><meta name="twitter:image" content="{image}">' if image else ''
+    return f'''<meta property="og:title" content="{title}">
+<meta property="og:description" content="{desc}">
+<meta property="og:url" content="{url}">
+<meta property="og:type" content="{og_type}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{title}">
+<meta name="twitter:description" content="{desc}">{img_tag}
+'''
 NAV_SCRIPT = '<script>(function(){var h=document.querySelector(".hamburger");if(h){h.addEventListener("click",function(){var n=document.querySelector(".nav-links");n.classList.toggle("open");h.setAttribute("aria-expanded",n.classList.contains("open"))})}var d=document.querySelector(".dropdown-btn");if(d){d.addEventListener("click",function(e){e.preventDefault();this.closest(".dropdown").classList.toggle("open")})}})();</script>'
 import os
 
@@ -587,6 +673,7 @@ def build_root_index(state, posts, form_url=""):
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {HEAD_HTML('Abvorn — Product Reviews & Buying Guides', 'Independent, expert reviews across every category. We test so you can buy with confidence.')}
+{OG_META('Abvorn — Product Reviews & Buying Guides', 'Independent, expert reviews across every category. We test so you can buy with confidence.', _SITE_URL)}
 {jsonld}
 {ANALYTICS_HTML}
 <style>{CSS_SHARED}</style>
@@ -693,6 +780,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {HEAD_HTML(f'Best {niche_name} — Abvorn', f'The best {niche_name.lower()} reviewed and compared. Our expert picks after hours of testing.')}
+{OG_META(f'Best {niche_name} — Abvorn', f'The best {niche_name.lower()} reviewed and compared by our experts.', f'{_SITE_URL}/{niche_slug}/')}
 {bread}
 {faq}
 {ANALYTICS_HTML}
@@ -734,6 +822,152 @@ window.postComment=function(){var t=document.getElementById('comment-text');if(!
 window.toggleReaction=function(type,btn){var k='abvorn_r_'+type+'_'+location.pathname;var d=JSON.parse(localStorage.getItem(k)||'{"active":false,"count":0}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')};
 </script>"""
 
+RPS_JS = """<script>
+(function(){
+// ── Abvorn Regret Probability Score (client-side) ──────────────
+var DATA = document.getElementById('abvorn-rps-data');
+if(!DATA)return;
+var rpsData;
+try{rpsData=JSON.parse(DATA.textContent)}catch(e){return}
+if(!rpsData||!rpsData.products||!rpsData.products.length)return;
+
+// Preference-to-score label mapping (mirrors PREFERENCE_MAP in rps.py)
+var PREFS = {sound_quality:'Sound Quality',battery_life:'Battery Life',
+  comfort:'Comfort & Fit',features:'Features & Tech',value:'Value for Money',
+  performance:'Performance',build_quality:'Build Quality',ease_of_use:'Ease of Use',
+  design:'Design',reliability:'Reliability',accuracy:'Accuracy',compatibility:'Compatibility'};
+
+// Load or initialize preference profile from localStorage
+var LS_KEY='abvorn_prefs';
+var DEFAULT_PREFS={sound_quality:5,battery_life:5,comfort:5,features:5,value:5};
+var prefs=JSON.parse(localStorage.getItem(LS_KEY)||'null');
+if(!prefs){prefs=JSON.parse(JSON.stringify(DEFAULT_PREFS))}
+
+// Update preferences from click signals
+function trackPref(category,weight){
+  if(category in prefs){
+    var old=prefs[category];
+    prefs[category]=Math.min(10,Math.max(0,old+(weight||5)-old)*0.3+old*0.7);
+    localStorage.setItem(LS_KEY,JSON.stringify(prefs));
+  }
+}
+
+// Track clicks on product cards, verdict, buy buttons
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-track]');
+  if(!el)return;
+  var cat=el.getAttribute('data-track');
+  var w=parseFloat(el.getAttribute('data-weight')||'5');
+  trackPref(cat,w);
+});
+
+// Calculate alignment and regret probability (JS port of Python RPS engine)
+function calcRegret(userPrefs,productScores){
+  var totalW=0,weightedSum=0,reasons=[],good=[],poor=[];
+  for(var key in userPrefs){
+    if(!userPrefs.hasOwnProperty(key))continue;
+    var importance=Math.min(10,Math.max(0,userPrefs[key]));
+    var label=PREFS[key];
+    if(!label||!(label in productScores))continue;
+    var prodVal=parseFloat(productScores[label]);
+    var diff=Math.abs(importance-prodVal)/10;
+    var align=1-diff;
+    weightedSum+=align*importance;
+    totalW+=importance;
+    if(diff>0.3){
+      var msg='You prioritize '+_(key)+' ('+importance.toFixed(0)+'/10), but this product scores '+prodVal.toFixed(1)+'/10.';
+      reasons.push({message:msg,severity:diff>0.6?'mismatch':'notice'});
+    }
+    if(Math.abs(importance-prodVal)<=2&&importance>=5){
+      good.push({label:_(key),val:importance+'/'+prodVal.toFixed(1)});
+    }
+    if(Math.abs(importance-prodVal)>2&&importance>=5){
+      poor.push({label:_(key),val:importance+'/'+prodVal.toFixed(1)});
+    }
+  }
+  var alignScore=totalW>0?weightedSum/totalW:0.5;
+  var regret=Math.min(1,Math.max(0,1-alignScore));
+  return {
+    regretProb:Math.round(regret*1000)/10,
+    alignmentScore:Math.round(alignScore*100)/100,
+    reasons:reasons.slice(0,4),
+    goodMatches:good.slice(0,3),
+    poorMatches:poor.slice(0,3),
+    severity:regret<0.3?'low':regret<0.6?'moderate':regret<0.8?'high':'very_high'
+  };
+}
+function _(k){return k.replace(/_/g,' ').replace(/\\b\\w/g,function(c){return c.toUpperCase()})}
+
+// Render the RPS widget
+function renderRPS(regret,productName,allProducts){
+  var severityColors={low:'#3a8a5c',moderate:'#d4a03e',high:'#d4633e',very_high:'#c0392b'};
+  var severityLabels={low:'Low Regret Risk',moderate:'Moderate Regret Risk',high:'High Regret Risk',very_high:'Very High Regret Risk'};
+  var severityTips={low:'This product aligns well with your preferences.',
+    moderate:'Some of your priorities don\'t match this product.',
+    high:'This product may not be right for you.',
+    very_high:'Based on your preferences, this is likely the wrong choice.'};
+  var c=severityColors[regret.severity]||'#9e9690';
+  var lbl=severityLabels[regret.severity]||'Unknown';
+  var tip=severityTips[regret.severity]||'';
+  var reasonsHtml=regret.reasons.map(function(r){
+    return '<div class="rps-reason rps-'+r.severity+'">'+r.message+'</div>';
+  }).join('');
+
+  // Rank alternatives
+  var altHtml='';
+  if(allProducts.length>1){
+    var ranked=allProducts.filter(function(p){return p.name!==productName}).map(function(p){
+      var pr=calcRegret(prefs,p.scores);
+      return {name:p.name,prob:pr.regretProb,price:p.price,url:p.url};
+    }).sort(function(a,b){return a.prob-b.prob}).slice(0,3);
+    if(ranked.length){
+      altHtml='<div class="rps-alt-title">Better alternatives based on your preferences:</div>';
+      ranked.forEach(function(a){
+        altHtml+='<a class="rps-alt-item" href="'+(a.url||'#')+'" target="_blank">'
+          +'<span class="rps-alt-name">'+a.name+'</span>'
+          +'<span class="rps-alt-prob" style="color:'+severityColors[a.prob<30?'low':a.prob<60?'moderate':'high']+'">Regret Risk: '+a.prob+'%</span>'
+          +'<span class="rps-alt-price">'+a.price+'</span></a>';
+      });
+    }
+  }
+
+  var el=document.getElementById('abvorn-rps-widget');
+  if(!el){
+    el=document.createElement('div');
+    el.id='abvorn-rps-widget';
+    var verdict=document.querySelector('.abvorn-verdict');
+    if(verdict)verdict.parentNode.insertBefore(el,verdict.nextSibling);
+    else{
+      var h1=document.querySelector('h1');
+      if(h1)h1.parentNode.insertBefore(el,h1.nextSibling);
+    }
+  }
+  el.innerHTML='<div class="rps-container"><div class="rps-badge">Abvorn Regret Probability Score</div>'
+    +'<div class="rps-header" style="border-left-color:'+c+'">'
+    +'<div class="rps-score"><span class="rps-number" style="color:'+c+'">'+regret.regretProb+'%</span>'
+    +'<span style="color:'+c+';display:block;font-size:.85rem;font-weight:600;margin-top:2px">'+lbl+'</span></div>'
+    +'<div class="rps-product-name">For: '+productName+'</div></div>'
+    +(reasonsHtml?'<div class="rps-reasons"><div class="rps-section-title">Why?</div>'+reasonsHtml+'</div>':'')
+    +'<div class="rps-tip">'+tip+'</div>'
+    +(altHtml?'<div class="rps-alternatives">'+altHtml+'</div>':'')
+    +'<div class="rps-footer">Your preferences are stored locally. <button class="rps-reset" onclick="resetPrefs()">Reset</button></div></div>';
+}
+
+// Reset preferences
+window.resetPrefs=function(){
+  localStorage.removeItem(LS_KEY);
+  prefs=JSON.parse(JSON.stringify(DEFAULT_PREFS));
+  var el=document.getElementById('abvorn-rps-widget');
+  if(el)el.remove();
+};
+
+// Auto-initialize on page load
+var primaryProduct=rpsData.products[0];
+var regret=calcRegret(prefs,primaryProduct.scores);
+renderRPS(regret,primaryProduct.name,rpsData.products);
+})();
+</script>"""
+
 
 def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None):
     b = SITE_BASE
@@ -760,12 +994,38 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         p0 = products[0]
         p0_url = p0.get("url", "")
         p0_aff = affiliate_url(p0_url, t) if p0_url else f"https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}"
-        verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(p0.get('name', product_name))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="{p0_aff}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
+        # Abvorn Verdict Engine — score the product
+        try:
+            from abvorn.core.verdict import AbvornVerdictEngine, render_verdict_card
+            engine = AbvornVerdictEngine()
+            verdict = engine.score_product(niche_slug, p0)
+            detail_url = f"{b}/reviews/{niche_slug}/"
+            verdict_html = render_verdict_card(verdict, html_mod.escape(p0.get('name', product_name)), p0_aff, detail_url)
+        except Exception:
+            verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(p0.get('name', product_name))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="{p0_aff}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
     bread = breadcrumb_schema([
         ("Abvorn", "/"),
         (f"Best {niche_name}", f"/{niche_slug}/"),
         (html_mod.escape(post_title)[:60], f"/reviews/{niche_slug}/"),
     ])
+    # RPS data: embed all product scores for client-side regret prediction
+    rps_data = {"products": [], "niche": niche_slug}
+    try:
+        from abvorn.core.verdict import AbvornVerdictEngine
+        ve = AbvornVerdictEngine()
+        for prod in (products or []):
+            v = ve.score_product(niche_slug, prod)
+            rps_data["products"].append({
+                "name": prod.get("name", "Product"),
+                "price": prod.get("price", ""),
+                "scores": v["breakdown"],
+                "overall": v["overall"],
+                "label": v["label"],
+                "url": affiliate_url(prod.get("url", ""), t) or "",
+            })
+    except Exception:
+        pass
+    rps_json = html_mod.escape(json.dumps(rps_data))
     related_html = ""
     if related_niches:
         cards = "".join(
@@ -777,8 +1037,10 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {HEAD_HTML(html_mod.escape(post_title) + ' - Abvorn', html_mod.escape(meta_desc)[:160])}
+{OG_META(html_mod.escape(post_title) + ' - Abvorn', html_mod.escape(meta_desc)[:160], article_url, og_type='article')}
 <link rel="canonical" href="{article_url}">
 {bread}
+<script id="abvorn-rps-data" type="application/json">{rps_json}</script>
 {ANALYTICS_HTML}
 <style>{CSS_SHARED}</style>
 </head><body>
@@ -816,7 +1078,8 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 <div class="container"><div class="affiliate-banner">We earn a commission if you buy through our links, at no extra cost to you. Our opinions are our own.</div></div>
 <footer><p>Abvorn &middot; Independent reviews since 2026</p><div class="footer-links"><a href="{b}/privacy/">Privacy</a><a href="{b}/terms/">Terms</a><a href="{b}/disclaimer/">Disclaimer</a><a href="{b}/about/">About</a></div>{SOCIAL_HTML}</footer>
 {NAV_SCRIPT}
-{CAROUSEL_JS}</body></html>"""
+{CAROUSEL_JS}
+{RPS_JS}</body></html>"""
 
 
 
@@ -933,6 +1196,7 @@ def build_methodology_page(all_slugs, form_url=""):
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {HEAD_HTML('How We Test — Abvorn', 'Our rigorous, independent testing methodology. Every recommendation is earned through real-world evaluation.')}
+{OG_META('How We Test — Abvorn', 'Our rigorous, independent testing methodology. Every recommendation is earned through real-world evaluation.', f'{_SITE_URL}/how-we-test/')}
 {ANALYTICS_HTML}
 <style>{CSS_SHARED}</style>
 </head><body>
@@ -967,6 +1231,310 @@ def build_methodology_page(all_slugs, form_url=""):
 <footer><p>Abvorn &middot; Independent reviews since 2026</p><div class="footer-links"><a href="{b}/privacy/">Privacy</a><a href="{b}/terms/">Terms</a><a href="{b}/disclaimer/">Disclaimer</a><a href="{b}/about/">About</a></div>{SOCIAL_HTML}</footer>
 {NAV_SCRIPT}
 {CAROUSEL_JS}</body></html>"""
+
+
+# ─── Persona Content Engine ──────────────────────────────────────────────
+CONTENT_TYPE_MAP = {
+    "unaware": {"type": "problem_discovery", "label": "Problem Discovery",
+        "purpose": "Catch the unaware — make them feel seen. Start with their frustration, name it, validate it.",
+        "example": "5 Signs Your Commute Is Draining You More Than You Realize"},
+    "problem_aware": {"type": "problem_deep_dive", "label": "Problem Deep-Dive",
+        "purpose": "Educate the problem-aware. Show them why the problem costs more than they think.",
+        "example": "Why Most Commuters Get Half the Battery Life They Could"},
+    "solution_aware": {"type": "how_to", "label": "How-To / Setup Guide",
+        "purpose": "Help the solution-aware implement. Step-by-step, actionable.",
+        "example": "How to Set Up Noise Cancelling Without Missing Your Train Stop"},
+    "solution_aware_comparison": {"type": "solution_comparison", "label": "Solution Comparison",
+        "purpose": "Help the solution-aware decide between approaches.",
+        "example": "Noise Cancelling vs Transparency Mode — Which Commuter Type Are You?"},
+    "product_aware": {"type": "product_review", "label": "Product Review",
+        "purpose": "Give the product-aware the final nudge. Real testing, real verdict.",
+        "example": "Sony XM6 Review: 30 Days as a Daily Commuter"},
+    "most_aware": {"type": "micro_comparison", "label": "Micro-Comparison",
+        "purpose": "Convert the most-aware. Quick, decisive head-to-head.",
+        "example": "XM6 vs AirPods Pro 3: The Commuter's Verdict"},
+    "cross_sell": {"type": "cross_sell", "label": "Cross-Sell Bundle",
+        "purpose": "Bundle cross-sell. Natural next-product recommendation.",
+        "example": "The 3-Gadget Commute Kit That Changed My Morning"},
+}
+
+def generate_persona_content_plan(niche_name, persona, awareness_level="problem_aware",
+                                   products=None, content_type_override=None):
+    """Generate a content plan matrix for a persona at a given awareness level.
+    Returns a dict with title, angle, structure, and SEO metadata — no API call needed."""
+    p_name = persona.get("name", "Your Reader")
+    frustrations = persona.get("psychology", {}).get("anxieties", ["the problem"])
+    hopes = persona.get("psychology", {}).get("hopes", ["a solution"])
+    cialdini = persona.get("psychology", {}).get("cialdini_principles", ["social_proof"])
+    hoffeld = persona.get("psychology", {}).get("hoffeld_buying_reason", "gain")
+
+    if content_type_override:
+        ct = next((v for v in CONTENT_TYPE_MAP.values() if v["type"] == content_type_override),
+                  CONTENT_TYPE_MAP["problem_aware"])
+    else:
+        ct = CONTENT_TYPE_MAP.get(awareness_level, CONTENT_TYPE_MAP["problem_aware"])
+
+    frust = frustrations[0] if frustrations else "the problem"
+    hope = hopes[0] if hopes else "a solution"
+    niche_lower = niche_name.lower()
+
+    title_templates = {
+        "problem_discovery": [
+            f"Are You {frust.title()}? Here's What No One Tells You About {niche_lower}",
+            f"5 Signs Your {frust.title()} Is Costing You More Than You Think",
+            f"Stop Ignoring {frust.title()} — Why {niche_lower} Matters More Than Ever",
+        ],
+        "problem_deep_dive": [
+            f"Why Most People Get {niche_lower} Wrong (And Pay for It)",
+            f"The Hidden Cost of Bad {niche_lower}: What Nobody Talks About",
+            f"Your {niche_lower} Is Holding You Back. Here's How to Fix It",
+        ],
+        "how_to": [
+            f"How to {hope.title()} Without Breaking the Bank",
+            f"{niche_lower} Done Right: A Step-by-Step Guide for {p_name}",
+            f"The {p_name}'s Guide to {hope.title()}",
+        ],
+        "solution_comparison": [
+            f"{niche_lower}: The {p_name}'s Dilemma — Which Path Is Right for You?",
+            f"Should You Prioritize {hopes[0] if len(hopes)>1 else 'Quality'} or {frust}?",
+        ],
+        "product_review": [
+            f"Best {niche_lower} for {p_name}: Real Testing, Honest Verdict",
+            f"We Tested the Top {niche_lower} So {p_name} Doesn't Have To",
+        ],
+        "micro_comparison": [
+            f"[Product A] vs [Product B]: The {p_name}'s Verdict",
+            f"Which {niche_lower} Should {p_name} Buy? The 90-Second Answer",
+        ],
+        "cross_sell": [
+            f"The Ultimate {niche_lower} Kit for {p_name}",
+            f"3 Products {p_name} Needs for the Perfect {niche_lower} Setup",
+        ],
+    }
+
+    titles = title_templates.get(ct["type"], [f"Best {niche_lower} for {p_name}"])
+    selected_title = titles[0]
+
+    return {
+        "persona": p_name,
+        "awareness_level": awareness_level,
+        "content_type": ct["type"],
+        "content_label": ct["label"],
+        "purpose": ct["purpose"],
+        "suggested_title": selected_title,
+        "alternative_titles": titles[1:],
+        "angle": f"Help {p_name} overcome {frust} to achieve {hope}",
+        "primary_keyword": f"best {niche_lower} for {p_name.lower().replace(' ','-')}",
+        "meta_description_template": f"Struggling with {frust}? Our {ct['label'].lower()} helps {p_name} {hope[:40]}. Expert guidance, real results.",
+        "persuasion_levers": {
+            "cialdini": cialdini,
+            "hoffeld": hoffeld,
+        },
+        "suggested_structure": [
+            f"Hook: Name {p_name}'s specific {frust}",
+            f"Agitate: Why {frust} costs them time/money/peace",
+            "Solution: Present the method or approach",
+            "Trust: Specific examples, data, or social proof",
+            "Action: Clear next step with product recommendation",
+        ],
+    }
+
+
+def generate_persona_article(niche_name, persona, awareness_level, router=None,
+                              products=None, content_type_override=None):
+    """Generate full persona-specific article using AI router if available.
+    Falls back to returning a content plan + placeholder structure."""
+    plan = generate_persona_content_plan(niche_name, persona, awareness_level,
+                                          products, content_type_override)
+
+    # If no router or no API keys, return content plan for manual authoring
+    if router is None or not router.providers:
+        plan["mode"] = "manual"
+        plan["article_html"] = _persona_article_template(plan, persona, niche_name, products)
+        plan["instructions"] = "Replace placeholder text with original content. See mission phase 4 for guidelines."
+        return plan
+
+    # Generate full article via AI
+    p = persona.get("psychology", {})
+    frustrations = p.get("anxieties", [])
+    hopes = p.get("hopes", [])
+    prod_names = json.dumps([pr.get("name", "") for pr in (products or [])])
+
+    prompt = f"""You are writing a {plan['content_label']} article for Abvorn.
+
+NICHE: {niche_name}
+CONTENT TYPE: {plan['content_type']} — {plan['purpose']}
+PRIMARY KEYWORD: {plan['primary_keyword']}
+
+TARGET READER — {persona.get('name', 'Your Reader')}
+Their frustrations: {json.dumps(frustrations)}
+Their hopes: {json.dumps(hopes)}
+Awareness level: {awareness_level}
+
+Products to feature: {prod_names or 'None yet — write generically'}
+
+INSTRUCTIONS:
+1. Lead with the persona's frustration. Make them feel seen.
+2. Agitate the problem — why it costs them time/money/peace of mind.
+3. Present the solution (method, not just product).
+4. Cross-sell naturally: if mentioning a product, use an affiliate link.
+5. End with a clear, low-friction CTA.
+
+Return JSON:
+{{
+  "post_title": "Compelling title (50-65 chars)",
+  "meta_description": "SEO meta (150-160 chars) that speaks to the persona",
+  "intro": "2-3 paragraph hook (HTML)",
+  "article_html": "Full article body (800-1200 words HTML). Include 1-2 natural affiliate links with tag=viraltestco-20"
+}}"""
+
+    result = router.ask(prompt, json_mode=True)
+    if not result:
+        plan["mode"] = "fallback"
+        plan["article_html"] = _persona_article_template(plan, persona, niche_name, products)
+        return plan
+
+    import json as _json
+    try:
+        data = _json.loads(result)
+    except Exception:
+        plan["mode"] = "fallback"
+        plan["article_html"] = _persona_article_template(plan, persona, niche_name, products)
+        return plan
+
+    plan["mode"] = "ai_generated"
+    plan["post_title"] = data.get("post_title", plan["suggested_title"])
+    plan["meta_description"] = data.get("meta_description", "")
+    plan["intro"] = data.get("intro", "")
+    plan["article_html"] = data.get("article_html", "")
+    return plan
+
+
+def _persona_article_template(plan, persona, niche_name, products=None):
+    """Generate a well-structured HTML template for manual filling."""
+    p_name = persona.get("name", "Your Reader")
+    frustrations = persona.get("psychology", {}).get("anxieties", [])
+    hopes = persona.get("psychology", {}).get("hopes", [])
+    frust = frustrations[0] if frustrations else "this problem"
+    hope = hopes[0] if hopes else "your goal"
+    ct = plan["content_type"]
+    prod = products[0].get("name", "our recommended product") if products else "our recommended product"
+    prod_price = products[0].get("price", "$XX") if products else "$XX"
+
+    templates = {
+        "problem_discovery": f"""<p>You know that feeling when {frust}? It's not just annoying — it's a sign that something isn't working.</p>
+<p>Most people ignore it. They adapt, they cope, they tell themselves it's fine. But here's the truth: {frust} is costing you more than you realize.</p>
+<p>In this guide, we'll show you exactly what's going wrong and — more importantly — how to fix it. No fluff, no theory. Just actionable steps that actually work.</p>
+<h2>The Real Cost of Ignoring {frust}</h2>
+<p>The problem with {frust.lower()} isn't just the inconvenience. It's the cumulative drain on your time, your focus, and your peace of mind.</p>
+<p>Think about it: every time you deal with {frust.lower()}, you're spending mental energy you could be using for something that matters. Multiply that by days, weeks, months — and the cost adds up fast.</p>
+<h2>What You Can Do About It</h2>
+<p>The good news? You don't have to live with this. Here's a proven approach to solving {frust.lower()} once and for all.</p>
+<p>Start by acknowledging the problem. Then look at the tools and techniques available. And finally — make a decision based on what actually works, not what's marketed the hardest.</p>
+<p>If you're ready to take action, we recommend starting with <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">{prod} ({prod_price})</a> — it's what we use and trust.</p>""",
+        "problem_deep_dive": f"""<p>Let's talk about {frust}. It's one of the most overlooked issues in {niche_name}, and it's quietly costing people like {p_name} thousands in wasted time and money.</p>
+<p>Most articles tell you what to buy. This one tells you why the problem exists in the first place — and how to fix it at the root.</p>
+<h2>Why {frust} Happens</h2>
+<p>The root cause is almost never what people think. It's not about budget, or brand, or even the specific product. It's about how {niche_name} fits into your specific situation.</p>
+<p>When you understand the underlying mechanics, you stop wasting money on Band-Aid fixes and start investing in solutions that last.</p>
+<h2>What {p_name} Should Do Instead</h2>
+<p>Here's the framework we use after testing dozens of options. Step one: identify your actual use case. Step two: match it to proven solutions. Step three: ignore everything else.</p>
+<p>Want the shortcut? Start with <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">{prod}</a> — it consistently outperforms alternatives in this exact scenario.</p>""",
+        "how_to": f"""<p>If you've been struggling with {frust}, here's a step-by-step system that will help you achieve {hope}.</p>
+<h2>Step 1: Assess Your Starting Point</h2>
+<p>Before you can fix {frust.lower()}, you need to understand where you are now. Take 5 minutes to evaluate your current setup and identify the specific gaps.</p>
+<h2>Step 2: Choose the Right Approach</h2>
+<p>Not all solutions are created equal. For {p_name}, the best approach prioritizes {hope.lower()} without creating new problems. Here's what to look for...</p>
+<h2>Step 3: Invest in What Works</h2>
+<p>Once you've identified the right approach, it's time to execute. We've tested extensively and found that <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">{prod}</a> delivers the best results for people in your situation.</p>
+<h2>Step 4: Optimize and Maintain</h2>
+<p>Getting it right is one thing. Keeping it right is another. Here's how to maintain your setup for long-term success...</p>""",
+        "solution_comparison": f"""<p>If you're reading this, you already know {frust} is a problem. Now the question is: what's the best way to solve it?</p>
+<p>We've tested every major approach. Here's our honest assessment of what works best for {p_name}.</p>
+<h2>Option A: The Quick Fix</h2>
+<p>Fast, affordable, but often temporary. Good if you need an immediate solution and are comfortable iterating.</p>
+<h2>Option B: The Long-Term Solution</h2>
+<p>More investment upfront, but delivers {hope} sustainably. This is what we recommend for most people.</p>
+<h2>Our Verdict</h2>
+<p>For {p_name}, we recommend <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">{prod}</a>. It strikes the best balance of performance, value, and reliability.</p>""",
+        "product_review": f"""<p>After spending [X hours] testing {prod} against its top competitors, here's our honest verdict — including what we didn't like.</p>
+<h2>First Impressions</h2>
+<p>Out of the box, {prod} feels {hope.lower()} in mind. The build quality is solid, the setup is straightforward, and the initial performance is impressive.</p>
+<h2>How It Performs in Real-World Use</h2>
+<p>We tested {prod} for [X days/weeks] in real conditions. Here's what we found...
+<strong>What we loved:</strong> [Key strengths]
+<strong>What we didn't:</strong> [Honest weaknesses]</p>
+<h2>Bottom Line</h2>
+<p>Is {prod} right for {p_name}? If {frust} is your main concern, then yes — this is the best option at {prod_price}. <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">Check the current price on Amazon</a>.</p>""",
+        "micro_comparison": f"""<p>Quick question for {p_name}: Are you better off with the market leader or the value pick? We tested both to give you a straight answer.</p>
+<h2>At a Glance</h2>
+<table class="decision-matrix"><thead><tr><th>Feature</th><th>{prod}</th><th>Alternative</th></tr></thead><tbody>
+<tr><td>Price</td><td>{prod_price}</td><td>$XX</td></tr>
+<tr><td>Performance</td><td>Excellent</td><td>Good</td></tr>
+<tr><td>Best For</td><td>{p_name}</td><td>Budget buyers</td></tr>
+</tbody></table>
+<h2>The Verdict</h2>
+<p>If {frust} is your priority, <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">{prod}</a> is the clear choice.</p>""",
+        "cross_sell": f"""<p>Most people stop at one product. But if you really want to solve {frust}, you need a system — not just a gadget.</p>
+<h2>The Essential Kit for {p_name}</h2>
+<p>After extensive testing, here are the three products {p_name} needs for the perfect {niche_name} setup:</p>
+<p><strong>1. {prod}</strong> — The cornerstone. This handles the core {frust.lower()} problem.</p>
+<p><strong>2. [Complementary product]</strong> — Extends your capabilities and fills the gaps.</p>
+<p><strong>3. [Accessory]</strong> — The finishing touch that makes everything work together seamlessly.</p>
+<p>Start with <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">{prod} ({prod_price})</a> and build from there.</p>""",
+    }
+
+    return templates.get(ct, templates["problem_discovery"])
+
+
+def get_persona_content_matrix(niche_name):
+    """Build a complete content matrix for a niche: all personas × all awareness levels.
+    Returns list of content plan dicts, one per cell in the matrix."""
+    from abvorn.persona.engine import PersonaEngine
+    engine = PersonaEngine()
+    personas = engine.discover_personas(niche_name)
+    matrix = []
+    for persona in personas:
+        for level in ["unaware", "problem_aware", "solution_aware", "product_aware", "most_aware"]:
+            plan = generate_persona_content_plan(niche_name, persona, level)
+            matrix.append(plan)
+        # Add cross-sell
+        plan = generate_persona_content_plan(niche_name, persona, "solution_aware",
+                                             content_type_override="cross_sell")
+        matrix.append(plan)
+    return matrix
+
+
+def write_persona_content_plan(niche_name, matrix, docs_dir="docs/plans"):
+    """Write persona content plan to a markdown file for the mission to use."""
+    import os
+    plans_dir = os.path.join(docs_dir, "")
+    os.makedirs(plans_dir, exist_ok=True)
+    slug = niche_name.lower().replace(" ", "-")
+    path = os.path.join(plans_dir, f"content-plan-{slug}.md")
+    lines = [
+        f"# Content Plan: {niche_name}",
+        f"Generated: {datetime.now().strftime('%Y-%m-%d')}",
+        "",
+    ]
+    for plan in matrix:
+        lines.extend([
+            f"## Persona: {plan['persona']} — {plan['content_label']}",
+            f"- **Awareness**: {plan['awareness_level']}",
+            f"- **Suggested Title**: {plan['suggested_title']}",
+            f"- **Angle**: {plan['angle']}",
+            f"- **Keyword**: {plan['primary_keyword']}",
+            f"- **Persuasion**: Cialdini={plan['persuasion_levers']['cialdini']}, Hoffeld={plan['persuasion_levers']['hoffeld']}",
+            f"- **Structure**:",
+        ])
+        for s in plan["suggested_structure"]:
+            lines.append(f"  - {s}")
+        lines.append("")
+    content = "\n".join(lines)
+    with open(path, "w") as f:
+        f.write(content)
+    print(f"  Written: {path} ({len(matrix)} content pieces planned)")
+    return path
 
 
 # ─── Document writer ────────────────────────────────────────────────────
@@ -1130,7 +1698,7 @@ def main(forced_niche=None, force=False):
             hero_images[niche_slug] = f'<img class="hero-img" src="/abvorn/assets/{niche_slug}.png" alt="{headline}" width="1200" height="630">'
             print(f"  Generated: assets/{niche_slug}.png ({len(img_bytes)} bytes)")
             # Also generate social-sized versions
-            social = resizer.social(img_bytes, "og", niche_slug)
+            social = resizer.resize(img_bytes, "og")
             if social:
                 (assets_dir / f"{niche_slug}-og.png").write_bytes(social)
                 print(f"  Generated: assets/{niche_slug}-og.png")
@@ -1156,7 +1724,7 @@ def main(forced_niche=None, force=False):
     # Summary
     total = sum(n["posts"] for n in state["niches"])
     print(f"\n{'='*50}")
-    print(f"✅ Cycle complete: {niche_slug}")
+    print(f"[OK] Cycle complete: {niche_slug}")
     print(f"   Total posts on site: {total}")
     print(f"   Next up: next niche in round-robin")
     print(f"{'='*50}")

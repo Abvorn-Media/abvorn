@@ -163,7 +163,11 @@ DEFAULT_STATE = {
     "performance": {}, "redirects": {}, "model_metrics": [], "email_schedule": [],
     "generals": {}, "enterprise_structure": {}, "cta_variants": {},
     "predictions": {}, "prediction_accuracy": {"total": 0, "correct": 0, "history": []},
-    "research_queue": [], "rss_sources": [], "persona_registry": {}
+    "research_queue": [], "rss_sources": [], "persona_registry": {},
+    "ndc_pending_questions": [], "ndc_experiments": [], "ndc_completed_experiments": [],
+    "ndc_last_learning": {}, "ndc_config": {}, "ndc_flags": {"rps_visible": False},
+    "ndc_page_metrics": [],
+    "surplus": {"pages_generated": 0, "affiliate_links_served": 0, "niches_active": [], "estimated_production_value": 0.0}
 }
 
 def load_state():

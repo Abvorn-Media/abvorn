@@ -5,10 +5,14 @@ from openai import OpenAI
 logger = logging.getLogger("abvorn.models")
 
 class AIProvider:
-    def __init__(self, name: str, api_key: str, base_url: str = None, model: str = None):
+    def __init__(self, name: str, api_key: str, base_url: str = None, model: str = None, timeout: float = None):
         self.name = name
         self.model = model or "gpt-4o"
-        self.client = OpenAI(api_key=api_key, base_url=base_url) if api_key else None
+        import httpx
+        to = httpx.Timeout(timeout if timeout else 60.0, connect=timeout if timeout else 10.0)
+        http_client = httpx.Client(timeout=to)
+        kwargs = {"api_key": api_key, "base_url": base_url, "http_client": http_client, "max_retries": 0}
+        self.client = OpenAI(**kwargs) if api_key else None
         self._banned_until = 0.0
         self.total_calls = 0
         self.total_tokens = 0
@@ -79,19 +83,20 @@ class AIProvider:
 
 
 class ModelRouter:
-    def __init__(self, secrets: dict):
+    def __init__(self, secrets: dict, timeout: float = None):
         self.providers = []
         configs = [
-            ("qwen", secrets.get("QWEN_KEY"), "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", "qwen3.5-flash"),
-            ("gemini", secrets.get("GEMINI_KEY"), "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-2.0-flash"),
-            ("groq", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile"),
+            ("cerebras", secrets.get("CEREBRAS_KEY"), "https://api.cerebras.ai/v1", "gpt-oss-120b"),
             ("deepseek", secrets.get("DEEPSEEK_KEY"), "https://api.deepseek.com/v1", "deepseek-chat"),
-            ("openai", secrets.get("OPENAI_KEY"), None, "gpt-4o"),
+            ("qwen", secrets.get("QWEN_KEY"), "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", "qwen3.5-flash"),
+            ("groq", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile"),
             ("glm", secrets.get("GLM_KEYS"), "https://open.bigmodel.cn/api/paas/v4/", "glm-4-flash"),
+            ("gemini", secrets.get("GEMINI_KEY"), "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-2.0-flash"),
+            ("openai", secrets.get("OPENAI_KEY"), None, "gpt-4o"),
         ]
         for name, key, url, model in configs:
             if key and "YOUR_" not in key:
-                self.providers.append(AIProvider(name, key, url, model))
+                self.providers.append(AIProvider(name, key, url, model, timeout=timeout))
 
     def ask(self, prompt: str, system: str = None, json_mode: bool = False,
             model_hint: str = None, task: str = None) -> str:
@@ -125,6 +130,36 @@ class ModelRouter:
                 continue
         logger.error("All AI providers exhausted")
         return None
+
+    def health(self) -> dict:
+        """Kilo health check. Returns availability + recent failure count."""
+        total = len(self.providers)
+        avail = sum(1 for p in self.providers if p.available)
+        recent_fails = sum(1 for p in self.providers if p.failures > 0 and not p.available)
+        return {
+            "total_providers": total,
+            "available": avail,
+            "unavailable": total - avail,
+            "recent_failures": recent_fails,
+            "healthy": avail > 0,
+        }
+
+    def get_fallback_response(self, prompt: str, task: str = None) -> str:
+        """Graceful fallback when no model is available.
+
+        Returns a template response so the system degrades gracefully
+        rather than crashing.
+        """
+        logger.warning("ModelRouter fallback: no AI providers available")
+        return ""
+
+    def ask_with_health(self, prompt: str, system: str = None, json_mode: bool = False,
+                        model_hint: str = None, task: str = None) -> tuple:
+        """Like ask() but returns (response, health_dict) for observability."""
+        result = self.ask(prompt, system, json_mode, model_hint, task)
+        if result is None:
+            result = self.get_fallback_response(prompt, task)
+        return result, self.health()
 
     def get_stats(self) -> list:
         return [{"name": p.name, "calls": p.total_calls, "tokens": p.total_tokens,
