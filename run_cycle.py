@@ -1657,6 +1657,44 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     print(f"  Written: docs/feed.xml, docs/sitemap.xml")
 
 
+def _register_sensors(nervous_system):
+        """Register all monitoring sensors."""
+        nervous_system.register_sensor(
+            "engagement_sensor",
+            lambda: 0.15,
+            "engagement_score",
+            0.3,
+            AlertLevel.CRITICAL
+        )
+        nervous_system.register_sensor(
+            "sentiment_sensor",
+            lambda: 0.45,
+            "sentiment_drift",
+            0.25,
+            AlertLevel.WARNING
+        )
+        nervous_system.register_sensor(
+            "algorithm_sensor",
+            lambda: 0.10,
+            "algorithm_change",
+            0.5,
+            AlertLevel.INFO
+        )
+        nervous_system.register_sensor(
+            "quality_sensor",
+            lambda: 0.85,
+            "quality_score",
+            0.7,
+            AlertLevel.WARNING
+        )
+        nervous_system.register_sensor(
+            "error_sensor",
+            lambda: 0.02,
+            "error_rate",
+            0.05,
+            AlertLevel.CRITICAL
+        )
+
 # ─── Main ────────────────────────────────────────────────────────────────
 def main(forced_niche=None, force=False):
     secrets = get_secrets()
