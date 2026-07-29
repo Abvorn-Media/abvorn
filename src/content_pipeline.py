@@ -9,6 +9,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 from src.humanizer_engine import HumanizerEngine
+from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
 
 logger = logging.getLogger("abvorn.content_pipeline")
 
@@ -31,6 +32,7 @@ class ContentPipeline:
 
     def __init__(self):
         self._ensure_dirs()
+        self.fact_checker = create_fact_checker()
 
     def _ensure_dirs(self):
         ASSETS_DIR.mkdir(parents=True, exist_ok=True)
@@ -189,6 +191,17 @@ class ContentPipeline:
             "hero_image": image_path,
             "created_at": datetime.now().isoformat(),
         }
+
+        # Fact-check all generated content
+        for platform, script_data in scripts.items():
+            if isinstance(script_data, dict) and "script" in script_data:
+                fc = self.fact_checker.check_content(script_data["script"], context={"platform": platform})
+                if fc["overall_status"] == "critical":
+                    logger.warning(f"  Fact-check CRITICAL for {platform}: {len(fc['failed_claims'])} failed claims")
+                elif fc["failed_claims"]:
+                    script_data["script"] = self.fact_checker.apply_corrections(
+                        script_data["script"], fc["corrections"])
+                    logger.info(f"  Fact-check fixes applied for {platform}: {len(fc['corrections'])}")
 
         self._save_pipeline_result(result)
         return result

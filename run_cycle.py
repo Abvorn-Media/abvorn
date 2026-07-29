@@ -7,6 +7,8 @@ import os, sys, json, logging, re, html as html_mod, requests as http_requests
 from pathlib import Path
 from datetime import datetime
 
+from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
+
 logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
 
 # ─── Secrets ────────────────────────────────────────────────────────────
@@ -1740,6 +1742,21 @@ def main(forced_niche=None, force=False):
                 form_url=secrets.get("APPS_SCRIPT_URL", ""),
                 hero_images=hero_images,
                 google_client_id=secrets.get("GOOGLE_CLIENT_ID", ""))
+
+    # 4.5 FACT-CHECK — Validate all factual claims before marking complete
+    fact_checker = create_fact_checker(draft)
+    fact_results = fact_checker.check_content(draft.get("article_html", ""), context={"niche": niche_slug})
+    if fact_results["overall_status"] == "critical":
+        print(f"  CRITICAL: Article failed fact-check — blocking publication")
+        logger.error(f"Fact-check CRITICAL for {niche_slug}: {len(fact_results['failed_claims'])} failed claims")
+    elif fact_results["failed_claims"]:
+        print(f"  WARNING: {len(fact_results['failed_claims'])} claims failed fact-check")
+        corrected_html = fact_checker.apply_corrections(draft.get("article_html", ""), fact_results["corrections"])
+        if corrected_html != draft.get("article_html", ""):
+            draft["article_html"] = corrected_html
+            print(f"  Applied {len(fact_results['corrections'])} auto-corrections")
+    else:
+        print(f"  Fact-check: PASSED ({len(fact_results['verified_claims'])} claims verified)")
 
     # 5. UPDATE STATE
     niche["posts"] += 1

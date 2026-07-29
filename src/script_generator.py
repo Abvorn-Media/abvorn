@@ -4,10 +4,12 @@ import logging
 from typing import Dict, Any, List
 
 from src.humanizer_engine import HumanizerEngine
+from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
 
 logger = logging.getLogger("abvorn.script_generator")
 
 _humanizer = HumanizerEngine()
+_fact_checker = create_fact_checker()
 
 DEFAULT_HOOKS = {
     "tiktok": [
@@ -81,6 +83,14 @@ def generate_viral_script(verdict: Dict[str, Any], platform: str) -> Dict[str, A
         body = _humanizer.humanize_youtube_script(body)
     elif platform == "tiktok":
         body = _humanizer.humanize_tiktok_script(body)
+
+    # Fact-check the humanized script
+    fc = _fact_checker.check_content(body, context={"platform": platform})
+    if fc["overall_status"] == "critical":
+        logger.warning(f"  Fact-check CRITICAL for {platform}: {len(fc['failed_claims'])} failed claims")
+    elif fc["failed_claims"]:
+        body = _fact_checker.apply_corrections(body, fc["corrections"])
+        logger.info(f"  Fact-check: {len(fc['corrections'])} corrections applied for {platform}")
 
     return {
         "platform": platform,
