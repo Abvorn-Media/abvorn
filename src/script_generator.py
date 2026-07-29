@@ -5,6 +5,7 @@ from typing import Dict, Any, List
 
 from src.humanizer_engine import HumanizerEngine
 from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
+from src.ai_sql import AISQL, create_ai_sql
 from src.quantum_content_engine import QuantumContentEngine, create_quantum_engine, Platform
 
 logger = logging.getLogger("abvorn.script_generator")
@@ -84,6 +85,20 @@ def generate_viral_script(verdict: Dict[str, Any], platform: str) -> Dict[str, A
         body = _humanizer.humanize_youtube_script(body)
     elif platform == "tiktok":
         body = _humanizer.humanize_tiktok_script(body)
+
+    # AI SQL optimization
+    try:
+        query = QueryPlan(
+            system_prompt="You are an expert content optimizer. Optimize this script for engagement.",
+            user_prompt=body,
+            params={"temperature": 0.7, "max_tokens": len(body.split()) * 2, "format": "json"},
+        )
+        ai_result = _ai_sql.query(query)
+        if ai_result.content:
+            body = ai_result.content
+            logger.info(f"  AI SQL optimized script via {ai_result.provider_used}")
+    except Exception as e:
+        logger.warning(f"  AI SQL optimization skipped: {e}")
 
     # Fact-check the humanized script
     fc = _fact_checker.check_content(body, context={"platform": platform})

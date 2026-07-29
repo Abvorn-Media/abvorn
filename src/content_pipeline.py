@@ -13,6 +13,11 @@ from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
 from src.quantum_content_engine import QuantumContentEngine, create_quantum_engine, Platform
 from src.quality_guardian import create_quality_guardian
 from src.paradox_engine import create_paradox_engine
+from src.ai_sql import AISQL, create_ai_sql
+from src.unified_memory import UnifiedMemory, create_unified_memory
+from src.close_feedback_loop import ClosedFeedbackLoop, create_feedback_loop
+from src.economic_surplus import EconomicSurplusTracker, create_economic_surplus_tracker
+from src.entitlements import EntitlementsFramework, create_entitlements_framework
 
 logger = logging.getLogger("abvorn.content_pipeline")
 
@@ -39,6 +44,11 @@ class ContentPipeline:
         self.quantum_engine = create_quantum_engine()
         self.quality_guardian = create_quality_guardian()
         self.paradox_engine = create_paradox_engine()
+        self.ai_sql = create_ai_sql()
+        self.unified_memory = create_unified_memory()
+        self.feedback_loop = create_feedback_loop()
+        self.surplus_tracker = create_economic_surplus_tracker()
+        self.entitlements = create_entitlements_framework()
 
     def _ensure_dirs(self):
         ASSETS_DIR.mkdir(parents=True, exist_ok=True)
@@ -220,6 +230,49 @@ class ContentPipeline:
                 )
         except Exception as e:
             logger.warning(f"Quality check skipped: {e}")
+
+        # AI SQL query for script optimization
+        try:
+            query = QueryPlan(
+                system_prompt="You are an expert content optimizer.",
+                user_prompt=f"Optimize this content for {product_name}: {verdict.get('summary', '')}",
+                params={"temperature": 0.7, "max_tokens": 500, "format": "json"},
+            )
+            ai_result = self.ai_sql.query(query)
+            logger.info(f"  AI SQL optimization complete via {ai_result.provider_used}")
+        except Exception as e:
+            logger.warning(f"  AI SQL optimization skipped: {e}")
+
+        # Unified memory store for this content cycle
+        try:
+            self.unified_memory.store(
+                f"{product_id}_pipeline",
+                {"product_id": product_id, "verdict": verdict, "scripts": len(scripts)},
+                tier=MemoryTier.SHORT_TERM,
+            )
+        except Exception as e:
+            logger.warning(f"  Memory store skipped: {e}")
+
+        # Closed feedback loop update
+        try:
+            self.feedback_loop.run()
+        except Exception as e:
+            logger.warning(f"  Feedback loop skipped: {e}")
+
+        # Economic surplus check
+        try:
+            surplus = self.surplus_tracker.measure()
+            logger.info(f"  Social permission score: {surplus.get('social_permission_score', 0):.2f}")
+        except Exception as e:
+            logger.warning(f"  Surplus check skipped: {e}")
+
+        # Entitlements check before publishing
+        try:
+            can_publish = self.entitlements.check("publish_content", {"product_id": product_id}, user_role="pipeline")
+            if not can_publish:
+                logger.warning(f"  Entitlements check failed for {product_id}")
+        except Exception as e:
+            logger.warning(f"  Entitlements check skipped: {e}")
 
         # Paradox Engine injection
         try:

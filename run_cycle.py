@@ -11,6 +11,11 @@ from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
 from src.quantum_content_engine import QuantumContentEngine, create_quantum_engine, Platform
 from src.nervous_system import NervousSystem, create_nervous_system, AlertLevel
 from src.living_knowledge_core import create_living_knowledge_core
+from src.ai_sql import AISQL, create_ai_sql, QueryPlan, QueryResult
+from src.unified_memory import UnifiedMemory, create_unified_memory, MemoryTier
+from src.close_feedback_loop import ClosedFeedbackLoop, create_feedback_loop
+from src.economic_surplus import EconomicSurplusTracker, create_economic_surplus_tracker
+from src.entitlements import EntitlementsFramework, create_entitlements_framework
 
 logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
 
