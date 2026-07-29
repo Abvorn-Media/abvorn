@@ -8,6 +8,7 @@ from pathlib import Path
 from datetime import datetime
 
 from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
+from src.quantum_content_engine import QuantumContentEngine, create_quantum_engine, Platform
 
 logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
 
@@ -1757,6 +1758,22 @@ def main(forced_niche=None, force=False):
             print(f"  Applied {len(fact_results['corrections'])} auto-corrections")
     else:
         print(f"  Fact-check: PASSED ({len(fact_results['verified_claims'])} claims verified)")
+
+    # 4.6 QUANTUM SIMULATION — Predict engagement before marking complete
+    print(f"\n--- QUANTUM SIMULATION: {niche_slug} ---")
+    try:
+        quantum_engine = create_quantum_engine()
+        user_data = {"interest_score": 0.7}
+        for platform_str in ["tiktok", "youtube_short", "instagram_reel", "x", "linkedin"]:
+            platform_map = {"tiktok": Platform.TIKTOK, "youtube_short": Platform.YOUTUBE, "instagram_reel": Platform.INSTAGRAM, "x": Platform.X, "linkedin": Platform.LINKEDIN}
+            plat = platform_map.get(platform_str)
+            if plat:
+                simulation = quantum_engine.simulate_content(draft, user_data, plat)
+                assembled = quantum_engine.assemble_content(simulation, draft, plat)
+                print(f"  {platform_str}: engagement={assembled['predictions']['engagement_score']:.0%} confidence={assembled['predictions']['confidence']:.0%}")
+        print(f"  Quantum simulation complete")
+    except Exception as e:
+        print(f"  Quantum simulation skipped: {e}")
 
     # 5. UPDATE STATE
     niche["posts"] += 1

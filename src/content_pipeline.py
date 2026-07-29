@@ -10,6 +10,7 @@ from datetime import datetime
 
 from src.humanizer_engine import HumanizerEngine
 from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
+from src.quantum_content_engine import QuantumContentEngine, create_quantum_engine, Platform
 
 logger = logging.getLogger("abvorn.content_pipeline")
 
@@ -33,6 +34,7 @@ class ContentPipeline:
     def __init__(self):
         self._ensure_dirs()
         self.fact_checker = create_fact_checker()
+        self.quantum_engine = create_quantum_engine()
 
     def _ensure_dirs(self):
         ASSETS_DIR.mkdir(parents=True, exist_ok=True)
@@ -202,6 +204,22 @@ class ContentPipeline:
                     script_data["script"] = self.fact_checker.apply_corrections(
                         script_data["script"], fc["corrections"])
                     logger.info(f"  Fact-check fixes applied for {platform}: {len(fc['corrections'])}")
+
+        # Quantum engagement simulation
+        try:
+            user_data = {"interest_score": 0.7}
+            for platform_str in ["tiktok", "youtube_short", "instagram_reel", "x", "linkedin"]:
+                platform_map = {"tiktok": Platform.TIKTOK, "youtube_short": Platform.YOUTUBE, "instagram_reel": Platform.INSTAGRAM, "x": Platform.X, "linkedin": Platform.LINKEDIN}
+                plat = platform_map.get(platform_str)
+                if plat:
+                    simulation = self.quantum_engine.simulate_content(verdict, user_data, plat)
+                    assembled = self.quantum_engine.assemble_content(simulation, verdict, plat)
+                    if isinstance(scripts.get(platform_str), dict):
+                        scripts[platform_str]["predicted_engagement"] = assembled["predictions"]["engagement_score"]
+                        scripts[platform_str]["predicted_views"] = assembled["predictions"]["views"]
+                        scripts[platform_str]["predicted_components"] = assembled["components"]
+        except Exception as e:
+            logger.warning(f"Quantum simulation skipped: {e}")
 
         self._save_pipeline_result(result)
         return result

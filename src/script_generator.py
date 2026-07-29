@@ -5,6 +5,7 @@ from typing import Dict, Any, List
 
 from src.humanizer_engine import HumanizerEngine
 from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
+from src.quantum_content_engine import QuantumContentEngine, create_quantum_engine, Platform
 
 logger = logging.getLogger("abvorn.script_generator")
 
@@ -92,6 +93,21 @@ def generate_viral_script(verdict: Dict[str, Any], platform: str) -> Dict[str, A
         body = _fact_checker.apply_corrections(body, fc["corrections"])
         logger.info(f"  Fact-check: {len(fc['corrections'])} corrections applied for {platform}")
 
+    # Quantum engagement prediction
+    try:
+        quantum = create_quantum_engine()
+        user_data = {"interest_score": 0.7}
+        platform_map = {"tiktok": Platform.TIKTOK, "youtube_short": Platform.YOUTUBE, "instagram_reel": Platform.INSTAGRAM, "x": Platform.X, "linkedin": Platform.LINKEDIN}
+        plat = platform_map.get(platform)
+        if plat:
+            sim = quantum.simulate_content({"verdict": {"overall": overall, "breakdown": {}}}, user_data, plat)
+            asm = quantum.assemble_content(sim, {"verdict": {"overall": overall}}, plat)
+            predictions = asm["predictions"]
+        else:
+            predictions = {"engagement_score": 0.0, "views": 0.0, "confidence": 0.0}
+    except Exception:
+        predictions = {"engagement_score": 0.0, "views": 0.0, "confidence": 0.0}
+
     return {
         "platform": platform,
         "hook": hook,
@@ -99,6 +115,9 @@ def generate_viral_script(verdict: Dict[str, Any], platform: str) -> Dict[str, A
         "key_points": key_points,
         "hashtags": hashtags,
         "word_count": len(body.split()),
+        "predicted_engagement": predictions["engagement_score"],
+        "predicted_views": predictions["views"],
+        "predicted_confidence": predictions["confidence"],
     }
 
 
