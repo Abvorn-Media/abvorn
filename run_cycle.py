@@ -349,7 +349,44 @@ def _get_price_floor(niche_slug: str) -> str:
     }
     return floors.get(niche_slug, "50")
 
-FONT_LINK = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">'
+FONT_LINK = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">'
+
+DESIGN_SYSTEM_CSS = """
+:root {
+    --clr-accent: #c98a2c;
+    --clr-accent-text: #8b6914;
+    --clr-white: #ffffff;
+    --clr-off-white: #f6f5f2;
+    --clr-light-gray: #e5e2dc;
+    --clr-mid-gray: #888;
+    --clr-primary: #0a0a0a;
+    --clr-black: #0a0a0a;
+    --font-display: 'Libre Franklin', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --space-xs: 4px; --space-sm: 8px; --space-md: 16px; --space-lg: 24px; --space-xl: 32px;
+    --space-2xl: 48px; --space-3xl: 64px;
+    --text-xs: 0.75rem; --text-sm: 0.875rem; --text-base: 1rem; --text-lg: 1.125rem;
+    --text-xl: 1.25rem; --text-2xl: 1.5rem; --text-3xl: 2rem; --text-4xl: 2.5rem;
+    --radius-sm: 6px; --radius-md: 12px; --radius-lg: 16px;
+    --shadow-sm: 0 1px 3px rgba(10,10,10,0.06);
+    --shadow-md: 0 4px 14px rgba(10,10,10,0.08);
+    --shadow-lg: 0 10px 30px rgba(10,10,10,0.1);
+    --duration-fast: 0.15s; --duration-base: 0.25s; --duration-slow: 0.4s;
+    --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;font-family:var(--font-body);-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{color:var(--clr-primary);background:var(--clr-white);line-height:1.6}
+::selection{background:rgba(201,138,44,0.15)}
+.container{max-width:1200px;margin:0 auto;padding:0 20px}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;height:auto}
+.btn{display:inline-block;border:none;cursor:pointer;font-family:var(--font-body);font-weight:700;padding:0.8em 1.6em;border-radius:var(--radius-sm);font-size:0.9rem;transition:all var(--duration-fast) var(--ease-out);text-decoration:none}
+.btn:hover{text-decoration:none}
+.input{font-family:var(--font-body);padding:10px 14px;border:2px solid var(--clr-light-gray);border-radius:var(--radius-sm);font-size:0.9rem;transition:border-color var(--duration-fast);outline:none;background:var(--clr-white);color:var(--clr-primary)}
+.input:focus{border-color:var(--clr-accent)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+"""
 
 CSS_SHARED = """
 :root{--primary:#d4633e;--primary-dark:#b84d2a;--primary-light:#fce9e1;--accent:#1a8a7a;--accent-dark:#147062;--accent-light:#d4ede8;--green:#3a8a5c;--green-light:#d6f0df;--purple:#8b6fba;--purple-light:#ebe3f5;--bg:#faf6f1;--bg-alt:#f0ebe3;--text:#2a2724;--text-secondary:#6b6560;--text-muted:#9e9690;--border:#e3dbd4;--shadow-sm:0 1px 3px rgba(42,39,36,.06);--shadow-md:0 4px 14px rgba(42,39,36,.07);--shadow-lg:0 10px 30px rgba(42,39,36,.08);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--font-display:'Fraunces',Georgia,'Times New Roman',serif;--font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
@@ -361,24 +398,34 @@ body{color:var(--text);background:var(--bg);line-height:1.6}
 .container{max-width:1080px;margin:0 auto;padding:0 24px}
 a{color:var(--primary);text-decoration:none;transition:color .15s}
 a:hover{color:var(--primary-dark);text-decoration:underline}
-nav{background:rgba(250,246,241,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
-@media(prefers-color-scheme:dark){nav{background:rgba(26,23,21,.9)}}
-nav .inner{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:56px;justify-content:space-between}
-nav .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1.15rem;color:var(--text);text-decoration:none;font-family:var(--font-display)}
-nav .logo:hover{text-decoration:none}
-.nav-links{display:flex;align-items:center;gap:24px}
-.dropdown{position:relative}
-.dropdown-btn{background:none;border:none;cursor:pointer;font-size:.9rem;color:var(--text-secondary);padding:4px 0;border-bottom:2px solid transparent;font-family:inherit;display:flex;align-items:center;gap:4px;transition:color .15s}
-.dropdown-btn:hover{color:var(--text);border-bottom-color:var(--primary)}
-.dropdown-btn::after{content:'';display:inline-block;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid var(--text-muted);margin-left:4px;transition:transform .2s}
-.dropdown.open .dropdown-btn::after{transform:rotate(180deg)}
-.dropdown-menu{display:none;position:absolute;top:100%;left:0;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);min-width:200px;padding:8px;z-index:20;max-height:400px;overflow-y:auto}
-.dropdown:hover .dropdown-menu,.dropdown.open .dropdown-menu{display:block}
-.dropdown-menu a{display:block;padding:8px 12px;font-size:.9rem;color:var(--text-secondary);border-radius:4px;text-decoration:none;transition:all .15s}
-.dropdown-menu a:hover{background:var(--bg-alt);color:var(--primary);text-decoration:none}
-.nav-link{font-size:.9rem;color:var(--text-secondary);text-decoration:none;padding:4px 0;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
-.nav-link:hover{color:var(--text);border-bottom-color:var(--primary);text-decoration:none}
-.nav-link.current{color:var(--text);border-bottom-color:var(--primary)}
+.top-bar{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}
+.top-bar .container{display:flex;justify-content:space-between}
+header{background:#0a0a0a;padding:18px 0;position:relative;z-index:20;border-bottom:1px solid #2a2a2a}
+.navbar{display:flex;justify-content:space-between;align-items:center}
+.logo img{max-height:44px;width:auto}
+.nav-links{display:flex;align-items:center;gap:8px}
+.nav-links > a,.nav-item > a{color:#fff;text-decoration:none;padding:8px 16px;font-weight:600;font-size:0.9rem;border-radius:var(--radius-sm);transition:background var(--duration-fast) var(--ease-out)}
+.nav-links > a:hover,.nav-item > a:hover{background:rgba(255,255,255,0.08);color:var(--clr-accent,#c98a2c)}
+.nav-item{position:relative}
+.nav-item > a{padding:8px 16px;display:flex;align-items:center;gap:4px}
+.nav-item > a::after{content:'▾';font-size:0.6rem;opacity:0.5}
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#1a1a1a;min-width:220px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:6px 0;z-index:30;border:1px solid #2a2a2a}
+.nav-item:hover .nav-dropdown{display:block}
+.nav-dropdown a{display:block;color:#ccc;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
+.nav-dropdown a:hover{background:#2a2a2a;color:#fff}
+.nav-toggle{display:none;background:none;border:none;color:#fff;padding:6px;cursor:pointer}
+.nav-toggle svg{width:24px;height:24px}
+@media(max-width:640px){
+.nav-toggle{display:block}
+.nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:#0a0a0a;flex-direction:column;align-items:stretch;padding:8px 20px 20px;gap:2px;box-shadow:var(--shadow-lg);border-top:1px solid #2a2a2a;z-index:30}
+.nav-links.open{display:flex}
+.nav-links > a,.nav-item{margin:0}
+.nav-links > a,.nav-item > a{padding:10px 0}
+.nav-item > a::after{display:none}
+.nav-dropdown{position:static;box-shadow:none;margin-top:0;padding-left:16px;display:block;background:transparent;border:none}
+.nav-dropdown a{color:#888;padding:6px 0;font-size:0.8rem}
+.nav-dropdown a:hover{background:transparent;color:#fff}
+}
 h1,h2,h3,.hero h1,.cat-name,.post-title,.section-title,.lead-capture h2,.cta-banner h3,.story-section h2,.verdict-title{font-family:var(--font-display)}
 h1{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;letter-spacing:-0.02em;line-height:1.15;color:var(--text)}
 h2{font-size:clamp(1.3rem,2.5vw,1.6rem);font-weight:700;margin-bottom:20px;letter-spacing:-0.01em;color:var(--text)}
@@ -492,17 +539,6 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .skip-link{position:absolute;top:-40px;left:8px;background:var(--primary);color:#fff;padding:8px 16px;z-index:100;border-radius:0 0 4px;font-size:.9rem;text-decoration:none;transition:top .15s}
 .skip-link:focus{top:0;color:#fff}
-.hamburger{display:none;background:none;border:none;cursor:pointer;padding:8px;font-size:1.6rem;line-height:1;color:var(--text);font-family:inherit}
-@media(max-width:768px){
-.hamburger{display:block}
-.nav-links{display:none;position:absolute;top:56px;left:0;right:0;background:var(--bg);border-bottom:1px solid var(--border);flex-direction:column;padding:16px 24px;gap:12px;box-shadow:var(--shadow-lg)}
-.nav-links.open{display:flex}
-.dropdown{width:100%}
-.dropdown-menu{position:static;border:none;box-shadow:none;padding:0 0 0 16px;max-height:none}
-.dropdown:hover .dropdown-menu{display:none}
-.dropdown.open .dropdown-menu{display:block}
-.dropdown-btn{width:100%;justify-content:space-between}
-}
 @media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}.product-card{flex-direction:column}.product-card img{width:100%;height:auto}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 .comments-section{max-width:720px;margin:48px auto;padding:0 24px}.comments-section h2{font-size:1.2rem;margin-bottom:4px}.comments-section .subtitle{font-size:.85rem;color:var(--text-muted);margin-bottom:24px}.comment-form{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}.comment-form input,.comment-form textarea{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;font-family:var(--font-body);background:var(--bg);color:var(--text);transition:border-color .15s}.comment-form input:focus,.comment-form textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(212,99,62,.12)}.comment-form textarea{resize:vertical;min-height:80px}.comment-form button{align-self:flex-start}.comment{border-bottom:1px solid var(--border);padding:16px 0}.comment:first-of-type{padding-top:0}.comment .author{font-weight:600;font-size:.9rem;color:var(--text)}.comment .time{font-weight:400;color:var(--text-muted);font-size:.8rem;margin-left:8px}.comment .body{margin-top:4px;font-size:.95rem;color:var(--text-secondary);line-height:1.5}.no-comments{color:var(--text-muted);font-size:.9rem;padding:16px 0}
@@ -595,20 +631,7 @@ SVG_INSTAGRAM = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c
 SVG_X = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>'
 SVG_YOUTUBE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
 SOCIAL_HTML = '<div class="social"><a href="https://www.youtube.com/@Abvorn-Media" target="_blank" aria-label="YouTube">' + SVG_YOUTUBE + '</a><a href="https://www.tiktok.com/@abvorn" target="_blank" aria-label="TikTok">' + SVG_TIKTOK + '</a><a href="https://www.instagram.com/abvorn/" target="_blank" aria-label="Instagram">' + SVG_INSTAGRAM + '</a><a href="https://x.com/Abvorn" target="_blank" aria-label="X">' + SVG_X + '</a></div>'
-STORY_HTML = """<section class="story-section">
-<div class="container">
-<h2>Why Abvorn?</h2>
-<p>Most buying advice is paid, not earned. Sponsored placements, undisclosed commissions, and recycled press releases masquerading as reviews. We started Abvorn to fix that.</p>
-<p>Every recommendation here comes from real testing, real research, and real opinions. We buy the products, we test them head-to-head, and we tell you which one to buy — no favours, no sponsorships, no compromises.</p>
-<ul class="trust-list">
-<li class="trust-item"><strong>Independent</strong><span>Zero sponsor influence. We buy what we test.</span></li>
-<li class="trust-item"><strong>Transparent</strong><span>We show our work. Every pick has a reason.</span></li>
-<li class="trust-item"><strong>Expert-led</strong><span>Specialist reviewers who know their categories.</span></li>
-<li class="trust-item"><strong>Reader-first</strong><span>We recommend what we'd buy our own family.</span></li>
-</ul>
-<p style="text-align:center;font-size:.9rem;color:var(--text-muted)"><em>Buy with confidence.</em></p>
-</div>
-</section>"""
+
 
 
 HEAD_HTML = lambda title, desc: f'''<title>{title}</title>
@@ -630,7 +653,7 @@ def OG_META(title, desc, url, image="", og_type="website"):
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{desc}">{img_tag}
 '''
-NAV_SCRIPT = '<script>(function(){var h=document.querySelector(".hamburger");if(h){h.addEventListener("click",function(){var n=document.querySelector(".nav-links");n.classList.toggle("open");h.setAttribute("aria-expanded",n.classList.contains("open"))})}var d=document.querySelector(".dropdown-btn");if(d){d.addEventListener("click",function(e){e.preventDefault();this.closest(".dropdown").classList.toggle("open")})}})();</script><script>(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){return}var b=document.getElementById("cookie-banner");if(b){b.classList.add("show")}window.acceptAnalytics=function(){document.cookie="analytics_consent=granted; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show");if(typeof loadAnalytics==="function"){loadAnalytics()}};window.declineAnalytics=function(){document.cookie="analytics_consent=denied; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show")}})();</script>'
+NAV_SCRIPT = '<script>(function(){var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")})})();</script>'
 import os
 
 CONSENT_CSS = '''
@@ -656,88 +679,353 @@ if _ga_id:
 <button class="btn" onclick="acceptAnalytics()">Accept</button>
 </div>'''
 
+COOKIE_CONSENT_SCRIPT = '''
+<style>
+#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
+#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
+#cookie-banner p{margin:0;color:#ccc;font-size:13px}
+#cookie-banner a{color:var(--clr-accent,#c98a2c);text-decoration:underline}
+#cookie-banner .btn{background:var(--clr-accent,#c98a2c);color:#0a0a0a;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}
+#cookie-banner .btn:hover{background:#d4a03a}
+#cookie-banner .btn-secondary{background:transparent;color:#ccc;border:1px solid #555;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
+#cookie-banner .btn-secondary:hover{border-color:#888}
+</style>
+<div id="cookie-banner" role="dialog" aria-label="Cookie consent">
+<p>We use cookies to analyze traffic and improve your experience. <a href="__BASE__/privacy/">Privacy Policy</a></p>
+<button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
+<button class="btn" onclick="acceptAnalytics()">Accept</button>
+</div>
+<script>
+(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){return}var b=document.getElementById("cookie-banner");if(b){b.classList.add("show")}window.acceptAnalytics=function(){document.cookie="analytics_consent=granted; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show");if(typeof loadAnalytics==="function"){loadAnalytics()}};window.declineAnalytics=function(){document.cookie="analytics_consent=denied; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show")}})();
+</script>'''
+
+def _slugify_title(s):
+    """Convert a slug to a readable category name."""
+    return s.replace("-", " ").title()
+
 def nav_html(categories, current=""):
     b = SITE_BASE
-    featured = categories[:4]
-    rest = categories[4:]
-    featured_links = "".join(f'<a class="nav-link" href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in featured)
-    more_items = "".join(f'<a href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in rest)
-    more_items += f'<a href="{b}/how-we-test/">How We Test</a>'
-    dd = f'<div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu">{more_items}</div></div>' if rest or True else ""
-    return f'<nav><div class="inner"><a class="logo" href="{b}/">Abvorn</a><button class="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="main-nav">☰</button><div class="nav-links" id="main-nav">{featured_links}{dd}</div></div></nav>'
+    dd_items = "".join(f'<a href="{b}/{c}/">{_slugify_title(c)}</a>' for c in categories)
+    dropdown = f'<div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown">{dd_items}</div></div>'
+    return f'''
+<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
+<header><div class="container navbar">
+    <a href="{b}/" class="logo"><img src="{b}/logo.png" alt="Abvorn" style="max-height:44px;width:auto"></a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav-links" id="nav-links">
+        {dropdown}
+        <a href="{b}/store.html">Store</a>
+        <a href="{b}/about.html">About</a>
+        <a href="{b}/privacy.html">Privacy</a>
+    </nav>
+</div></header>
+<script>
+(function(){{var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){{var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")}})}})();
+</script>'''
 
 
-def home_carousel_html(b, niches):
-    slides = ""
-    for i, n in enumerate(niches[:5]):
-        img_src = carousel_img(n["slug"], b)
-        slides += f"""<div class="carousel-slide">
-<img src="{img_src}" alt="{n["name"]}" loading="{ 'eager' if i==0 else 'lazy' }">
-<div class="carousel-overlay">
-<div class="carousel-badge" style="background:var(--accent)">{n["posts"]} reviews</div>
-<h3>{n["name"]}</h3>
-<p>Expert-tested buying guides and honest reviews.</p>
-<a href="{b}/{n["slug"]}/">Browse Reviews →</a>
-</div></div>"""
-    dots = "".join(f'<button class="carousel-dot{" active" if i==0 else ""}" data-slide="{i}" aria-label="Slide {i+1}"></button>' for i in range(min(len(niches),5)))
-    arrows = """<button class="carousel-arrow prev" aria-label="Previous">‹</button><button class="carousel-arrow next" aria-label="Next">›</button>"""
-    return f"""<div class="carousel" role="region" aria-label="Featured categories">
-<div class="carousel-track">{slides}</div>
-{arrows}
-<div class="carousel-dots">{dots}</div></div>"""
+# ── Social icon SVGs for footer ───────────────────────────────────
+SOCIAL_FOOTER_SVGS = {
+    "x": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+    "instagram": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>',
+    "youtube": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+    "tiktok": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>',
+}
 
 
-def build_root_index(state, posts, form_url=""):
+HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="__SITE_BASE__/favicon.png">
+    <title>Abvorn – Reviews Based on Real Testing, Not Spec Sheets</title>
+    <meta name="description" content="Independent product reviews and buying guides. We test before we recommend.">
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>__CSS__</style>
+</head>
+<body>
+<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
+<header><div class="container navbar">
+    <a href="__SITE_BASE__/" class="logo"><img src="__SITE_BASE__/logo.png" alt="Abvorn"></a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav-links" id="nav-links">
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown">__CATEGORY_DROPDOWN__</div></div>
+        <a href="__SITE_BASE__/store.html">Store</a>
+        <a href="__SITE_BASE__/about.html">About</a>
+        <a href="__SITE_BASE__/privacy.html">Privacy</a>
+    </nav>
+</div></header>
+__TRENDING_TICKER__
+
+<section class="hero"><div class="container hero-grid">
+    <div>
+        <span class="hero-eyebrow">How we work</span>
+        <h1>We buy it, test it, and tell you what's actually worth your money.</h1>
+        <p>Every recommendation on Abvorn comes from hands-on testing against real alternatives — not spec sheets, not press releases.</p>
+        <a href="#niches" class="btn">See our latest guides</a>
+    </div>
+    <div class="hero-slider" id="hero-slider">
+        __HERO_SLIDES__
+        <div class="hero-slider__dots">__HERO_DOTS__</div>
+    </div>
+</div></section>
+
+<section class="stats-band"><div class="container stats-grid">
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="__STAT_GUIDES__">0</div><div class="stat-label">Guides published</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="stat-number" data-target="__STAT_CATEGORIES__">0</div><div class="stat-label">Categories covered</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="__STAT_PRODUCTS__">0</div><div class="stat-label">Products compared</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3.5-7.1"/><path d="M21 3v6h-6"/></svg></div><div class="stat-number">Weekly</div><div class="stat-label">Review cycle</div></div>
+</div></section>
+
+<section class="subscribe-band"><div class="container subscribe-inner">
+    <div class="subscribe-copy">
+        <h2>Get notified about new guides</h2>
+        <p>One email whenever we publish a new review. No spam, unsubscribe anytime.</p>
+    </div>
+    <form class="subscribe-form" id="homepage-subscribe-form" onsubmit="submitHomepageSubscribe(event)">
+        <input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off">
+        <label for="homepage-subscribe-email" class="sr-only">Email address</label>
+        <input type="email" class="input" id="homepage-subscribe-email" placeholder="you@example.com" required>
+        <button type="submit" class="btn">Notify me</button>
+        <p class="subscribe-msg" id="homepage-subscribe-msg" aria-live="polite"></p>
+    </form>
+</div></section>
+
+<section class="latest-reviews-section container">
+    <div class="category-section__header"><h2>Latest reviews</h2></div>
+    <div class="niche-grid">__LATEST_REVIEWS__</div>
+</section>
+
+<section class="guides-section container" id="niches">
+    __CATEGORY_SECTIONS__
+</section>
+
+<footer class="footer"><div class="container">
+    <div class="footer-grid">
+        <div class="footer-col">
+            <h4>Abvorn</h4>
+            <p>Independent product reviews and buying guides, based on real testing.</p>
+            <div class="footer-social">__FOOTER_SOCIAL__</div>
+        </div>
+        <div class="footer-col"><h4>Categories</h4>__FOOTER_CATEGORIES__</div>
+        <div class="footer-col"><h4>Company</h4><a href="__SITE_BASE__/about.html">About</a><a href="__SITE_BASE__/store.html">Store</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="__SITE_BASE__/privacy.html">Privacy policy</a></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; __YEAR__ Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
+</div></footer>
+
+<script>
+(function(){var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")})})();
+(function(){var n=document.querySelectorAll(".stat-number[data-target]");if(!n.length)return;var r=window.matchMedia("(prefers-reduced-motion: reduce)").matches;function a(e){var t=parseInt(e.dataset.target,10);if(isNaN(t))return;if(r){e.textContent=t.toLocaleString();return}var d=1200,s=performance.now();function f(n){var p=Math.min((n-s)/d,1),v=1-Math.pow(1-p,3);e.textContent=Math.round(v*t).toLocaleString();if(p<1)requestAnimationFrame(f)}requestAnimationFrame(f)}if("IntersectionObserver"in window){var o=new IntersectionObserver(function(e){e.forEach(function(e){if(e.isIntersecting){a(e.target);o.unobserve(e.target)}})},{threshold:0.4});n.forEach(function(e){o.observe(e)})}else{n.forEach(function(e){e.textContent=e.dataset.target})}})();
+(function(){var s=document.getElementById("hero-slider");if(!s)return;var l=s.querySelectorAll(".hero-slide");var d=s.querySelectorAll(".hero-slider__dot");if(l.length<2)return;var c=0;function h(i){l.forEach(function(e,x){e.classList.toggle("active",x===i)});d.forEach(function(e,x){e.classList.toggle("active",x===i);e.setAttribute("aria-current",x===i?"true":"false")});c=i}d.forEach(function(e,x){e.addEventListener("click",function(){h(x)})});setInterval(function(){h((c+1)%l.length)},5000)})();
+async function submitHomepageSubscribe(e){e.preventDefault();var f=e.target;var m=document.getElementById("homepage-subscribe-msg");if(f._gotcha.value!==""){m.innerText="Success! Check your inbox.";return}var em=document.getElementById("homepage-subscribe-email").value.trim();if(!em)return;m.innerText="Sending...";try{var r=await fetch("__APPS_SCRIPT_URL__",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em,niche:"general",source:"homepage_notify",lead_magnet:"New guide notifications"})});var j=await r.json();m.innerText=j.success?"Success! Check your inbox.":(j.message||"Oops, try again.")}catch(e){m.innerText="Connection error. Please try later."}}
+</script>
+</body>
+</html>'''
+
+
+def render_footer_social():
+    social_urls = {
+        "x": os.environ.get("SOCIAL_X_URL", ""),
+        "instagram": os.environ.get("SOCIAL_INSTAGRAM_URL", ""),
+        "youtube": os.environ.get("SOCIAL_YOUTUBE_URL", ""),
+        "tiktok": os.environ.get("SOCIAL_TIKTOK_URL", ""),
+    }
+    return "".join(
+        f'<a href="{url or "#"}" aria-label="{name.title()}" target="_blank" rel="noopener">{SOCIAL_FOOTER_SVGS[name]}</a>'
+        for name, url in social_urls.items()
+    )
+
+
+def build_homepage(state, form_url=""):
+    """Build the premium homepage with hero slider, stats, and category sections."""
     niches = state["niches"]
     all_slugs = [n["slug"] for n in niches]
     b = SITE_BASE
-    cats = "".join(f'<a class="cat-card" href="{b}/{n["slug"]}/"><div class="cat-name">{n["name"]}</div>{"<div class=cat-count>"+str(n["posts"])+" reviews</div>" if n["posts"] else ""}</a>' for n in niches)
-    recent = ""
-    first_post = posts[0] if posts else None
-    for p in posts[:6]:
-        title = p.get("title", "")
-        slug = p.get("slug", "")
-        link_slug = f"reviews/{slug}" if "/" not in slug else slug
-        recent += f'<div class="post-card"><div class="post-title"><a href="{b}/{link_slug}/">{title}</a></div><div class="post-meta">{slug.replace("-"," ").title()}</div></div>'
-    jsonld = """<script type="application/ld+json">{
-"@context":"https://schema.org","@type":"Organization","name":"Abvorn","url":"_SITE_URL/","description":"Independent product reviews and buying guides.","sameAs":["https://www.tiktok.com/@abvorn","https://www.instagram.com/abvorn/","https://x.com/Abvorn"]}</script>""".replace("_SITE_URL", _SITE_URL)
-    hero_featured = ""
-    if first_post:
-        ftitle = first_post.get("title", "")
-        fslug = first_post.get("slug", "")
-        flink = f"reviews/{fslug}" if "/" not in fslug else fslug
-        hero_featured = f'<a class="featured-pick" href="{b}/{flink}/"><span class="fp-badge">Our pick</span><span class="fp-title">{ftitle}</span><span class="fp-arrow">→</span></a>'
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-{HEAD_HTML('Abvorn — Product Reviews & Buying Guides', 'Independent, expert reviews across every category. We test so you can buy with confidence.')}
-{OG_META('Abvorn — Product Reviews & Buying Guides', 'Independent, expert reviews across every category. We test so you can buy with confidence.', _SITE_URL)}
-{jsonld}
-{ANALYTICS_HTML}
-<style>{CSS_SHARED}</style>
-</head><body>
-<a class="skip-link" href="#main">Skip to content</a>
-{nav_html(all_slugs)}
-<section class="hero" id="main" style="padding-bottom:0"><div class="container">
-{home_carousel_html(b, niches[:5])}
-<h1>The best products, reviewed.</h1>
-<p>We test hundreds of products across dozens of categories so you don't have to. Independent, honest, data-driven.</p>
-{hero_featured}
-</div></section>
-{STORY_HTML}
-<section class="section"><div class="container">
-<div class="section-title">All Categories</div>
-<div class="grid-3">{cats}</div>
-</div></section>
-<section class="section"><div class="container">
-<div class="section-title">Latest Reviews</div>
-<div class="grid-3">{recent or '<div style="color:var(--text-muted)">Reviews coming soon</div>'}</div>
-</div></section>
-<div class="container"><div class="affiliate-banner">When you buy through our links, we may earn a commission. Our opinions are our own.</div></div>
-{lead_form_html(form_url)}
-<footer><p>Abvorn &middot; Independent reviews &middot; Honest recommendations</p><div class="footer-links"><a href="{b}/privacy/">Privacy</a><a href="{b}/terms/">Terms</a><a href="{b}/disclaimer/">Disclaimer</a><a href="{b}/about/">About</a></div>{SOCIAL_HTML}</footer>
-{NAV_SCRIPT}
-{CAROUSEL_JS}</body></html>"""
+    total_posts = sum(n["posts"] for n in niches)
+    total_products = total_posts * 3  # rough estimate
+
+    # Build nav dropdown
+    nav_dd = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+
+    # Build hero slides
+    hero_slides = ""
+    hero_dots = ""
+    hero_candidates = []
+    for n in reversed(niches):
+        if len(hero_candidates) >= 5:
+            break
+        img = carousel_img(n["slug"], b)
+        hero_candidates.append((img, n["name"], n["slug"]))
+    if not hero_candidates:
+        hero_candidates.append((f"{b}/assets/hero-home.svg", "Reviews", "coming-soon"))
+    for i, (img, name, slug) in enumerate(hero_candidates):
+        active = " active" if i == 0 else ""
+        hero_slides += f'<div class="hero-slide{active}"><img src="{img}" alt="{name}"><figcaption>{name} reviews — expert tested</figcaption></div>'
+        hero_dots += f'<button class="hero-slider__dot{active}" aria-label="Show {name}" aria-current="{"true" if i == 0 else "false"}"></button>'
+
+    # Build latest review cards
+    latest_cards = ""
+    for n in niches:
+        if not n["posts"]:
+            continue
+        card = f'''<div class="niche-card">
+    <a href="{b}/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
+    <div class="niche-card__body">
+        <h3><a href="{b}/{n["slug"]}/">{n["name"]}</a></h3>
+        <p>{n["posts"]} expert-reviewed guide{"s" if n["posts"] > 1 else ""} with real testing results.</p>
+        <a href="{b}/{n["slug"]}/" class="read-link">Browse guides →</a>
+    </div>
+</div>'''
+        latest_cards += card
+
+    # Build category sections with posts
+    cat_sections = ""
+    for n in niches:
+        if not n["posts"]:
+            continue
+        section = f'''<div class="category-section">
+    <div class="category-section__header"><h2>{n["name"]}</h2><a href="{b}/{n["slug"]}/">View all →</a></div>
+    <div class="niche-grid">{card}</div>
+</div>'''
+        cat_sections += section
+
+    # Trending ticker
+    ticker_items = " · ".join(
+        f'<a href="{b}/{n["slug"]}/" class="trending-ticker__item">{n["name"]}</a>'
+        for n in niches if n["posts"]
+    )
+    ticker = f'<div class="trending-ticker"><div class="container"><div class="trending-ticker__inner"><span class="trending-ticker__label">Latest updates:</span>{ticker_items}</div></div></div>' if ticker_items else ""
+
+    # Footer
+    footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    footer_social = render_footer_social()
+
+    # Assemble homepage CSS from DESIGN_SYSTEM_CSS + premium-specific additions
+    homepage_css = DESIGN_SYSTEM_CSS + """
+.top-bar{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}
+.top-bar .container{display:flex;justify-content:space-between}
+header{background:#0a0a0a;padding:18px 0;position:relative;z-index:20;border-bottom:1px solid #2a2a2a}
+.navbar{display:flex;justify-content:space-between;align-items:center}
+.logo img{max-height:44px;width:auto}
+.nav-links{display:flex;align-items:center;gap:8px}
+.nav-links > a,.nav-item > a{color:#fff;text-decoration:none;padding:8px 16px;font-weight:600;font-size:0.9rem;border-radius:var(--radius-sm);transition:background var(--duration-fast) var(--ease-out)}
+.nav-links > a:hover,.nav-item > a:hover{background:rgba(255,255,255,0.08);color:var(--clr-accent)}
+.nav-item{position:relative}
+.nav-item > a{padding:8px 16px;display:flex;align-items:center;gap:4px}
+.nav-item > a::after{content:'\\25BE';font-size:0.6rem;opacity:0.5}
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#1a1a1a;min-width:220px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:6px 0;z-index:30;border:1px solid #2a2a2a}
+.nav-item:hover .nav-dropdown{display:block}
+.nav-dropdown a{display:block;color:#ccc;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
+.nav-dropdown a:hover{background:#2a2a2a;color:#fff}
+.nav-toggle{display:none;background:none;border:none;color:#fff;padding:6px;cursor:pointer}
+.nav-toggle svg{width:24px;height:24px}
+@media(max-width:640px){
+.nav-toggle{display:block}
+.nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:#0a0a0a;flex-direction:column;align-items:stretch;padding:8px 20px 20px;gap:2px;box-shadow:var(--shadow-lg);border-top:1px solid #2a2a2a;z-index:30}
+.nav-links.open{display:flex}
+.nav-links > a,.nav-item{margin:0}
+.nav-links > a,.nav-item > a{padding:10px 0}
+.nav-item > a::after{display:none}
+.nav-dropdown{position:static;box-shadow:none;margin-top:0;padding-left:16px;display:block;background:transparent;border:none}
+.nav-dropdown a{color:#888;padding:6px 0;font-size:0.8rem}
+.nav-dropdown a:hover{background:transparent;color:#fff}
+}
+.trending-ticker{background:#111;color:#888;padding:8px 0;font-size:0.8rem;overflow:hidden;white-space:nowrap;border-bottom:1px solid #2a2a2a}
+.trending-ticker__inner{display:inline-block;animation:ticker-scroll 30s linear infinite}
+.trending-ticker__label{font-weight:700;margin-right:16px;color:#fff}
+.trending-ticker__item{color:#aaa;text-decoration:none;padding:0 12px}
+.trending-ticker__item:hover{color:#fff}
+@keyframes ticker-scroll{0%{transform:translateX(100vw)}100%{transform:translateX(-100%)}}
+.hero{background:#f6f5f2;padding:var(--space-2xl) 0}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-xl);align-items:center}
+.hero-eyebrow{display:inline-block;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#888;margin-bottom:var(--space-md);border-left:3px solid var(--clr-accent);padding-left:12px}
+.hero h1{font-size:clamp(var(--text-3xl),4vw,var(--text-4xl));margin-bottom:var(--space-md);color:#0a0a0a;line-height:1.1}
+.hero p{font-size:var(--text-lg);color:#555;max-width:42ch;margin-bottom:var(--space-lg);line-height:1.6}
+.hero .btn{background:#1a1a1a;color:#fff;padding:0.9em 2em;font-size:0.9rem}
+.hero .btn:hover{background:var(--clr-accent);color:#1a1200}
+.hero-slider{position:relative;border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-lg);aspect-ratio:4/3;background:#111}
+.hero-slide{position:absolute;inset:0;opacity:0;transition:opacity 0.8s var(--ease-out)}
+.hero-slide.active{opacity:1}
+.hero-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.hero-slide figcaption{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,0.75));color:#fff;padding:40px var(--space-lg) var(--space-md);font-weight:600;font-size:0.95rem}
+.hero-slider__dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:5}
+.hero-slider__dot{width:36px;height:36px;border:none;background:transparent;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+.hero-slider__dot::before{content:'';width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.3);transition:background var(--duration-fast)}
+.hero-slider__dot.active::before{background:#fff}
+@media(max-width:860px){.hero-grid{grid-template-columns:1fr}}
+.stats-band{background:#0a0a0a;color:#fff;padding:var(--space-lg) 0;border-bottom:1px solid #2a2a2a}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--space-lg);text-align:center}
+.stat-icon{width:28px;height:28px;margin:0 auto 8px;color:var(--clr-accent);opacity:0.8}
+.stat-number{font-family:var(--font-display);font-size:var(--text-2xl);font-weight:700;color:var(--clr-accent)}
+.stat-label{font-size:0.75rem;color:#777;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px}
+.subscribe-band{background:#f6f5f2;padding:var(--space-xl) 0;border-top:1px solid #e5e2dc}
+.subscribe-inner{display:flex;justify-content:space-between;align-items:center;gap:var(--space-lg);flex-wrap:wrap}
+.subscribe-copy h2{font-size:var(--text-xl);margin-bottom:4px;color:#0a0a0a}
+.subscribe-copy p{margin:0;color:#555;max-width:40ch;font-size:0.95rem}
+.subscribe-form{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.subscribe-form .input{width:240px;background:#fff;border:2px solid #e5e2dc}
+.subscribe-form .input:focus{border-color:var(--clr-accent)}
+.hp-field{position:absolute;left:-9999px}
+.subscribe-form .btn{background:var(--clr-accent);color:#1a1200;font-weight:800;padding:0.85em 1.7em;box-shadow:0 4px 16px rgba(201,138,44,0.3)}
+.subscribe-form .btn:hover{background:#d4a03a;transform:scale(1.03)}
+.subscribe-msg{flex-basis:100%;font-size:0.85rem;color:#666;margin-top:6px}
+@media(max-width:700px){.subscribe-inner{flex-direction:column;align-items:flex-start}.subscribe-form .input{width:100%}}
+.guides-section{padding:var(--space-2xl) 0}
+.latest-reviews-section{padding:var(--space-2xl) 0}
+.category-section{margin-bottom:var(--space-2xl)}
+.category-section__header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:var(--space-lg);border-bottom:2px solid #e5e2dc;padding-bottom:var(--space-sm)}
+.category-section__header h2{font-size:var(--text-xl);margin:0}
+.category-section__header a{font-size:0.8rem;font-weight:600;color:var(--clr-accent-text);text-decoration:none}
+.category-section__header a:hover{text-decoration:underline}
+.niche-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-lg)}
+.niche-card{border-radius:var(--radius-md);overflow:hidden;transition:transform var(--duration-base) var(--ease-out);background:var(--clr-white);border:1px solid #e5e2dc}
+.niche-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.niche-card__image-wrapper{aspect-ratio:4/3;overflow:hidden}
+.niche-card img{width:100%;height:100%;object-fit:cover;transition:transform var(--duration-slow) var(--ease-out)}
+.niche-card:hover img{transform:scale(1.04)}
+.niche-card__body{padding:var(--space-md)}
+.niche-card h3{font-size:var(--text-lg);margin:0 0 6px}
+.niche-card h3 a{color:inherit;text-decoration:none}
+.niche-card p{font-size:0.9rem;color:#888;margin-bottom:var(--space-sm);line-height:1.5}
+.niche-card .read-link{font-weight:700;font-size:0.85rem;color:#0a0a0a;text-decoration:none;border-bottom:2px solid var(--clr-accent);padding-bottom:1px;display:inline-block}
+.niche-card .read-link:hover{color:var(--clr-accent-text)}
+.footer{background:#0a0a0a;color:#888;padding:var(--space-2xl) 0 var(--space-lg);border-top:1px solid #2a2a2a}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:var(--space-lg);margin-bottom:var(--space-xl)}
+.footer-col h4{color:#fff;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px}
+.footer-col p{color:#888;font-size:0.9rem;max-width:30ch;line-height:1.6}
+.footer-col a{display:block;color:#888;text-decoration:none;padding:3px 0;font-size:0.9rem;transition:color var(--duration-fast)}
+.footer-col a:hover{color:#fff}
+.footer-social{display:flex;gap:8px;margin-top:12px}
+.footer-social a{width:40px;height:40px;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;color:#888;transition:background var(--duration-fast),color var(--duration-fast);border:1px solid #2a2a2a}
+.footer-social a:hover{background:var(--clr-accent);color:#0a0a0a;border-color:var(--clr-accent)}
+.footer-social svg{width:16px;height:16px}
+.footer-bottom{border-top:1px solid #1a1a1a;padding-top:16px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:0.8rem;color:#555}
+@media(max-width:760px){.footer-grid{grid-template-columns:1fr 1fr}}
+"""
+
+    html = HOMEPAGE_TEMPLATE
+    html = html.replace("__SITE_BASE__", b)
+    html = html.replace("__CSS__", homepage_css)
+    html = html.replace("__CATEGORY_DROPDOWN__", nav_dd)
+    html = html.replace("__HERO_SLIDES__", hero_slides)
+    html = html.replace("__HERO_DOTS__", hero_dots)
+    html = html.replace("__LATEST_REVIEWS__", latest_cards if latest_cards else '<p style="grid-column:1/-1;text-align:center;color:#888;padding:40px 0">More guides on the way.</p>')
+    html = html.replace("__CATEGORY_SECTIONS__", cat_sections if cat_sections else '<div class="category-section"><div class="niche-card"><div class="niche-card__image-wrapper"><img src="' + b + '/assets/hero-home.svg" alt="Coming soon"></div><div class="niche-card__body"><h3>Our first guide is in testing</h3><p>Check back shortly for hands-on reviews.</p></div></div></div>')
+    html = html.replace("__TRENDING_TICKER__", ticker)
+    html = html.replace("__FOOTER_SOCIAL__", footer_social)
+    html = html.replace("__FOOTER_CATEGORIES__", footer_cats)
+    html = html.replace("__APPS_SCRIPT_URL__", form_url)
+    html = html.replace("__YEAR__", str(datetime.now().year))
+    html = html.replace("__STAT_GUIDES__", str(total_posts))
+    html = html.replace("__STAT_CATEGORIES__", str(len(niches)))
+    html = html.replace("__STAT_PRODUCTS__", str(total_products))
+    return html
 
 
 def carousel_img(niche_slug, b):
@@ -748,98 +1036,157 @@ def carousel_img(niche_slug, b):
     return f"{b}/assets/{niche_slug}.svg"
 
 
-def carousel_html(b, niche_slug, posts):
-    """Build a full-bleed hero carousel from product data."""
-    slides = ""
-    for i, p in enumerate(posts[:4]):
-        title = p.get("title", f"Best {niche_slug.replace('-',' ')}")
-        review_slug = p.get("slug", f"reviews/{niche_slug}")
-        rank_labels = ["Our Pick", "Budget Pick", "Upgrade Pick", "Also Great"]
-        label = rank_labels[i] if i < 4 else "Top Pick"
-        img_src = carousel_img(niche_slug, b)
-        slides += f"""<div class="carousel-slide">
-<img src="{img_src}" alt="{title}" loading="{ 'eager' if i==0 else 'lazy' }">
-<div class="carousel-overlay">
-<div class="carousel-badge">{label}</div>
-<h3>{html_mod.escape(title)}</h3>
-<p>Expert tested and reviewed. See why this made our list.</p>
-<a href="{b}/{review_slug}/">Read Full Review →</a>
-</div></div>"""
-    if not slides:
-        img_src = carousel_img(niche_slug, b)
-        slides = f"""<div class="carousel-slide">
-<img src="{img_src}" alt="{niche_slug}">
-<div class="carousel-overlay">
-<h3>Best {niche_slug.replace('-',' ')}</h3>
-<p>Reviews being researched. Check back soon.</p>
-</div></div>"""
-    dots = "".join(f'<button class="carousel-dot{" active" if i==0 else ""}" data-slide="{i}" aria-label="Slide {i+1}"></button>' for i in range(max(len(posts[:4]),1)))
-    arrows = """<button class="carousel-arrow prev" aria-label="Previous">‹</button><button class="carousel-arrow next" aria-label="Next">›</button>"""
-    return f"""<div class="carousel" role="region" aria-label="Featured products">
-<div class="carousel-track">{slides}</div>
-{arrows}
-<div class="carousel-dots">{dots}</div></div>"""
-
-
 CAROUSEL_JS = """<script>(function(){var c=document.querySelector('.carousel');if(!c)return;var t=c.querySelector('.carousel-track');if(!t)return;var s=t.querySelectorAll('.carousel-slide');if(s.length<2)return;var dots=c.querySelectorAll('.carousel-dot');var prev=c.querySelector('.carousel-arrow.prev');var next=c.querySelector('.carousel-arrow.next');var i=0,n=s.length;var go=function(idx){i=((idx%n)+n)%n;t.style.transform='translateX(-'+(i*100)+'%)';dots.forEach(function(d){d.classList.toggle('active',parseInt(d.dataset.slide)===i)})};dots.forEach(function(d){d.addEventListener('click',function(){go(parseInt(this.dataset.slide))})});if(prev){prev.addEventListener('click',function(){go(i-1)})}if(next){next.addEventListener('click',function(){go(i+1)})};var iv=setInterval(function(){go(i+1)},5000);c.addEventListener('mouseenter',function(){clearInterval(iv)});c.addEventListener('mouseleave',function(){iv=setInterval(function(){go(i+1)},5000)})})();</script>"""
 
 
 def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=""):
     b = SITE_BASE
-    t = affiliate_tag or os.environ.get("AMAZON_TAG", "")
-    post_rows = ""
-    for i, p in enumerate(posts[:5]):
-        title = p.get("title", "")
-        review_slug = p.get("slug", f"reviews/{niche_slug}")
-        rank_labels = ["Our pick", "Budget pick", "Upgrade pick", "Also great", "Also great"]
-        rank_classes = ["", "budget", "upgrade", "", ""]
-        ri = i if i < 5 else 4
-        post_rows += f"""<div class="pick-card">
-<div class="rank {rank_classes[ri]}">{i+1}</div>
-<div class="info">
-<div class="badge {rank_classes[ri]}">{rank_labels[ri]}</div>
-<h3>{title} <span class="tested-badge">Tested</span></h3>
-<p>In-depth testing and honest comparison. See why this made our list.</p>
-<a class="buy-btn" href="https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}" target="_blank" rel="sponsored">Check Price</a>
-<a href="{b}/{review_slug}/" style="margin-left:12px">Read full review →</a>
-</div></div>"""
-    bread = breadcrumb_schema([("Abvorn", "/"), (f"Best {niche_name}", f"/{niche_slug}/")])
-    faq = faq_schema([
-        (f"What is the best {niche_name.lower()}?",
-         f"After extensive testing, we recommend {posts[0].get('title', 'our top pick')} as the best {niche_name.lower()} for most people.") if posts else
-        (f"How do you test {niche_name.lower()}?",
-         "We buy each product with our own money, test it for at least a week in real-world conditions, and compare it head-to-head against competitors."),
-        (f"How much should I spend on {niche_name.lower()}?",
-         f"Good {niche_name.lower()} start around ${_get_price_floor(niche_slug)}. Our picks range from budget-friendly to premium, so there's an option for every budget."),
-        (f"What should I look for when buying {niche_name.lower()}?",
-         "Focus on build quality, performance metrics that matter for your use case, warranty coverage, and verified user reviews. We cover all of this in our detailed reviews."),
-    ])
+    # Build post cards
+    post_cards = ""
+    for p in posts:
+        title = p.get("title", niche_name)
+        slug = p.get("slug", f"reviews/{niche_slug}")
+        img_src = carousel_img(niche_slug, b)
+        post_cards += f'''<div class="post-card">
+    <a href="{b}/{slug}/"><img src="{img_src}" alt="{html_mod.escape(title)}"></a>
+    <div class="post-card__body">
+        <h3><a href="{b}/{slug}/">{html_mod.escape(title)}</a></h3>
+        <p>Expert-tested and reviewed. See why this made our list.</p>
+        <a href="{b}/{slug}/" class="read-link">Read more →</a>
+    </div>
+</div>'''
+
+    # Nav dropdown
+    nav_dd = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+
+    # Footer
+    footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    footer_social = render_footer_social()
+
+    category_css = DESIGN_SYSTEM_CSS + """
+.top-bar{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}
+.top-bar .container{display:flex;justify-content:space-between}
+header{background:#0a0a0a;padding:18px 0;border-bottom:1px solid #2a2a2a}
+.navbar{display:flex;justify-content:space-between;align-items:center}
+.logo img{max-height:44px;width:auto}
+.nav-links{display:flex;align-items:center;gap:8px}
+.nav-links > a,.nav-item > a{color:#fff;text-decoration:none;padding:8px 16px;font-weight:600;font-size:0.9rem;border-radius:var(--radius-sm);transition:background var(--duration-fast) var(--ease-out)}
+.nav-links > a:hover,.nav-item > a:hover{background:rgba(255,255,255,0.08);color:var(--clr-accent)}
+.nav-item{position:relative}
+.nav-item > a{padding:8px 16px;display:flex;align-items:center;gap:4px}
+.nav-item > a::after{content:'\\25BE';font-size:0.6rem;opacity:0.5}
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#1a1a1a;min-width:220px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:6px 0;z-index:30;border:1px solid #2a2a2a}
+.nav-item:hover .nav-dropdown{display:block}
+.nav-dropdown a{display:block;color:#ccc;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
+.nav-dropdown a:hover{background:#2a2a2a;color:#fff}
+.nav-toggle{display:none;background:none;border:none;color:#fff;padding:6px;cursor:pointer}
+.nav-toggle svg{width:24px;height:24px}
+@media(max-width:640px){
+.nav-toggle{display:block}
+.nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:#0a0a0a;flex-direction:column;align-items:stretch;padding:8px 20px 20px;gap:2px;box-shadow:var(--shadow-lg);border-top:1px solid #2a2a2a;z-index:30}
+.nav-links.open{display:flex}
+.nav-links > a,.nav-item{margin:0}
+.nav-links > a,.nav-item > a{padding:10px 0}
+.nav-item > a::after{display:none}
+.nav-dropdown{position:static;box-shadow:none;margin-top:0;padding-left:16px;display:block;background:transparent;border:none}
+.nav-dropdown a{color:#888;padding:6px 0;font-size:0.8rem}
+.nav-dropdown a:hover{background:transparent;color:#fff}
+}
+.category-hero{background:var(--clr-off-white);padding:var(--space-2xl) 0;border-bottom:1px solid #e5e2dc}
+.category-hero h1{font-size:clamp(var(--text-3xl),4vw,var(--text-4xl));margin-bottom:var(--space-sm)}
+.category-hero p{font-size:var(--text-lg);color:var(--clr-mid-gray);max-width:50ch}
+.posts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:var(--space-lg);padding:var(--space-2xl) 0}
+.post-card{border:1px solid #e5e2dc;border-radius:var(--radius-md);overflow:hidden;transition:transform var(--duration-base),box-shadow var(--duration-base);background:var(--clr-white)}
+.post-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.post-card img{width:100%;height:200px;object-fit:cover}
+.post-card__body{padding:var(--space-md)}
+.post-card h3{font-size:var(--text-lg);margin:0 0 6px}
+.post-card h3 a{color:inherit;text-decoration:none}
+.post-card p{font-size:0.9rem;color:var(--clr-mid-gray);margin-bottom:var(--space-sm);line-height:1.5}
+.post-card .read-link{font-weight:700;font-size:0.85rem;color:var(--clr-black);text-decoration:none;border-bottom:2px solid var(--clr-accent);padding-bottom:1px}
+.subscribe-band{background:var(--clr-off-white);padding:var(--space-xl) 0;border-top:1px solid #e5e2dc}
+.subscribe-inner{display:flex;justify-content:space-between;align-items:center;gap:var(--space-lg);flex-wrap:wrap}
+.subscribe-copy h2{font-size:var(--text-xl);margin-bottom:4px}
+.subscribe-copy p{margin:0;color:var(--clr-mid-gray);max-width:40ch;font-size:0.95rem}
+.subscribe-form{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.subscribe-form .input{width:240px;background:#fff;border:2px solid #e5e2dc}
+.subscribe-form .input:focus{border-color:var(--clr-accent)}
+.subscribe-form .btn{background:var(--clr-accent);color:#1a1200;font-weight:800;padding:0.85em 1.7em;box-shadow:0 4px 16px rgba(201,138,44,0.3)}
+.subscribe-form .btn:hover{background:#d4a03a;transform:scale(1.03)}
+.subscribe-msg{flex-basis:100%;font-size:0.85rem;color:#666;margin-top:6px}
+@media(max-width:700px){.subscribe-inner{flex-direction:column;align-items:flex-start}.subscribe-form .input{width:100%}}
+.footer{background:#0a0a0a;color:#888;padding:var(--space-2xl) 0 var(--space-lg);border-top:1px solid #2a2a2a}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:var(--space-lg);margin-bottom:var(--space-xl)}
+.footer-col h4{color:#fff;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px}
+.footer-col a{display:block;color:#888;text-decoration:none;padding:3px 0;font-size:0.9rem}
+.footer-col a:hover{color:#fff}
+.footer-social{display:flex;gap:8px;margin-top:12px}
+.footer-social a{width:40px;height:40px;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;color:#888;border:1px solid #2a2a2a}
+.footer-social a:hover{background:var(--clr-accent);color:#0a0a0a}
+.footer-social svg{width:16px;height:16px}
+.footer-bottom{border-top:1px solid #1a1a1a;padding-top:16px;display:flex;justify-content:space-between;flex-wrap:wrap;font-size:0.8rem;color:#555}
+@media(max-width:760px){.footer-grid{grid-template-columns:1fr 1fr}}
+"""
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-{HEAD_HTML(f'Best {niche_name} — Abvorn', f'The best {niche_name.lower()} reviewed and compared. Our expert picks after hours of testing.')}
-{OG_META(f'Best {niche_name} — Abvorn', f'The best {niche_name.lower()} reviewed and compared by our experts.', f'{_SITE_URL}/{niche_slug}/')}
-{bread}
-{faq}
-{ANALYTICS_HTML}
-<style>{CSS_SHARED}</style>
-</head><body>
-<a class="skip-link" href="#main">Skip to content</a>
-{nav_html(all_slugs)}
-<section class="hero" id="main" style="padding-bottom:0"><div class="container">
-{carousel_html(b, niche_slug, posts[:4])}
-<h1>The Best {niche_name}</h1>
-<p>We tested the top contenders to find the ones worth your money.</p>
-{f'<a class="featured-pick" href="{b}/reviews/{niche_slug}/"><span class="fp-badge">Our pick</span><span class="fp-title">{html_mod.escape(posts[0].get("title","Read our review"))}</span><span class="fp-arrow">→</span></a>' if posts else ''}
+<link rel="icon" type="image/png" href="{b}/favicon.png">
+<title>Best {html_mod.escape(niche_name)} Reviews | Abvorn</title>
+<meta name="description" content="Expert {niche_name.lower()} reviews and buying guides. Independent testing, real recommendations.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>{category_css}</style>
+</head>
+<body>
+<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
+<header><div class="container navbar">
+    <a href="{b}/" class="logo"><img src="{b}/logo.png" alt="Abvorn"></a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav-links" id="nav-links">
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown">{nav_dd}</div></div>
+        <a href="{b}/store.html">Store</a>
+        <a href="{b}/about.html">About</a>
+        <a href="{b}/privacy.html">Privacy</a>
+    </nav>
+</div></header>
+
+<section class="category-hero"><div class="container">
+    <h1>Best {html_mod.escape(niche_name)} Reviews</h1>
+    <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
 </div></section>
-<section class="section"><div class="container">
-<div class="section-title">Our Top Picks</div>
-{post_rows or '<div style="color:var(--text-muted);padding:32px;text-align:center">Reviews for this category are being researched. Check back soon.</div>'}
+
+<section class="container posts-grid">{post_cards or '<p style="grid-column:1/-1;text-align:center;color:var(--clr-mid-gray);padding:40px 0">Reviews coming soon.</p>'}</section>
+
+<section class="subscribe-band"><div class="container subscribe-inner">
+    <div class="subscribe-copy">
+        <h2>Get alerted when we publish a new review</h2>
+        <p>One email whenever we publish a new guide in this category. No spam, unsubscribe anytime.</p>
+    </div>
+    <form class="subscribe-form" onsubmit="return false">
+        <label for="category-subscribe-email" class="sr-only">Email address</label>
+        <input type="email" class="input" id="category-subscribe-email" placeholder="you@example.com" required>
+        <button type="submit" class="btn" onclick="alert('Subscribe feature coming soon.')">Notify Me</button>
+    </form>
 </div></section>
-<div class="container"><div class="affiliate-banner">We earn from qualifying purchases.</div></div>
-<footer><p>Abvorn &middot; Independent reviews</p><div class="footer-links"><a href="{b}/privacy/">Privacy</a><a href="{b}/terms/">Terms</a><a href="{b}/disclaimer/">Disclaimer</a><a href="{b}/about/">About</a></div>{SOCIAL_HTML}</footer>
-{NAV_SCRIPT}
-{CAROUSEL_JS}</body></html>"""
+
+<footer class="footer"><div class="container">
+    <div class="footer-grid">
+        <div class="footer-col"><h4>Abvorn</h4><p>Independent product reviews and buying guides.</p><div class="footer-social">{footer_social}</div></div>
+        <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
+        <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a><a href="{b}/store.html">Store</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; {datetime.now().year} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
+</div></footer>
+
+<script>
+(function(){{var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){{var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")}})}})();
+</script>
+</body>
+</html>"""
 
 
 SHARE_HTML_T = """<div class="share-buttons" style="display:flex;gap:8px;margin:32px 0;padding-top:24px;border-top:1px solid var(--border);align-items:center;flex-wrap:wrap">
@@ -1071,52 +1418,163 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             for r in related_niches
         )
         related_html = f'<section class="section"><div class="container"><div class="section-title">Related Categories</div><div class="grid-3">{cards}</div></div></section>'
+    # Build nav dropdown
+    nav_dd = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    # Footer
+    footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    footer_social = render_footer_social()
+
+    article_css = DESIGN_SYSTEM_CSS + """
+.top-bar{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}
+.top-bar .container{display:flex;justify-content:space-between}
+header{background:#0a0a0a;padding:18px 0;border-bottom:1px solid #2a2a2a}
+.navbar{display:flex;justify-content:space-between;align-items:center}
+.logo img{max-height:44px;width:auto}
+.nav-links{display:flex;align-items:center;gap:8px}
+.nav-links > a,.nav-item > a{color:#fff;text-decoration:none;padding:8px 16px;font-weight:600;font-size:0.9rem;border-radius:var(--radius-sm);transition:background var(--duration-fast) var(--ease-out)}
+.nav-links > a:hover,.nav-item > a:hover{background:rgba(255,255,255,0.08);color:var(--clr-accent)}
+.nav-item{position:relative}
+.nav-item > a{padding:8px 16px;display:flex;align-items:center;gap:4px}
+.nav-item > a::after{content:'\\25BE';font-size:0.6rem;opacity:0.5}
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#1a1a1a;min-width:220px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:6px 0;z-index:30;border:1px solid #2a2a2a}
+.nav-item:hover .nav-dropdown{display:block}
+.nav-dropdown a{display:block;color:#ccc;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
+.nav-dropdown a:hover{background:#2a2a2a;color:#fff}
+.nav-toggle{display:none;background:none;border:none;color:#fff;padding:6px;cursor:pointer}
+.nav-toggle svg{width:24px;height:24px}
+@media(max-width:640px){
+.nav-toggle{display:block}
+.nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:#0a0a0a;flex-direction:column;align-items:stretch;padding:8px 20px 20px;gap:2px;box-shadow:var(--shadow-lg);border-top:1px solid #2a2a2a;z-index:30}
+.nav-links.open{display:flex}
+.nav-links > a,.nav-item{margin:0}
+.nav-links > a,.nav-item > a{padding:10px 0}
+.nav-item > a::after{display:none}
+.nav-dropdown{position:static;box-shadow:none;margin-top:0;padding-left:16px;display:block;background:transparent;border:none}
+.nav-dropdown a{color:#888;padding:6px 0;font-size:0.8rem}
+.nav-dropdown a:hover{background:transparent;color:#fff}
+}
+.post-hero{background:var(--clr-off-white);padding:var(--space-2xl) 0;border-bottom:1px solid #e5e2dc}
+.post-hero__category{display:inline-block;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--clr-accent-text);margin-bottom:var(--space-sm)}
+.post-hero h1{font-size:clamp(var(--text-2xl),4vw,var(--text-4xl));margin-bottom:var(--space-sm)}
+.post-hero .meta{font-size:0.85rem;color:var(--clr-mid-gray)}
+.post-hero .excerpt{font-size:var(--text-lg);color:var(--clr-mid-gray);max-width:50ch;margin-top:var(--space-md)}
+.content-wrapper{display:grid;grid-template-columns:1fr 320px;gap:var(--space-xl);padding:var(--space-2xl) 0;max-width:1200px;margin:0 auto;padding-left:20px;padding-right:20px}
+.article-body{font-size:1.05rem;line-height:1.8;color:#0a0a0a}
+.article-body h2{margin:40px 0 16px;font-size:var(--text-xl)}
+.article-body h3{margin:24px 0 12px;font-size:var(--text-lg)}
+.article-body p{margin-bottom:var(--space-md);max-width:65ch}
+.article-body img{max-width:100%;height:auto;border-radius:var(--radius-sm);margin:20px 0}
+.article-body ul,.article-body ol{margin-bottom:var(--space-md);padding-left:var(--space-lg)}
+.article-body li{margin-bottom:var(--space-xs)}
+.article-body blockquote{border-left:4px solid var(--clr-accent);padding-left:var(--space-lg);margin:var(--space-lg) 0;color:var(--clr-mid-gray);font-style:italic}
+.disclosure{background:var(--clr-off-white);padding:var(--space-md);border-radius:var(--radius-sm);font-size:0.85rem;color:var(--clr-mid-gray);margin-bottom:var(--space-lg)}
+.product-section{margin:var(--space-xl) 0}
+.product-card{display:grid;grid-template-columns:1fr 1.5fr;gap:var(--space-lg);background:var(--clr-off-white);border:1px solid #e5e2dc;border-radius:var(--radius-md);padding:var(--space-lg);margin-bottom:var(--space-lg);transition:transform var(--duration-base),box-shadow var(--duration-base)}
+.product-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.product-card__image-wrapper{position:relative;overflow:hidden;border-radius:var(--radius-sm)}
+.product-card__image{width:100%;height:auto;display:block}
+.sidebar{position:sticky;top:80px}
+.sidebar-box{background:#0a0a0a;color:#fff;padding:var(--space-lg);border-radius:var(--radius-md);margin-bottom:var(--space-lg)}
+.sidebar-box h4{color:var(--clr-accent);text-transform:uppercase;letter-spacing:0.08em;font-size:0.8rem;margin-bottom:var(--space-md)}
+.sidebar-box p{font-size:0.9rem;color:#ccc;margin-bottom:var(--space-md)}
+.sidebar-box .input{background:#1a1a1a;color:#fff;border-color:#333}
+.sidebar-box .input:focus{border-color:var(--clr-accent)}
+.sidebar-box .btn{background:var(--clr-accent);color:#1a1200;width:100%;font-weight:700}
+.sidebar-box .btn:hover{background:#d4a03a}
+.further-reading{margin-top:var(--space-xl);border-top:1px solid #e5e2dc;padding-top:var(--space-lg)}
+.further-reading h3{font-size:var(--text-lg);margin-bottom:var(--space-md)}
+.further-reading ul{list-style:none;padding:0}
+.further-reading li{margin-bottom:8px}
+.further-reading a{color:#0a0a0a;text-decoration:none;font-weight:600}
+.further-reading a:hover{color:var(--clr-accent-text)}
+.footer{background:#0a0a0a;color:#888;padding:var(--space-2xl) 0 var(--space-lg);border-top:1px solid #2a2a2a}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:var(--space-lg);margin-bottom:var(--space-xl);max-width:1200px;margin-left:auto;margin-right:auto;padding:0 20px}
+.footer-col h4{color:#fff;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px}
+.footer-col a{display:block;color:#888;text-decoration:none;padding:3px 0;font-size:0.9rem}
+.footer-col a:hover{color:#fff}
+.footer-social{display:flex;gap:8px;margin-top:12px}
+.footer-social a{width:40px;height:40px;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;color:#888;border:1px solid #2a2a2a}
+.footer-social a:hover{background:var(--clr-accent);color:#0a0a0a}
+.footer-social svg{width:16px;height:16px}
+.footer-bottom{border-top:1px solid #1a1a1a;padding-top:16px;display:flex;justify-content:space-between;flex-wrap:wrap;font-size:0.8rem;color:#555;max-width:1200px;margin:0 auto;padding-left:20px;padding-right:20px}
+@media(max-width:860px){.content-wrapper{grid-template-columns:1fr}.product-card{grid-template-columns:1fr}}
+@media(max-width:760px){.footer-grid{grid-template-columns:1fr 1fr}}
+"""
+    # Disclosure text
+    disclosure = '<div class="disclosure">We earn a commission if you buy through our links, at no extra cost to you. Our opinions are our own.</div>'
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-{HEAD_HTML(html_mod.escape(post_title) + ' - Abvorn', html_mod.escape(meta_desc)[:160])}
-{OG_META(html_mod.escape(post_title) + ' - Abvorn', html_mod.escape(meta_desc)[:160], article_url, og_type='article')}
+<meta name="description" content="{html_mod.escape(meta_desc)[:160]}">
+<link rel="icon" type="image/png" href="{b}/favicon.png">
+<title>{html_mod.escape(post_title)} - Abvorn</title>
 <link rel="canonical" href="{article_url}">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 {bread}
 <script id="abvorn-rps-data" type="application/json">{rps_json}</script>
-{ANALYTICS_HTML}
-<style>{CSS_SHARED}</style>
-</head><body>
-<a class="skip-link" href="#main">Skip to content</a>
-{nav_html(all_slugs)}
-{hero_img}
-<article id="main">
-<h1>{html_mod.escape(post_title)}</h1>
-<div class="meta">By <strong>Abvorn Review Team</strong> - {html_mod.escape(product_name)} - Updated 2026 <span class="tested-badge" style="margin-left:8px">Tested</span></div>
-{cta}
-{matrix_html}
-{verdict_html}
-<div class="content">
-{intro}
-{article_html}
-</div>
-<div class="reactions-bar">
-<button class="reaction-btn" onclick="toggleReaction('like',this)" aria-label="Like">
-<span class="reaction-icon">&#x1F44D;</span>
-<span class="reaction-count">0</span>
-</button>
-<button class="reaction-btn" onclick="toggleReaction('love',this)" aria-label="Love">
-<span class="reaction-icon">&#x2764;&#xFE0F;</span>
-<span class="reaction-count">0</span>
-</button>
-</div>
-{share}
-</article>
+<style>{article_css}</style>
+</head>
+<body>
+<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
+<header><div class="container navbar">
+    <a href="{b}/" class="logo"><img src="{b}/logo.png" alt="Abvorn"></a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav-links" id="nav-links">
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown">{nav_dd}</div></div>
+        <a href="{b}/store.html">Store</a>
+        <a href="{b}/about.html">About</a>
+        <a href="{b}/privacy.html">Privacy</a>
+    </nav>
+</div></header>
 
-{related_html}
+<section class="post-hero"><div class="container">
+    <span class="post-hero__category">{html_mod.escape(niche_name)}</span>
+    <h1>{html_mod.escape(post_title)}</h1>
+    <div class="meta">By Abvorn · Updated 2026</div>
+    <p class="excerpt">{html_mod.escape(product_name)} — {html_mod.escape(meta_desc)[:120]}</p>
+</div></section>
 
-{product_cards}
-<div class="container">{cta}</div>
-{lead_form_html(form_url)}
-<div class="container"><div class="affiliate-banner">We earn a commission if you buy through our links, at no extra cost to you. Our opinions are our own.</div></div>
-<footer><p>Abvorn &middot; Independent reviews since 2026</p><div class="footer-links"><a href="{b}/privacy/">Privacy</a><a href="{b}/terms/">Terms</a><a href="{b}/disclaimer/">Disclaimer</a><a href="{b}/about/">About</a></div>{SOCIAL_HTML}</footer>
-{NAV_SCRIPT}
-{CAROUSEL_JS}
+<section class="content-wrapper">
+    <article class="article-body" id="main">
+        {disclosure}
+        {cta}
+        {matrix_html}
+        {verdict_html}
+        {intro}
+        {article_html}
+        <div class="reactions-bar">
+        <button class="reaction-btn" onclick="toggleReaction('like',this)" aria-label="Like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+        <button class="reaction-btn" onclick="toggleReaction('love',this)" aria-label="Love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        {share}
+        {related_html}
+        {product_cards}
+    </article>
+    <aside class="sidebar">
+        <div class="sidebar-box"><h4>Get the Free Guide</h4><p>Enter your email and we'll send the <strong>{html_mod.escape(product_name)} Guide</strong> directly to your inbox.</p>
+            <form onsubmit="return false">
+                <input type="email" placeholder="your@email.com" class="input" required>
+                <button type="submit" class="btn" style="margin-top:10px;" onclick="alert('Guide delivery coming soon.')">Send Me the Guide</button>
+            </form>
+        </div>
+    </aside>
+</section>
+
+<footer class="footer"><div class="footer-grid">
+    <div class="footer-col"><h4>Abvorn</h4><p>Independent product reviews and buying guides.</p><div class="footer-social">{footer_social}</div></div>
+    <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
+    <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a><a href="{b}/store.html">Store</a></div>
+    <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
+</div>
+<div class="footer-bottom"><span>&copy; {datetime.now().year} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div></footer>
+
+<script>
+(function(){{var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){{var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")}})}})();
+</script>
 {RPS_JS}</body></html>"""
 
 
@@ -1622,9 +2080,45 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     docs = Path("docs")
     docs.mkdir(exist_ok=True)
 
-    # Write root index
-    (docs / "index.html").write_text(build_root_index(state, all_posts, form_url), encoding="utf-8")
+    # Write root index (premium homepage)
+    (docs / "index.html").write_text(build_homepage(state, form_url), encoding="utf-8")
     print(f"  Written: docs/index.html")
+
+    # Generate static pages if they don't exist
+    b = SITE_BASE
+    year = datetime.now().year
+    static_pages = [
+        ("store.html", "Store", "<h2>Our Niche Stores</h2><p>Select a niche to explore curated product recommendations.</p>"),
+        ("about.html", "About Abvorn", "<h2>About Abvorn</h2><p>We are an AI-powered media network delivering expert product reviews and buying guides.</p>"),
+        ("privacy.html", "Privacy Policy", "<h2>Privacy Policy</h2><p>We respect your privacy. This site uses cookies for analytics and affiliate tracking. No personal data is sold.</p>"),
+    ]
+    for page_name, title, content in static_pages:
+        page_path = docs / page_name
+        if not page_path.exists():
+            full_page = f'''<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="{b}/favicon.png"><title>{title} | Abvorn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{{box-sizing:border-box;margin:0;padding:0}}body{{font-family:'Inter',sans-serif;color:#333;line-height:1.6}}
+.top-bar{{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}}
+.top-bar .container{{display:flex;justify-content:space-between;max-width:1200px;margin:0 auto;padding:0 20px}}
+header{{background:#0a0a0a;padding:18px 0;border-bottom:1px solid #2a2a2a}}
+.header-inner{{display:flex;justify-content:space-between;align-items:center;max-width:1200px;margin:0 auto;padding:0 20px}}
+.logo-img{{max-height:44px;width:auto}}
+.main{{padding:60px 20px;max-width:800px;margin:0 auto}}
+footer{{background:#0a0a0a;color:#888;padding:40px 0;text-align:center;border-top:1px solid #2a2a2a}}
+footer a{{color:#aaa;text-decoration:none}}
+</style></head>
+<body>
+<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
+<header><div class="header-inner"><a href="{b}/"><img src="{b}/logo.png" alt="Abvorn" class="logo-img"></a></div></header>
+<main class="main"><h1>{title}</h1>{content}</main>
+<footer><p>&copy; {year} Abvorn</p></footer>
+</body></html>'''
+            page_path.write_text(full_page)
+            print(f"  Written: docs/{page_name}")
 
     # Write category pages (post slugs point to reviews/{slug} for article pages)
     for n in state["niches"]:
