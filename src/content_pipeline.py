@@ -11,6 +11,8 @@ from datetime import datetime
 from src.humanizer_engine import HumanizerEngine
 from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
 from src.quantum_content_engine import QuantumContentEngine, create_quantum_engine, Platform
+from src.quality_guardian import create_quality_guardian
+from src.paradox_engine import create_paradox_engine
 
 logger = logging.getLogger("abvorn.content_pipeline")
 
@@ -35,6 +37,8 @@ class ContentPipeline:
         self._ensure_dirs()
         self.fact_checker = create_fact_checker()
         self.quantum_engine = create_quantum_engine()
+        self.quality_guardian = create_quality_guardian()
+        self.paradox_engine = create_paradox_engine()
 
     def _ensure_dirs(self):
         ASSETS_DIR.mkdir(parents=True, exist_ok=True)
@@ -204,6 +208,29 @@ class ContentPipeline:
                     script_data["script"] = self.fact_checker.apply_corrections(
                         script_data["script"], fc["corrections"])
                     logger.info(f"  Fact-check fixes applied for {platform}: {len(fc['corrections'])}")
+
+        # Quality check
+        try:
+            q_result = self.quality_guardian.check_content(
+                str(result), platform="general"
+            )
+            if not q_result["passed"]:
+                logger.warning(
+                    f"Quality issues: {[i['message'] for i in q_result['issues']]}"
+                )
+        except Exception as e:
+            logger.warning(f"Quality check skipped: {e}")
+
+        # Paradox Engine injection
+        try:
+            paradox = self.paradox_engine.generate_paradox_content(verdict)
+            if paradox.get("hook"):
+                for platform in PLATFORMS:
+                    if platform in scripts:
+                        if isinstance(scripts[platform], dict) and "script" in scripts[platform]:
+                            scripts[platform]["hook"] = paradox["hook"]
+        except Exception as e:
+            logger.warning(f"Paradox injection skipped: {e}")
 
         # Quantum engagement simulation
         try:

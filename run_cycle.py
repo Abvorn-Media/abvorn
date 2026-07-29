@@ -10,6 +10,7 @@ from datetime import datetime
 from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
 from src.quantum_content_engine import QuantumContentEngine, create_quantum_engine, Platform
 from src.nervous_system import NervousSystem, create_nervous_system, AlertLevel
+from src.living_knowledge_core import create_living_knowledge_core
 
 logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
 
