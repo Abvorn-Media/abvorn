@@ -1,4 +1,23 @@
 User-agent: *
 Allow: /
+Disallow: /assets/hero/
+Disallow: /plans/
+Disallow: /specs/
+
+# Prevent scraping of article content by known content scrapers
+User-agent: GPTBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Imagesiftbot
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
 
 Sitemap: https://Abvorn-Media.github.io/abvorn/sitemap.xml

@@ -61,10 +61,12 @@ class EmailSender:
         for sub in recipients or []:
             email = sub.get("email", "")
             name = sub.get("name", email.split("@")[0])
+            tracking_consent = bool(sub.get("tracking_consent", 0))
             html = render_persona_update(
                 to_name=name, persona_name=persona_name,
                 post_title=post_title, post_url=post_url,
                 niche=niche,
+                tracking_consent=tracking_consent,
             )
             ok = self.send_email(email, f"New: {post_title[:50]}", html)
             if ok:

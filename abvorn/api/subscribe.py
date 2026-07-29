@@ -14,6 +14,7 @@ def handle_subscribe(data: dict, db_path: Path = None) -> dict:
     email = (data.get("email") or "").strip().lower()
     name = (data.get("name") or "").strip()
     niche = (data.get("niche") or "tech").strip()
+    tracking_consent = data.get("tracking_consent", False)
 
     if not email or "@" not in email:
         return {"status": "error", "message": "Valid email required"}
@@ -21,7 +22,7 @@ def handle_subscribe(data: dict, db_path: Path = None) -> dict:
         return {"status": "error", "message": "Name required"}
 
     db = SubscriberDB(db_path or DEFAULT_DB)
-    db.add_subscriber(email, f"persona_{niche}", niche)
+    db.add_subscriber(email, f"persona_{niche}", niche, tracking_consent=tracking_consent)
 
     import sqlite3
     try:
@@ -31,8 +32,21 @@ def handle_subscribe(data: dict, db_path: Path = None) -> dict:
     except Exception as e:
         logger.warning(f"Could not store name: {e}")
 
-    logger.info(f"New subscriber: {name} <{email}> for {niche}")
+    logger.info(f"New subscriber: {name} <{email}> for {niche} tracking_consent={tracking_consent}")
     return {"status": "ok", "email": email, "niche": niche}
+
+
+def handle_delete(data: dict, db_path: Path = None) -> dict:
+    """Delete all data for a subscriber by email."""
+    email = (data.get("email") or "").strip().lower()
+    if not email or "@" not in email:
+        return {"status": "error", "message": "Valid email required"}
+    db = SubscriberDB(db_path or DEFAULT_DB)
+    ok = db.delete_subscriber(email)
+    if ok:
+        logger.info(f"Data deleted for: {email}")
+        return {"status": "ok", "message": f"All data deleted for {email}"}
+    return {"status": "error", "message": "Email not found"}
 
 
 def subscribe_form_html() -> str:
@@ -54,6 +68,10 @@ def subscribe_form_html() -> str:
         <option value="monitor">Monitors</option>
         <option value="smart home">Smart Home</option>
       </select>
+    </label>
+    <label class="subscribe-tracking" style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:12px;color:#6b6560;cursor:pointer">
+      <input type="checkbox" id="sub-tracking" checked style="margin-top:2px">
+      <span>Allow open and click tracking to improve our recommendations. <a href="/abvorn/privacy/" target="_blank" style="color:#d4633e">Privacy Policy</a></span>
     </label>
   </form>
   <div id="subscribe-status"></div>

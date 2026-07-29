@@ -38,7 +38,8 @@ class SubscriberDB:
                     sequence_step INT DEFAULT 0,
                     total_conversions INT DEFAULT 0,
                     total_revenue REAL DEFAULT 0.0,
-                    status TEXT DEFAULT 'active'
+                    status TEXT DEFAULT 'active',
+                    tracking_consent INT DEFAULT 0
                 );
                 CREATE TABLE IF NOT EXISTS email_sequences (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,13 +56,13 @@ class SubscriberDB:
                 );
             """)
 
-    def add_subscriber(self, email: str, persona_id: str, niche: str):
+    def add_subscriber(self, email: str, persona_id: str, niche: str, tracking_consent: bool = False):
         with self._cursor() as c:
             c.execute("""INSERT OR IGNORE INTO subscribers
-                (email, persona_id, niche, subscribed_at)
-                VALUES (?, ?, ?, ?)""",
-                (email, persona_id, niche, datetime.now().isoformat()))
-            logger.info(f"Subscriber added: {email} ({persona_id})")
+                (email, persona_id, niche, subscribed_at, tracking_consent)
+                VALUES (?, ?, ?, ?, ?)""",
+                (email, persona_id, niche, datetime.now().isoformat(), 1 if tracking_consent else 0))
+            logger.info(f"Subscriber added: {email} ({persona_id}) tracking_consent={tracking_consent}")
 
     def get_subscribers(self, niche: str = None) -> list[dict]:
         with self._cursor() as c:
@@ -101,6 +102,14 @@ class SubscriberDB:
                 c.execute("""SELECT * FROM email_sequences
                     WHERE niche=? ORDER BY day""", (niche,))
             return [dict(row) for row in c.fetchall()]
+
+    def delete_subscriber(self, email: str) -> bool:
+        with self._cursor() as c:
+            c.execute("DELETE FROM subscribers WHERE email=?", (email,))
+            deleted = c.rowcount > 0
+            if deleted:
+                logger.info(f"Subscriber deleted: {email}")
+            return deleted
 
     def close(self):
         if hasattr(self._local, 'conn') and self._local.conn:

@@ -568,6 +568,14 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 .rps-reset{background:none;border:1px solid var(--border);border-radius:100px;padding:4px 12px;font-size:.75rem;color:var(--text-muted);cursor:pointer;font-family:inherit;transition:all .15s}
 .rps-reset:hover{border-color:var(--primary);color:var(--primary)}
 @media(prefers-color-scheme:dark){.rps-reason.rps-mismatch{background:rgba(192,57,43,.12);color:#fca5a5}.rps-reason.rps-notice{background:rgba(212,160,62,.12);color:#fcd34d}}
+#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#2a2724;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
+#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
+#cookie-banner p{margin:0;color:#e3dbd4;font-size:13px}
+#cookie-banner a{color:#d4633e;text-decoration:underline}
+#cookie-banner .btn{background:#d4633e;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
+#cookie-banner .btn:hover{background:#b84d2a}
+#cookie-banner .btn-secondary{background:transparent;color:#e3dbd4;border:1px solid #6b6560;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
+#cookie-banner .btn-secondary:hover{border-color:#9e9690}
 """
 
 SVG_TIKTOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>'
@@ -610,13 +618,31 @@ def OG_META(title, desc, url, image="", og_type="website"):
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{desc}">{img_tag}
 '''
-NAV_SCRIPT = '<script>(function(){var h=document.querySelector(".hamburger");if(h){h.addEventListener("click",function(){var n=document.querySelector(".nav-links");n.classList.toggle("open");h.setAttribute("aria-expanded",n.classList.contains("open"))})}var d=document.querySelector(".dropdown-btn");if(d){d.addEventListener("click",function(e){e.preventDefault();this.closest(".dropdown").classList.toggle("open")})}})();</script>'
+NAV_SCRIPT = '<script>(function(){var h=document.querySelector(".hamburger");if(h){h.addEventListener("click",function(){var n=document.querySelector(".nav-links");n.classList.toggle("open");h.setAttribute("aria-expanded",n.classList.contains("open"))})}var d=document.querySelector(".dropdown-btn");if(d){d.addEventListener("click",function(e){e.preventDefault();this.closest(".dropdown").classList.toggle("open")})}})();</script><script>(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){return}var b=document.getElementById("cookie-banner");if(b){b.classList.add("show")}window.acceptAnalytics=function(){document.cookie="analytics_consent=granted; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show");if(typeof loadAnalytics==="function"){loadAnalytics()}};window.declineAnalytics=function(){document.cookie="analytics_consent=denied; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show")}})();</script>'
 import os
 
+CONSENT_CSS = '''
+#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#2a2724;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
+#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
+#cookie-banner p{margin:0;color:#e3dbd4;font-size:13px}
+#cookie-banner a{color:#d4633e;text-decoration:underline}
+#cookie-banner .btn{background:#d4633e;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
+#cookie-banner .btn:hover{background:#b84d2a}
+#cookie-banner .btn-secondary{background:transparent;color:#e3dbd4;border:1px solid #6b6560;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
+#cookie-banner .btn-secondary:hover{border-color:#9e9690}
+'''
+CONSENT_JS = '''
+(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){return}var b=document.getElementById("cookie-banner");if(b){b.classList.add("show")}window.acceptAnalytics=function(){document.cookie="analytics_consent=granted; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show");loadAnalytics()};window.declineAnalytics=function(){document.cookie="analytics_consent=denied; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show")}})()
+'''
 ANALYTICS_HTML = ''
 _ga_id = os.environ.get("GA_MEASUREMENT_ID", "")
 if _ga_id:
-    ANALYTICS_HTML = f'<script async src="https://www.googletagmanager.com/gtag/js?id={_ga_id}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments)}};gtag(\'js\',new Date());gtag(\'config\',\'{_ga_id}\');</script>'
+    ANALYTICS_HTML = f'''<script>window.loadAnalytics=function(){{var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id={_ga_id}";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments)}};gtag("js",new Date());gtag("config","{_ga_id}")}};(function(){{var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){{loadAnalytics()}}}})()</script>
+<div id="cookie-banner" role="dialog" aria-label="Cookie consent">
+<p>We use cookies to analyze traffic and improve your experience. <a href="{SITE_BASE}/privacy/">Privacy Policy</a></p>
+<button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
+<button class="btn" onclick="acceptAnalytics()">Accept</button>
+</div>'''
 
 def nav_html(categories, current=""):
     b = SITE_BASE

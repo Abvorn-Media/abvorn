@@ -44,7 +44,7 @@ You received this because you subscribed to {niche} updates.
 <p style="margin:0;font-size:12px;color:#9e9690">
 <a href="{unsubscribe_url}" style="color:#d4633e;text-decoration:underline">Unsubscribe</a>
 </p>
-<img src="{tracking_pixel}" width="1" height="1" alt="" style="display:none">
+{tracking_pixel_html}
 </td></tr>
 
 </table>
@@ -58,7 +58,8 @@ def render_email(to_name: str, subject: str, body_html: str,
                  magnet_title: str = "", magnet_url: str = "",
                  niche: str = "products",
                  unsubscribe_url: str = "#",
-                 tracking_pixel: str = "") -> str:
+                 tracking_pixel: str = "",
+                 tracking_consent: bool = False) -> str:
     """Render a complete HTML email with all optional blocks."""
     cta_block = ""
     if cta_text and cta_url:
@@ -92,13 +93,15 @@ def render_email(to_name: str, subject: str, body_html: str,
         body_html=body_html, cta_block=cta_block,
         lead_magnet_block=lead_magnet_block,
         niche=niche, unsubscribe_url=unsubscribe_url,
-        tracking_pixel=tracking_pixel or "",
+        tracking_pixel=(tracking_pixel if tracking_consent else "") or "",
+        tracking_pixel_html=f'<img src="{tracking_pixel}" width="1" height="1" alt="" style="display:none">' if tracking_consent and tracking_pixel else "",
     )
 
 
 def render_lead_magnet_email(to_name: str, magnet_title: str,
                                magnet_url: str = "#",
-                               niche: str = "products") -> str:
+                               niche: str = "products",
+                               tracking_consent: bool = False) -> str:
     """Render a lead magnet delivery email."""
     body = f"<p style=\"margin:0 0 16px;font-size:16px;color:#333;line-height:1.6\">Thanks for your interest in {niche}. Here's your free guide to help you make the right choice.</p>"
     return render_email(
@@ -108,12 +111,14 @@ def render_lead_magnet_email(to_name: str, magnet_title: str,
         magnet_title=magnet_title,
         magnet_url=magnet_url,
         niche=niche,
+        tracking_consent=tracking_consent,
     )
 
 
 def render_persona_update(to_name: str, persona_name: str,
                            post_title: str, post_url: str,
-                           niche: str = "products") -> str:
+                           niche: str = "products",
+                           tracking_consent: bool = False) -> str:
     """Render a persona-targeted content update email."""
     body = f"""<p style="margin:0 0 16px;font-size:16px;color:#333;line-height:1.6">We found something we think you'll love — a new guide written specifically for someone like you.</p>
 <p style="margin:0 0 4px;font-size:13px;color:#888;text-transform:uppercase;letter-spacing:0.5px">Just for you, {persona_name}</p>
@@ -125,4 +130,5 @@ def render_persona_update(to_name: str, persona_name: str,
         cta_text="Read the Full Guide",
         cta_url=post_url,
         niche=niche,
+        tracking_consent=tracking_consent,
     )
