@@ -1,5 +1,8 @@
 import run_cycle
 import json, os
+from src.humanizer_engine import HumanizerEngine
+
+_humanizer = HumanizerEngine()
 
 state = json.load(open("cycle_state.json"))
 secrets = run_cycle.get_secrets()

@@ -6,6 +6,10 @@ Outputs: structured questions with hypotheses and proposed experiments
 No API required. Uses rule-based question templates when no model available.
 """
 
+from src.humanizer_engine import HumanizerEngine
+
+_humanizer = HumanizerEngine()
+
 
 def questioner_agent(formula_outputs: dict, product_data: dict = None,
                      model_ask=None) -> list:
@@ -46,6 +50,17 @@ def questioner_agent(formula_outputs: dict, product_data: dict = None,
         if ai_q:
             questions.extend(ai_q)
 
+    questions = _humanize_questions(questions)
+    return questions
+
+
+def _humanize_questions(questions: list) -> list:
+    """Humanize question text and hypotheses for natural reading."""
+    for q in questions:
+        if "question" in q:
+            q["question"] = _humanizer.humanize_agent_output(q["question"], "question")
+        if "hypothesis" in q:
+            q["hypothesis"] = _humanizer.humanize_agent_output(q["hypothesis"], "hypothesis")
     return questions
 
 

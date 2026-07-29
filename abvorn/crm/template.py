@@ -1,5 +1,9 @@
 """Email HTML templates — beautiful, consistent, responsive."""
 
+from src.humanizer_engine import HumanizerEngine
+
+_humanizer = HumanizerEngine()
+
 _EMAIL_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -87,6 +91,9 @@ def render_email(to_name: str, subject: str, body_html: str,
 </tr>
 </table>
 </td></tr></table>'''
+
+    subject = _humanizer.humanize_email_subject(subject)
+    body_html = _humanizer.humanize_email_body(body_html)
 
     return _EMAIL_TEMPLATE.format(
         subject=subject, to_name=to_name,

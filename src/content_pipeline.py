@@ -8,7 +8,11 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
+from src.humanizer_engine import HumanizerEngine
+
 logger = logging.getLogger("abvorn.content_pipeline")
+
+_humanizer = HumanizerEngine()
 
 ASSETS_DIR = Path("assets")
 OUTPUT_DIR = Path("output")
@@ -97,6 +101,46 @@ class ContentPipeline:
         logger.info(f"  Placeholder created: {placeholder}")
         return str(placeholder)
 
+    def generate_title(self, verdict: Dict[str, Any], platform: str) -> str:
+        """Generate and humanize a platform-optimized title."""
+        product_name = verdict.get("product_name", "Product")
+        overall = verdict.get("overall", 0)
+        label = verdict.get("label", "")
+
+        templates = {
+            "tiktok": f"Is this the best {product_name}?",
+            "youtube_short": f"{product_name} — {label} review ({overall}/10)",
+            "instagram_reel": f"Rating the {product_name}: {label}",
+            "x": f"{product_name} review: {label}",
+            "linkedin": f"Deep dive: {product_name} — {label} with {overall}/10",
+        }
+        raw_title = templates.get(platform, templates["youtube_short"])
+        return _humanizer.humanize_video_title(raw_title, platform)
+
+    def generate_description(self, verdict: Dict[str, Any], platform: str) -> str:
+        """Generate and humanize a platform-optimized description."""
+        product_name = verdict.get("product_name", "Product")
+        overall = verdict.get("overall", 0)
+        summary = verdict.get("summary", "")
+
+        raw_desc = f"{product_name} — rated {overall}/10. {summary}"
+        return _humanizer.humanize_description(raw_desc, platform)
+
+    def generate_thumbnail_text(self, verdict: Dict[str, Any]) -> str:
+        """Generate humanized thumbnail text."""
+        product_name = verdict.get("product_name", "Product")
+        overall = verdict.get("overall", 0)
+        label = verdict.get("label", "")
+        raw_text = f"{product_name}\n{overall}/10 {label}"
+        return _humanizer.humanize_thumbnail_text(raw_text)
+
+    def generate_voiceover(self, verdict: Dict[str, Any]) -> str:
+        """Generate humanized voiceover script from verdict summary."""
+        summary = verdict.get("summary", "")
+        product_name = verdict.get("product_name", "Product")
+        raw_vo = f"Today we are reviewing the {product_name}. Here is our verdict: {summary}"
+        return _humanizer.humanize_voiceover_script(raw_vo)
+
     def create_content(self, product_id: str) -> Dict[str, Any]:
         """
         Full content creation pipeline for one product.
@@ -122,12 +166,26 @@ class ContentPipeline:
         scripts = self.generate_scripts(verdict)
         image_path = self.generate_hero_image(product_name, overall, product_id)
 
+        titles = {}
+        descriptions = {}
+        thumbnail_text = ""
+        voiceover = ""
+        for platform in PLATFORMS:
+            titles[platform] = self.generate_title(verdict, platform)
+            descriptions[platform] = self.generate_description(verdict, platform)
+        thumbnail_text = self.generate_thumbnail_text(verdict)
+        voiceover = self.generate_voiceover(verdict)
+
         result = {
             "product_id": product_id,
             "product_name": product_name,
             "verdict": verdict,
             "raw_data": raw,
             "scripts": scripts,
+            "titles": titles,
+            "descriptions": descriptions,
+            "thumbnail_text": thumbnail_text,
+            "voiceover": voiceover,
             "hero_image": image_path,
             "created_at": datetime.now().isoformat(),
         }

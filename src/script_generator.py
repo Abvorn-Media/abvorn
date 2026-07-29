@@ -3,7 +3,11 @@
 import logging
 from typing import Dict, Any, List
 
+from src.humanizer_engine import HumanizerEngine
+
 logger = logging.getLogger("abvorn.script_generator")
+
+_humanizer = HumanizerEngine()
 
 DEFAULT_HOOKS = {
     "tiktok": [
@@ -72,7 +76,12 @@ def generate_viral_script(verdict: Dict[str, Any], platform: str) -> Dict[str, A
     )
     
     hashtags = _generate_hashtags(product_name, platform)
-    
+
+    if platform in ("youtube_short", "youtube"):
+        body = _humanizer.humanize_youtube_script(body)
+    elif platform == "tiktok":
+        body = _humanizer.humanize_tiktok_script(body)
+
     return {
         "platform": platform,
         "hook": hook,
