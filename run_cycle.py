@@ -1122,7 +1122,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 
 
 # ─── AI Research (skip DDGS, use AI knowledge directly) ──────────────────
-def research_products(niche, router):
+def research_products(niche):
     secrets = get_secrets()
     api_key = secrets.get("OPENWEB_NINJA_KEY", "")
 
@@ -1132,7 +1132,7 @@ def research_products(niche, router):
         print(f"  Real products from Amazon API: {[p['name'] for p in real_products]}")
         return real_products
 
-    # Fallback: AI-generated product data
+    # Fallback: AI-generated product data via AISQL
     print(f"  Amazon API unavailable, using AI fallback for {niche}")
     prompt = f"""You are a product expert. For the niche '{niche}', recommend exactly 3 specific real products with brand and model names. Use your knowledge of real products available on Amazon.
 
@@ -1143,7 +1143,13 @@ Return a JSON array. Each product must have:
 - features: array of 3-4 key features
 - category: "best_overall", "best_value", or "premium_pick"
 - affiliate_query: search query for this product (e.g. "Sony+WH-1000XM5")"""
-    result = router.ask(prompt, json_mode=True)
+    result = ai_sql.query(QueryPlan(
+        system_prompt="You are an expert product researcher returning structured JSON data.",
+        user_prompt=prompt,
+        params={"temperature": 0.3, "max_tokens": 1000, "format": "json"},
+        provider_preferences=["openai", "anthropic"],
+        fallback_chain=["deepseek", "gemini", "local"],
+    )).content
     if not result:
         return None
     try:
@@ -1161,7 +1167,7 @@ Return a JSON array. Each product must have:
 
 
 # ─── Content generation ─────────────────────────────────────────────────
-def generate_outline(niche, products, router):
+def generate_outline(niche, products):
     names = json.dumps([p.get("name", "") for p in products[:3]])
     prompt = f"""You are a content strategist planning a buying guide for '{niche}'.
 Products: {names}
@@ -1172,7 +1178,13 @@ Return a JSON object with:
 - primary_keyword: the main SEO keyword for this guide
 - post_title: compelling title for the buying guide
 - meta_description: 1-2 sentence SEO description"""
-    result = router.ask(prompt, json_mode=True)
+    result = ai_sql.query(QueryPlan(
+        system_prompt="You are an expert content strategist returning structured JSON data.",
+        user_prompt=prompt,
+        params={"temperature": 0.7, "max_tokens": 500, "format": "json"},
+        provider_preferences=["openai", "anthropic", "deepseek"],
+        fallback_chain=["gemini", "local"],
+    )).content
     if not result:
         return None
     try:
@@ -1185,7 +1197,7 @@ Return a JSON object with:
     return None
 
 
-def write_draft(niche, products, outline, router):
+def write_draft(niche, products, outline):
     products_text = json.dumps(products, indent=2)
     post_title = outline.get("post_title", f"Best {niche} — Expert Review")
     meta_desc = outline.get("meta_description", f"Find the best {niche} with our expert guide.")
@@ -1199,7 +1211,13 @@ Products: {products_text}
 
 Write 2-3 short paragraphs (as HTML) that hook the reader, state the problem, and introduce the solution.
 Return ONLY the HTML paragraphs, wrapped in <p> tags."""
-    intro_html = router.ask(intro_prompt, system="You write concise, honest product review copy.")
+    intro_html = ai_sql.query(QueryPlan(
+        system_prompt="You write concise, honest product review copy.",
+        user_prompt=intro_prompt,
+        params={"temperature": 0.7, "max_tokens": 500},
+        provider_preferences=["openai", "anthropic"],
+        fallback_chain=["deepseek", "gemini", "local"],
+    )).content
     if not intro_html:
         intro_html = "<p>We tested the top products to find the ones worth your money.</p>"
 
@@ -1214,7 +1232,13 @@ For each product, include: a brief intro, key features, pros/cons, and a bottom-
 Use <p> for paragraphs, <ul>/<li> for lists, <strong> for emphasis.
 Be honest, specific (use real prices/numbers), and scannable.
 Return ONLY the HTML."""
-    article_html = router.ask(article_prompt, system="You write thorough, honest product reviews with specific details and real prices.")
+    article_html = ai_sql.query(QueryPlan(
+        system_prompt="You write thorough, honest product reviews with specific details and real prices.",
+        user_prompt=article_prompt,
+        params={"temperature": 0.7, "max_tokens": 2000},
+        provider_preferences=["openai", "anthropic"],
+        fallback_chain=["deepseek", "gemini", "local"],
+    )).content
     if not article_html:
         article_html = "<p>We're reviewing the top products in this category.</p>"
 
@@ -1378,21 +1402,22 @@ def generate_persona_content_plan(niche_name, persona, awareness_level="problem_
     }
 
 
-def generate_persona_article(niche_name, persona, awareness_level, router=None,
-                              products=None, content_type_override=None):
-    """Generate full persona-specific article using AI router if available.
+def generate_persona_article(niche_name, persona, awareness_level,
+                               products=None, content_type_override=None):
+    """Generate full persona-specific article using AISQL.
     Falls back to returning a content plan + placeholder structure."""
     plan = generate_persona_content_plan(niche_name, persona, awareness_level,
                                           products, content_type_override)
 
-    # If no router or no API keys, return content plan for manual authoring
-    if router is None or not router.providers:
+    # Check if AISQL is available (has working providers)
+    ai_sql_available = any(p.health_check() for p in ai_sql.providers.values())
+    if not ai_sql_available:
         plan["mode"] = "manual"
         plan["article_html"] = _persona_article_template(plan, persona, niche_name, products)
         plan["instructions"] = "Replace placeholder text with original content. See mission phase 4 for guidelines."
         return plan
 
-    # Generate full article via AI
+    # Generate full article via AISQL
     p = persona.get("psychology", {})
     frustrations = p.get("anxieties", [])
     hopes = p.get("hopes", [])
@@ -1426,7 +1451,13 @@ Return JSON:
   "article_html": "Full article body (800-1200 words HTML). Include 1-2 natural affiliate links with tag=viraltestco-20"
 }}"""
 
-    result = router.ask(prompt, json_mode=True)
+    result = ai_sql.query(QueryPlan(
+        system_prompt="You are an expert content writer for Abvorn, an independent product review platform.",
+        user_prompt=prompt,
+        params={"temperature": 0.9, "max_tokens": 1500, "format": "json"},
+        provider_preferences=["openai", "anthropic"],
+        fallback_chain=["deepseek", "gemini", "local"],
+    )).content
     if not result:
         plan["mode"] = "fallback"
         plan["article_html"] = _persona_article_template(plan, persona, niche_name, products)
@@ -1705,10 +1736,7 @@ def _register_sensors(nervous_system):
 # ─── Main ────────────────────────────────────────────────────────────────
 def main(forced_niche=None, force=False):
     secrets = get_secrets()
-
-    # Build ModelRouter from env
-    from abvorn.core.models import ModelRouter
-    router = ModelRouter(secrets)
+    ai_sql = create_ai_sql()
 
     # Load state
     state = load_state()
@@ -1731,7 +1759,7 @@ def main(forced_niche=None, force=False):
 
     # 1. RESEARCH
     print(f"\n--- RESEARCH: {niche_slug} ---")
-    products = research_products(niche_slug, router)
+    products = research_products(niche_slug)
     if not products:
         print("ERROR: No products found")
         sys.exit(1)
@@ -1739,7 +1767,7 @@ def main(forced_niche=None, force=False):
 
     # 2. OUTLINE
     print(f"\n--- OUTLINE: {niche_slug} ---")
-    outline = generate_outline(niche_slug, products, router)
+    outline = generate_outline(niche_slug, products)
     if not outline:
         print("WARNING: Outline failed, using default")
         outline = {"post_title": f"Best {niche_name}", "meta_description": f"Find the best {niche_name}.",
@@ -1749,7 +1777,7 @@ def main(forced_niche=None, force=False):
 
     # 3. DRAFT
     print(f"\n--- DRAFT: {niche_slug} ---")
-    draft = write_draft(niche_slug, products, outline, router)
+    draft = write_draft(niche_slug, products, outline)
     if not draft:
         print("ERROR: Draft failed")
         sys.exit(1)
