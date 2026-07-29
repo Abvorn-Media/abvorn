@@ -5,13 +5,14 @@ from typing import Dict, Any, List
 
 from src.humanizer_engine import HumanizerEngine
 from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
-from src.ai_sql import AISQL, create_ai_sql
+from src.ai_sql import AISQL, create_ai_sql, QueryPlan
 from src.quantum_content_engine import QuantumContentEngine, create_quantum_engine, Platform
 
 logger = logging.getLogger("abvorn.script_generator")
 
 _humanizer = HumanizerEngine()
 _fact_checker = create_fact_checker()
+_ai_sql = create_ai_sql()
 
 DEFAULT_HOOKS = {
     "tiktok": [

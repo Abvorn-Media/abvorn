@@ -16,6 +16,8 @@ from src.unified_memory import UnifiedMemory, create_unified_memory, MemoryTier
 from src.close_feedback_loop import ClosedFeedbackLoop, create_feedback_loop
 from src.economic_surplus import EconomicSurplusTracker, create_economic_surplus_tracker
 from src.entitlements import EntitlementsFramework, create_entitlements_framework
+from src.workflow_engine import WorkflowEngine, create_workflow_engine
+from src.social_permission import SocialPermissionFramework, create_social_permission_framework
 
 logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
 
