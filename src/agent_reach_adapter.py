@@ -102,6 +102,42 @@ class AgentReachAdapter:
             platform="bilibili",
         )
 
+    def fetch_linkedin(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """Fetch LinkedIn posts matching the query."""
+        return self._fetch_via_tool(
+            tool="linkedin",
+            args=["search", query, "--limit", str(limit), "--json"],
+            query=query,
+            platform="linkedin",
+        )
+
+    def fetch_instagram(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """Fetch Instagram posts matching the query."""
+        return self._fetch_via_tool(
+            tool="instagram",
+            args=["search", query, "--limit", str(limit), "--json"],
+            query=query,
+            platform="instagram",
+        )
+
+    def fetch_tiktok(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """Fetch TikTok videos matching the query."""
+        return self._fetch_via_tool(
+            tool="tiktok",
+            args=["search", query, "--limit", str(limit), "--json"],
+            query=query,
+            platform="tiktok",
+        )
+
+    def fetch_rss(self, feed_url: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """Fetch items from an RSS feed URL."""
+        return self._fetch_via_tool(
+            tool="rss",
+            args=["fetch", feed_url, "--limit", str(limit), "--json"],
+            query=feed_url,
+            platform="rss",
+        )
+
     def fetch_social_data(
         self,
         query: str,
@@ -110,16 +146,20 @@ class AgentReachAdapter:
     ) -> Dict[str, List[Dict[str, Any]]]:
         """Fetch data from multiple platforms in one call."""
         if platforms is None:
-            platforms = ["twitter", "reddit", "youtube"]
+            platforms = ["twitter", "linkedin", "tiktok", "instagram"]
 
         results: Dict[str, List[Dict[str, Any]]] = {}
         platform_map = {
             "twitter": lambda: self.fetch_tweets(query, limit=limit_per_platform),
             "reddit": lambda: self.fetch_reddit(query=query, limit=limit_per_platform),
             "youtube": lambda: self.fetch_youtube(query, limit=limit_per_platform),
+            "linkedin": lambda: self.fetch_linkedin(query, limit=limit_per_platform),
+            "instagram": lambda: self.fetch_instagram(query, limit=limit_per_platform),
+            "tiktok": lambda: self.fetch_tiktok(query, limit=limit_per_platform),
             "github": lambda: self.fetch_github_issues(query=query, limit=limit_per_platform),
             "xiaohongshu": lambda: self.fetch_xiaohongshu(query, limit=limit_per_platform),
             "bilibili": lambda: self.fetch_bilibili(query, limit=limit_per_platform),
+            "rss": lambda: self.fetch_rss(query, limit=limit_per_platform),
         }
 
         for platform in platforms:
