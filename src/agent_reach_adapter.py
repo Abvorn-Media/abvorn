@@ -1,228 +1,142 @@
-"""agent_reach_adapter.py — Unified adapter for Agent-Reach social listening.
+"""agent_reach_adapter.py — Real-time social data fetcher using Agent-Reach internal APIs.
 
 Agent-Reach installs and configures upstream tools (twitter-cli, yt-dlp, etc.).
 This adapter provides a clean Python API over those tools for the Abvorn pipeline.
 """
-import json
 import logging
-import subprocess
-from typing import Dict, List, Any, Optional
+from typing import List, Dict, Any, Optional
 
-from agent_reach import AgentReach
-from agent_reach.channels import get_channel, ALL_CHANNELS
+try:
+    from agent_reach import twitter, reddit, youtube, github, xiaohongshu, bilibili
+except ImportError:
+    twitter = reddit = youtube = github = xiaohongshu = bilibili = None
+    logging.warning("Agent-Reach not installed; social data will be unavailable.")
 
-logger = logging.getLogger("abvorn.agent_reach")
+logger = logging.getLogger(__name__)
 
 
 class AgentReachAdapter:
-    def __init__(self, config_path: Optional[str] = None):
-        self.agent_reach = AgentReach()
-        self.config_path = config_path
-        self._health = None
+    def __init__(self):
+        self._available = False
+        self._check_available()
 
-    def check_health(self) -> Dict[str, Any]:
-        """Check all channel availability via Agent-Reach doctor."""
-        self._health = self.agent_reach.doctor()
-        return self._health
+    def _check_available(self):
+        if twitter is None:
+            logger.warning("Agent-Reach not installed; social data will be unavailable.")
+            self._available = False
+            return
+        self._available = True
 
-    def health_report(self) -> str:
-        """Get formatted health report."""
-        if self._health is None:
-            self.check_health()
-        from agent_reach.doctor import format_report
-        return format_report(self._health)
+    @property
+    def available(self) -> bool:
+        return self._available
 
-    def fetch_tweets(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
-        """Fetch recent tweets matching the query."""
-        return self._fetch_via_tool(
-            tool="twitter",
-            args=["search", query, "--limit", str(limit), "--json"],
-            query=query,
-            platform="twitter",
-        )
+    def fetch_tweets(self, query: str, limit: int = 10) -> List[Dict]:
+        """Fetch recent tweets matching query."""
+        if not self._available:
+            return []
+        try:
+            results = twitter.search(query, limit=limit)
+            return [{
+                'text': r.get('text', ''),
+                'author': r.get('author', {}).get('username', 'unknown'),
+                'timestamp': r.get('created_at'),
+                'url': r.get('url'),
+                'engagement': {
+                    'likes': r.get('like_count', 0),
+                    'retweets': r.get('retweet_count', 0),
+                    'replies': r.get('reply_count', 0),
+                },
+            } for r in results]
+        except Exception as e:
+            logger.error(f"Twitter fetch failed: {e}")
+            return []
 
-    def fetch_reddit(self, subreddit: Optional[str] = None,
-                        query: Optional[str] = None,
-                        limit: int = 5) -> List[Dict[str, Any]]:
-        """Fetch Reddit posts from a subreddit or search query."""
-        if subreddit:
-            search_query = f"site:reddit.com/r/{subreddit} {query or ''}"
-        elif query:
-            search_query = query
-        else:
-            raise ValueError("Either subreddit or query must be provided.")
-        return self._fetch_via_tool(
-            tool="reddit",
-            args=["search", search_query, "--limit", str(limit), "--json"],
-            query=search_query,
-            platform="reddit",
-        )
-
-    def fetch_youtube(self, query: str, limit: int = 3) -> List[Dict[str, Any]]:
-        """Fetch YouTube videos matching the query."""
-        return self._fetch_via_tool(
-            tool="yt-dlp",
-            args=["--dump-json", "--flat-playlist", f"ytsearch{limit}:{query}"],
-            query=query,
-            platform="youtube",
-        )
-
-    def fetch_github_issues(self, repo: Optional[str] = None,
-                               query: Optional[str] = None,
-                               limit: int = 5) -> List[Dict[str, Any]]:
-        """Fetch GitHub issues from a repo or search query."""
-        if repo:
-            search_query = f"repo:{repo} {query or ''}"
-        elif query:
-            search_query = query
-        else:
-            raise ValueError("Either repo or query must be provided.")
-        return self._fetch_via_tool(
-            tool="gh",
-            args=["search", "issue", search_query, "--limit", str(limit), "--json"],
-            query=search_query,
-            platform="github",
-        )
-
-    def fetch_xiaohongshu(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
-        """Fetch posts from XiaoHongShu (Little Red Book)."""
-        return self._fetch_via_tool(
-            tool="xiaohongshu",
-            args=["search", query, "--limit", str(limit), "--json"],
-            query=query,
-            platform="xiaohongshu",
-        )
-
-    def fetch_bilibili(self, query: str, limit: int = 3) -> List[Dict[str, Any]]:
-        """Fetch Bilibili videos matching the query."""
-        return self._fetch_via_tool(
-            tool="bilibili",
-            args=["search", query, "--limit", str(limit), "--json"],
-            query=query,
-            platform="bilibili",
-        )
-
-    def fetch_linkedin(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
-        """Fetch LinkedIn posts matching the query."""
-        return self._fetch_via_tool(
-            tool="linkedin",
-            args=["search", query, "--limit", str(limit), "--json"],
-            query=query,
-            platform="linkedin",
-        )
-
-    def fetch_instagram(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
-        """Fetch Instagram posts matching the query."""
-        return self._fetch_via_tool(
-            tool="instagram",
-            args=["search", query, "--limit", str(limit), "--json"],
-            query=query,
-            platform="instagram",
-        )
-
-    def fetch_tiktok(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
-        """Fetch TikTok videos matching the query."""
-        return self._fetch_via_tool(
-            tool="tiktok",
-            args=["search", query, "--limit", str(limit), "--json"],
-            query=query,
-            platform="tiktok",
-        )
-
-    def fetch_rss(self, feed_url: str, limit: int = 10) -> List[Dict[str, Any]]:
-        """Fetch items from an RSS feed URL."""
-        return self._fetch_via_tool(
-            tool="rss",
-            args=["fetch", feed_url, "--limit", str(limit), "--json"],
-            query=feed_url,
-            platform="rss",
-        )
-
-    def fetch_social_data(
-        self,
-        query: str,
-        platforms: Optional[List[str]] = None,
-        limit_per_platform: int = 5,
-    ) -> Dict[str, List[Dict[str, Any]]]:
-        """Fetch data from multiple platforms in one call."""
-        if platforms is None:
-            platforms = ["twitter", "linkedin", "tiktok", "instagram"]
-
-        results: Dict[str, List[Dict[str, Any]]] = {}
-        platform_map = {
-            "twitter": lambda: self.fetch_tweets(query, limit=limit_per_platform),
-            "reddit": lambda: self.fetch_reddit(query=query, limit=limit_per_platform),
-            "youtube": lambda: self.fetch_youtube(query, limit=limit_per_platform),
-            "linkedin": lambda: self.fetch_linkedin(query, limit=limit_per_platform),
-            "instagram": lambda: self.fetch_instagram(query, limit=limit_per_platform),
-            "tiktok": lambda: self.fetch_tiktok(query, limit=limit_per_platform),
-            "github": lambda: self.fetch_github_issues(query=query, limit=limit_per_platform),
-            "xiaohongshu": lambda: self.fetch_xiaohongshu(query, limit=limit_per_platform),
-            "bilibili": lambda: self.fetch_bilibili(query, limit=limit_per_platform),
-            "rss": lambda: self.fetch_rss(query, limit=limit_per_platform),
-        }
-
-        for platform in platforms:
-            fetch_fn = platform_map.get(platform)
-            if fetch_fn:
-                try:
-                    results[platform] = fetch_fn()
-                except Exception as e:
-                    logger.warning(f"Failed to fetch {platform}: {e}")
-                    results[platform] = []
+    def fetch_reddit_posts(self, subreddit: Optional[str] = None,
+                           query: Optional[str] = None,
+                           limit: int = 5) -> List[Dict]:
+        """Fetch Reddit posts from subreddit or search."""
+        if not self._available:
+            return []
+        try:
+            if subreddit:
+                results = reddit.subreddit(subreddit).hot(limit=limit)
+            elif query:
+                results = reddit.search(query, limit=limit)
             else:
-                logger.warning(f"Unknown platform: {platform}, skipping")
+                return []
+            return [{
+                'text': r.title + '\n' + (r.selftext or ''),
+                'author': str(r.author),
+                'timestamp': r.created_utc,
+                'url': r.url,
+                'engagement': {
+                    'upvotes': r.score,
+                    'comments': r.num_comments,
+                },
+            } for r in results]
+        except Exception as e:
+            logger.error(f"Reddit fetch failed: {e}")
+            return []
 
-        return results
-
-    def _fetch_via_tool(
-        self,
-        tool: str,
-        args: List[str],
-        query: str,
-        platform: str,
-    ) -> List[Dict[str, Any]]:
-        """Fallback: try CLI tool, then web search."""
-        # Try Agent-Reach channel first
+    def fetch_youtube_videos(self, query: str, limit: int = 3) -> List[Dict]:
+        """Fetch YouTube videos matching query."""
+        if not self._available:
+            return []
         try:
-            channel = get_channel(platform)
-            if channel:
-                logger.info(f"Using Agent-Reach channel for {platform}")
-        except Exception:
-            pass
+            results = youtube.search(query, limit=limit)
+            return [{
+                'text': r.get('title', '') + '\n' + r.get('description', ''),
+                'author': r.get('channel_name', ''),
+                'timestamp': r.get('published_at'),
+                'url': f"https://youtu.be/{r.get('video_id')}",
+                'engagement': {
+                    'views': r.get('view_count', 0),
+                    'likes': r.get('like_count', 0),
+                    'comments': r.get('comment_count', 0),
+                },
+            } for r in results]
+        except Exception as e:
+            logger.error(f"YouTube fetch failed: {e}")
+            return []
 
-        # Try direct CLI execution
+    def fetch_github_issues(self, repo: str, query: Optional[str] = None, limit: int = 5) -> List[Dict]:
+        """Fetch GitHub issues from repo or search query."""
+        if not self._available:
+            return []
         try:
-            result = subprocess.run(
-                [tool] + args,
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
-            if result.returncode == 0 and result.stdout.strip():
-                return json.loads(result.stdout)
-        except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError):
-            pass
+            results = github.issues(repo, query=query, limit=limit)
+            return [{
+                'text': r.get('title', '') + '\n' + r.get('body', ''),
+                'author': r.get('user', {}).get('login', ''),
+                'timestamp': r.get('created_at'),
+                'url': r.get('html_url'),
+                'engagement': {
+                    'comments': r.get('comments', 0),
+                    'reactions': len(r.get('reactions', {})),
+                },
+            } for r in results]
+        except Exception as e:
+            logger.error(f"GitHub fetch failed: {e}")
+            return []
 
-        # Fallback: return structured placeholder with the query
-        logger.info(f"{tool} not available, returning placeholder for: {query}")
-        return self._placeholder_result(query, platform)
+    def fetch_social_data(self, query: str,
+                          platforms: List[str] = ['twitter', 'reddit', 'youtube'],
+                          limit_per_platform: int = 5) -> Dict[str, List[Dict]]:
+        """Aggregate data from multiple platforms."""
+        if not self._available:
+            logger.warning("Agent-Reach not available; returning empty social data")
+            return {}
+        data: Dict[str, List[Dict]] = {}
+        if 'twitter' in platforms:
+            data['twitter'] = self.fetch_tweets(query, limit=limit_per_platform)
+        if 'reddit' in platforms:
+            data['reddit'] = self.fetch_reddit_posts(query=query, limit=limit_per_platform)
+        if 'youtube' in platforms:
+            data['youtube'] = self.fetch_youtube_videos(query, limit=limit_per_platform)
+        return data
 
-    @staticmethod
-    def _placeholder_result(query: str, platform: str) -> List[Dict[str, Any]]:
-        return [
-            {
-                "text": f"[placeholder] Search query: {query}",
-                "author": "system",
-                "platform": platform,
-                "timestamp": "",
-                "url": "",
-                "engagement": {"likes": 0, "shares": 0, "comments": 0},
-            }
-        ]
 
-
-# Singleton
 _instance: Optional[AgentReachAdapter] = None
 
 

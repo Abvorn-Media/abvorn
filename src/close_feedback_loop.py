@@ -541,6 +541,23 @@ class ClosedFeedbackLoop:
             )
             logger.info("Optimized prompt fed back to AISQL")
 
+    def record_social_sentiment(self, niche: str, platform: str, sentiment_score: float) -> None:
+        """Store social sentiment for a niche over time."""
+        from pathlib import Path
+        import json as _json
+        from datetime import datetime as _dt
+        file_path = Path("data/social_sentiment") / f"{niche}_{platform}.json"
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        data = []
+        if file_path.exists():
+            try:
+                data = _json.loads(file_path.read_text(encoding="utf-8"))
+            except (_json.JSONDecodeError, OSError):
+                data = []
+        data.append({"timestamp": _dt.now().isoformat(), "sentiment": sentiment_score})
+        file_path.write_text(_json.dumps(data, indent=2, default=str), encoding="utf-8")
+        logger.info(f"Social sentiment recorded: {niche}/{platform} = {sentiment_score:.3f}")
+
     def _calculate_engagement_score(self, metrics: dict) -> float:
         """Calculate a normalized engagement score from metrics."""
         score = 0.0

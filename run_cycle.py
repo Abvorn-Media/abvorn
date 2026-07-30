@@ -2858,8 +2858,34 @@ def process_single_niche(niche: Dict, workflow_name: str = None) -> Dict:
     if not products:
         return {"status": "error", "message": f"No products found for {niche_slug}"}
 
+    # 1.5. Fetch social sentiment data and record it
+    social_data = {}
+    try:
+        social_data = fetch_social_sentiment(niche_name)
+        # Record sentiment scores in feedback loop
+        for platform, items in social_data.items():
+            if isinstance(items, list) and items:
+                total_polarity = 0.0
+                for item in items:
+                    text = item.get("text", "")
+                    # Simple sentiment: positive if more positive words
+                    pos_words = {"good", "great", "excellent", "best", "love", "amazing", "perfect", "recommend", "happy", "satisfied", "worth", "impressive", "outstanding"}
+                    neg_words = {"bad", "worst", "hate", "terrible", "awful", "disappointed", "poor", "waste", "overpriced", "broken", "useless"}
+                    words = text.lower().split()
+                    pos_count = sum(1 for w in words if w.strip(".,!?"'()[]") in pos_words)
+                    neg_count = sum(1 for w in words if w.strip(".,!?"'()[]") in neg_words)
+                    polarity = (pos_count - neg_count) / max(len(words), 1)
+                    total_polarity += polarity
+                avg_sentiment = total_polarity / max(len(items), 1)
+                try:
+                    feedback_loop.record_social_sentiment(niche_name, platform, avg_sentiment)
+                except (NameError, AttributeError):
+                    pass
+    except Exception as e:
+        logger.warning(f"Social data fetch failed for {niche_slug}: {e}")
+
     # 2. Outline
-    outline = generate_outline(niche_slug, products, _knowledge_core, _workflow_engine)
+    outline = generate_outline(niche_slug, products, _knowledge_core, _workflow_engine, social_data=social_data)
     if not outline:
         outline = {
             "post_title": f"Best {niche_name}",
@@ -2869,7 +2895,7 @@ def process_single_niche(niche: Dict, workflow_name: str = None) -> Dict:
         }
 
     # 3. Draft
-    draft = write_draft(niche_slug, products, outline, _knowledge_core, _workflow_engine)
+    draft = write_draft(niche_slug, products, outline, _knowledge_core, _workflow_engine, social_data=social_data)
     if not draft:
         return {"status": "error", "message": f"Draft failed for {niche_slug}"}
 
