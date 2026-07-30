@@ -1068,8 +1068,8 @@ def render_footer_social():
 
 def build_homepage(state, form_url=""):
     """Build the premium homepage with hero slider, stats, and category sections."""
-    niches = state["niches"]
-    all_slugs = [n["slug"] for n in niches]
+    niches = sorted(state["niches"], key=lambda n: n["name"].lower())
+    all_slugs = sorted([n["slug"] for n in niches], key=lambda s: _slugify_title(s).lower())
     b = SITE_BASE
     total_posts = sum(n["posts"] for n in niches)
     total_products = total_posts * 3  # rough estimate
@@ -2455,7 +2455,7 @@ def write_persona_content_plan(niche_name, matrix, docs_dir="docs/plans"):
 # ─── Document writer ────────────────────────────────────────────────────
 def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_url="", hero_images=None, google_client_id=""):
     """Write all HTML files to docs/ directory."""
-    all_slugs = [n["slug"] for n in state["niches"]]
+    all_slugs = sorted([n["slug"] for n in state["niches"]], key=lambda s: _slugify_title(s).lower())
     hero_images = hero_images or {}
     niche_name = next((n["name"] for n in state["niches"] if n["slug"] == niche_slug), niche_slug.replace("-", " ").title())
 
@@ -2536,7 +2536,8 @@ footer a{{color:#aaa;text-decoration:none}}
             post_dir = docs / "reviews" / slug
             post_dir.mkdir(parents=True, exist_ok=True)
             hero_img_html = hero_images.get(slug, "")
-            related = [n for n in state["niches"] if n["slug"] != slug][:4]
+            _sorted_niches = sorted(state["niches"], key=lambda n: n["name"].lower())
+            related = [n for n in _sorted_niches if n["slug"] != slug][:4]
             (post_dir / "index.html").write_text(
                 build_article_page(slug, niche_name, a["post_title"], a["article_html"],
                                    a["intro"], a["product_name"], a["meta_description"],
