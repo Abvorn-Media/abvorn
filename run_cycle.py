@@ -813,7 +813,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="__SITE_BASE__/favicon.png">
+    <link rel="icon" type="image/png" href="__SITE_BASE__/assets/favicon.png">
     <title>Abvorn – Reviews Based on Real Testing, Not Spec Sheets</title>
     <meta name="description" content="Independent product reviews and buying guides. We test before we recommend.">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1277,7 +1277,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     return f'''<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="{b}/favicon.png">
+    <link rel="icon" type="image/png" href="{b}/assets/favicon.png">
     <title>{blog_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1764,7 +1764,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="{b}/favicon.png">
+    <link rel="icon" type="image/png" href="{b}/assets/favicon.png">
     <title>{title_escaped} | Abvorn</title>
     <meta name="description" content="{meta_escaped}">
     <link rel="canonical" href="{article_url}">
@@ -2578,7 +2578,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
         if not page_path.exists():
             full_page = f'''<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="{b}/favicon.png"><title>{title} | Abvorn</title>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="{b}/assets/favicon.png"><title>{title} | Abvorn</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
