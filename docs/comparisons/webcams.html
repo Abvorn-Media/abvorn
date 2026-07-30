@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/abvorn/assets/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/abvorn/assets/apple-touch-icon.png">
 <link rel="manifest" href="/abvorn/assets/site.webmanifest">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <meta property="og:title" content="Best Webcams Compared - Abvorn">
 <meta property="og:description" content="Side-by-side comparison of the best webcams.">
 <meta property="og:url" content="https://Abvorn-Media.github.io/abvorn/comparisons/webcams/">
@@ -30,24 +30,34 @@ body{color:var(--text);background:var(--bg);line-height:1.6}
 .container{max-width:1080px;margin:0 auto;padding:0 24px}
 a{color:var(--primary);text-decoration:none;transition:color .15s}
 a:hover{color:var(--primary-dark);text-decoration:underline}
-nav{background:rgba(250,246,241,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
-@media(prefers-color-scheme:dark){nav{background:rgba(26,23,21,.9)}}
-nav .inner{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:56px;justify-content:space-between}
-nav .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1.15rem;color:var(--text);text-decoration:none;font-family:var(--font-display)}
-nav .logo:hover{text-decoration:none}
-.nav-links{display:flex;align-items:center;gap:24px}
-.dropdown{position:relative}
-.dropdown-btn{background:none;border:none;cursor:pointer;font-size:.9rem;color:var(--text-secondary);padding:4px 0;border-bottom:2px solid transparent;font-family:inherit;display:flex;align-items:center;gap:4px;transition:color .15s}
-.dropdown-btn:hover{color:var(--text);border-bottom-color:var(--primary)}
-.dropdown-btn::after{content:'';display:inline-block;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid var(--text-muted);margin-left:4px;transition:transform .2s}
-.dropdown.open .dropdown-btn::after{transform:rotate(180deg)}
-.dropdown-menu{display:none;position:absolute;top:100%;left:0;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);min-width:200px;padding:8px;z-index:20;max-height:400px;overflow-y:auto}
-.dropdown:hover .dropdown-menu,.dropdown.open .dropdown-menu{display:block}
-.dropdown-menu a{display:block;padding:8px 12px;font-size:.9rem;color:var(--text-secondary);border-radius:4px;text-decoration:none;transition:all .15s}
-.dropdown-menu a:hover{background:var(--bg-alt);color:var(--primary);text-decoration:none}
-.nav-link{font-size:.9rem;color:var(--text-secondary);text-decoration:none;padding:4px 0;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
-.nav-link:hover{color:var(--text);border-bottom-color:var(--primary);text-decoration:none}
-.nav-link.current{color:var(--text);border-bottom-color:var(--primary)}
+.top-bar{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}
+.top-bar .container{display:flex;justify-content:space-between}
+header{background:#0a0a0a;padding:18px 0;position:relative;z-index:20;border-bottom:1px solid #2a2a2a}
+.navbar{display:flex;justify-content:space-between;align-items:center}
+.logo img{max-height:44px;width:auto}
+.nav-links{display:flex;align-items:center;gap:8px}
+.nav-links > a,.nav-item > a{color:#fff;text-decoration:none;padding:8px 16px;font-weight:600;font-size:0.9rem;border-radius:var(--radius-sm);transition:background var(--duration-fast) var(--ease-out)}
+.nav-links > a:hover,.nav-item > a:hover{background:rgba(255,255,255,0.08);color:var(--clr-accent,#c98a2c)}
+.nav-item{position:relative}
+.nav-item > a{padding:8px 16px;display:flex;align-items:center;gap:4px}
+.nav-item > a::after{content:'▾';font-size:0.6rem;opacity:0.5}
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#1a1a1a;min-width:220px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:6px 0;z-index:30;border:1px solid #2a2a2a}
+.nav-item:hover .nav-dropdown{display:block}
+.nav-dropdown a{display:block;color:#ffffff;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
+.nav-dropdown a:hover{background:#2a2a2a;color:#fff}
+.nav-toggle{display:none;background:none;border:none;color:#fff;padding:6px;cursor:pointer}
+.nav-toggle svg{width:24px;height:24px}
+@media(max-width:640px){
+.nav-toggle{display:block}
+.nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:#0a0a0a;flex-direction:column;align-items:stretch;padding:8px 20px 20px;gap:2px;box-shadow:var(--shadow-lg);border-top:1px solid #2a2a2a;z-index:30}
+.nav-links.open{display:flex}
+.nav-links > a,.nav-item{margin:0}
+.nav-links > a,.nav-item > a{padding:10px 0}
+.nav-item > a::after{display:none}
+.nav-dropdown{position:static;box-shadow:none;margin-top:0;padding-left:16px;display:block;background:transparent;border:none}
+.nav-dropdown a{color:#888;padding:6px 0;font-size:0.8rem}
+.nav-dropdown a:hover{background:transparent;color:#fff}
+}
 h1,h2,h3,.hero h1,.cat-name,.post-title,.section-title,.lead-capture h2,.cta-banner h3,.story-section h2,.verdict-title{font-family:var(--font-display)}
 h1{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;letter-spacing:-0.02em;line-height:1.15;color:var(--text)}
 h2{font-size:clamp(1.3rem,2.5vw,1.6rem);font-weight:700;margin-bottom:20px;letter-spacing:-0.01em;color:var(--text)}
@@ -161,17 +171,6 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .skip-link{position:absolute;top:-40px;left:8px;background:var(--primary);color:#fff;padding:8px 16px;z-index:100;border-radius:0 0 4px;font-size:.9rem;text-decoration:none;transition:top .15s}
 .skip-link:focus{top:0;color:#fff}
-.hamburger{display:none;background:none;border:none;cursor:pointer;padding:8px;font-size:1.6rem;line-height:1;color:var(--text);font-family:inherit}
-@media(max-width:768px){
-.hamburger{display:block}
-.nav-links{display:none;position:absolute;top:56px;left:0;right:0;background:var(--bg);border-bottom:1px solid var(--border);flex-direction:column;padding:16px 24px;gap:12px;box-shadow:var(--shadow-lg)}
-.nav-links.open{display:flex}
-.dropdown{width:100%}
-.dropdown-menu{position:static;border:none;box-shadow:none;padding:0 0 0 16px;max-height:none}
-.dropdown:hover .dropdown-menu{display:none}
-.dropdown.open .dropdown-menu{display:block}
-.dropdown-btn{width:100%;justify-content:space-between}
-}
 @media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}.product-card{flex-direction:column}.product-card img{width:100%;height:auto}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 .comments-section{max-width:720px;margin:48px auto;padding:0 24px}.comments-section h2{font-size:1.2rem;margin-bottom:4px}.comments-section .subtitle{font-size:.85rem;color:var(--text-muted);margin-bottom:24px}.comment-form{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}.comment-form input,.comment-form textarea{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;font-family:var(--font-body);background:var(--bg);color:var(--text);transition:border-color .15s}.comment-form input:focus,.comment-form textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(212,99,62,.12)}.comment-form textarea{resize:vertical;min-height:80px}.comment-form button{align-self:flex-start}.comment{border-bottom:1px solid var(--border);padding:16px 0}.comment:first-of-type{padding-top:0}.comment .author{font-weight:600;font-size:.9rem;color:var(--text)}.comment .time{font-weight:400;color:var(--text-muted);font-size:.8rem;margin-left:8px}.comment .body{margin-top:4px;font-size:.95rem;color:var(--text-secondary);line-height:1.5}.no-comments{color:var(--text-muted);font-size:.9rem;padding:16px 0}
@@ -249,10 +248,34 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 .rps-reset{background:none;border:1px solid var(--border);border-radius:100px;padding:4px 12px;font-size:.75rem;color:var(--text-muted);cursor:pointer;font-family:inherit;transition:all .15s}
 .rps-reset:hover{border-color:var(--primary);color:var(--primary)}
 @media(prefers-color-scheme:dark){.rps-reason.rps-mismatch{background:rgba(192,57,43,.12);color:#fca5a5}.rps-reason.rps-notice{background:rgba(212,160,62,.12);color:#fcd34d}}
+#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#2a2724;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
+#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
+#cookie-banner p{margin:0;color:#e3dbd4;font-size:13px}
+#cookie-banner a{color:#d4633e;text-decoration:underline}
+#cookie-banner .btn{background:#d4633e;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
+#cookie-banner .btn:hover{background:#b84d2a}
+#cookie-banner .btn-secondary{background:transparent;color:#e3dbd4;border:1px solid #6b6560;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
+#cookie-banner .btn-secondary:hover{border-color:#9e9690}
 </style>
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
-<nav><div class="inner"><a class="logo" href="/abvorn/">Abvorn</a><button class="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="main-nav">☰</button><div class="nav-links" id="main-nav"><a class="nav-link" href="/abvorn/wireless-headphones/">Wireless Headphones</a><a class="nav-link" href="/abvorn/gaming-mice/">Gaming Mice</a><a class="nav-link" href="/abvorn/4k-monitors/">4K Monitors</a><a class="nav-link" href="/abvorn/laptops/">Laptops</a><div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu"><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/how-we-test/">How We Test</a></div></div></div></div></nav>
+
+<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
+<header><div class="container navbar">
+    <a href="/abvorn/" class="logo"><img src="/abvorn/logo.png" alt="Abvorn" style="max-height:44px;width:auto"></a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav-links" id="nav-links">
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown"><a href="/abvorn/wireless-headphones/">Wireless Headphones</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/smart-home/">Smart Home</a></div></div>
+        <a href="/abvorn/store.html">Store</a>
+        <a href="/abvorn/about.html">About</a>
+        <a href="/abvorn/privacy.html">Privacy</a>
+    </nav>
+</div></header>
+<script>
+(function(){var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")})})();
+</script>
 <section class="hero" id="main" style="padding:24px 16px"><div class="container">
 <h1>Best Webcams Compared</h1>
 <p>We put the top webcams head-to-head. Here's how they stack up.</p>
@@ -260,9 +283,9 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 <section class="section"><div class="container">
 <div style="overflow-x:auto"><table class="comparison-table">
 <thead><tr><th>Product</th><th>Abvorn Score</th><th>Price</th><th>Weight</th><th>Battery</th><th>Rating</th><th>Warranty</th><th>Buy</th></tr></thead>
-<tbody><tr><td><strong>1. 1080P HD Webcam with Microphone</strong><br><small>1080P HD Webcam with Microphone, Privacy Cover, Wide-Angle Lens, Plug &amp;amp; </small></td><td class="av-score-cell"><span class="av-compact-score">7.0</span><span class="av-compact-label">Average</span></td><td>$16.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0H1WQ75PQ?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>2. Logitech Brio 101 Full HD 1080p Webcam for Streaming and Meetings - Black | 1080p with auto-light correction</strong><br><small>Logitech Brio 101 Full HD 1080p Webcam for Streaming and Meetings - Black | 1080</small></td><td class="av-score-cell"><span class="av-compact-score">7.0</span><span class="av-compact-label">Average</span></td><td>$38.35</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0BXGFFSL1?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>3. EMEET C960 1080P Webcam with Microphone</strong><br><small>EMEET C960 1080P Webcam with Microphone, 2 Mics, 90° FOV, Computer Camera | USB </small></td><td class="av-score-cell"><span class="av-compact-score">7.0</span><span class="av-compact-label">Average</span></td><td>$28.49</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0DSPJPRXD?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>4. Logitech C270 720p Webcam Plug-and-Play Wide Screen Video Calling - Black | Auto-Light Correct</strong><br><small>Logitech C270 720p Webcam Plug-and-Play Wide Screen Video Calling - Black | Auto</small></td><td class="av-score-cell"><span class="av-compact-score">7.0</span><span class="av-compact-label">Average</span></td><td>$17.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B004FHO5Y6?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>5. Logitech C920x HD Pro PC Webcam Full 1080p/30fps Video - Black | 30fps Video</strong><br><small>Logitech C920x HD Pro PC Webcam Full 1080p/30fps Video - Black | 30fps Video, Cl</small></td><td class="av-score-cell"><span class="av-compact-score">6.7</span><span class="av-compact-label">Average</span></td><td>$69.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B085TFF7M1?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr></tbody>
+<tbody><tr><td><strong>1. 1080P HD Webcam with Microphone</strong><br><small>1080P HD Webcam with Microphone, Privacy Cover, Wide-Angle Lens, Plug &amp;amp; </small></td><td class="av-score-cell">—</td><td>$16.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0H1WQ75PQ?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>2. Logitech Brio 101 Full HD 1080p Webcam for Streaming and Meetings - Black | 1080p with auto-light correction</strong><br><small>Logitech Brio 101 Full HD 1080p Webcam for Streaming and Meetings - Black | 1080</small></td><td class="av-score-cell">—</td><td>$38.35</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0BXGFFSL1?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>3. EMEET C960 1080P Webcam with Microphone</strong><br><small>EMEET C960 1080P Webcam with Microphone, 2 Mics, 90° FOV, Computer Camera | USB </small></td><td class="av-score-cell">—</td><td>$28.49</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0DSPJPRXD?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>4. Logitech C270 720p Webcam Plug-and-Play Wide Screen Video Calling - Black | Auto-Light Correct</strong><br><small>Logitech C270 720p Webcam Plug-and-Play Wide Screen Video Calling - Black | Auto</small></td><td class="av-score-cell">—</td><td>$17.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B004FHO5Y6?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>5. Logitech C920x HD Pro PC Webcam Full 1080p/30fps Video - Black | 30fps Video</strong><br><small>Logitech C920x HD Pro PC Webcam Full 1080p/30fps Video - Black | 30fps Video, Cl</small></td><td class="av-score-cell">—</td><td>$69.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B085TFF7M1?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr></tbody>
 </table></div>
 </div></section>
 <div class="container"><div class="affiliate-banner">We earn from qualifying purchases.</div></div>
 <footer><p>Abvorn &middot; Independent reviews</p><div class="footer-links"><a href="/abvorn/privacy/">Privacy</a><a href="/abvorn/terms/">Terms</a><a href="/abvorn/disclaimer/">Disclaimer</a><a href="/abvorn/about/">About</a></div><div class="social"><a href="https://www.youtube.com/@Abvorn-Media" target="_blank" aria-label="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a><a href="https://www.tiktok.com/@abvorn" target="_blank" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a><a href="https://www.instagram.com/abvorn/" target="_blank" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a><a href="https://x.com/Abvorn" target="_blank" aria-label="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a></div></footer>
-<script>(function(){var h=document.querySelector(".hamburger");if(h){h.addEventListener("click",function(){var n=document.querySelector(".nav-links");n.classList.toggle("open");h.setAttribute("aria-expanded",n.classList.contains("open"))})}var d=document.querySelector(".dropdown-btn");if(d){d.addEventListener("click",function(e){e.preventDefault();this.closest(".dropdown").classList.toggle("open")})}})();</script></body></html>
+<script>(function(){var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")})})();</script></body></html>
