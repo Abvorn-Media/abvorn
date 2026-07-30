@@ -425,7 +425,8 @@ header{background:#0a0a0a;padding:18px 0;position:relative;z-index:20;border-bot
 .nav-item{position:relative}
 .nav-item > a{padding:8px 16px;display:flex;align-items:center;gap:4px}
 .nav-item > a::after{content:'▾';font-size:0.6rem;opacity:0.5}
-.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#1a1a1a;min-width:220px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:6px 0;z-index:30;border:1px solid #2a2a2a}
+.nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:8px}
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:8px;background:#1a1a1a;min-width:220px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:6px 0;z-index:30;border:1px solid #2a2a2a}
 .nav-item:hover .nav-dropdown{display:block}
 .nav-dropdown a{display:block;color:#ffffff;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
 .nav-dropdown a:hover{background:#2a2a2a;color:#fff}
@@ -734,7 +735,6 @@ def nav_html(categories, current=""):
     </button>
     <nav class="nav-links" id="nav-links">
         {dropdown}
-        <a href="{b}/store.html">Store</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/privacy.html">Privacy</a>
     </nav>
@@ -781,6 +781,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .nav-links > a:hover, .nav-item > a:hover { color: var(--clr-accent); }
         .nav-item { position:relative; margin-left:28px; }
         .nav-item > a { margin-left:0; }
+        .nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:14px}
         .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#fff; min-width:240px; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding:8px 0; z-index:30; }
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
         .nav-dropdown a { display:block; color:#1a1a1a; padding:9px 20px; font-weight:500; font-size:0.9rem; text-decoration:none; }
@@ -889,7 +890,6 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     </button>
     <nav class="nav-links" id="nav-links">
         <div class="nav-item"><a href="#niches">Categories ▾</a><div class="nav-dropdown">CATEGORY_DROPDOWN_PLACEHOLDER</div></div>
-        <a href="__SITE_BASE__/store.html">Store</a>
         <a href="__SITE_BASE__/about.html">About</a>
         <a href="__SITE_BASE__/privacy.html">Privacy</a>
     </nav>
@@ -947,7 +947,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
             <div class="footer-social">FOOTER_SOCIAL_PLACEHOLDER</div>
         </div>
         <div class="footer-col"><h4>Categories</h4>FOOTER_CATEGORY_LINKS_PLACEHOLDER</div>
-        <div class="footer-col"><h4>Company</h4><a href="__SITE_BASE__/about.html">About</a><a href="__SITE_BASE__/store.html">Store</a></div>
+        <div class="footer-col"><h4>Company</h4><a href="__SITE_BASE__/about.html">About</a></div>
         <div class="footer-col"><h4>Legal</h4><a href="__SITE_BASE__/privacy.html">Privacy policy</a></div>
     </div>
     <div class="footer-bottom"><img src="__SITE_BASE__/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; YEAR_PLACEHOLDER Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
@@ -1240,6 +1240,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .nav-item {{ position:relative; }}
         .nav-item > a {{ padding:8px 16px; display:flex; align-items:center; gap:4px; }}
         .nav-item > a::after {{ content:'\u25be'; font-size:0.6rem; opacity:0.5; }}
+        .nav-item::after {{ content:''; position:absolute; top:100%; left:0; right:0; height:4px; }}
         .nav-dropdown {{ display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#1a1a1a; min-width:220px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:6px 0; border:1px solid #2a2a2a; z-index:30; }}
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown {{ display:block; }}
         .nav-dropdown a {{ display:block; color:#ffffff; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }}
@@ -1731,6 +1732,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .nav-item {{ position:relative; }}
         .nav-item > a {{ padding:8px 16px; display:flex; align-items:center; gap:4px; }}
         .nav-item > a::after {{ content:'\u25be'; font-size:0.6rem; opacity:0.5; }}
+        .nav-item::after {{ content:''; position:absolute; top:100%; left:0; right:0; height:4px; }}
         .nav-dropdown {{ display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#1a1a1a; min-width:220px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:6px 0; border:1px solid #2a2a2a; z-index:30; }}
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown {{ display:block; }}
         .nav-dropdown a {{ display:block; color:#ffffff; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }}

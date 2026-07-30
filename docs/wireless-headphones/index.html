@@ -69,6 +69,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .nav-item { position:relative; }
         .nav-item > a { padding:8px 16px; display:flex; align-items:center; gap:4px; }
         .nav-item > a::after { content:'▾'; font-size:0.6rem; opacity:0.5; }
+        .nav-item::after { content:''; position:absolute; top:100%; left:0; right:0; height:4px; }
         .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#1a1a1a; min-width:220px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:6px 0; border:1px solid #2a2a2a; z-index:30; }
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
         .nav-dropdown a { display:block; color:#ffffff; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }
@@ -147,7 +148,14 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
 </div></section>
 
-<section class="container posts-grid"><p style="grid-column:1/-1;text-align:center;color:var(--clr-mid-gray);padding:40px 0">Reviews coming soon.</p></section>
+<section class="container posts-grid"><div class="post-card">
+    <a href="/abvorn/reviews/wireless-headphones/"><img src="/abvorn/assets/wireless-headphones.svg" alt="Best Wireless Headphones"></a>
+    <div class="post-card__body">
+        <h3><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones</a></h3>
+        <p>Expert-tested and reviewed. See why this made our list.</p>
+        <a href="/abvorn/reviews/wireless-headphones/" class="read-link">Read more →</a>
+    </div>
+</div></section>
 
 <section class="subscribe-band"><div class="container subscribe-inner">
     <div class="subscribe-copy">
