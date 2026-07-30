@@ -4,15 +4,14 @@ Reads secrets from env vars (GITHUB_ prefixed) or falls back to secrets.json.
 Picks the niche with fewest posts, generates content, writes to docs/, updates state.
 """
 import os
-import logging
 import sys
 import json
 import logging
 import re
 import html as html_mod
 import requests as http_requests
+import hashlib
 import time
-import hashlib, time
 from pathlib import Path
 from datetime import datetime
 
@@ -34,6 +33,7 @@ from src.social_permission import SocialPermissionFramework, create_social_permi
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 
+logger = logging.getLogger("run_cycle")
 logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
 
 ai_sql = None  # set by main()
