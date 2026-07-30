@@ -14,12 +14,14 @@ import hashlib
 import time
 from pathlib import Path
 from datetime import datetime
+from typing import Dict, Any, List, Optional
 
 from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
 from src.quantum_content_engine import QuantumContentEngine, create_quantum_engine, Platform
 from src.nervous_system import NervousSystem, create_nervous_system, AlertLevel
 from src.living_knowledge_core import create_living_knowledge_core
 from src.ai_sql import AISQL, create_ai_sql, QueryPlan, QueryResult
+from src.agent_reach_adapter import AgentReachAdapter, get_agent_reach_adapter
 from src.unified_memory import UnifiedMemory, create_unified_memory, MemoryTier
 from abvorn.core.verdict import render_verdict_card
 from src.close_feedback_loop import ClosedFeedbackLoop, create_feedback_loop
@@ -2116,7 +2118,22 @@ def _track_call(niche: str, provider: str, tokens: int, latency_ms: float = 0.0)
     energy_accounting.record_usage(provider, tokens, latency_ms)
 
 
-def generate_outline(niche, products, knowledge_core=None, workflow_engine=None):
+def fetch_social_sentiment(niche_name: str, limit_per_platform: int = 5) -> Dict[str, Any]:
+    """Fetch real-time social sentiment data for a niche."""
+    try:
+        adapter = get_agent_reach_adapter()
+        results = adapter.fetch_social_data(
+            query=f"{niche_name} product review OR best {niche_name}",
+            platforms=["twitter", "reddit", "youtube"],
+            limit_per_platform=limit_per_platform,
+        )
+        return results
+    except Exception as e:
+        logger.warning(f"Social sentiment fetch failed for {niche_name}: {e}")
+        return {}
+
+
+def generate_outline(niche, products, knowledge_core=None, workflow_engine=None, social_data=None):
     names = json.dumps([p.get("name", "") for p in products[:3]])
 
     # Build knowledge context
@@ -2133,8 +2150,22 @@ def generate_outline(niche, products, knowledge_core=None, workflow_engine=None)
         except Exception:
             pass
 
+    # Build social sentiment context
+    social_context = ""
+    if social_data:
+        parts = []
+        for platform, items in social_data.items():
+            if isinstance(items, list) and items:
+                samples = items[:3]
+                parts.append(f"{platform}:\n" + "\n".join(
+                    f"- {item.get('text', item.get('title', ''))[:100]}"
+                    for item in samples
+                ))
+        if parts:
+            social_context = "\n\n💬 Real-Time Social Sentiment:\n" + "\n\n".join(parts)
+
     prompt = f"""You are a content strategist planning a buying guide for '{niche}'.
-Products: {names}{knowledge_context}
+Products: {names}{knowledge_context}{social_context}
 
 Return a JSON object with:
 - outline: array of H2 section headings (e.g. ["Introduction", "What to Look For", "Product Reviews", "Buying Guide", "FAQ", "Conclusion"])
@@ -2170,7 +2201,7 @@ Return a JSON object with:
     return None
 
 
-def write_draft(niche, products, outline, knowledge_core=None, workflow_engine=None):
+def write_draft(niche, products, outline, knowledge_core=None, workflow_engine=None, social_data=None):
     products_text = json.dumps(products, indent=2)
     post_title = outline.get("post_title", f"Best {niche} — Expert Review")
     meta_desc = outline.get("meta_description", f"Find the best {niche} with our expert guide.")
@@ -2191,6 +2222,20 @@ def write_draft(niche, products, outline, knowledge_core=None, workflow_engine=N
         except Exception:
             pass
 
+    # Inject social sentiment data if available
+    social_context = ""
+    if social_data:
+        parts = []
+        for platform, items in social_data.items():
+            if isinstance(items, list) and items:
+                samples = items[:3]
+                parts.append(f"{platform}:\n" + "\n".join(
+                    f"- {item.get('text', item.get('title', ''))[:100]}"
+                    for item in samples
+                ))
+        if parts:
+            social_context = "\n\n💬 Real-Time Social Sentiment:\n" + "\n\n".join(parts)
+
     # Use workflow config for AI params when available
     ai_temp = 0.7
     ai_max_tokens_intro = 500
@@ -2205,7 +2250,7 @@ def write_draft(niche, products, outline, knowledge_core=None, workflow_engine=N
     intro_prompt = f"""Write the introduction for a buying guide titled '{post_title}' about {niche}.
 Angle: {angle}
 Keyword: {keyword}
-Products: {products_text}{knowledge_context}
+Products: {products_text}{knowledge_context}{social_context}
 
 Write 2-3 short paragraphs (as HTML) that hook the reader, state the problem, and introduce the solution.
 Return ONLY the HTML paragraphs, wrapped in <p> tags."""
@@ -2224,7 +2269,7 @@ Return ONLY the HTML paragraphs, wrapped in <p> tags."""
 Products: {products_text}
 Outline sections: {outline_sections}
 Angle: {angle}
-Keyword: {keyword}{knowledge_context}
+Keyword: {keyword}{knowledge_context}{social_context}
 
 Write the COMPLETE article body as HTML. Follow the outline sections as <h2> headings.
 For each product, include: a brief intro, key features, pros/cons, and a bottom-line recommendation.
@@ -2905,9 +2950,11 @@ def main(forced_niche=None, force=False, batch_mode=False):
         sys.exit(1)
     print(f"Found {len(products)} products: {[p.get('name','?') for p in products]}")
 
-    # 2. OUTLINE — enriched with knowledge core insights
+    social_data = fetch_social_sentiment(niche_slug)
+
+    # 2. Outline — enriched with knowledge core insights and social data
     print(f"\n--- OUTLINE: {niche_slug} ---")
-    outline = generate_outline(niche_slug, products, _knowledge_core, _workflow_engine)
+    outline = generate_outline(niche_slug, products, _knowledge_core, _workflow_engine, social_data)
     if not outline:
         print("WARNING: Outline failed, using default")
         outline = {"post_title": f"Best {niche_name}", "meta_description": f"Find the best {niche_name}.",
@@ -2917,7 +2964,7 @@ def main(forced_niche=None, force=False, batch_mode=False):
 
     # 3. DRAFT — enriched with knowledge core insights
     print(f"\n--- DRAFT: {niche_slug} ---")
-    draft = write_draft(niche_slug, products, outline, _knowledge_core, _workflow_engine)
+    draft = write_draft(niche_slug, products, outline, _knowledge_core, _workflow_engine, social_data)
     if not draft:
         print("ERROR: Draft failed")
         sys.exit(1)
