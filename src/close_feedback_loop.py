@@ -492,6 +492,8 @@ class ClosedFeedbackLoop:
         }
         self.loop_history.append(loop_entry)
         logger.info(f"Closed feedback loop completed: {loop_entry}")
+        # Feed engagement data back to AISQL for provider selection and prompt optimization
+        self.feed_back_to_ai_sql(self.ai_sql)
         return loop_entry
 
     def _measure_improvement(

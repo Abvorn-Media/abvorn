@@ -83,7 +83,7 @@ class EntitlementsFramework:
     def check(self, action: str, context: Dict[str, Any], user_role: str = "user") -> bool:
         allowed = False
         for name, policy in self.policies.items():
-            if policy.action == action or action in policy.action:
+            if policy.action == action:
                 if user_role in policy.allowed_roles:
                     allowed = True
                     break

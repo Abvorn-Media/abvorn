@@ -13,11 +13,14 @@ from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
 from src.quantum_content_engine import QuantumContentEngine, create_quantum_engine, Platform
 from src.quality_guardian import create_quality_guardian
 from src.paradox_engine import create_paradox_engine
-from src.ai_sql import AISQL, create_ai_sql
-from src.unified_memory import UnifiedMemory, create_unified_memory
+from src.ai_sql import AISQL, create_ai_sql, QueryPlan, QueryResult
+from src.unified_memory import UnifiedMemory, create_unified_memory, MemoryTier
 from src.close_feedback_loop import ClosedFeedbackLoop, create_feedback_loop
 from src.economic_surplus import EconomicSurplusTracker, create_economic_surplus_tracker
 from src.entitlements import EntitlementsFramework, create_entitlements_framework
+from src.tools_registry import create_tool_registry, ToolAccess
+from src.change_management import create_change_manager, ChangeType, ChangeStatus
+from src.dag_scheduler import DAGScheduler
 
 logger = logging.getLogger("abvorn.content_pipeline")
 
@@ -46,9 +49,13 @@ class ContentPipeline:
         self.paradox_engine = create_paradox_engine()
         self.ai_sql = create_ai_sql()
         self.unified_memory = create_unified_memory()
-        self.feedback_loop = create_feedback_loop()
+        self.feedback_loop = create_feedback_loop(ai_sql=self.ai_sql)
         self.surplus_tracker = create_economic_surplus_tracker()
         self.entitlements = create_entitlements_framework()
+        # Scaffolding layer — first-class systems
+        self.tool_registry = create_tool_registry()
+        self.change_mgr = create_change_manager()
+        self.dag_scheduler = DAGScheduler()
 
     def _ensure_dirs(self):
         ASSETS_DIR.mkdir(parents=True, exist_ok=True)
@@ -231,17 +238,50 @@ class ContentPipeline:
         except Exception as e:
             logger.warning(f"Quality check skipped: {e}")
 
-        # AI SQL query for script optimization
+        # AI SQL query for script optimization — scheduled via DAG
         try:
             query = QueryPlan(
                 system_prompt="You are an expert content optimizer.",
                 user_prompt=f"Optimize this content for {product_name}: {verdict.get('summary', '')}",
                 params={"temperature": 0.7, "max_tokens": 500, "format": "json"},
             )
-            ai_result = self.ai_sql.query(query)
-            logger.info(f"  AI SQL optimization complete via {ai_result.provider_used}")
+            task = Task(
+                id=f"ai_optimize_{product_id}",
+                name=f"AI optimize {product_id}",
+                func=lambda q: self.ai_sql.query(q),
+                args=(query,),
+                max_retries=2,
+            )
+            dag = DAG(id=f"pipeline_{product_id}", name=f"Pipeline {product_id}", tasks={task.id: task})
+            self.dag_scheduler.register_dag(dag)
+            dag_result = self.dag_scheduler.execute_dag(dag_id=f"pipeline_{product_id}")
+            ai_result = dag_result.get("results", {}).get(task.id)
+            if ai_result:
+                logger.info(f"  AI SQL optimization complete via {ai_result.provider_used}")
         except Exception as e:
             logger.warning(f"  AI SQL optimization skipped: {e}")
+
+        # Track pipeline change
+        try:
+            self.change_mgr.register_change(
+                change_type=ChangeType.PIPELINE_RUN,
+                description=f"Pipeline run for {product_id}",
+                status=ChangeStatus.CANARY,
+            )
+        except Exception as e:
+            logger.warning(f"  Change tracking skipped: {e}")
+
+        # Register pipeline tools
+        try:
+            self.tool_registry.register(
+                name="ai_sql_query",
+                description="Execute AI SQL query for content optimization",
+                function=lambda q: self.ai_sql.query(q),
+                access_level=ToolAccess.INTERNAL,
+                rate_limit=10,
+            )
+        except Exception:
+            pass
 
         # Unified memory store for this content cycle
         try:
@@ -253,9 +293,10 @@ class ContentPipeline:
         except Exception as e:
             logger.warning(f"  Memory store skipped: {e}")
 
-        # Closed feedback loop update
+        # Closed feedback loop update — feed engagement data back to AISQL
         try:
             self.feedback_loop.run()
+            self.feedback_loop.feed_back_to_ai_sql(self.ai_sql)
         except Exception as e:
             logger.warning(f"  Feedback loop skipped: {e}")
 
@@ -266,11 +307,14 @@ class ContentPipeline:
         except Exception as e:
             logger.warning(f"  Surplus check skipped: {e}")
 
-        # Entitlements check before publishing
+        # Entitlements check — denials block publishing
         try:
             can_publish = self.entitlements.check("publish_content", {"product_id": product_id}, user_role="pipeline")
             if not can_publish:
-                logger.warning(f"  Entitlements check failed for {product_id}")
+                logger.error(f"  Entitlements check failed — blocking publication for {product_id}")
+                raise PermissionError(f"Entitlement denied for publish_content: {product_id}")
+        except PermissionError:
+            raise
         except Exception as e:
             logger.warning(f"  Entitlements check skipped: {e}")
 
