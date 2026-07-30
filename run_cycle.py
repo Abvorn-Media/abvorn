@@ -1091,7 +1091,7 @@ def build_homepage(state, form_url=""):
     <a href="{b}/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
     <h2><a href="{b}/{n["slug"]}/">{n["name"]}</a></h2>
     <p>{n["posts"]} expert-reviewed guide{"s" if n["posts"] > 1 else ""} with real testing results.</p>
-    <a href="{b}/{n["slug"]}/" class="read-link">Browse guides →</a>
+    <a href="{b}/{n["slug"]}/" class="read-link">Continue reading →</a>
 </div>'''
         card_count += 1
 
@@ -1104,7 +1104,7 @@ def build_homepage(state, form_url=""):
     <a href="{b}/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
     <h2><a href="{b}/{n["slug"]}/">{n["name"]}</a></h2>
     <p>{n["posts"]} expert-reviewed guide{"s" if n["posts"] > 1 else ""} with real testing results.</p>
-    <a href="{b}/{n["slug"]}/" class="read-link">Browse guides →</a>
+    <a href="{b}/{n["slug"]}/" class="read-link">Continue reading →</a>
 </div>'''
         cat_sections += f'''<div class="category-section">
     <div class="category-section__header"><h2>{n["name"]}</h2><a href="{b}/{n["slug"]}/">View all →</a></div>
