@@ -6,7 +6,7 @@ A stable abstraction layer for AI providers.
 Separates what you want (the query) from how you get it (the provider).
 """
 
-import logging, os
+import logging, os, time
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
@@ -39,17 +39,30 @@ class QueryResult:
 
 
 class ProviderAdapter:
-    def __init__(self, name: str, priority: int = 5):
+    def __init__(self, name: str, priority: int = 5, cost_per_1k_tokens: float = 0.0):
         self.name = name
         self.priority = priority
         self.available = True
         self.last_error = None
+        self.cost_per_1k_tokens = cost_per_1k_tokens
+        self.success_count = 0
+        self.failure_count = 0
+        self.total_latency_ms = 0.0
 
     def execute(self, query: QueryPlan) -> QueryResult:
         raise NotImplementedError
 
     def health_check(self) -> bool:
         return self.available
+
+    def record_success(self, latency_ms: float) -> None:
+        self.success_count += 1
+        self.total_latency_ms += latency_ms
+
+    def record_failure(self, error: str) -> None:
+        self.failure_count += 1
+        self.last_error = error
+        self.available = False
 
 
 class OpenAIProvider(ProviderAdapter):
@@ -67,31 +80,112 @@ class OpenAIProvider(ProviderAdapter):
 
 
 class AnthropicProvider(ProviderAdapter):
-    def __init__(self):
+    """Anthropic Claude provider."""
+
+    def __init__(self, api_key: str = "", model: str = "claude-3-haiku-20240307"):
         super().__init__("anthropic", priority=2)
+        self.model = model
+        self.api_key = api_key or os.environ.get("ANTHROPIC_KEY", "") or os.environ.get("ANTHROPIC_API_KEY", "")
+        self._client = None
+        if self.api_key:
+            try:
+                import anthropic
+                self._client = anthropic.Anthropic(api_key=self.api_key)
+                self.available = True
+            except ImportError:
+                logger.warning("anthropic SDK not installed; AnthropicProvider unavailable")
+                self.available = False
+            except Exception as e:
+                logger.warning(f"Anthropic client init failed: {e}")
+                self.available = False
 
     def execute(self, query: QueryPlan) -> QueryResult:
-        return QueryResult(
-            content="",
-            provider_used=self.name,
-            confidence=0.0,
-            tokens_used=0,
-            cost_estimate=0.0
-        )
+        if not self._client:
+            return QueryResult(
+                content="", provider_used=self.name, confidence=0.0,
+                tokens_used=0, cost_estimate=0.0,
+            )
+        start = time.time()
+        try:
+            response = self._client.messages.create(
+                model=self.model,
+                system=query.system_prompt,
+                messages=[{"role": "user", "content": query.user_prompt}],
+                temperature=query.params.get("temperature", 0.7),
+                max_tokens=query.params.get("max_tokens", 2000),
+            )
+            content = response.content[0].text
+            latency = (time.time() - start) * 1000
+            usage = response.usage
+            self.record_success(latency)
+            return QueryResult(
+                content=content,
+                provider_used=self.name,
+                confidence=0.9 if content else 0.0,
+                tokens_used=usage.input_tokens + usage.output_tokens,
+                cost_estimate=usage.input_tokens * 0.00025 / 1000 + usage.output_tokens * 0.00125 / 1000,
+            )
+        except Exception as e:
+            self.record_failure(str(e))
+            return QueryResult(
+                content="", provider_used=self.name, confidence=0.0,
+                tokens_used=0, cost_estimate=0.0, latency_ms=(time.time() - start) * 1000,
+            )
 
 
 class GeminiProvider(ProviderAdapter):
-    def __init__(self):
+    """Google Gemini provider."""
+
+    def __init__(self, api_key: str = "", model: str = "gemini-1.5-flash"):
         super().__init__("gemini", priority=3)
+        self.model_name = model
+        self.api_key = api_key or os.environ.get("GEMINI_KEY", "") or os.environ.get("GOOGLE_API_KEY", "")
+        self._model = None
+        if self.api_key:
+            try:
+                import google.generativeai as genai
+                genai.configure(api_key=self.api_key)
+                self._model = genai.GenerativeModel(model)
+                self.available = True
+            except ImportError:
+                logger.warning("google-generativeai not installed; GeminiProvider unavailable")
+                self.available = False
+            except Exception as e:
+                logger.warning(f"Gemini client init failed: {e}")
+                self.available = False
 
     def execute(self, query: QueryPlan) -> QueryResult:
-        return QueryResult(
-            content="",
-            provider_used=self.name,
-            confidence=0.0,
-            tokens_used=0,
-            cost_estimate=0.0
-        )
+        if not self._model:
+            return QueryResult(
+                content="", provider_used=self.name, confidence=0.0,
+                tokens_used=0, cost_estimate=0.0,
+            )
+        start = time.time()
+        try:
+            combined = f"{query.system_prompt}\n\n{query.user_prompt}"
+            response = self._model.generate_content(
+                combined,
+                generation_config={
+                    "temperature": query.params.get("temperature", 0.7),
+                    "max_output_tokens": query.params.get("max_tokens", 2000),
+                },
+            )
+            content = response.text
+            latency = (time.time() - start) * 1000
+            self.record_success(latency)
+            return QueryResult(
+                content=content,
+                provider_used=self.name,
+                confidence=0.9 if content else 0.0,
+                tokens_used=0,
+                cost_estimate=0.0,
+            )
+        except Exception as e:
+            self.record_failure(str(e))
+            return QueryResult(
+                content="", provider_used=self.name, confidence=0.0,
+                tokens_used=0, cost_estimate=0.0, latency_ms=(time.time() - start) * 1000,
+            )
 
 
 class DeepSeekProvider(ProviderAdapter):
@@ -238,17 +332,119 @@ class KiloGatewayProvider(ProviderAdapter):
 
 
 class LocalProvider(ProviderAdapter):
-    def __init__(self):
+    """Ollama local provider via OpenAI-compatible API."""
+
+    def __init__(self, model: str = "llama3.2", base_url: str = "http://localhost:11434"):
         super().__init__("local", priority=5)
+        self.model = model
+        self.base_url = base_url
+        self._client = None
+        try:
+            from openai import OpenAI
+            self._client = OpenAI(
+                base_url=f"{base_url}/v1",
+                api_key="ollama",
+            )
+            self.available = True
+        except Exception as e:
+            logger.warning(f"Local/Ollama client init failed: {e}")
+            self.available = False
 
     def execute(self, query: QueryPlan) -> QueryResult:
-        return QueryResult(
-            content="",
-            provider_used=self.name,
-            confidence=0.0,
-            tokens_used=0,
-            cost_estimate=0.0
-        )
+        if not self._client:
+            return QueryResult(
+                content="", provider_used=self.name, confidence=0.0,
+                tokens_used=0, cost_estimate=0.0,
+            )
+        start = time.time()
+        try:
+            response = self._client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": query.system_prompt},
+                    {"role": "user", "content": query.user_prompt},
+                ],
+                temperature=query.params.get("temperature", 0.7),
+                max_tokens=query.params.get("max_tokens", 2000),
+            )
+            content = response.choices[0].message.content or ""
+            latency = (time.time() - start) * 1000
+            self.record_success(latency)
+            return QueryResult(
+                content=content,
+                provider_used=self.name,
+                confidence=0.9 if content else 0.0,
+                tokens_used=0,
+                cost_estimate=0.0,
+            )
+        except Exception as e:
+            self.record_failure(str(e))
+            return QueryResult(
+                content="", provider_used=self.name, confidence=0.0,
+                tokens_used=0, cost_estimate=0.0, latency_ms=(time.time() - start) * 1000,
+            )
+
+
+class HuggingFaceProvider(ProviderAdapter):
+    """Hugging Face Inference API provider."""
+
+    def __init__(self, api_key: str = "", model: str = "mistralai/Mistral-7B-Instruct-v0.3"):
+        super().__init__("huggingface", priority=6)
+        self.model = model
+        self.api_key = api_key or os.environ.get("HUGGINGFACE_KEY", "") or os.environ.get("HF_TOKEN", "")
+        self._api_url = f"https://api-inference.huggingface.co/models/{model}"
+        if self.api_key:
+            self._headers = {"Authorization": f"Bearer {self.api_key}"}
+            self.available = True
+        else:
+            self.available = False
+
+    def execute(self, query: QueryPlan) -> QueryResult:
+        if not self.api_key:
+            return QueryResult(
+                content="", provider_used=self.name, confidence=0.0,
+                tokens_used=0, cost_estimate=0.0,
+            )
+        start = time.time()
+        try:
+            import requests
+            combined = f"{query.system_prompt}\n\n{query.user_prompt}"
+            response = requests.post(
+                self._api_url,
+                headers=self._headers,
+                json={"inputs": combined},
+                timeout=query.params.get("timeout", 30),
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and len(data) > 0:
+                    content = data[0].get("generated_text", "")
+                else:
+                    content = data.get("generated_text", "")
+                latency = (time.time() - start) * 1000
+                self.record_success(latency)
+                return QueryResult(
+                    content=content,
+                    provider_used=self.name,
+                    confidence=0.8 if content else 0.0,
+                    tokens_used=0,
+                    cost_estimate=0.0,
+                    latency_ms=latency,
+                )
+            else:
+                error_msg = f"HTTP {response.status_code}"
+                self.record_failure(error_msg)
+                return QueryResult(
+                    content="", provider_used=self.name, confidence=0.0,
+                    tokens_used=0, cost_estimate=0.0,
+                    error=error_msg, latency_ms=(time.time() - start) * 1000,
+                )
+        except Exception as e:
+            self.record_failure(str(e))
+            return QueryResult(
+                content="", provider_used=self.name, confidence=0.0,
+                tokens_used=0, cost_estimate=0.0, latency_ms=(time.time() - start) * 1000,
+            )
 
 
 class AISQL:
@@ -264,10 +460,11 @@ class AISQL:
             "gemini": GeminiProvider(),
             "kimi": KimiProvider(),
             "deepseek": DeepSeekProvider(),
+            "huggingface": HuggingFaceProvider(),
             "local": LocalProvider(),
         }
         self.primary_provider = "kilogateway"
-        self.fallback_chain = ["kilogateway", "kimi", "deepseek", "gemini", "local"]
+        self.fallback_chain = ["kilogateway", "huggingface", "kimi", "deepseek", "anthropic", "gemini", "local"]
         self.provider_scores: Dict[str, float] = {}
         self.provider_usage: Dict[str, int] = {}
         self.prompt_variants: Dict[str, Dict[str, Any]] = {}
@@ -357,11 +554,20 @@ def create_ai_sql() -> AISQL:
         secrets = {}
     deepseek_key = os.environ.get("DEEPSEEK_KEY", "") or secrets.get("DEEPSEEK_KEY", "")
     kimi_key = os.environ.get("KIMI_KEY", "") or secrets.get("KIMI_KEY", "")
+    anthropic_key = os.environ.get("ANTHROPIC_KEY", "") or os.environ.get("ANTHROPIC_API_KEY", "") or secrets.get("ANTHROPIC_KEY", "") or secrets.get("ANTHROPIC_API_KEY", "")
+    gemini_key = os.environ.get("GEMINI_KEY", "") or os.environ.get("GOOGLE_API_KEY", "") or secrets.get("GEMINI_KEY", "") or secrets.get("GOOGLE_API_KEY", "")
+    hf_key = os.environ.get("HUGGINGFACE_KEY", "") or os.environ.get("HF_TOKEN", "") or secrets.get("HUGGINGFACE_KEY", "") or secrets.get("HF_TOKEN", "")
     ai = AISQL()
     if deepseek_key and "deepseek" in ai.providers:
         ai.providers["deepseek"] = DeepSeekProvider(api_key=deepseek_key)
     if kimi_key and "kimi" in ai.providers:
         ai.providers["kimi"] = KimiProvider(api_key=kimi_key)
+    if anthropic_key and "anthropic" in ai.providers:
+        ai.providers["anthropic"] = AnthropicProvider(api_key=anthropic_key)
+    if gemini_key and "gemini" in ai.providers:
+        ai.providers["gemini"] = GeminiProvider(api_key=gemini_key)
+    if hf_key and "huggingface" in ai.providers:
+        ai.providers["huggingface"] = HuggingFaceProvider(api_key=hf_key)
     # Auto-select first healthy provider as primary
     for name in ai.fallback_chain:
         p = ai.providers.get(name)

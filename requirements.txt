@@ -1,6 +1,8 @@
 pypdf
 chromadb
 openai
+anthropic
+google-generativeai
 duckduckgo-search
 pytrends
 requests
