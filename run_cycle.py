@@ -2859,6 +2859,27 @@ def main(forced_niche=None, force=False):
     except Exception as e:
         logger.warning(f"Feedback loop close failed: {e}")
 
+    # Economic surplus & social permission measurement
+    try:
+        surplus_tracker = create_economic_surplus_tracker()
+        surplus = surplus_tracker.measure()
+        print(f"  Economic surplus score: {surplus.get('social_permission_score', 0):.2f}")
+        social_perm = create_social_permission_framework()
+        can_expand = social_perm.act("expand_content")
+        if not can_expand:
+            print(f"  Social permission: expansion halted — surplus score too low")
+    except Exception as e:
+        logger.warning(f"Economic/social permission check skipped: {e}")
+
+    # Infrastructure cost summary
+    try:
+        infra_summary = infra_reporter.get_summary()
+        print(f"  Cost summary: ${infra_summary.get('total_cost', 0):.4f} | "
+              f"Lat avg: {infra_summary.get('avg_latency_ms', 0):.0f}ms | "
+              f"Tokens: {infra_summary.get('total_tokens', 0):,}")
+    except Exception as e:
+        logger.warning(f"Infra summary skipped: {e}")
+
     # Mark cycle change as complete
     if "change_id" in dir():
         change_mgr.promote_change(change_id, ChangeStatus.PRODUCTION)
