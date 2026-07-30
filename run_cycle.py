@@ -741,46 +741,155 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="__SITE_BASE__/favicon.png">
+    <link rel="icon" type="image/png" href="/favicon.png">
     <title>Abvorn – Reviews Based on Real Testing, Not Spec Sheets</title>
     <meta name="description" content="Independent product reviews and buying guides. We test before we recommend.">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>__CSS__</style>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        ''' + DESIGN_SYSTEM_CSS + '''
+        /* FIX: header/hero/footer are fixed brand chrome, always black-on-white —
+           they must NOT use the adaptive --clr-black/--clr-white/--clr-off-white
+           tokens, which the dark-mode media query above intentionally flips for
+           body content. Using those tokens here was the actual bug behind the
+           invisible nav (white text on a header that turned white) and the
+           invisible hero button (background and text both collapsing toward
+           black). Hardcoded values below are deliberate, not an oversight. */
+        .top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
+        .top-bar .container { display:flex; justify-content:space-between; }
+        header { background:#0a0a0a; padding:18px 0; position:relative; z-index:20; }
+        .navbar { display:flex; justify-content:space-between; align-items:center; }
+        .logo img { max-height:44px; width:auto; }
+        .nav-links { display:flex; align-items:center; }
+        .nav-links > a, .nav-item > a { color:#fff; text-decoration:none; margin-left:28px; font-weight:600; font-size:0.9rem; }
+        .nav-links > a:hover, .nav-item > a:hover { color: var(--clr-accent); }
+        .nav-item { position:relative; margin-left:28px; }
+        .nav-item > a { margin-left:0; }
+        .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#fff; min-width:240px; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding:8px 0; z-index:30; }
+        .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
+        .nav-dropdown a { display:block; color:#1a1a1a; padding:9px 20px; font-weight:500; font-size:0.9rem; text-decoration:none; }
+        .nav-dropdown a:hover { background:#f6f5f2; color: var(--clr-accent-text); }
+        .nav-toggle { display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }
+        .nav-toggle svg { width:24px; height:24px; }
+        @media (max-width: 640px) {
+            .nav-toggle { display:block; }
+            .nav-links { display:none; position:absolute; top:100%; left:0; right:0; background:#0a0a0a; flex-direction:column; align-items:flex-start; padding: 8px 24px 20px; gap:4px; box-shadow: var(--shadow-lg); }
+            .nav-links.open { display:flex; }
+            .nav-links > a, .nav-item { margin-left:0; width:100%; }
+            .nav-links > a, .nav-item > a { padding:10px 0; }
+            .nav-dropdown { position:static; box-shadow:none; margin-top:0; padding-left:12px; display:block; background:transparent; }
+            .nav-dropdown a { color:#ccc; padding:7px 0; }
+            .nav-dropdown a:hover { background:transparent; }
+        }
+        .trending-ticker { background:#151515; color:#ccc; padding:9px 0; font-size:0.82rem; overflow:hidden; white-space:nowrap; border-bottom:1px solid #2a2a2a; }
+        .trending-ticker__inner { display:inline-block; animation: ticker-scroll 24s linear infinite; }
+        .trending-ticker__label { font-weight:700; margin-right:15px; color:#fff; }
+        .trending-ticker__item { color:#ccc; text-decoration:none; padding:0 10px; }
+        @keyframes ticker-scroll { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+        .hero { background:#f6f5f2; padding: var(--space-2xl) 0; }
+        .hero-grid { display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items:center; }
+        .hero-eyebrow { display:inline-block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#666; margin-bottom: var(--space-md); }
+        .hero h1 { font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-md); color:#0a0a0a; }
+        .hero p { font-size: var(--text-lg); color:#555; max-width:46ch; margin-bottom: var(--space-lg); }
+        .hero .btn { background:#1a1a1a; color:#fff; }
+        .hero .btn:hover { background: var(--clr-accent); color:#1a1200; }
+        .hero-slider { position:relative; border-radius: var(--radius-md); overflow:hidden; box-shadow: var(--shadow-lg); aspect-ratio: 4/3; background:#111; }
+        .hero-slide { position:absolute; inset:0; opacity:0; transition:opacity 0.9s var(--ease-out); }
+        .hero-slide.active { opacity:1; }
+        .hero-slide img { width:100%; height:100%; object-fit:cover; display:block; }
+        .hero-slide figcaption { position:absolute; left:0; right:0; bottom:0; background:linear-gradient(transparent, rgba(0,0,0,0.8)); color:#fff; padding: 44px var(--space-lg) var(--space-md); font-weight:600; font-size:0.95rem; }
+        .hero-slider__dots { position:absolute; bottom:6px; left:50%; transform:translateX(-50%); display:flex; z-index:5; }
+        .hero-slider__dot { width:44px; height:44px; border:none; background:transparent; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
+        .hero-slider__dot::before { content:''; width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.45); transition: background var(--duration-fast) var(--ease-out); }
+        .hero-slider__dot.active::before { background:#fff; }
+        @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; } }
+
+        .stats-band { background:#0a0a0a; color:#fff; padding: var(--space-lg) 0; }
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap: var(--space-lg); text-align:center; }
+        .stat-icon { width:28px; height:28px; margin:0 auto 10px; color: var(--clr-accent); opacity:0.9; }
+        .stat-icon svg { width:100%; height:100%; }
+        .stat-number { font-family: var(--font-display); font-size: var(--text-3xl); font-weight:700; color: var(--clr-accent); }
+        .stat-label { font-size:0.82rem; color:#999; text-transform:uppercase; letter-spacing:0.06em; margin-top:4px; }
+
+        .subscribe-band { background:#f6f5f2; padding: var(--space-xl) 0; }
+        .subscribe-inner { display:flex; justify-content:space-between; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }
+        .subscribe-copy h2 { font-size: var(--text-xl); margin-bottom:6px; color:#0a0a0a; }
+        .subscribe-copy p { margin:0; color:#555; max-width:42ch; }
+        .subscribe-form { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+        .subscribe-form .input { width:260px; }
+        .subscribe-form .hp-field { position:absolute; left:-9999px; }
+        .subscribe-form .btn { background: var(--clr-accent); color:#1a1200; font-size:1rem; font-weight:800; padding:0.85em 1.7em; gap:8px; box-shadow: 0 6px 22px rgba(201,138,44,0.4); }
+        .subscribe-form .btn:hover { background:#e0a23f; transform: scale(1.045); box-shadow: 0 8px 28px rgba(201,138,44,0.55); }
+        .subscribe-form .btn svg { width:18px; height:18px; }
+        .subscribe-msg { flex-basis:100%; font-size:0.85rem; color:#666; margin-top:8px; }
+        @media (max-width: 700px) { .subscribe-inner { flex-direction:column; align-items:flex-start; } .subscribe-form .input { width:100%; } }
+
+        .guides-section { padding: var(--space-2xl) 0; }
+        .latest-reviews-section { padding-top: var(--space-2xl); }
+        .category-section { margin-bottom: var(--space-2xl); }
+        .category-section__header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-light-gray); padding-bottom: var(--space-sm); }
+        .category-section__header h2 { font-size: var(--text-2xl); margin:0; }
+        .category-section__header a { font-size:0.85rem; font-weight:700; color: var(--clr-accent-text); text-decoration:none; white-space:nowrap; }
+        .category-section__header a:hover { text-decoration:underline; }
+        .niche-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }
+        .niche-card { border-radius: var(--radius-md); overflow:hidden; transition: transform var(--duration-base) var(--ease-out); }
+        .niche-card:hover { transform: translateY(-3px); }
+        .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; border-radius: var(--radius-md); }
+        .niche-card img { width:100%; height:100%; object-fit:cover; transition: transform var(--duration-slow) var(--ease-out); }
+        .niche-card:hover img { transform: scale(1.04); }
+        .niche-card h2 { font-size: var(--text-lg); margin: var(--space-md) 0 8px; }
+        .niche-card h2 a { color:inherit; text-decoration:none; }
+        .niche-card p { font-size:0.92rem; color: var(--clr-mid-gray); margin-bottom: var(--space-sm); max-width:none; }
+        .niche-card .read-link { font-weight:700; font-size:0.88rem; color: var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }
+        .niche-card .read-link:hover { color: var(--clr-accent-text); }
+
+        .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
+        .footer-grid { display:grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
+        .footer-col h4 { color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }
+        .footer-col p { color:#999; font-size:0.9rem; max-width:32ch; }
+        .footer-col a { display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }
+        .footer-col a:hover { color:#fff; }
+        .footer-social { display:flex; gap:10px; margin-top:16px; }
+        .footer-social a { width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+        .footer-social a:hover { background: var(--clr-accent); color:#0a0a0a; }
+        .footer-social svg { width:16px; height:16px; }
+        .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
+        @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+    </style>
 </head>
 <body>
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
-    <a href="__SITE_BASE__/" class="logo"><img src="__SITE_BASE__/logo.png" alt="Abvorn"></a>
+    <a href="/" class="logo"><img src="/logo.png" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown">__CATEGORY_DROPDOWN__</div></div>
-        <a href="__SITE_BASE__/store.html">Store</a>
-        <a href="__SITE_BASE__/about.html">About</a>
-        <a href="__SITE_BASE__/privacy.html">Privacy</a>
+        <div class="nav-item"><a href="#niches">Categories ▾</a><div class="nav-dropdown">CATEGORY_DROPDOWN_PLACEHOLDER</div></div>
+        <a href="/store.html">Store</a>
+        <a href="/about.html">About</a>
+        <a href="/privacy.html">Privacy</a>
     </nav>
 </div></header>
-__TRENDING_TICKER__
+<div class="trending-ticker"><div class="container"><div class="trending-ticker__inner"><span class="trending-ticker__label">Latest updates:</span><span id="trending-items">LATEST_UPDATES_PLACEHOLDER</span></div></div></div>
 
 <section class="hero"><div class="container hero-grid">
     <div>
         <span class="hero-eyebrow">How we work</span>
         <h1>We buy it, test it, and tell you what's actually worth your money.</h1>
-        <p>Every recommendation on Abvorn comes from hands-on testing against real alternatives — not spec sheets, not press releases.</p>
+        <p>Every recommendation on Abvorn comes from hands-on testing against real alternatives &mdash; not spec sheets, not press releases.</p>
         <a href="#niches" class="btn">See our latest guides</a>
     </div>
     <div class="hero-slider" id="hero-slider">
-        __HERO_SLIDES__
-        <div class="hero-slider__dots">__HERO_DOTS__</div>
+        HERO_SLIDES_PLACEHOLDER
+        <div class="hero-slider__dots">HERO_DOTS_PLACEHOLDER</div>
     </div>
 </div></section>
 
 <section class="stats-band"><div class="container stats-grid">
-    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="__STAT_GUIDES__">0</div><div class="stat-label">Guides published</div></div>
-    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="stat-number" data-target="__STAT_CATEGORIES__">0</div><div class="stat-label">Categories covered</div></div>
-    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="__STAT_PRODUCTS__">0</div><div class="stat-label">Products compared</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="STAT_GUIDES_COUNT">0</div><div class="stat-label">Guides published</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="stat-number" data-target="STAT_CATEGORIES_COUNT">0</div><div class="stat-label">Categories covered</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="STAT_PRODUCTS_COUNT">0</div><div class="stat-label">Products compared</div></div>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3.5-7.1"/><path d="M21 3v6h-6"/></svg></div><div class="stat-number">Weekly</div><div class="stat-label">Review cycle</div></div>
 </div></section>
 
@@ -793,18 +902,18 @@ __TRENDING_TICKER__
         <input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off">
         <label for="homepage-subscribe-email" class="sr-only">Email address</label>
         <input type="email" class="input" id="homepage-subscribe-email" placeholder="you@example.com" required>
-        <button type="submit" class="btn">Notify me</button>
+        <button type="submit" class="btn"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Notify me</button>
         <p class="subscribe-msg" id="homepage-subscribe-msg" aria-live="polite"></p>
     </form>
 </div></section>
 
 <section class="latest-reviews-section container">
     <div class="category-section__header"><h2>Latest reviews</h2></div>
-    <div class="niche-grid">__LATEST_REVIEWS__</div>
+    <div class="niche-grid">LATEST_REVIEWS_PLACEHOLDER</div>
 </section>
 
 <section class="guides-section container" id="niches">
-    __CATEGORY_SECTIONS__
+    CATEGORY_SECTIONS_PLACEHOLDER
 </section>
 
 <footer class="footer"><div class="container">
@@ -812,20 +921,92 @@ __TRENDING_TICKER__
         <div class="footer-col">
             <h4>Abvorn</h4>
             <p>Independent product reviews and buying guides, based on real testing.</p>
-            <div class="footer-social">__FOOTER_SOCIAL__</div>
+            <div class="footer-social">FOOTER_SOCIAL_PLACEHOLDER</div>
         </div>
-        <div class="footer-col"><h4>Categories</h4>__FOOTER_CATEGORIES__</div>
-        <div class="footer-col"><h4>Company</h4><a href="__SITE_BASE__/about.html">About</a><a href="__SITE_BASE__/store.html">Store</a></div>
-        <div class="footer-col"><h4>Legal</h4><a href="__SITE_BASE__/privacy.html">Privacy policy</a></div>
+        <div class="footer-col"><h4>Categories</h4>FOOTER_CATEGORY_LINKS_PLACEHOLDER</div>
+        <div class="footer-col"><h4>Company</h4><a href="/about.html">About</a><a href="/store.html">Store</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="/privacy.html">Privacy policy</a></div>
     </div>
-    <div class="footer-bottom"><span>&copy; __YEAR__ Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
+    <div class="footer-bottom"><span>&copy; YEAR_PLACEHOLDER Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
 </div></footer>
 
 <script>
-(function(){var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")})})();
-(function(){var n=document.querySelectorAll(".stat-number[data-target]");if(!n.length)return;var r=window.matchMedia("(prefers-reduced-motion: reduce)").matches;function a(e){var t=parseInt(e.dataset.target,10);if(isNaN(t))return;if(r){e.textContent=t.toLocaleString();return}var d=1200,s=performance.now();function f(n){var p=Math.min((n-s)/d,1),v=1-Math.pow(1-p,3);e.textContent=Math.round(v*t).toLocaleString();if(p<1)requestAnimationFrame(f)}requestAnimationFrame(f)}if("IntersectionObserver"in window){var o=new IntersectionObserver(function(e){e.forEach(function(e){if(e.isIntersecting){a(e.target);o.unobserve(e.target)}})},{threshold:0.4});n.forEach(function(e){o.observe(e)})}else{n.forEach(function(e){e.textContent=e.dataset.target})}})();
-(function(){var s=document.getElementById("hero-slider");if(!s)return;var l=s.querySelectorAll(".hero-slide");var d=s.querySelectorAll(".hero-slider__dot");if(l.length<2)return;var c=0;function h(i){l.forEach(function(e,x){e.classList.toggle("active",x===i)});d.forEach(function(e,x){e.classList.toggle("active",x===i);e.setAttribute("aria-current",x===i?"true":"false")});c=i}d.forEach(function(e,x){e.addEventListener("click",function(){h(x)})});setInterval(function(){h((c+1)%l.length)},5000)})();
-async function submitHomepageSubscribe(e){e.preventDefault();var f=e.target;var m=document.getElementById("homepage-subscribe-msg");if(f._gotcha.value!==""){m.innerText="Success! Check your inbox.";return}var em=document.getElementById("homepage-subscribe-email").value.trim();if(!em)return;m.innerText="Sending...";try{var r=await fetch("__APPS_SCRIPT_URL__",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em,niche:"general",source:"homepage_notify",lead_magnet:"New guide notifications"})});var j=await r.json();m.innerText=j.success?"Success! Check your inbox.":(j.message||"Oops, try again.")}catch(e){m.innerText="Connection error. Please try later."}}
+const APPS_SCRIPT_URL = "__APPS_SCRIPT_URL__";
+
+// Mobile nav toggle
+(function() {
+    const btn = document.getElementById('nav-toggle');
+    const nav = document.getElementById('nav-links');
+    if (!btn || !nav) return;
+    btn.addEventListener('click', () => {
+        const open = nav.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+})();
+
+// Stat counters — roll from 0 to the real number once the strip is on screen
+(function() {
+    const nums = document.querySelectorAll('.stat-number[data-target]');
+    if (!nums.length) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function animate(el) {
+        const target = parseInt(el.dataset.target, 10);
+        if (isNaN(target)) return;
+        if (reduceMotion) { el.textContent = target.toLocaleString(); return; }
+        const duration = 1200, start = performance.now();
+        function tick(now) {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.round(eased * target).toLocaleString();
+            if (progress < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+    }
+    if ('IntersectionObserver' in window) {
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) { animate(entry.target); obs.unobserve(entry.target); } });
+        }, { threshold: 0.4 });
+        nums.forEach(n => obs.observe(n));
+    } else { nums.forEach(n => { n.textContent = n.dataset.target; }); }
+})();
+
+async function submitHomepageSubscribe(e) {
+    e.preventDefault();
+    const f = e.target;
+    const msg = document.getElementById('homepage-subscribe-msg');
+    if (f._gotcha.value !== "") { msg.innerText = 'Success! Check your inbox.'; return; }
+    const email = document.getElementById('homepage-subscribe-email').value.trim();
+    if (!email) return;
+    msg.innerText = 'Sending...';
+    try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email: email, niche: 'general', source: 'homepage_notify', lead_magnet: 'New guide notifications' })
+        });
+        const result = await response.json();
+        msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
+    } catch (err) { msg.innerText = 'Connection error. Please try later.'; }
+}
+
+// Hero slider — auto-advance + dot navigation
+(function() {
+    const slider = document.getElementById('hero-slider');
+    if (!slider) return;
+    const slides = slider.querySelectorAll('.hero-slide');
+    const dots = slider.querySelectorAll('.hero-slider__dot');
+    if (slides.length < 2) return;
+    let current = 0;
+    function show(i) {
+        slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+        dots.forEach((d, idx) => {
+            d.classList.toggle('active', idx === i);
+            d.setAttribute('aria-current', idx === i ? 'true' : 'false');
+        });
+        current = i;
+    }
+    dots.forEach((d, idx) => d.addEventListener('click', () => show(idx)));
+    setInterval(() => show((current + 1) % slides.length), 5000);
+})();
 </script>
 </body>
 </html>'''
@@ -853,7 +1034,7 @@ def build_homepage(state, form_url=""):
     total_products = total_posts * 3  # rough estimate
 
     # Build nav dropdown
-    nav_dd = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    nav_dd = "".join(f'<a href="/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
 
     # Build hero slides
     hero_slides = ""
@@ -871,162 +1052,62 @@ def build_homepage(state, form_url=""):
         hero_slides += f'<div class="hero-slide{active}"><img src="{img}" alt="{name}"><figcaption>{name} reviews — expert tested</figcaption></div>'
         hero_dots += f'<button class="hero-slider__dot{active}" aria-label="Show {name}" aria-current="{"true" if i == 0 else "false"}"></button>'
 
-    # Build latest review cards
+    # Build latest review cards — exactly 3
     latest_cards = ""
+    card_count = 0
     for n in niches:
         if not n["posts"]:
             continue
-        card = f'''<div class="niche-card">
-    <a href="{b}/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
-    <div class="niche-card__body">
-        <h3><a href="{b}/{n["slug"]}/">{n["name"]}</a></h3>
-        <p>{n["posts"]} expert-reviewed guide{"s" if n["posts"] > 1 else ""} with real testing results.</p>
-        <a href="{b}/{n["slug"]}/" class="read-link">Browse guides →</a>
-    </div>
+        if card_count >= 3:
+            break
+        latest_cards += f'''<div class="niche-card">
+    <a href="/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
+    <h2><a href="/{n["slug"]}/">{n["name"]}</a></h2>
+    <p>{n["posts"]} expert-reviewed guide{"s" if n["posts"] > 1 else ""} with real testing results.</p>
+    <a href="/{n["slug"]}/" class="read-link">Browse guides →</a>
 </div>'''
-        latest_cards += card
+        card_count += 1
 
     # Build category sections with posts
     cat_sections = ""
     for n in niches:
         if not n["posts"]:
             continue
-        section = f'''<div class="category-section">
-    <div class="category-section__header"><h2>{n["name"]}</h2><a href="{b}/{n["slug"]}/">View all →</a></div>
+        card = f'''<div class="niche-card">
+    <a href="/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
+    <h2><a href="/{n["slug"]}/">{n["name"]}</a></h2>
+    <p>{n["posts"]} expert-reviewed guide{"s" if n["posts"] > 1 else ""} with real testing results.</p>
+    <a href="/{n["slug"]}/" class="read-link">Browse guides →</a>
+</div>'''
+        cat_sections += f'''<div class="category-section">
+    <div class="category-section__header"><h2>{n["name"]}</h2><a href="/{n["slug"]}/">View all →</a></div>
     <div class="niche-grid">{card}</div>
 </div>'''
-        cat_sections += section
 
-    # Trending ticker
+    # Trending ticker items text
     ticker_items = " · ".join(
-        f'<a href="{b}/{n["slug"]}/" class="trending-ticker__item">{n["name"]}</a>'
+        f'<a href="/{n["slug"]}/" class="trending-ticker__item">{n["name"]}</a>'
         for n in niches if n["posts"]
     )
-    ticker = f'<div class="trending-ticker"><div class="container"><div class="trending-ticker__inner"><span class="trending-ticker__label">Latest updates:</span>{ticker_items}</div></div></div>' if ticker_items else ""
 
     # Footer
-    footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    footer_cats = "".join(f'<a href="/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
     footer_social = render_footer_social()
 
-    # Assemble homepage CSS from DESIGN_SYSTEM_CSS + premium-specific additions
-    homepage_css = DESIGN_SYSTEM_CSS + """
-.top-bar{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}
-.top-bar .container{display:flex;justify-content:space-between}
-header{background:#0a0a0a;padding:18px 0;position:relative;z-index:20;border-bottom:1px solid #2a2a2a}
-.navbar{display:flex;justify-content:space-between;align-items:center}
-.logo img{max-height:44px;width:auto}
-.nav-links{display:flex;align-items:center;gap:8px}
-.nav-links > a,.nav-item > a{color:#fff;text-decoration:none;padding:8px 16px;font-weight:600;font-size:0.9rem;border-radius:var(--radius-sm);transition:background var(--duration-fast) var(--ease-out)}
-.nav-links > a:hover,.nav-item > a:hover{background:rgba(255,255,255,0.08);color:var(--clr-accent)}
-.nav-item{position:relative}
-.nav-item > a{padding:8px 16px;display:flex;align-items:center;gap:4px}
-.nav-item > a::after{content:'\\25BE';font-size:0.6rem;opacity:0.5}
-.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#1a1a1a;min-width:220px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:6px 0;z-index:30;border:1px solid #2a2a2a}
-.nav-item:hover .nav-dropdown{display:block}
-.nav-dropdown a{display:block;color:#ccc;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
-.nav-dropdown a:hover{background:#2a2a2a;color:#fff}
-.nav-toggle{display:none;background:none;border:none;color:#fff;padding:6px;cursor:pointer}
-.nav-toggle svg{width:24px;height:24px}
-@media(max-width:640px){
-.nav-toggle{display:block}
-.nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:#0a0a0a;flex-direction:column;align-items:stretch;padding:8px 20px 20px;gap:2px;box-shadow:var(--shadow-lg);border-top:1px solid #2a2a2a;z-index:30}
-.nav-links.open{display:flex}
-.nav-links > a,.nav-item{margin:0}
-.nav-links > a,.nav-item > a{padding:10px 0}
-.nav-item > a::after{display:none}
-.nav-dropdown{position:static;box-shadow:none;margin-top:0;padding-left:16px;display:block;background:transparent;border:none}
-.nav-dropdown a{color:#888;padding:6px 0;font-size:0.8rem}
-.nav-dropdown a:hover{background:transparent;color:#fff}
-}
-.trending-ticker{background:#111;color:#888;padding:8px 0;font-size:0.8rem;overflow:hidden;white-space:nowrap;border-bottom:1px solid #2a2a2a}
-.trending-ticker__inner{display:inline-block;animation:ticker-scroll 30s linear infinite}
-.trending-ticker__label{font-weight:700;margin-right:16px;color:#fff}
-.trending-ticker__item{color:#aaa;text-decoration:none;padding:0 12px}
-.trending-ticker__item:hover{color:#fff}
-@keyframes ticker-scroll{0%{transform:translateX(100vw)}100%{transform:translateX(-100%)}}
-.hero{background:#f6f5f2;padding:var(--space-2xl) 0}
-.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-xl);align-items:center}
-.hero-eyebrow{display:inline-block;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#888;margin-bottom:var(--space-md);border-left:3px solid var(--clr-accent);padding-left:12px}
-.hero h1{font-size:clamp(var(--text-3xl),4vw,var(--text-4xl));margin-bottom:var(--space-md);color:#0a0a0a;line-height:1.1}
-.hero p{font-size:var(--text-lg);color:#555;max-width:42ch;margin-bottom:var(--space-lg);line-height:1.6}
-.hero .btn{background:#1a1a1a;color:#fff;padding:0.9em 2em;font-size:0.9rem}
-.hero .btn:hover{background:var(--clr-accent);color:#1a1200}
-.hero-slider{position:relative;border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-lg);aspect-ratio:4/3;background:#111}
-.hero-slide{position:absolute;inset:0;opacity:0;transition:opacity 0.8s var(--ease-out)}
-.hero-slide.active{opacity:1}
-.hero-slide img{width:100%;height:100%;object-fit:cover;display:block}
-.hero-slide figcaption{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,0.75));color:#fff;padding:40px var(--space-lg) var(--space-md);font-weight:600;font-size:0.95rem}
-.hero-slider__dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:5}
-.hero-slider__dot{width:36px;height:36px;border:none;background:transparent;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
-.hero-slider__dot::before{content:'';width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.3);transition:background var(--duration-fast)}
-.hero-slider__dot.active::before{background:#fff}
-@media(max-width:860px){.hero-grid{grid-template-columns:1fr}}
-.stats-band{background:#0a0a0a;color:#fff;padding:var(--space-lg) 0;border-bottom:1px solid #2a2a2a}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--space-lg);text-align:center}
-.stat-icon{width:28px;height:28px;margin:0 auto 8px;color:var(--clr-accent);opacity:0.8}
-.stat-number{font-family:var(--font-display);font-size:var(--text-2xl);font-weight:700;color:var(--clr-accent)}
-.stat-label{font-size:0.75rem;color:#777;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px}
-.subscribe-band{background:#f6f5f2;padding:var(--space-xl) 0;border-top:1px solid #e5e2dc}
-.subscribe-inner{display:flex;justify-content:space-between;align-items:center;gap:var(--space-lg);flex-wrap:wrap}
-.subscribe-copy h2{font-size:var(--text-xl);margin-bottom:4px;color:#0a0a0a}
-.subscribe-copy p{margin:0;color:#555;max-width:40ch;font-size:0.95rem}
-.subscribe-form{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.subscribe-form .input{width:240px;background:#fff;border:2px solid #e5e2dc}
-.subscribe-form .input:focus{border-color:var(--clr-accent)}
-.hp-field{position:absolute;left:-9999px}
-.subscribe-form .btn{background:var(--clr-accent);color:#1a1200;font-weight:800;padding:0.85em 1.7em;box-shadow:0 4px 16px rgba(201,138,44,0.3)}
-.subscribe-form .btn:hover{background:#d4a03a;transform:scale(1.03)}
-.subscribe-msg{flex-basis:100%;font-size:0.85rem;color:#666;margin-top:6px}
-@media(max-width:700px){.subscribe-inner{flex-direction:column;align-items:flex-start}.subscribe-form .input{width:100%}}
-.guides-section{padding:var(--space-2xl) 0}
-.latest-reviews-section{padding:var(--space-2xl) 0}
-.category-section{margin-bottom:var(--space-2xl)}
-.category-section__header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:var(--space-lg);border-bottom:2px solid #e5e2dc;padding-bottom:var(--space-sm)}
-.category-section__header h2{font-size:var(--text-xl);margin:0}
-.category-section__header a{font-size:0.8rem;font-weight:600;color:var(--clr-accent-text);text-decoration:none}
-.category-section__header a:hover{text-decoration:underline}
-.niche-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-lg)}
-.niche-card{border-radius:var(--radius-md);overflow:hidden;transition:transform var(--duration-base) var(--ease-out);background:var(--clr-white);border:1px solid #e5e2dc}
-.niche-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
-.niche-card__image-wrapper{aspect-ratio:4/3;overflow:hidden}
-.niche-card img{width:100%;height:100%;object-fit:cover;transition:transform var(--duration-slow) var(--ease-out)}
-.niche-card:hover img{transform:scale(1.04)}
-.niche-card__body{padding:var(--space-md)}
-.niche-card h3{font-size:var(--text-lg);margin:0 0 6px}
-.niche-card h3 a{color:inherit;text-decoration:none}
-.niche-card p{font-size:0.9rem;color:#888;margin-bottom:var(--space-sm);line-height:1.5}
-.niche-card .read-link{font-weight:700;font-size:0.85rem;color:#0a0a0a;text-decoration:none;border-bottom:2px solid var(--clr-accent);padding-bottom:1px;display:inline-block}
-.niche-card .read-link:hover{color:var(--clr-accent-text)}
-.footer{background:#0a0a0a;color:#888;padding:var(--space-2xl) 0 var(--space-lg);border-top:1px solid #2a2a2a}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:var(--space-lg);margin-bottom:var(--space-xl)}
-.footer-col h4{color:#fff;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px}
-.footer-col p{color:#888;font-size:0.9rem;max-width:30ch;line-height:1.6}
-.footer-col a{display:block;color:#888;text-decoration:none;padding:3px 0;font-size:0.9rem;transition:color var(--duration-fast)}
-.footer-col a:hover{color:#fff}
-.footer-social{display:flex;gap:8px;margin-top:12px}
-.footer-social a{width:40px;height:40px;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;color:#888;transition:background var(--duration-fast),color var(--duration-fast);border:1px solid #2a2a2a}
-.footer-social a:hover{background:var(--clr-accent);color:#0a0a0a;border-color:var(--clr-accent)}
-.footer-social svg{width:16px;height:16px}
-.footer-bottom{border-top:1px solid #1a1a1a;padding-top:16px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:0.8rem;color:#555}
-@media(max-width:760px){.footer-grid{grid-template-columns:1fr 1fr}}
-"""
-
     html = HOMEPAGE_TEMPLATE
-    html = html.replace("__SITE_BASE__", b)
-    html = html.replace("__CSS__", homepage_css)
-    html = html.replace("__CATEGORY_DROPDOWN__", nav_dd)
-    html = html.replace("__HERO_SLIDES__", hero_slides)
-    html = html.replace("__HERO_DOTS__", hero_dots)
-    html = html.replace("__LATEST_REVIEWS__", latest_cards if latest_cards else '<p style="grid-column:1/-1;text-align:center;color:#888;padding:40px 0">More guides on the way.</p>')
-    html = html.replace("__CATEGORY_SECTIONS__", cat_sections if cat_sections else '<div class="category-section"><div class="niche-card"><div class="niche-card__image-wrapper"><img src="' + b + '/assets/hero-home.svg" alt="Coming soon"></div><div class="niche-card__body"><h3>Our first guide is in testing</h3><p>Check back shortly for hands-on reviews.</p></div></div></div>')
-    html = html.replace("__TRENDING_TICKER__", ticker)
-    html = html.replace("__FOOTER_SOCIAL__", footer_social)
-    html = html.replace("__FOOTER_CATEGORIES__", footer_cats)
+    html = html.replace("CATEGORY_DROPDOWN_PLACEHOLDER", nav_dd)
+    html = html.replace("HERO_SLIDES_PLACEHOLDER", hero_slides)
+    html = html.replace("HERO_DOTS_PLACEHOLDER", hero_dots)
+    html = html.replace("STAT_GUIDES_COUNT", str(total_posts))
+    html = html.replace("STAT_CATEGORIES_COUNT", str(len(niches)))
+    html = html.replace("STAT_PRODUCTS_COUNT", str(total_products))
+    html = html.replace("LATEST_UPDATES_PLACEHOLDER", ticker_items if ticker_items else "No reviews yet")
+    html = html.replace("LATEST_REVIEWS_PLACEHOLDER", latest_cards if latest_cards else '<p style="grid-column:1/-1;text-align:center;color:#888;padding:40px 0">More guides on the way.</p>')
+    html = html.replace("CATEGORY_SECTIONS_PLACEHOLDER", cat_sections if cat_sections else '<div class="category-section"><div class="niche-card"><div class="niche-card__image-wrapper"><img src="' + b + '/assets/hero-home.svg" alt="Coming soon"></div><div class="niche-card__body"><h2>Our first guide is in testing</h2><p>Check back shortly for hands-on reviews.</p></div></div></div>')
+    html = html.replace("FOOTER_SOCIAL_PLACEHOLDER", footer_social)
+    html = html.replace("FOOTER_CATEGORY_LINKS_PLACEHOLDER", footer_cats)
     html = html.replace("__APPS_SCRIPT_URL__", form_url)
-    html = html.replace("__YEAR__", str(datetime.now().year))
-    html = html.replace("__STAT_GUIDES__", str(total_posts))
-    html = html.replace("__STAT_CATEGORIES__", str(len(niches)))
-    html = html.replace("__STAT_PRODUCTS__", str(total_products))
+    html = html.replace("YEAR_PLACEHOLDER", str(datetime.now().year))
     return html
 
 
