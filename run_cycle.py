@@ -4,6 +4,7 @@ Reads secrets from env vars (GITHUB_ prefixed) or falls back to secrets.json.
 Picks the niche with fewest posts, generates content, writes to docs/, updates state.
 """
 import os, sys, json, logging, re, html as html_mod, requests as http_requests
+import hashlib, time
 from pathlib import Path
 from datetime import datetime
 
@@ -19,10 +20,120 @@ from src.economic_surplus import EconomicSurplusTracker, create_economic_surplus
 from src.entitlements import EntitlementsFramework, create_entitlements_framework
 from src.workflow_engine import WorkflowEngine, create_workflow_engine
 from src.social_permission import SocialPermissionFramework, create_social_permission_framework
+from src.infrastructure import infra_reporter
+from src.energy_accounting import energy_accounting
 
 logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
 
 ai_sql = None  # set by main()
+
+# ─── Open Web Ninja Batching & Caching ─────────────────────────
+OWN_CACHE_DIR = Path("data/openweb_cache")
+OWN_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+OWN_USAGE_FILE = Path("data/openweb_usage.json")
+
+
+def _own_cache_key(query: str, source: str = "amazon") -> str:
+    return hashlib.md5(f"{source}:{query}".encode()).hexdigest()
+
+
+def _own_load_cache() -> dict:
+    f = OWN_CACHE_DIR / "cache.json"
+    if f.exists():
+        try:
+            return json.loads(f.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return {}
+    return {}
+
+
+def _own_save_cache(cache: dict):
+    OWN_CACHE_DIR.joinpath("cache.json").write_text(json.dumps(cache, indent=2), encoding="utf-8")
+
+
+def _own_track_usage(count: int):
+    try:
+        if OWN_USAGE_FILE.exists():
+            data = json.loads(OWN_USAGE_FILE.read_text(encoding="utf-8"))
+        else:
+            data = {}
+        data["total"] = data.get("total", 0) + count
+        data["last_update"] = datetime.now().isoformat()
+        OWN_USAGE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        OWN_USAGE_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    except Exception:
+        pass
+
+
+def fetch_own_batch(queries: list, source: str = "amazon") -> dict:
+    """Fetch product data for multiple queries in one batch with caching."""
+    secrets = get_secrets()
+    api_key = secrets.get("OPENWEB_NINJA_KEY", "")
+    if not api_key:
+        return {}
+
+    cache = _own_load_cache()
+    results = {}
+    uncached = []
+
+    for q in queries:
+        key = _own_cache_key(q, source)
+        if key in cache:
+            results[q] = cache[key]
+        else:
+            uncached.append(q)
+
+    if uncached:
+        api_url = "https://api.openwebninja.com/realtime-amazon-data/search"
+        for i in range(0, len(uncached)):
+            q = uncached[i]
+            key = _own_cache_key(q, source)
+            try:
+                resp = http_requests.get(
+                    api_url,
+                    params={"query": q.replace("-", " "), "page": 1},
+                    headers={"X-API-Key": api_key},
+                    timeout=15,
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    products = data.get("data", {}).get("products", [])[:5]
+                    product_list = []
+                    for p in products:
+                        product_list.append({
+                            "name": p.get("product_title", "").split(",")[0].strip(),
+                            "price": p.get("product_price", ""),
+                            "original_price": p.get("product_original_price", ""),
+                            "rating": p.get("product_star_rating", ""),
+                            "ratings_count": p.get("product_num_ratings", 0),
+                            "image": p.get("product_photo", ""),
+                            "url": p.get("product_url", ""),
+                            "asin": p.get("asin", ""),
+                            "description": p.get("product_title", ""),
+                            "features": [],
+                            "is_best_seller": p.get("is_best_seller", False),
+                            "is_amazon_choice": p.get("is_amazon_choice", False),
+                            "sales_volume": p.get("sales_volume", ""),
+                        })
+                    cache[key] = product_list
+                    results[q] = product_list
+                    _own_save_cache(cache)
+                else:
+                    logger.warning(f"Open Web Ninja {resp.status_code} for '{q}'")
+            except Exception as e:
+                logger.warning(f"Open Web Ninja error for '{q}': {e}")
+            if i < len(uncached) - 1:
+                time.sleep(0.3)
+
+    _own_track_usage(len(uncached))
+    return results
+
+
+def fetch_all_niches_batch(niches: list) -> dict:
+    """Fetch products for all niches in batch, return {niche_slug: products}."""
+    queries = [n.get("keyword", n.get("slug", n.get("name", ""))) for n in niches]
+    return fetch_own_batch(queries)
+
 
 # ─── Secrets ────────────────────────────────────────────────────────────
 def get_secrets():
@@ -79,64 +190,6 @@ def amazon_link(query, tag=""):
     t = tag or os.environ.get("AMAZON_TAG", "")
     return f"https://www.amazon.com/s?k={q}&tag={t}" if t else f"https://www.amazon.com/s?k={q}"
 
-
-# ─── Open Web Ninja API — real Amazon product data ────────────────
-PRODUCTS_CACHE_FILE = "products_cache.json"
-
-def load_product_cache():
-    try:
-        with open(PRODUCTS_CACHE_FILE) as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-def save_product_cache(cache):
-    with open(PRODUCTS_CACHE_FILE, "w") as f:
-        json.dump(cache, f, indent=2)
-
-def fetch_real_products(niche, api_key):
-    """Fetch real Amazon products via Open Web Ninja. Uses local cache to stay within 100 req/month."""
-    if not api_key:
-        return None
-    cache = load_product_cache()
-    if niche in cache:
-        return cache[niche]
-    try:
-        response = http_requests.get(
-            "https://api.openwebninja.com/realtime-amazon-data/search",
-            params={"query": niche.replace("-", " "), "page": 1},
-            headers={"X-API-Key": api_key},
-            timeout=15
-        )
-        if response.status_code == 200:
-            data = response.json()
-            products = data.get("data", {}).get("products", [])
-            if products:
-                result = []
-                for p in products[:5]:
-                    result.append({
-                        "name": p.get("product_title", "").split(",")[0].strip(),
-                        "price": p.get("product_price", ""),
-                        "original_price": p.get("product_original_price", ""),
-                        "rating": p.get("product_star_rating", ""),
-                        "ratings_count": p.get("product_num_ratings", 0),
-                        "image": p.get("product_photo", ""),
-                        "url": p.get("product_url", ""),
-                        "asin": p.get("asin", ""),
-                        "description": p.get("product_title", ""),
-                        "features": [],
-                        "is_best_seller": p.get("is_best_seller", False),
-                        "is_amazon_choice": p.get("is_amazon_choice", False),
-                        "sales_volume": p.get("sales_volume", ""),
-                    })
-                cache[niche] = result
-                save_product_cache(cache)
-                return result
-        else:
-            logger.warning(f"Open Web Ninja returned {response.status_code} (body suppressed)")
-    except Exception as e:
-        logger.warning(f"Open Web Ninja API error: {e}")
-    return None
 
 def affiliate_url(product_url, tag=""):
     """Append Amazon affiliate tag to a product URL."""
@@ -1983,48 +2036,72 @@ document.addEventListener('DOMContentLoaded', function() {{
 
 # ─── AI Research (skip DDGS, use AI knowledge directly) ──────────────────
 def research_products(niche):
+    cache = _own_load_cache()
+    keyword = f"best {niche}"
+    cache_key = _own_cache_key(keyword, "amazon")
+    if cache_key in cache:
+        cached = cache[cache_key]
+        if cached:
+            print(f"  Cached products for {niche}: {len(cached)}")
+            return cached
     secrets = get_secrets()
     api_key = secrets.get("OPENWEB_NINJA_KEY", "")
-
-    # Try real Amazon data first via Open Web Ninja
-    real_products = fetch_real_products(niche, api_key)
-    if real_products:
-        print(f"  Real products from Amazon API: {[p['name'] for p in real_products]}")
-        return real_products
-
-    # Fallback: AI-generated product data via AISQL
-    print(f"  Amazon API unavailable, using AI fallback for {niche}")
-    prompt = f"""You are a product expert. For the niche '{niche}', recommend exactly 3 specific real products with brand and model names. Use your knowledge of real products available on Amazon.
-
-Return a JSON array. Each product must have:
-- name: specific brand + model (e.g. "Sony WH-1000XM5")
-- price: realistic price string
-- description: 1-2 sentence highlight
-- features: array of 3-4 key features
-- category: "best_overall", "best_value", or "premium_pick"
-- affiliate_query: search query for this product (e.g. "Sony+WH-1000XM5")"""
-    result = ai_sql.query(QueryPlan(
-        system_prompt="You are an expert product researcher returning structured JSON data.",
-        user_prompt=prompt,
-        params={"temperature": 0.3, "max_tokens": 1000, "format": "json"},
-    )).content
-    if not result:
+    if not api_key:
         return None
     try:
-        products = json.loads(result)
-    except json.JSONDecodeError:
-        m = re.search(r'\[.*\]', result, re.DOTALL)
-        if m:
-            try:
-                products = json.loads(m.group(0))
-            except:
-                products = None
+        response = http_requests.get(
+            "https://api.openwebninja.com/realtime-amazon-data/search",
+            params={"query": niche.replace("-", " "), "page": 1},
+            headers={"X-API-Key": api_key},
+            timeout=15
+        )
+        if response.status_code == 200:
+            data = response.json()
+            products = data.get("data", {}).get("products", [])
+            if products:
+                result = []
+                for p in products[:5]:
+                    result.append({
+                        "name": p.get("product_title", "").split(",")[0].strip(),
+                        "price": p.get("product_price", ""),
+                        "original_price": p.get("product_original_price", ""),
+                        "rating": p.get("product_star_rating", ""),
+                        "ratings_count": p.get("product_num_ratings", 0),
+                        "image": p.get("product_photo", ""),
+                        "url": p.get("product_url", ""),
+                        "asin": p.get("asin", ""),
+                        "description": p.get("product_title", ""),
+                        "features": [],
+                        "is_best_seller": p.get("is_best_seller", False),
+                        "is_amazon_choice": p.get("is_amazon_choice", False),
+                        "sales_volume": p.get("sales_volume", ""),
+                    })
+                cache[cache_key] = result
+                _own_save_cache(cache)
+                _own_track_usage(1)
+                print(f"  Real products from Amazon API: {[p['name'] for p in result]}")
+                return result
+            else:
+                logger.warning(f"Open Web Ninja returned no products for {niche}")
         else:
-            products = None
-    return products if isinstance(products, list) else ([products] if isinstance(products, dict) else None)
+            logger.warning(f"Open Web Ninja returned {response.status_code}")
+    except Exception as e:
+        logger.warning(f"Open Web Ninja API error: {e}")
+    return None
 
 
 # ─── Content generation ─────────────────────────────────────────────────
+_cost_per_1k = {
+    "kilogateway": 0.0, "deepseek": 0.002, "kimi": 0.003,
+    "openai": 0.015, "anthropic": 0.018, "gemini": 0.001,
+    "groq": 0.002, "glm": 0.003, "local": 0.0,
+}
+def _track_call(provider, tokens, latency_ms=0.0):
+    cost = tokens * (_cost_per_1k.get(provider, 0.002) / 1000.0)
+    infra_reporter.report_article_cost("", provider, cost, latency_ms, tokens, niche)
+    energy_accounting.record_usage(provider, tokens, latency_ms)
+
+
 def generate_outline(niche, products):
     names = json.dumps([p.get("name", "") for p in products[:3]])
     prompt = f"""You are a content strategist planning a buying guide for '{niche}'.

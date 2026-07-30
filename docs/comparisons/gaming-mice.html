@@ -41,7 +41,8 @@ header{background:#0a0a0a;padding:18px 0;position:relative;z-index:20;border-bot
 .nav-item{position:relative}
 .nav-item > a{padding:8px 16px;display:flex;align-items:center;gap:4px}
 .nav-item > a::after{content:'▾';font-size:0.6rem;opacity:0.5}
-.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#1a1a1a;min-width:220px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:6px 0;z-index:30;border:1px solid #2a2a2a}
+.nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:8px}
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:8px;background:#1a1a1a;min-width:220px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:6px 0;z-index:30;border:1px solid #2a2a2a}
 .nav-item:hover .nav-dropdown{display:block}
 .nav-dropdown a{display:block;color:#ffffff;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
 .nav-dropdown a:hover{background:#2a2a2a;color:#fff}
@@ -268,7 +269,6 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
     </button>
     <nav class="nav-links" id="nav-links">
         <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown"><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/laptops/">Laptops</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div></div>
-        <a href="/abvorn/store.html">Store</a>
         <a href="/abvorn/about.html">About</a>
         <a href="/abvorn/privacy.html">Privacy</a>
     </nav>

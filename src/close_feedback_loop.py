@@ -490,6 +490,28 @@ def create_feedback_loop() -> ClosedFeedbackLoop:
     return ClosedFeedbackLoop()
 
 
+class PromptOptimizer:
+    def __init__(self):
+        self.prompt_variants: Dict[str, Dict[str, Any]] = {}
+
+    def log_variant(self, variant_id: str, system_prompt: str, user_prompt: str, engagement_score: float):
+        self.prompt_variants[variant_id] = {
+            "system_prompt": system_prompt,
+            "user_prompt": user_prompt,
+            "engagement_score": engagement_score,
+            "timestamp": datetime.now().isoformat(),
+        }
+
+    def get_best_prompt(self) -> tuple:
+        if not self.prompt_variants:
+            return None, None
+        best = max(self.prompt_variants.items(), key=lambda x: x[1]["engagement_score"])
+        return best[1]["system_prompt"], best[1]["user_prompt"]
+
+    def get_all_variants(self) -> Dict[str, Dict[str, Any]]:
+        return dict(self.prompt_variants)
+
+
 if __name__ == "__main__":
     loop = create_feedback_loop()
     result = loop.run()
