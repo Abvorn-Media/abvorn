@@ -942,7 +942,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
 <footer class="footer"><div class="container">
     <div class="footer-grid">
         <div class="footer-col">
-            <h4>Abvorn</h4>
+            <img src="__SITE_BASE__/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px">
             <p>Independent product reviews and buying guides, based on real testing.</p>
             <div class="footer-social">FOOTER_SOCIAL_PLACEHOLDER</div>
         </div>
@@ -1335,7 +1335,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 </div></section>
 
 <footer class="footer"><div class="footer-grid">
-    <div class="footer-col"><h4>Abvorn</h4><p>Independent product reviews and buying guides.</p><div class="footer-social">{footer_social}</div></div>
+    <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides.</p><div class="footer-social">{footer_social}</div></div>
     <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
     <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
 </div>
@@ -1874,7 +1874,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 </section>
 
 <footer class="footer"><div class="footer-grid">
-    <div class="footer-col"><h4>Abvorn</h4><p>Independent product reviews and buying guides.</p><div class="footer-social">{footer_social}</div></div>
+    <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides.</p><div class="footer-social">{footer_social}</div></div>
     <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
     <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
 </div>
