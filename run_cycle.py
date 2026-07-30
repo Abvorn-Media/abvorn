@@ -750,6 +750,22 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         ''' + DESIGN_SYSTEM_CSS + '''
+        /* ===== FIX: HERO — MATCH PREVIEW ===== */
+        .hero { padding: var(--space-2xl) 0; }
+        .hero h1 { font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-md); color: #0a0a0a; font-weight: 700; }
+        .hero p { font-size: var(--text-lg); color: #555; max-width: 46ch; margin-bottom: var(--space-lg); line-height: 1.6; }
+        .hero .btn { padding: 0.9em 2em; font-size: 0.9rem; }
+        /* ===== FIX: STATS BAND — MATCH PREVIEW ===== */
+        .stats-band { background: #0a0a0a; color: #fff; padding: var(--space-lg) 0; }
+        .stat-number { font-family: var(--font-display); font-size: var(--text-3xl); font-weight: 700; color: var(--clr-accent); }
+        .stat-label { font-size: 0.82rem; color: #999; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+        .stat-icon { width: 28px; height: 28px; margin: 0 auto 10px; color: var(--clr-accent); opacity: 0.9; }
+        /* ===== FIX: LEAD CAPTURE — MATCH PREVIEW ===== */
+        .subscribe-band { background: #f6f5f2; padding: var(--space-xl) 0; }
+        .subscribe-copy h2 { font-size: var(--text-xl); margin-bottom: 6px; color: #0a0a0a; }
+        .subscribe-copy p { margin: 0; color: #555; max-width: 42ch; font-size: 0.95rem; }
+        .subscribe-form .btn { background: var(--clr-accent); color: #1a1200; font-size: 1rem; font-weight: 800; padding: 0.85em 1.7em; gap: 8px; box-shadow: 0 6px 22px rgba(201, 138, 44, 0.4); }
+        .subscribe-form .input { width: 260px; padding: 0.75em 1em; font-size: var(--text-base); }
         /* FIX: header/hero/footer are fixed brand chrome, always black-on-white —
            they must NOT use the adaptive --clr-black/--clr-white/--clr-off-white
            tokens, which the dark-mode media query above intentionally flips for
