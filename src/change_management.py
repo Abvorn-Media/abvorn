@@ -144,35 +144,88 @@ class ChangeManager:
         return False
 
     def run_ab_test(self, test_name: str, variant_a: Callable, variant_b: Callable,
-                    sample_size: int = 100) -> Dict[str, Any]:
+                    sample_size: int = 100, metric: str = "success") -> Dict[str, Any]:
         results = {
             "test_name": test_name,
-            "variant_a": {"successes": 0, "total": 0},
-            "variant_b": {"successes": 0, "total": 0},
+            "metric": metric,
+            "variant_a": {"successes": 0, "failures": 0, "scores": []},
+            "variant_b": {"successes": 0, "failures": 0, "scores": []},
             "winner": None,
             "confidence": 0.0,
+            "p_value": None,
+            "significant": False,
+            "statistical_test": None,
         }
         for i in range(sample_size):
             if i < sample_size // 2:
                 try:
-                    variant_a()
+                    result = variant_a()
                     results["variant_a"]["successes"] += 1
+                    if isinstance(result, dict) and metric in result:
+                        results["variant_a"]["scores"].append(result[metric])
                 except Exception:
-                    pass
+                    results["variant_a"]["failures"] += 1
             else:
                 try:
-                    variant_b()
+                    result = variant_b()
                     results["variant_b"]["successes"] += 1
+                    if isinstance(result, dict) and metric in result:
+                        results["variant_b"]["scores"].append(result[metric])
                 except Exception:
-                    pass
-            results["variant_a"]["total"] += 1
-            results["variant_b"]["total"] += 1
+                    results["variant_b"]["failures"] += 1
 
-        a_rate = results["variant_a"]["successes"] / max(results["variant_a"]["total"], 1)
-        b_rate = results["variant_b"]["successes"] / max(results["variant_b"]["total"], 1)
-        results["winner"] = "A" if a_rate > b_rate else ("B" if b_rate > a_rate else "TIE")
-        results["confidence"] = abs(a_rate - b_rate) / (a_rate + b_rate + 0.0001)
+        a_total = results["variant_a"]["successes"] + results["variant_a"]["failures"]
+        b_total = results["variant_b"]["successes"] + results["variant_b"]["failures"]
+        a_rate = results["variant_a"]["successes"] / max(a_total, 1)
+        b_rate = results["variant_b"]["successes"] / max(b_total, 1)
+
+        results["winner"] = "A" if a_rate > b_rate else "B" if b_rate > a_rate else "TIE"
+        results["confidence"] = abs(a_rate - b_rate) / max(a_rate + b_rate, 0.001)
+
+        # Statistical significance testing
+        try:
+            if results["variant_a"]["scores"] and results["variant_b"]["scores"]:
+                n_a = len(results["variant_a"]["scores"])
+                n_b = len(results["variant_b"]["scores"])
+                mean_a = sum(results["variant_a"]["scores"]) / n_a
+                mean_b = sum(results["variant_b"]["scores"]) / n_b
+                var_a = sum((x - mean_a) ** 2 for x in results["variant_a"]["scores"]) / max(n_a - 1, 1)
+                var_b = sum((x - mean_b) ** 2 for x in results["variant_b"]["scores"]) / max(n_b - 1, 1)
+                pooled_se = ((var_a / n_a) + (var_b / n_b)) ** 0.5
+                if pooled_se > 0:
+                    t_stat = (mean_a - mean_b) / pooled_se
+                    df = n_a + n_b - 2
+                    p_value = self._t_test_p_value(t_stat, df)
+                    results["p_value"] = p_value
+                    results["statistical_test"] = {"t_stat": t_stat, "df": df, "p_value": p_value}
+                    results["significant"] = p_value < 0.05
+        except Exception:
+            results["statistical_test"] = {"test": "approx_ci", "p_value": None}
+
         return results
+
+    def _t_test_p_value(self, t_stat: float, df: int) -> float:
+        """Approximate p-value for t-statistic using normal distribution (large sample)."""
+        import math
+        abs_t = abs(t_stat)
+        if abs_t > 5:
+            return 0.0
+        # Normal approximation for t-distribution (acceptable for df > 30)
+        # Two-tailed p-value
+        z = abs_t
+        p = 2 * (1 - self._norm_cdf(z))
+        return min(max(p, 0.0), 1.0)
+
+    def _norm_cdf(self, x: float) -> float:
+        """Standard normal CDF approximation."""
+        import math
+        a1, a2, a3, a4, a5 = 0.254829592, -0.284496736, 1.421413741, -1.453152027, 1.061405429
+        p = 0.3275911
+        sign = 1 if x >= 0 else -1
+        x = abs(x) / math.sqrt(2)
+        t = 1.0 / (1.0 + p * x)
+        y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * math.exp(-x * x)
+        return 0.5 * (1.0 + sign * y)
 
     def create_onboarding_template(self, name: str, steps: List[Dict[str, Any]]) -> None:
         self.onboarding_templates[name] = {
