@@ -2702,6 +2702,7 @@ def main(forced_niche=None, force=False):
     global ai_sql
     secrets = get_secrets()
     ai_sql = create_ai_sql()
+    feedback_loop = create_feedback_loop(ai_sql)
 
     # Load state
     state = load_state()
@@ -2828,6 +2829,13 @@ def main(forced_niche=None, force=False):
     print(f"   Total posts on site: {total}")
     print(f"   Next up: next niche in round-robin")
     print(f"{'='*50}")
+
+    # Close feedback loop after each cycle
+    try:
+        feedback_result = feedback_loop.close_loop()
+        logger.info(f"Feedback loop closed: {feedback_result.get('status', 'ok')}")
+    except Exception as e:
+        logger.warning(f"Feedback loop close failed: {e}")
 
 
 if __name__ == "__main__":

@@ -11,6 +11,11 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 
+try:
+    from src.energy_accounting import energy_accounting
+except Exception:
+    energy_accounting = None
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -302,6 +307,8 @@ class AISQL:
                 result = provider.execute(query_plan)
                 if result.content and result.confidence > 0:
                     logger.info(f"AI SQL query executed via {provider.name}")
+                    if energy_accounting and result.tokens_used:
+                        energy_accounting.record_usage(provider.name, result.tokens_used)
                     return result
                 logger.warning(f"Provider {provider.name} returned empty content, trying next")
             except Exception as e:

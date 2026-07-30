@@ -12,7 +12,7 @@ import os
 import subprocess
 import sys
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
@@ -378,6 +378,34 @@ class AnalyticsEngine:
                 pass
         return metrics
 
+    def get_recent_engagement(self, days: int = 7) -> Dict[str, Any]:
+        """Get engagement data from the last N days."""
+        cutoff = datetime.now() - timedelta(days=days)
+        results = {
+            "by_provider": defaultdict(lambda: {"clicks": 0, "conversions": 0, "scroll_depth": 0, "count": 0}),
+            "total": {"clicks": 0, "conversions": 0, "scroll_depth": 0},
+            "articles": [],
+        }
+        for f in self.data_dir.glob("*.json"):
+            try:
+                data = json.loads(f.read_text(encoding="utf-8"))
+                ts_str = data.get("timestamp", "2000-01-01")
+                timestamp = datetime.fromisoformat(ts_str)
+                if timestamp < cutoff:
+                    continue
+                provider = data.get("provider", "unknown")
+                results["by_provider"][provider]["clicks"] += data.get("clicks", 0)
+                results["by_provider"][provider]["conversions"] += data.get("conversions", 0)
+                results["by_provider"][provider]["scroll_depth"] += data.get("scroll_depth", 0)
+                results["by_provider"][provider]["count"] += 1
+                results["total"]["clicks"] += data.get("clicks", 0)
+                results["total"]["conversions"] += data.get("conversions", 0)
+                results["total"]["scroll_depth"] += data.get("scroll_depth", 0)
+                results["articles"].append(data)
+            except Exception:
+                continue
+        return results
+
 
 class TrainingDataCollector:
     def __init__(self, data_dir: str = "data/training"):
@@ -433,6 +461,7 @@ class ClosedFeedbackLoop:
         self.model_fine_tuner = ModelFineTuner()
         self.deployment_pipeline = DeploymentPipeline()
         self.loop_history: List[Dict[str, Any]] = []
+        self.prompt_optimizer = PromptOptimizer()
 
     def run(self) -> Dict[str, Any]:
         analytics = self.analytics.collect()
