@@ -29,6 +29,7 @@ from src.energy_accounting import energy_accounting
 logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
 
 ai_sql = None  # set by main()
+_knowledge_core = None  # set by main()
 
 # ─── Open Web Ninja Batching & Caching ─────────────────────────
 OWN_CACHE_DIR = Path("data/openweb_cache")
@@ -2105,10 +2106,25 @@ def _track_call(niche: str, provider: str, tokens: int, latency_ms: float = 0.0)
     energy_accounting.record_usage(provider, tokens, latency_ms)
 
 
-def generate_outline(niche, products):
+def generate_outline(niche, products, knowledge_core=None):
     names = json.dumps([p.get("name", "") for p in products[:3]])
+
+    # Build knowledge context
+    knowledge_context = ""
+    if knowledge_core:
+        try:
+            brief = knowledge_core.generate_strategy_brief(niche)
+            insights = brief.get("insights", [])
+            trend = brief.get("trend", "no_data")
+            if insights:
+                knowledge_context = f"\n\n📚 Strategic Insights for {niche} (trend: {trend}):\n" + "\n".join(
+                    f"- {i}" for i in insights[:5]
+                )
+        except Exception:
+            pass
+
     prompt = f"""You are a content strategist planning a buying guide for '{niche}'.
-Products: {names}
+Products: {names}{knowledge_context}
 
 Return a JSON object with:
 - outline: array of H2 section headings (e.g. ["Introduction", "What to Look For", "Product Reviews", "Buying Guide", "FAQ", "Conclusion"])
@@ -2136,17 +2152,31 @@ Return a JSON object with:
     return None
 
 
-def write_draft(niche, products, outline):
+def write_draft(niche, products, outline, knowledge_core=None):
     products_text = json.dumps(products, indent=2)
     post_title = outline.get("post_title", f"Best {niche} — Expert Review")
     meta_desc = outline.get("meta_description", f"Find the best {niche} with our expert guide.")
     angle = outline.get("selected_angle", "problem_solution")
     keyword = outline.get("primary_keyword", f"best {niche}")
     outline_sections = json.dumps(outline.get("outline", []))
+
+    # Inject knowledge core insights if available
+    knowledge_context = ""
+    if knowledge_core:
+        try:
+            brief = knowledge_core.generate_strategy_brief(niche)
+            insights = brief.get("insights", [])
+            if insights:
+                knowledge_context = "\n\n📚 Business Strategy Insights:\n" + "\n".join(
+                    f"- {i}" for i in insights[:5]
+                )
+        except Exception:
+            pass
+
     intro_prompt = f"""Write the introduction for a buying guide titled '{post_title}' about {niche}.
 Angle: {angle}
 Keyword: {keyword}
-Products: {products_text}
+Products: {products_text}{knowledge_context}
 
 Write 2-3 short paragraphs (as HTML) that hook the reader, state the problem, and introduce the solution.
 Return ONLY the HTML paragraphs, wrapped in <p> tags."""
@@ -2165,7 +2195,7 @@ Return ONLY the HTML paragraphs, wrapped in <p> tags."""
 Products: {products_text}
 Outline sections: {outline_sections}
 Angle: {angle}
-Keyword: {keyword}
+Keyword: {keyword}{knowledge_context}
 
 Write the COMPLETE article body as HTML. Follow the outline sections as <h2> headings.
 For each product, include: a brief intro, key features, pros/cons, and a bottom-line recommendation.
@@ -2714,6 +2744,14 @@ def main(forced_niche=None, force=False):
     global ai_sql
     secrets = get_secrets()
     ai_sql = create_ai_sql()
+
+    # Knowledge Core (business book insights)
+    global _knowledge_core
+    library_path = os.environ.get("LIBRARY_PATH", "")
+    if library_path and os.path.exists(library_path):
+        _knowledge_core = create_living_knowledge_core(library_path, watch_folder=False)
+    else:
+        _knowledge_core = None
     feedback_loop = create_feedback_loop(ai_sql)
 
     # Change management setup
@@ -2753,9 +2791,9 @@ def main(forced_niche=None, force=False):
         sys.exit(1)
     print(f"Found {len(products)} products: {[p.get('name','?') for p in products]}")
 
-    # 2. OUTLINE
+    # 2. OUTLINE — enriched with knowledge core insights
     print(f"\n--- OUTLINE: {niche_slug} ---")
-    outline = generate_outline(niche_slug, products)
+    outline = generate_outline(niche_slug, products, _knowledge_core)
     if not outline:
         print("WARNING: Outline failed, using default")
         outline = {"post_title": f"Best {niche_name}", "meta_description": f"Find the best {niche_name}.",
@@ -2763,9 +2801,9 @@ def main(forced_niche=None, force=False):
                    "outline": ["Introduction", "Product Reviews", "Buying Guide", "FAQ", "Conclusion"]}
     print(f"Title: {outline.get('post_title','?')}")
 
-    # 3. DRAFT
+    # 3. DRAFT — enriched with knowledge core insights
     print(f"\n--- DRAFT: {niche_slug} ---")
-    draft = write_draft(niche_slug, products, outline)
+    draft = write_draft(niche_slug, products, outline, _knowledge_core)
     if not draft:
         print("ERROR: Draft failed")
         sys.exit(1)
