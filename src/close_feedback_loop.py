@@ -11,6 +11,7 @@ import logging
 import os
 import subprocess
 import sys
+from collections import defaultdict
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -462,6 +463,10 @@ class ClosedFeedbackLoop:
         self.deployment_pipeline = DeploymentPipeline()
         self.loop_history: List[Dict[str, Any]] = []
         self.prompt_optimizer = PromptOptimizer()
+        self.ai_sql = None
+
+    def set_ai_sql(self, ai_sql) -> None:
+        self.ai_sql = ai_sql
 
     def run(self) -> Dict[str, Any]:
         analytics = self.analytics.collect()
@@ -569,8 +574,12 @@ class ClosedFeedbackLoop:
         }
 
 
-def create_feedback_loop() -> ClosedFeedbackLoop:
-    return ClosedFeedbackLoop()
+def create_feedback_loop(ai_sql=None) -> ClosedFeedbackLoop:
+    """Factory for ClosedFeedbackLoop."""
+    loop = ClosedFeedbackLoop()
+    if ai_sql:
+        loop.set_ai_sql(ai_sql)
+    return loop
 
 
 class PromptOptimizer:

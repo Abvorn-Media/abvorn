@@ -44,6 +44,9 @@ class InfrastructureReporter:
             "timestamp": datetime.now().isoformat(),
         }
         self.cost_by_provider[provider_name] += cost
+        self.latency_by_provider[provider_name] = (
+            self.latency_by_provider.get(provider_name, 0.0) + latency_ms
+        )
         self.cost_by_niche[niche] += cost
         self.total_cost += cost
         self.total_articles += 1
@@ -79,7 +82,7 @@ class InfrastructureReporter:
             "cost_by_niche": dict(self.cost_by_niche),
             "latency_by_provider": {
                 k: round(v, 0)
-                for k, v in self.cost_by_provider.items()
+                for k, v in self.latency_by_provider.items()
             },
         }
 
