@@ -3,7 +3,15 @@
 Reads secrets from env vars (GITHUB_ prefixed) or falls back to secrets.json.
 Picks the niche with fewest posts, generates content, writes to docs/, updates state.
 """
-import os, sys, json, logging, re, html as html_mod, requests as http_requests
+import os
+import logging
+import sys
+import json
+import logging
+import re
+import html as html_mod
+import requests as http_requests
+import time
 import hashlib, time
 from pathlib import Path
 from datetime import datetime
@@ -30,6 +38,7 @@ logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
 
 ai_sql = None  # set by main()
 _knowledge_core = None  # set by main()
+_workflow_engine = None  # set by main()
 
 # ─── Open Web Ninja Batching & Caching ─────────────────────────
 OWN_CACHE_DIR = Path("data/openweb_cache")
@@ -2106,7 +2115,7 @@ def _track_call(niche: str, provider: str, tokens: int, latency_ms: float = 0.0)
     energy_accounting.record_usage(provider, tokens, latency_ms)
 
 
-def generate_outline(niche, products, knowledge_core=None):
+def generate_outline(niche, products, knowledge_core=None, workflow_engine=None):
     names = json.dumps([p.get("name", "") for p in products[:3]])
 
     # Build knowledge context
@@ -2132,11 +2141,22 @@ Return a JSON object with:
 - primary_keyword: the main SEO keyword for this guide
 - post_title: compelling title for the buying guide
 - meta_description: 1-2 sentence SEO description"""
+    # Use workflow config for AI params when available
+    ai_temp = 0.7
+    ai_max_tokens = 500
+    if workflow_engine:
+        wf = workflow_engine.get_workflow_recommendation()
+        if wf and isinstance(wf, dict):
+            ai_temp = wf.get("temperature", 0.7)
+            ai_max_tokens = wf.get("max_tokens", 500)
+        elif wf:
+            ai_temp = getattr(wf, "temperature", 0.7)
+            ai_max_tokens = getattr(wf, "max_tokens", 500)
     t0 = time.time()
     result = ai_sql.query(QueryPlan(
         system_prompt="You are an expert content strategist returning structured JSON data.",
         user_prompt=prompt,
-        params={"temperature": 0.7, "max_tokens": 500, "format": "json"},
+        params={"temperature": ai_temp, "max_tokens": ai_max_tokens, "format": "json"},
     ))
     result_text = result.content
     _track_call(niche, result.provider_used, result.tokens_used, (time.time() - t0) * 1000)
@@ -2152,7 +2172,7 @@ Return a JSON object with:
     return None
 
 
-def write_draft(niche, products, outline, knowledge_core=None):
+def write_draft(niche, products, outline, knowledge_core=None, workflow_engine=None):
     products_text = json.dumps(products, indent=2)
     post_title = outline.get("post_title", f"Best {niche} — Expert Review")
     meta_desc = outline.get("meta_description", f"Find the best {niche} with our expert guide.")
@@ -2173,6 +2193,21 @@ def write_draft(niche, products, outline, knowledge_core=None):
         except Exception:
             pass
 
+    # Use workflow config for AI params when available
+    ai_temp = 0.7
+    ai_max_tokens_intro = 500
+    ai_max_tokens_article = 2000
+    if workflow_engine:
+        wf = workflow_engine.get_workflow_recommendation()
+        if wf and isinstance(wf, dict):
+            ai_temp = wf.get("temperature", 0.7)
+            ai_max_tokens_intro = wf.get("max_tokens", 500)
+            ai_max_tokens_article = wf.get("max_tokens", 2000)
+        elif wf:
+            ai_temp = getattr(wf, "temperature", 0.7)
+            ai_max_tokens_intro = getattr(wf, "max_tokens", 500)
+            ai_max_tokens_article = getattr(wf, "max_tokens", 2000)
+
     intro_prompt = f"""Write the introduction for a buying guide titled '{post_title}' about {niche}.
 Angle: {angle}
 Keyword: {keyword}
@@ -2184,7 +2219,7 @@ Return ONLY the HTML paragraphs, wrapped in <p> tags."""
     intro_result = ai_sql.query(QueryPlan(
         system_prompt="You write concise, honest product review copy.",
         user_prompt=intro_prompt,
-        params={"temperature": 0.7, "max_tokens": 500},
+        params={"temperature": ai_temp, "max_tokens": ai_max_tokens_intro},
     ))
     intro_html = intro_result.content
     _track_call(niche, intro_result.provider_used, intro_result.tokens_used, (time.time() - t0) * 1000)
@@ -2206,7 +2241,7 @@ Return ONLY the HTML."""
     article_result = ai_sql.query(QueryPlan(
         system_prompt="You write thorough, honest product reviews with specific details and real prices.",
         user_prompt=article_prompt,
-        params={"temperature": 0.7, "max_tokens": 2000},
+        params={"temperature": ai_temp, "max_tokens": ai_max_tokens_article},
     ))
     article_html = article_result.content
     _track_call(niche, article_result.provider_used, article_result.tokens_used, (time.time() - t0) * 1000)
@@ -2752,6 +2787,11 @@ def main(forced_niche=None, force=False):
         _knowledge_core = create_living_knowledge_core(library_path, watch_folder=False)
     else:
         _knowledge_core = None
+
+    # Workflow Engine — selects optimal config per cycle
+    global _workflow_engine
+    _workflow_engine = create_workflow_engine()
+    logger.info(f"Workflow engine ready: {list(_workflow_engine.workflows.keys())}")
     feedback_loop = create_feedback_loop(ai_sql)
 
     # Change management setup
@@ -2793,7 +2833,7 @@ def main(forced_niche=None, force=False):
 
     # 2. OUTLINE — enriched with knowledge core insights
     print(f"\n--- OUTLINE: {niche_slug} ---")
-    outline = generate_outline(niche_slug, products, _knowledge_core)
+    outline = generate_outline(niche_slug, products, _knowledge_core, _workflow_engine)
     if not outline:
         print("WARNING: Outline failed, using default")
         outline = {"post_title": f"Best {niche_name}", "meta_description": f"Find the best {niche_name}.",
@@ -2803,7 +2843,7 @@ def main(forced_niche=None, force=False):
 
     # 3. DRAFT — enriched with knowledge core insights
     print(f"\n--- DRAFT: {niche_slug} ---")
-    draft = write_draft(niche_slug, products, outline, _knowledge_core)
+    draft = write_draft(niche_slug, products, outline, _knowledge_core, _workflow_engine)
     if not draft:
         print("ERROR: Draft failed")
         sys.exit(1)
