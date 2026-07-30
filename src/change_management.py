@@ -63,6 +63,7 @@ class ChangeManager:
         self.feature_flags: Dict[str, bool] = {}
         self.onboarding_templates: Dict[str, Dict] = {}
         self.metrics: Dict[str, List[float]] = defaultdict(list)
+        self._ab_results: List[Dict[str, Any]] = []
 
     def create_change(self, name: str, change_type: ChangeType, description: str) -> Change:
         change_id = f"change_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hashlib.md5(name.encode()).hexdigest()[:8]}"
@@ -202,6 +203,7 @@ class ChangeManager:
         except Exception:
             results["statistical_test"] = {"test": "approx_ci", "p_value": None}
 
+        self._ab_results.append(results)
         return results
 
     def _t_test_p_value(self, t_stat: float, df: int) -> float:

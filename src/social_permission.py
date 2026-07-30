@@ -161,12 +161,27 @@ ACTIONS = {
 
 
 class SocialPermissionFramework:
-    def __init__(self, data_dir: str = "data/social_permission", nervous_system=None):
+    def __init__(self, data_dir: str = "data/social_permission", nervous_system=None, energy_accounting=None):
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.nervous_system = nervous_system
+        self.energy_accounting = energy_accounting
         self.history: List[Dict[str, Any]] = []
         self.action_log: List[Dict[str, Any]] = []
+
+    def _apply_carbon_adjustment(self, score: float, metrics: Dict[str, Any] = None) -> float:
+        if not self.energy_accounting:
+            return score
+        try:
+            report = self.energy_accounting.get_report()
+            total_co2 = report.get("total_co2_g", 0)
+            carbon_factor = max(0.0, 1.0 - (total_co2 / 100.0))
+            economic = (metrics or {}).get("economic_surplus", score * 0.4)
+            engagement = (metrics or {}).get("user_engagement", score * 0.3)
+            trust = (metrics or {}).get("trust_score", score * 0.3)
+            return (economic * 0.4 + engagement * 0.3 + trust * 0.3) * carbon_factor
+        except Exception:
+            return score
 
     def act(
         self, score: float, surplus_data: Dict[str, Any] = None, metrics: Dict[str, Any] = None
@@ -182,6 +197,7 @@ class SocialPermissionFramework:
         Returns:
             Dict with actions taken, level, and recommendations
         """
+        score = self._apply_carbon_adjustment(score, metrics)
         level = THRESHOLDS.get_level(score)
         actions = ACTIONS.get(level, [])
         executed_actions: List[Dict[str, Any]] = []

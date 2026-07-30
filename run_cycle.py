@@ -34,6 +34,8 @@ from src.workflow_engine import WorkflowEngine, create_workflow_engine
 from src.social_permission import SocialPermissionFramework, create_social_permission_framework
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
+from src.content_generation import generate_outline, write_draft
+from src.deployment import build_homepage, push_single_file, deploy_single_page
 
 logger = logging.getLogger("run_cycle")
 logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
@@ -1136,111 +1138,6 @@ def render_footer_social():
     )
 
 
-def build_homepage(state, form_url=""):
-    """Build the premium homepage with hero slider, stats, and category sections."""
-    niches = sorted(state["niches"], key=lambda n: n["name"].lower())
-    all_slugs = sorted([n["slug"] for n in niches], key=lambda s: _slugify_title(s).lower())
-    b = SITE_BASE
-    total_posts = sum(n["posts"] for n in niches)
-    total_products = total_posts * 3  # rough estimate
-
-    # Build nav dropdown
-    nav_dd = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
-
-    # Build hero slides
-    hero_slides = ""
-    hero_dots = ""
-    hero_candidates = []
-    for n in reversed(niches):
-        if len(hero_candidates) >= 5:
-            break
-        img = carousel_img(n["slug"], b)
-        hero_candidates.append((img, n["name"], n["slug"]))
-    if not hero_candidates:
-        hero_candidates.append((f"{b}/assets/hero-home.svg", "Reviews", "coming-soon"))
-    for i, (img, name, slug) in enumerate(hero_candidates):
-        active = " active" if i == 0 else ""
-        hero_slides += f'<div class="hero-slide{active}"><img src="{img}" alt="{name}"><figcaption>{name} reviews — expert tested</figcaption></div>'
-        hero_dots += f'<button class="hero-slider__dot{active}" aria-label="Show {name}" aria-current="{"true" if i == 0 else "false"}"></button>'
-
-    # Build latest review cards — exactly 3
-    latest_cards = ""
-    card_count = 0
-    for n in niches:
-        if not n["posts"]:
-            continue
-        if card_count >= 3:
-            break
-        latest_cards += f'''<div class="niche-card">
-    <a href="{b}/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
-    <h2><a href="{b}/{n["slug"]}/">{n["name"]}</a></h2>
-    <p>{n["posts"]} expert-reviewed guide{"s" if n["posts"] > 1 else ""} with real testing results.</p>
-    <a href="{b}/{n["slug"]}/" class="read-link">Continue reading →</a>
-</div>'''
-        card_count += 1
-
-    # Build category sections with posts — groups of 4, first visible
-    cat_groups = []
-    group_buffer = ""
-    group_count = 0
-    for n in niches:
-        if not n["posts"]:
-            continue
-        card = f'''<div class="niche-card">
-    <a href="{b}/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
-    <h2><a href="{b}/{n["slug"]}/">{n["name"]}</a></h2>
-    <p>{n["posts"]} expert-reviewed guide{"s" if n["posts"] > 1 else ""} with real testing results.</p>
-    <a href="{b}/{n["slug"]}/" class="read-link">Continue reading →</a>
-</div>'''
-        section = f'''<div class="category-section">
-    <div class="category-section__header"><h2>{n["name"]}</h2><a href="{b}/{n["slug"]}/">View all in {n["name"]} →</a></div>
-    <div class="niche-grid">{card}</div>
-</div>'''
-        group_buffer += section
-        group_count += 1
-        if group_count % 4 == 0:
-            cat_groups.append(group_buffer)
-            group_buffer = ""
-    if group_buffer:
-        cat_groups.append(group_buffer)
-
-    cat_sections = ""
-    for i, group in enumerate(cat_groups):
-        cls = " visible" if i == 0 else ""
-        cat_sections += f'<div class="category-group{cls}">{group}</div>'
-
-    if len(cat_groups) > 1:
-        cat_sections += f'''<div style="text-align:center">
-    <button class="show-more-btn">View more categories<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
-</div>'''
-
-    # Trending ticker items text
-    ticker_items = " · ".join(
-        f'<a href="{b}/{n["slug"]}/" class="trending-ticker__item">{n["name"]}</a>'
-        for n in niches if n["posts"]
-    )
-
-    # Footer
-    footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
-    footer_social = render_footer_social()
-
-    html = HOMEPAGE_TEMPLATE
-    html = html.replace("__SITE_BASE__", b)
-    html = html.replace("CATEGORY_DROPDOWN_PLACEHOLDER", nav_dd)
-    html = html.replace("HERO_SLIDES_PLACEHOLDER", hero_slides)
-    html = html.replace("HERO_DOTS_PLACEHOLDER", hero_dots)
-    html = html.replace("STAT_GUIDES_COUNT", str(total_posts))
-    html = html.replace("STAT_CATEGORIES_COUNT", str(len(niches)))
-    html = html.replace("STAT_PRODUCTS_COUNT", str(total_products))
-    html = html.replace("LATEST_UPDATES_PLACEHOLDER", ticker_items if ticker_items else "No reviews yet")
-    html = html.replace("LATEST_REVIEWS_PLACEHOLDER", latest_cards if latest_cards else '<p style="grid-column:1/-1;text-align:center;color:#888;padding:40px 0">More guides on the way.</p>')
-    html = html.replace("CATEGORY_SECTIONS_PLACEHOLDER", cat_sections if cat_sections else '<div class="category-section"><div class="niche-card"><div class="niche-card__image-wrapper"><img src="' + b + '/assets/hero-home.svg" alt="Coming soon"></div><div class="niche-card__body"><h2>Our first guide is in testing</h2><p>Check back shortly for hands-on reviews.</p></div></div></div>')
-    html = html.replace("FOOTER_SOCIAL_PLACEHOLDER", footer_social)
-    html = html.replace("FOOTER_CATEGORY_LINKS_PLACEHOLDER", footer_cats)
-    html = html.replace("__APPS_SCRIPT_URL__", form_url)
-    html = html.replace("YEAR_PLACEHOLDER", str(datetime.now().year))
-    return html
-
 
 def carousel_img(niche_slug, b):
     """Pick real hero JPG if uploaded, else fall back to generated SVG."""
@@ -2133,168 +2030,6 @@ def fetch_social_sentiment(niche_name: str, limit_per_platform: int = 5) -> Dict
         return {}
 
 
-def generate_outline(niche, products, knowledge_core=None, workflow_engine=None, social_data=None):
-    names = json.dumps([p.get("name", "") for p in products[:3]])
-
-    # Build knowledge context
-    knowledge_context = ""
-    if knowledge_core:
-        try:
-            brief = knowledge_core.generate_strategy_brief(niche)
-            insights = brief.get("insights", [])
-            trend = brief.get("trend", "no_data")
-            if insights:
-                knowledge_context = f"\n\n📚 Strategic Insights for {niche} (trend: {trend}):\n" + "\n".join(
-                    f"- {i}" for i in insights[:5]
-                )
-        except Exception:
-            pass
-
-    # Build social sentiment context
-    social_context = ""
-    if social_data:
-        parts = []
-        for platform, items in social_data.items():
-            if isinstance(items, list) and items:
-                samples = items[:3]
-                parts.append(f"{platform}:\n" + "\n".join(
-                    f"- {item.get('text', item.get('title', ''))[:100]}"
-                    for item in samples
-                ))
-        if parts:
-            social_context = "\n\n💬 Real-Time Social Sentiment:\n" + "\n\n".join(parts)
-
-    prompt = f"""You are a content strategist planning a buying guide for '{niche}'.
-Products: {names}{knowledge_context}{social_context}
-
-Return a JSON object with:
-- outline: array of H2 section headings (e.g. ["Introduction", "What to Look For", "Product Reviews", "Buying Guide", "FAQ", "Conclusion"])
-- selected_angle: one of: problem_solution, comparison, how_to, listicle, deep_dive, objection_buster
-- primary_keyword: the main SEO keyword for this guide
-- post_title: compelling title for the buying guide
-- meta_description: 1-2 sentence SEO description"""
-    # Use workflow config for AI params when available
-    ai_temp = 0.7
-    ai_max_tokens = 500
-    if workflow_engine:
-        wf = workflow_engine.workflows.get("quality")
-        if wf:
-            ai_temp = wf.temperature
-            ai_max_tokens = wf.max_tokens
-    t0 = time.time()
-    result = ai_sql.query(QueryPlan(
-        system_prompt="You are an expert content strategist returning structured JSON data.",
-        user_prompt=prompt,
-        params={"temperature": ai_temp, "max_tokens": ai_max_tokens, "format": "json"},
-    ))
-    result_text = result.content
-    _track_call(niche, result.provider_used, result.tokens_used, (time.time() - t0) * 1000)
-    if not result_text:
-        return None
-    try:
-        return json.loads(result)
-    except:
-        m = re.search(r'\{.*\}', result, re.DOTALL)
-        if m:
-            try: return json.loads(m.group(0))
-            except: pass
-    return None
-
-
-def write_draft(niche, products, outline, knowledge_core=None, workflow_engine=None, social_data=None):
-    products_text = json.dumps(products, indent=2)
-    post_title = outline.get("post_title", f"Best {niche} — Expert Review")
-    meta_desc = outline.get("meta_description", f"Find the best {niche} with our expert guide.")
-    angle = outline.get("selected_angle", "problem_solution")
-    keyword = outline.get("primary_keyword", f"best {niche}")
-    outline_sections = json.dumps(outline.get("outline", []))
-
-    # Inject knowledge core insights if available
-    knowledge_context = ""
-    if knowledge_core:
-        try:
-            brief = knowledge_core.generate_strategy_brief(niche)
-            insights = brief.get("insights", [])
-            if insights:
-                knowledge_context = "\n\n📚 Business Strategy Insights:\n" + "\n".join(
-                    f"- {i}" for i in insights[:5]
-                )
-        except Exception:
-            pass
-
-    # Inject social sentiment data if available
-    social_context = ""
-    if social_data:
-        parts = []
-        for platform, items in social_data.items():
-            if isinstance(items, list) and items:
-                samples = items[:3]
-                parts.append(f"{platform}:\n" + "\n".join(
-                    f"- {item.get('text', item.get('title', ''))[:100]}"
-                    for item in samples
-                ))
-        if parts:
-            social_context = "\n\n💬 Real-Time Social Sentiment:\n" + "\n\n".join(parts)
-
-    # Use workflow config for AI params when available
-    ai_temp = 0.7
-    ai_max_tokens_intro = 500
-    ai_max_tokens_article = 2000
-    if workflow_engine:
-        wf = workflow_engine.workflows.get("quality")
-        if wf:
-            ai_temp = wf.temperature
-            ai_max_tokens_intro = wf.max_tokens
-            ai_max_tokens_article = wf.max_tokens
-
-    intro_prompt = f"""Write the introduction for a buying guide titled '{post_title}' about {niche}.
-Angle: {angle}
-Keyword: {keyword}
-Products: {products_text}{knowledge_context}{social_context}
-
-Write 2-3 short paragraphs (as HTML) that hook the reader, state the problem, and introduce the solution.
-Return ONLY the HTML paragraphs, wrapped in <p> tags."""
-    t0 = time.time()
-    intro_result = ai_sql.query(QueryPlan(
-        system_prompt="You write concise, honest product review copy.",
-        user_prompt=intro_prompt,
-        params={"temperature": ai_temp, "max_tokens": ai_max_tokens_intro},
-    ))
-    intro_html = intro_result.content
-    _track_call(niche, intro_result.provider_used, intro_result.tokens_used, (time.time() - t0) * 1000)
-    if not intro_html:
-        intro_html = "<p>We tested the top products to find the ones worth your money.</p>"
-
-    article_prompt = f"""Write the full article body for '{post_title}' about {niche}.
-Products: {products_text}
-Outline sections: {outline_sections}
-Angle: {angle}
-Keyword: {keyword}{knowledge_context}{social_context}
-
-Write the COMPLETE article body as HTML. Follow the outline sections as <h2> headings.
-For each product, include: a brief intro, key features, pros/cons, and a bottom-line recommendation.
-Use <p> for paragraphs, <ul>/<li> for lists, <strong> for emphasis.
-Be honest, specific (use real prices/numbers), and scannable.
-Return ONLY the HTML."""
-    t0 = time.time()
-    article_result = ai_sql.query(QueryPlan(
-        system_prompt="You write thorough, honest product reviews with specific details and real prices.",
-        user_prompt=article_prompt,
-        params={"temperature": ai_temp, "max_tokens": ai_max_tokens_article},
-    ))
-    article_html = article_result.content
-    _track_call(niche, article_result.provider_used, article_result.tokens_used, (time.time() - t0) * 1000)
-    if not article_html:
-        article_html = "<p>We're reviewing the top products in this category.</p>"
-
-    return {
-        "post_title": post_title,
-        "meta_description": meta_desc,
-        "intro": intro_html,
-        "article_html": article_html,
-        "product_name": products[0].get("name", ""),
-        "products": products,
-    }
 
 
 def build_methodology_page(all_slugs, form_url=""):
@@ -3098,7 +2833,7 @@ def main(forced_niche=None, force=False, batch_mode=False):
         surplus = surplus_tracker.measure()
         print(f"  Economic surplus score: {surplus.get('social_permission_score', 0):.2f}")
         nervous = create_nervous_system()
-        social_perm = create_social_permission_framework(nervous_system=nervous)
+        social_perm = create_social_permission_framework(nervous_system=nervous, energy_accounting=energy_accounting)
         metrics = {
             'economic_surplus': surplus.get('total_profit', 0) / max(surplus.get('total_revenue', 1), 1),
             'user_engagement': state.get('engagement_avg', 0.5),
@@ -3145,6 +2880,22 @@ def main(forced_niche=None, force=False, batch_mode=False):
     # Mark cycle change as complete
     if "change_id" in dir():
         change_mgr.promote_change(change_id, ChangeStatus.PRODUCTION)
+
+    # Ingest any A/B test results from the change manager into the feedback loop
+    try:
+        ab_results = getattr(change_mgr, "_ab_results", [])
+        if ab_results:
+            latest = ab_results[-1]
+            feedback_loop.ingest_ab_test_results(
+                test_name=latest.get("test_name", ""),
+                winner=latest.get("winner", "A"),
+                metrics={
+                    "confidence": latest.get("confidence", 0.0),
+                    "significant": latest.get("significant", False),
+                },
+            )
+    except Exception as e:
+        logger.warning(f"A/B test ingestion skipped: {e}")
 
 
 if __name__ == "__main__":

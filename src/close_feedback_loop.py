@@ -464,6 +464,34 @@ class ClosedFeedbackLoop:
         self.loop_history: List[Dict[str, Any]] = []
         self.prompt_optimizer = PromptOptimizer()
         self.ai_sql = None
+        self.ab_test_history: List[Dict[str, Any]] = []
+        self.state_file = Path("data/feedback_loop_state.json")
+
+    def ingest_ab_test_results(self, test_name: str, winner: str, metrics: Dict[str, Any]) -> Dict[str, Any]:
+        entry = {
+            "test_name": test_name,
+            "winner": winner,
+            "metrics": metrics,
+            "timestamp": datetime.now().isoformat(),
+        }
+        self.ab_test_history.append(entry)
+        if winner == "A":
+            self.prompt_optimizer.set_variant("variant_a")
+        else:
+            self.prompt_optimizer.set_variant("variant_b")
+        try:
+            self.state_file.parent.mkdir(parents=True, exist_ok=True)
+            existing = []
+            if self.state_file.exists():
+                existing = json.loads(self.state_file.read_text())
+            existing.append(entry)
+            self.state_file.write_text(json.dumps(existing, indent=2, default=str))
+        except Exception:
+            pass
+        return entry
+
+    def get_ab_history(self) -> List[Dict[str, Any]]:
+        return list(self.ab_test_history)
 
     def set_ai_sql(self, ai_sql) -> None:
         self.ai_sql = ai_sql
@@ -604,6 +632,7 @@ def create_feedback_loop(ai_sql=None) -> ClosedFeedbackLoop:
 class PromptOptimizer:
     def __init__(self):
         self.prompt_variants: Dict[str, Dict[str, Any]] = {}
+        self.active_variant: Optional[str] = None
 
     def log_variant(self, variant_id: str, system_prompt: str, user_prompt: str, engagement_score: float):
         self.prompt_variants[variant_id] = {
@@ -621,6 +650,14 @@ class PromptOptimizer:
 
     def get_all_variants(self) -> Dict[str, Dict[str, Any]]:
         return dict(self.prompt_variants)
+
+    def set_variant(self, variant_id: str) -> None:
+        if variant_id not in self.prompt_variants:
+            raise KeyError(f"Variant '{variant_id}' not found in prompt_variants")
+        self.active_variant = variant_id
+
+    def get_active_variant(self) -> Optional[str]:
+        return getattr(self, "active_variant", None)
 
 
 if __name__ == "__main__":

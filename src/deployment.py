@@ -12,10 +12,41 @@ from github import Github, Auth, InputGitTreeElement
 
 logger = logging.getLogger(__name__)
 
-"""deployment.py — Deployment functions for Abvorn.
+# Helpers shared with run_cycle.py
+SITE_BASE = "https://abvorn-media.github.io/abvorn"
 
-All functions that deploy pages to GitHub live here.
-"""
+
+def _slugify_title(s):
+    """Convert a slug to a readable category name."""
+    return s.replace("-", " ").title()
+
+
+def carousel_img(niche_slug, b):
+    """Pick real hero JPG if uploaded, else fall back to generated SVG."""
+    hero_path = f"docs/assets/hero/{niche_slug}.jpg"
+    if os.path.exists(hero_path):
+        return f"{b}/assets/hero/{niche_slug}.jpg"
+    return f"{b}/assets/{niche_slug}.svg"
+
+
+def HEAD_HTML(title, description):
+    return f"""<title>{title}</title><meta name="description" content="{description}">"""
+
+
+def OG_META(title, description, url):
+    return f"""<meta property="og:title" content="{title}"><meta property="og:description" content="{description}"><meta property="og:url" content="{url}">"""
+
+
+ANALYTICS_HTML = ""
+
+
+CSS_SHARED = """"""
+
+
+FOOTER_HTML = ""
+
+
+# Duplicate docstring/imports cleanup
 import json
 import logging
 from pathlib import Path
@@ -23,8 +54,6 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 logger = logging.getLogger(__name__)
-
-
 
 
 def push_single_file(path: str, content: str) -> None:
