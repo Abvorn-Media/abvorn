@@ -187,7 +187,7 @@ class AbvornVerdictEngine:
         best = max(weights, key=lambda c: scores.get(c, 0))
         worst = min(weights, key=lambda c: scores.get(c, 0))
         summary = self._summary(product_data, weights[best]["label"], weights[worst]["label"])
-        summary = _humanizer.humanize_summary(summary, "verdict")
+        summary = _humanizer.humanize_verdict_summary(summary)
 
         breakdown = {}
         for cat in weights:

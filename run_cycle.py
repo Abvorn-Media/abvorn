@@ -162,7 +162,7 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
     # Product image: Amazon image > Pexels > gradient placeholder
     img = ""
     if product_image:
-        img = f'<img src="{product_image}" alt="{html_mod.escape(name)}" loading="lazy" style="width:160px;height:160px;object-fit:contain;background:#fff;border-radius:var(--radius-sm)">'
+        img = f'<img src="{product_image}" alt="{html_mod.escape(name)}" loading="lazy" style="width:100px;height:100px;object-fit:contain;background:var(--clr-white);border-radius:var(--radius-sm)">'
     elif pexels_key:
         img_url = fetch_product_image(name, pexels_key)
         if img_url:
@@ -1379,7 +1379,7 @@ async function submitCategorySubscribe(e) {{
 
 SHARE_HTML_T = """<div class="share-buttons" style="display:flex;gap:8px;margin:32px 0;padding-top:24px;border-top:1px solid var(--border);align-items:center;flex-wrap:wrap">
 <span style="font-size:.85rem;font-weight:600;color:var(--text-secondary);margin-right:8px">Share:</span>
-<a href="https://twitter.com/intent/tweet?text=TITLE_T&url=URL_T&via=Abvorn" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem;color:var(--text-secondary);text-decoration:none;transition:all .15s" aria-label="Share on X"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> X</a>
+<a href="https://twitter.com/intent/tweet?text=TITLE_T&url=URL_T&via=Abvorn" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem;color:var(--text-secondary);text-decoration:none;transition:all .15s" aria-label="Share on X"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
 <a href="https://www.facebook.com/sharer/sharer.php?u=URL_T" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem;color:var(--text-secondary);text-decoration:none;transition:all .15s" aria-label="Share on Facebook"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg> Facebook</a>
 <a href="https://pinterest.com/pin/create/button/?url=URL_T&description=TITLE_T" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem;color:var(--text-secondary);text-decoration:none;transition:all .15s" aria-label="Share on Pinterest"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146 1.124.347 2.317.535 3.554.535 6.607 0 11.974-5.367 11.974-11.987C23.97 5.367 18.603.001 12.017.001z"/></svg> Pinterest</a>
 <a href="mailto:?subject=TITLE_T&body=URL_T" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem;color:var(--text-secondary);text-decoration:none;transition:all .15s" aria-label="Share via Email"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg> Email</a>
@@ -1542,17 +1542,17 @@ renderRPS(regret,primaryProduct.name,rpsData.products);
 </script>"""
 
 
-def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None):
+def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None, published_date=None, updated_date=None):
     b = SITE_BASE
     t = amazon_tag or os.environ.get("AMAZON_TAG", "viraltestco-20")
     article_url = f"{_SITE_URL}/reviews/{niche_slug}/"
     share = SHARE_HTML_T.replace("TITLE_T", html_mod.escape(post_title)).replace("URL_T", article_url)
     product_cards = ""
     if products:
-        product_cards = '<section class="section"><div class="container"><div class="section-title">Products Mentioned</div>'
+        product_cards = '<section class="section"><div class="container"><div class="section-title">Products Mentioned</div><div class="product-section">'
         for prod in products:
             product_cards += product_card_html(prod, pexels_key, t)
-        product_cards += "</div></section>"
+        product_cards += "</div></div></section>"
     cta = CTA_BANNER.replace("{query}", niche_slug.replace("-", "+")).replace("{tag}", t)
     matrix_rows = ""
     if products:
@@ -1563,19 +1563,67 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             matrix_rows += f"<tr><td>{uc}</td><td>{html_mod.escape(prod.get('name','Product'))}</td><td>{html_mod.escape(why)}</td></tr>"
     matrix_html = f'<div class="decision-matrix"><table><thead><tr><th>Use Case</th><th>Product</th><th>Why</th></tr></thead><tbody>{matrix_rows}</tbody></table></div>' if matrix_rows else ""
     verdict_html = ""
+    hero_img_html = ""
+    verdict_chart_data = {"overall": 0, "label": "", "breakdown": {}, "productName": product_name}
     if products and len(products) > 0:
         p0 = products[0]
         p0_url = p0.get("url", "")
         p0_aff = affiliate_url(p0_url, t) if p0_url else f"https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}"
         # Abvorn Verdict Engine — score the product
         try:
-            from abvorn.core.verdict import AbvornVerdictEngine, render_verdict_card
+            from abvorn.core.verdict import AbvornVerdictEngine
             engine = AbvornVerdictEngine()
             verdict = engine.score_product(niche_slug, p0)
             detail_url = f"{b}/reviews/{niche_slug}/"
             verdict_html = render_verdict_card(verdict, html_mod.escape(p0.get('name', product_name)), p0_aff, detail_url)
         except Exception:
             verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(p0.get('name', product_name))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="{p0_aff}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
+            verdict = None
+        # Build verdict data JSON for the radar chart
+        verdict_chart_data = {}
+        if verdict and "breakdown" in verdict:
+            verdict_chart_data = {
+                "overall": verdict.get("overall", 0),
+                "label": verdict.get("label", ""),
+                "breakdown": verdict["breakdown"],
+                "productName": p0.get("name", product_name)
+            }
+        elif products and len(products) > 0:
+            # Fallback: estimate from product data
+            from abvorn.core.verdict import CATEGORY_WEIGHTS, FALLBACK_WEIGHTS
+            weights = CATEGORY_WEIGHTS.get(niche_slug, FALLBACK_WEIGHTS)
+            desc_text = (p0.get("description","") + " " + " ".join(p0.get("features",[]))).lower()
+            price_str = str(p0.get("price","0"))
+            import re as _re
+            p_match = _re.search(r"(\d+\.?\d*)", price_str.replace(",",""))
+            est_price = float(p_match.group(1)) if p_match else 0
+            breakdown = {}
+            for cat_key, cfg in weights.items():
+                score = 7.0
+                label = cfg["label"]
+                if cat_key == "value":
+                    if est_price == 0: score = 5.0
+                    elif est_price < 50: score = 8.0
+                    elif est_price < 100: score = 7.0
+                    else: score = 6.0
+                elif "battery" in cat_key or "battery" in label.lower():
+                    if "battery" in desc_text or "hour" in desc_text: score = 7.5
+                elif "sound" in cat_key or "sound" in label.lower() or "audio" in label.lower():
+                    if "sound" in desc_text or "audio" in desc_text or "bass" in desc_text: score = 7.5
+                elif "comfort" in cat_key or "comfort" in label.lower() or "fit" in label.lower():
+                    if "comfort" in desc_text or "fit" in desc_text or "ergo" in desc_text: score = 7.5
+                elif "feature" in cat_key or "feature" in label.lower():
+                    feat_count = len(p0.get("features", []))
+                    score = min(9.0, 5.0 + feat_count)
+                breakdown[label] = score
+            overall = sum(breakdown.values()) / len(breakdown) if breakdown else 7.0
+            verdict_chart_data = {"overall": round(overall, 1), "label": "", "breakdown": breakdown, "productName": p0.get("name", product_name)}
+        # Build hero image from hero_img or first product
+        if hero_img:
+            hero_img_html = hero_img
+        elif p0.get("image"):
+            hero_img_html = f'<img src="{html_mod.escape(p0["image"])}" alt="{html_mod.escape(p0.get("name", product_name))}" loading="eager">'
+    verdict_json = html_mod.escape(json.dumps(verdict_chart_data))
     bread = breadcrumb_schema([
         ("Abvorn", "/"),
         (f"Best {niche_name}", f"/{niche_slug}/"),
@@ -1617,6 +1665,13 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         {cta}
         {matrix_html}
         {verdict_html}
+        <div class="chart-section">
+            <h3 class="section-title">Performance Breakdown</h3>
+            <div class="chart-wrapper">
+                <canvas id="verdictChart"></canvas>
+            </div>
+            <p class="chart-note">Scores out of 10. Based on the Abvorn Verdict Engine.</p>
+        </div>
         {intro}
         {article_html}
         <div class="reactions-bar">
@@ -1636,6 +1691,9 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         )
 
     year_str = str(datetime.now().year)
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    pub_date = published_date or today_str
+    upd_date = updated_date or today_str
     title_escaped = html_mod.escape(post_title)
     meta_escaped = html_mod.escape(meta_desc)[:160]
     name_escaped = html_mod.escape(niche_name)
@@ -1654,6 +1712,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     <link rel="preconnect" href="https://m.media-amazon.com">
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {bread}
     <script id="abvorn-rps-data" type="application/json">{rps_json}</script>
     <style>
@@ -1689,12 +1748,23 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             .nav-dropdown a:hover {{ background:transparent; color:#fff; }}
         }}
 
-        /* ===== ORIGINAL BLOG LAYOUT (preserved) ===== */
-        .post-hero {{ background:var(--clr-off-white); padding: var(--space-2xl) 0; border-bottom:1px solid var(--clr-light-gray); }}
-        .post-hero__category {{ display:inline-block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-accent-text); margin-bottom:var(--space-sm); }}
-        .post-hero h1 {{ font-size:clamp(var(--text-2xl), 4vw, var(--text-4xl)); margin-bottom:var(--space-sm); }}
-        .post-hero .meta {{ font-size:0.85rem; color:var(--clr-mid-gray); }}
-        .post-hero .excerpt {{ font-size:var(--text-lg); color:var(--clr-mid-gray); max-width:50ch; margin-top:var(--space-md); }}
+        /* ===== ARTICLE HERO (dark bg, product image, chart bars) ===== */
+        .article-hero {{ background:#0a0a0a; color:#fff; padding: var(--space-2xl) 0; }}
+        .article-hero .hero-grid {{ display:grid; grid-template-columns:1fr 1fr; gap: var(--space-xl); align-items:center; }}
+        .article-hero .hero-category {{ display:inline-block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-accent); margin-bottom:var(--space-sm); }}
+        .article-hero h1 {{ font-size:clamp(var(--text-2xl), 4vw, var(--text-4xl)); margin-bottom:var(--space-sm); color:#fff; }}
+        .article-hero .meta {{ font-size:0.85rem; color:#999; }}
+        .article-hero .meta .published-date, .article-hero .meta .updated-date {{ display:inline-block; font-size:0.75rem; color:var(--clr-mid-gray); background:var(--clr-off-white); padding:2px 10px; border-radius:var(--radius-sm); margin-left:6px; }}
+        .article-hero .meta .updated-date {{ background:var(--clr-accent); color:#1a1200; font-weight:600; }}
+        .article-hero .excerpt {{ font-size:var(--text-lg); color:#ccc; max-width:50ch; margin-top:var(--space-md); }}
+        .hero-image-wrapper {{ position:relative; border-radius:var(--radius-md); overflow:hidden; background:#1a1a1a; display:flex; align-items:center; justify-content:center; min-height:260px; padding:var(--space-md); }}
+        .hero-image-wrapper img {{ width:100%; height:auto; max-height:320px; object-fit:contain; }}
+        @media (max-width:860px) {{ .article-hero .hero-grid {{ grid-template-columns:1fr; }} .hero-image-wrapper {{ order:-1; min-height:180px; }} }}
+        /* ===== VERDICT RADAR CHART ===== */
+        .chart-section {{ margin:var(--space-xl) 0; padding:var(--space-lg); background:var(--clr-off-white); border-radius:var(--radius-md); border:1px solid var(--clr-light-gray); }}
+        .chart-wrapper {{ width:100%; max-width:500px; height:400px; margin:0 auto; }}
+        .chart-note {{ text-align:center; font-size:0.8rem; color:var(--clr-mid-gray); margin-top:var(--space-sm); margin-bottom:0; }}
+        @media (max-width:600px) {{ .chart-wrapper {{ height:300px; }} }}
 
         .content-wrapper {{ display:grid; grid-template-columns:1fr 320px; gap: var(--space-xl); padding: var(--space-2xl) 0; max-width:1200px; margin:0 auto; padding-left:20px; padding-right:20px; }}
         .article-body {{ font-size:1.05rem; line-height:1.8; }}
@@ -1709,10 +1779,17 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 
         .product-section {{ margin:var(--space-xl) 0; }}
         .section-title {{ font-weight:800; text-transform:uppercase; letter-spacing:0.08em; font-size:0.75rem; margin-bottom:var(--space-md); border-bottom:3px solid var(--clr-primary); padding-bottom:8px; display:inline-block; }}
-        .product-card {{ display:grid; grid-template-columns:1fr 1.5fr; gap:var(--space-lg); background:var(--clr-off-white); border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); padding:var(--space-lg); margin-bottom:var(--space-lg); transition: transform var(--duration-base), box-shadow var(--duration-base); }}
+        .product-section {{ display:grid; grid-template-columns:1fr 1fr; gap:var(--space-lg); }}
+        .product-card {{ display:grid; grid-template-columns:100px 1fr; gap:var(--space-md); background:var(--clr-off-white); border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); padding:var(--space-md); transition: transform var(--duration-base), box-shadow var(--duration-base); }}
         .product-card:hover {{ transform:translateY(-2px); box-shadow:var(--shadow-md); }}
-        .product-card__image-wrapper {{ position:relative; overflow:hidden; border-radius:var(--radius-sm); }}
-        .product-card__image {{ width:100%; height:auto; display:block; }}
+        .product-card img {{ width:100px; height:100px; object-fit:contain; border-radius:var(--radius-sm); background:var(--clr-white); }}
+        .product-card-body h3 {{ font-size:var(--text-base); margin-bottom:2px; }}
+        .product-card-body .price {{ font-size:var(--text-sm); color:var(--clr-accent); font-weight:700; margin-bottom:4px; }}
+        .product-card-body p {{ font-size:0.85rem; color:var(--clr-mid-gray); margin-bottom:6px; }}
+        .product-card-body ul {{ padding-left:16px; margin:4px 0; font-size:0.8rem; color:var(--clr-mid-gray); }}
+        .product-card-body li {{ margin:2px 0; }}
+        .buy-btn {{ display:inline-block; padding:6px 14px; background:var(--clr-accent); color:#1a1200; border-radius:var(--radius-sm); font-weight:700; font-size:0.75rem; text-decoration:none; margin-top:6px; transition: background var(--duration-fast); border:none; cursor:pointer; }}
+        .buy-btn:hover {{ background:#d4a03a; color:#1a1200; }}
         .product-details h3 {{ font-size:var(--text-xl); margin-bottom:6px; }}
         .product-details .price {{ font-size:var(--text-lg); color:var(--clr-accent); font-weight:700; margin-bottom:6px; }}
         .product-details .rating {{ color:#f59e0b; font-size:1.1rem; margin-bottom:10px; display:flex; gap:2px; }}
@@ -1767,11 +1844,16 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     </nav>
 </div></header>
 
-<section class="post-hero"><div class="container">
-    <span class="post-hero__category">{name_escaped}</span>
-    <h1>{title_escaped}</h1>
-    <div class="meta">By Abvorn · {year_str}</div>
-    <p class="excerpt">{intro_paragraph}</p>
+<section class="article-hero"><div class="container hero-grid">
+    <div>
+        <span class="hero-category">{name_escaped}</span>
+        <h1>{title_escaped}</h1>
+        <div class="meta">By Abvorn · <span class="published-date">Published: {pub_date}</span> <span class="updated-date">Updated: {upd_date}</span></div>
+        <p class="excerpt">{intro_paragraph}</p>
+    </div>
+    <div class="hero-image-wrapper">
+        {hero_img_html}
+    </div>
 </div></section>
 
 <section class="content-wrapper">
@@ -1830,7 +1912,67 @@ async function submitLead(e) {{
     }} catch(err) {{ msg.innerText = 'Connection error. Please try later.'; }}
 }}
 </script>
-{RPS_JS}</body></html>'''
+{RPS_JS}
+<script id="abvorn-verdict-data" type="application/json">{verdict_json}</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {{
+    var dataEl = document.getElementById('abvorn-verdict-data');
+    if (!dataEl) return;
+    var verdictData;
+    try {{ verdictData = JSON.parse(dataEl.textContent); }} catch(e) {{ return; }}
+    if (!verdictData || !verdictData.breakdown || Object.keys(verdictData.breakdown).length === 0) return;
+    var labels = Object.keys(verdictData.breakdown);
+    var scores = labels.map(function(l) {{ return verdictData.breakdown[l]; }});
+    var ctx = document.getElementById('verdictChart');
+    if (!ctx) return;
+    ctx = ctx.getContext('2d');
+    new Chart(ctx, {{
+        type: 'radar',
+        data: {{
+            labels: labels,
+            datasets: [{{
+                label: verdictData.productName || 'Product Score',
+                data: scores,
+                backgroundColor: 'rgba(201,138,44,0.2)',
+                borderColor: '#c98a2c',
+                borderWidth: 2,
+                pointBackgroundColor: '#1a1a1a',
+                pointBorderColor: '#c98a2c',
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                fill: true
+            }}]
+        }},
+        options: {{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {{
+                legend: {{
+                    display: true,
+                    position: 'bottom',
+                    labels: {{ color: '#0a0a0a', font: {{ family: 'Inter', size: 14, weight: '600' }} }}
+                }},
+                tooltip: {{
+                    backgroundColor: '#0a0a0a',
+                    titleFont: {{ family: 'Inter', weight: '600' }},
+                    bodyFont: {{ family: 'Inter' }},
+                    callbacks: {{ label: function(ctx) {{ return ctx.raw + '/10'; }} }}
+                }}
+            }},
+            scales: {{
+                r: {{
+                    min: 0, max: 10,
+                    ticks: {{ stepSize: 2, color: '#666', backdropColor: 'transparent', font: {{ family: 'Inter', size: 10 }} }},
+                    grid: {{ color: 'rgba(0,0,0,0.08)', circular: true }},
+                    angleLines: {{ color: 'rgba(0,0,0,0.08)' }},
+                    pointLabels: {{ color: '#0a0a0a', font: {{ family: 'Libre Franklin', size: 14, weight: '600' }} }}
+                }}
+            }}
+        }}
+    }});
+}});
+</script>
+</body></html>'''
 
 
 
