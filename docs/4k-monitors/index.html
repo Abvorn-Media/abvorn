@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="icon" type="image/png" href="/abvorn/favicon.png">
-<title>Best 4K Monitors Reviews | Abvorn</title>
-<meta name="description" content="Expert 4k monitors reviews and buying guides. Independent testing, real recommendations.">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <title>Best 4K Monitors Reviews | Abvorn</title>
+    <meta name="description" content="Expert 4k monitors reviews and buying guides. Independent testing, real recommendations.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --niche-primary: #0a0a0a; --niche-accent: #c98a2c; }
+        
 :root {
     --clr-accent: #c98a2c;
     --clr-accent-text: #8b6914;
@@ -42,82 +44,87 @@ img{max-width:100%;height:auto}
 .input:focus{border-color:var(--clr-accent)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 
-.top-bar{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}
-.top-bar .container{display:flex;justify-content:space-between}
-header{background:#0a0a0a;padding:18px 0;border-bottom:1px solid #2a2a2a}
-.navbar{display:flex;justify-content:space-between;align-items:center}
-.logo img{max-height:44px;width:auto}
-.nav-links{display:flex;align-items:center;gap:8px}
-.nav-links > a,.nav-item > a{color:#fff;text-decoration:none;padding:8px 16px;font-weight:600;font-size:0.9rem;border-radius:var(--radius-sm);transition:background var(--duration-fast) var(--ease-out)}
-.nav-links > a:hover,.nav-item > a:hover{background:rgba(255,255,255,0.08);color:var(--clr-accent)}
-.nav-item{position:relative}
-.nav-item > a{padding:8px 16px;display:flex;align-items:center;gap:4px}
-.nav-item > a::after{content:'\25BE';font-size:0.6rem;opacity:0.5}
-.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#1a1a1a;min-width:220px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:6px 0;z-index:30;border:1px solid #2a2a2a}
-.nav-item:hover .nav-dropdown{display:block}
-.nav-dropdown a{display:block;color:#ccc;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
-.nav-dropdown a:hover{background:#2a2a2a;color:#fff}
-.nav-toggle{display:none;background:none;border:none;color:#fff;padding:6px;cursor:pointer}
-.nav-toggle svg{width:24px;height:24px}
-@media(max-width:640px){
-.nav-toggle{display:block}
-.nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:#0a0a0a;flex-direction:column;align-items:stretch;padding:8px 20px 20px;gap:2px;box-shadow:var(--shadow-lg);border-top:1px solid #2a2a2a;z-index:30}
-.nav-links.open{display:flex}
-.nav-links > a,.nav-item{margin:0}
-.nav-links > a,.nav-item > a{padding:10px 0}
-.nav-item > a::after{display:none}
-.nav-dropdown{position:static;box-shadow:none;margin-top:0;padding-left:16px;display:block;background:transparent;border:none}
-.nav-dropdown a{color:#888;padding:6px 0;font-size:0.8rem}
-.nav-dropdown a:hover{background:transparent;color:#fff}
-}
-.category-hero{background:var(--clr-off-white);padding:var(--space-2xl) 0;border-bottom:1px solid #e5e2dc}
-.category-hero h1{font-size:clamp(var(--text-3xl),4vw,var(--text-4xl));margin-bottom:var(--space-sm)}
-.category-hero p{font-size:var(--text-lg);color:var(--clr-mid-gray);max-width:50ch}
-.posts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:var(--space-lg);padding:var(--space-2xl) 0}
-.post-card{border:1px solid #e5e2dc;border-radius:var(--radius-md);overflow:hidden;transition:transform var(--duration-base),box-shadow var(--duration-base);background:var(--clr-white)}
-.post-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
-.post-card img{width:100%;height:200px;object-fit:cover}
-.post-card__body{padding:var(--space-md)}
-.post-card h3{font-size:var(--text-lg);margin:0 0 6px}
-.post-card h3 a{color:inherit;text-decoration:none}
-.post-card p{font-size:0.9rem;color:var(--clr-mid-gray);margin-bottom:var(--space-sm);line-height:1.5}
-.post-card .read-link{font-weight:700;font-size:0.85rem;color:var(--clr-black);text-decoration:none;border-bottom:2px solid var(--clr-accent);padding-bottom:1px}
-.subscribe-band{background:var(--clr-off-white);padding:var(--space-xl) 0;border-top:1px solid #e5e2dc}
-.subscribe-inner{display:flex;justify-content:space-between;align-items:center;gap:var(--space-lg);flex-wrap:wrap}
-.subscribe-copy h2{font-size:var(--text-xl);margin-bottom:4px}
-.subscribe-copy p{margin:0;color:var(--clr-mid-gray);max-width:40ch;font-size:0.95rem}
-.subscribe-form{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.subscribe-form .input{width:240px;background:#fff;border:2px solid #e5e2dc}
-.subscribe-form .input:focus{border-color:var(--clr-accent)}
-.subscribe-form .btn{background:var(--clr-accent);color:#1a1200;font-weight:800;padding:0.85em 1.7em;box-shadow:0 4px 16px rgba(201,138,44,0.3)}
-.subscribe-form .btn:hover{background:#d4a03a;transform:scale(1.03)}
-.subscribe-msg{flex-basis:100%;font-size:0.85rem;color:#666;margin-top:6px}
-@media(max-width:700px){.subscribe-inner{flex-direction:column;align-items:flex-start}.subscribe-form .input{width:100%}}
-.footer{background:#0a0a0a;color:#888;padding:var(--space-2xl) 0 var(--space-lg);border-top:1px solid #2a2a2a}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:var(--space-lg);margin-bottom:var(--space-xl)}
-.footer-col h4{color:#fff;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px}
-.footer-col a{display:block;color:#888;text-decoration:none;padding:3px 0;font-size:0.9rem}
-.footer-col a:hover{color:#fff}
-.footer-social{display:flex;gap:8px;margin-top:12px}
-.footer-social a{width:40px;height:40px;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;color:#888;border:1px solid #2a2a2a}
-.footer-social a:hover{background:var(--clr-accent);color:#0a0a0a}
-.footer-social svg{width:16px;height:16px}
-.footer-bottom{border-top:1px solid #1a1a1a;padding-top:16px;display:flex;justify-content:space-between;flex-wrap:wrap;font-size:0.8rem;color:#555}
-@media(max-width:760px){.footer-grid{grid-template-columns:1fr 1fr}}
-</style>
+        .top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
+        .top-bar .container { display:flex; justify-content:space-between; }
+        header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; }
+        .navbar { display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }
+        .logo img { max-height:44px; width:auto; }
+        .nav-links { display:flex; align-items:center; gap:8px; }
+        .nav-links > a, .nav-item > a { color:#fff; text-decoration:none; padding:8px 16px; font-weight:600; font-size:0.9rem; border-radius:var(--radius-sm); transition: background var(--duration-fast); }
+        .nav-links > a:hover, .nav-item > a:hover { background:rgba(255,255,255,0.08); color: var(--clr-accent); }
+        .nav-item { position:relative; }
+        .nav-item > a { padding:8px 16px; display:flex; align-items:center; gap:4px; }
+        .nav-item > a::after { content:'▾'; font-size:0.6rem; opacity:0.5; }
+        .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#1a1a1a; min-width:220px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:6px 0; border:1px solid #2a2a2a; z-index:30; }
+        .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
+        .nav-dropdown a { display:block; color:#ccc; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }
+        .nav-dropdown a:hover { background:#2a2a2a; color:#fff; }
+        .nav-toggle { display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }
+        .nav-toggle svg { width:24px; height:24px; }
+        @media (max-width:640px) {
+            .nav-toggle { display:block; }
+            .nav-links { display:none; position:absolute; top:100%; left:0; right:0; background:#0a0a0a; flex-direction:column; padding:8px 20px 20px; border-top:1px solid #2a2a2a; }
+            .nav-links.open { display:flex; }
+            .nav-links > a, .nav-item { margin:0; }
+            .nav-links > a, .nav-item > a { padding:10px 0; }
+            .nav-item > a::after { display:none; }
+            .nav-dropdown { position:static; box-shadow:none; margin-top:0; padding-left:16px; display:block; background:transparent; border:none; }
+            .nav-dropdown a { color:#888; padding:6px 0; font-size:0.8rem; }
+            .nav-dropdown a:hover { background:transparent; color:#fff; }
+        }
+
+        .category-hero { background:var(--clr-off-white); padding: var(--space-2xl) 0; border-bottom:1px solid var(--clr-light-gray); }
+        .category-hero h1 { font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-sm); }
+        .category-hero p { font-size: var(--text-lg); color: var(--clr-mid-gray); max-width:50ch; }
+
+        .subscribe-band { background:var(--clr-off-white); padding: var(--space-xl) 0; border-top:1px solid var(--clr-light-gray); }
+        .subscribe-inner { display:flex; justify-content:space-between; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }
+        .subscribe-copy h2 { font-size: var(--text-xl); margin-bottom:4px; }
+        .subscribe-copy p { margin:0; color:var(--clr-mid-gray); max-width:40ch; font-size:0.95rem; }
+        .subscribe-form { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+        .subscribe-form .input { width:240px; background:#fff; border:2px solid var(--clr-light-gray); }
+        .subscribe-form .input:focus { border-color:var(--clr-accent); }
+        .subscribe-form .hp-field { position:absolute; left:-9999px; }
+        .subscribe-form .btn { background:var(--clr-accent); color:#1a1200; font-weight:800; padding:0.85em 1.7em; box-shadow:0 4px 16px rgba(201,138,44,0.3); }
+        .subscribe-form .btn:hover { background:#d4a03a; transform:scale(1.03); }
+        .subscribe-msg { flex-basis:100%; font-size:0.85rem; color:#666; margin-top:6px; }
+        @media (max-width:700px) { .subscribe-inner { flex-direction:column; align-items:flex-start; } .subscribe-form .input { width:100%; } }
+
+        .posts-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }
+        .post-card { border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); }
+        .post-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
+        .post-card img { width:100%; height:200px; object-fit:cover; }
+        .post-card__body { padding:var(--space-md); }
+        .post-card h3 { font-size:var(--text-lg); margin:0 0 6px; }
+        .post-card h3 a { color:inherit; text-decoration:none; }
+        .post-card .post-meta { font-size:0.8rem; color:var(--clr-mid-gray); margin-bottom:8px; }
+        .post-card p { font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }
+        .post-card .read-link { font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }
+
+        .footer { background:#0a0a0a; color:#888; padding: var(--space-2xl) 0 var(--space-lg); border-top:1px solid #2a2a2a; }
+        .footer-grid { display:grid; grid-template-columns:2fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); max-width:1200px; margin-left:auto; margin-right:auto; padding:0 20px; }
+        .footer-col h4 { color:#fff; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px; }
+        .footer-col a { display:block; color:#888; text-decoration:none; padding:3px 0; font-size:0.9rem; }
+        .footer-col a:hover { color:#fff; }
+        .footer-social { display:flex; gap:8px; margin-top:12px; }
+        .footer-social a { width:40px; height:40px; border-radius:50%; background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#888; border:1px solid #2a2a2a; }
+        .footer-social a:hover { background:var(--clr-accent); color:#0a0a0a; }
+        .footer-social svg { width:16px; height:16px; }
+        .footer-bottom { border-top:1px solid #1a1a1a; padding-top:16px; display:flex; justify-content:space-between; flex-wrap:wrap; font-size:0.8rem; color:#555; max-width:1200px; margin:0 auto; padding-left:20px; padding-right:20px; }
+        @media (max-width:760px) { .footer-grid { grid-template-columns:1fr; } }
+    </style>
 </head>
 <body>
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
-    <a href="/abvorn/" class="logo"><img src="/abvorn/logo.png" alt="Abvorn"></a>
+    <a href="/" class="logo"><img src="/logo.png" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown"><a href="/abvorn/wireless-headphones/">Wireless Headphones</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/smart-home/">Smart Home</a></div></div>
-        <a href="/abvorn/store.html">Store</a>
-        <a href="/abvorn/about.html">About</a>
-        <a href="/abvorn/privacy.html">Privacy</a>
+        <div class="nav-item"><a href="/">Categories</a><div class="nav-dropdown"><a href="/wireless-headphones/">Wireless Headphones</a><a href="/gaming-mice/">Gaming Mice</a><a href="/4k-monitors/">4K Monitors</a><a href="/laptops/">Laptops</a><a href="/streaming-devices/">Streaming Devices</a><a href="/mechanical-keyboards/">Mechanical Keyboards</a><a href="/wireless-earbuds/">Wireless Earbuds</a><a href="/fitness-trackers/">Fitness Trackers</a><a href="/webcams/">Webcams</a><a href="/smart-home/">Smart Home</a></div></div>
+        <a href="/about.html">About</a>
+        <a href="/privacy.html">Privacy</a>
     </nav>
 </div></header>
 
@@ -126,32 +133,68 @@ header{background:#0a0a0a;padding:18px 0;border-bottom:1px solid #2a2a2a}
     <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
 </div></section>
 
-<section class="container posts-grid"><p style="grid-column:1/-1;text-align:center;color:var(--clr-mid-gray);padding:40px 0">Reviews coming soon.</p></section>
+<section class="container posts-grid"><div class="post-card">
+    <a href="/reviews/4k-monitors/"><img src="/abvorn/assets/4k-monitors.svg" alt="Best 4K Monitors"></a>
+    <div class="post-card__body">
+        <h3><a href="/reviews/4k-monitors/">Best 4K Monitors</a></h3>
+        <p>Expert-tested and reviewed. See why this made our list.</p>
+        <a href="/reviews/4k-monitors/" class="read-link">Read more →</a>
+    </div>
+</div></section>
 
 <section class="subscribe-band"><div class="container subscribe-inner">
     <div class="subscribe-copy">
-        <h2>Get alerted when we publish a new review</h2>
+        <h2>Get alerted when we publish a new 4K Monitors review</h2>
         <p>One email whenever we publish a new guide in this category. No spam, unsubscribe anytime.</p>
     </div>
-    <form class="subscribe-form" onsubmit="return false">
+    <form class="subscribe-form" id="category-subscribe-form" onsubmit="submitCategorySubscribe(event)">
+        <input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off">
         <label for="category-subscribe-email" class="sr-only">Email address</label>
         <input type="email" class="input" id="category-subscribe-email" placeholder="you@example.com" required>
-        <button type="submit" class="btn" onclick="alert('Subscribe feature coming soon.')">Notify Me</button>
+        <button type="submit" class="btn">Notify Me</button>
+        <p class="subscribe-msg" id="category-subscribe-msg" aria-live="polite"></p>
     </form>
 </div></section>
 
-<footer class="footer"><div class="container">
-    <div class="footer-grid">
-        <div class="footer-col"><h4>Abvorn</h4><p>Independent product reviews and buying guides.</p><div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a></div></div>
-        <div class="footer-col"><h4>Categories</h4><a href="/abvorn/wireless-headphones/">Wireless Headphones</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/smart-home/">Smart Home</a></div>
-        <div class="footer-col"><h4>Company</h4><a href="/abvorn/about.html">About</a><a href="/abvorn/store.html">Store</a></div>
-        <div class="footer-col"><h4>Legal</h4><a href="/abvorn/privacy.html">Privacy policy</a></div>
-    </div>
-    <div class="footer-bottom"><span>&copy; 2026 Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
-</div></footer>
+<footer class="footer"><div class="footer-grid">
+    <div class="footer-col"><h4>Abvorn</h4><p>Independent product reviews and buying guides.</p><div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a></div></div>
+    <div class="footer-col"><h4>Categories</h4><a href="/wireless-headphones/">Wireless Headphones</a><a href="/gaming-mice/">Gaming Mice</a><a href="/4k-monitors/">4K Monitors</a><a href="/laptops/">Laptops</a><a href="/streaming-devices/">Streaming Devices</a><a href="/mechanical-keyboards/">Mechanical Keyboards</a><a href="/wireless-earbuds/">Wireless Earbuds</a><a href="/fitness-trackers/">Fitness Trackers</a><a href="/webcams/">Webcams</a><a href="/smart-home/">Smart Home</a></div>
+    <div class="footer-col"><h4>Company</h4><a href="/about.html">About</a></div>
+</div>
+<div class="footer-bottom"><span>&copy; 2026 Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div></footer>
 
 <script>
-(function(){var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")})})();
+const APPS_SCRIPT_URL = "";
+const CATEGORY_SLUG = "4k-monitors";
+const CATEGORY_NAME = "4K Monitors";
+
+(function() {
+    const btn = document.getElementById('nav-toggle');
+    const nav = document.getElementById('nav-links');
+    if (!btn || !nav) return;
+    btn.addEventListener('click', () => {
+        const open = nav.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+})();
+
+async function submitCategorySubscribe(e) {
+    e.preventDefault();
+    const f = e.target;
+    const msg = document.getElementById('category-subscribe-msg');
+    if (f._gotcha.value !== "") { msg.innerText = 'Success! Check your inbox.'; return; }
+    const email = document.getElementById('category-subscribe-email').value.trim();
+    if (!email) return;
+    msg.innerText = 'Sending...';
+    try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email: email, niche: CATEGORY_SLUG, source: 'category_page', lead_magnet: `New ${CATEGORY_NAME} reviews` })
+        });
+        const result = await response.json();
+        msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
+    } catch (err) { msg.innerText = 'Connection error. Please try later.'; }
+}
 </script>
 </body>
 </html>
