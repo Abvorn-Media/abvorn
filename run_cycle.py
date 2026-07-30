@@ -728,7 +728,7 @@ def nav_html(categories, current=""):
     return f'''
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
-    <a href="{b}/" class="logo"><img src="{b}/logo.png" alt="Abvorn" style="max-height:44px;width:auto"></a>
+    <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:44px;width:auto"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
@@ -883,7 +883,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
 <body>
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
-    <a href="__SITE_BASE__/" class="logo"><img src="__SITE_BASE__/logo.png" alt="Abvorn"></a>
+    <a href="__SITE_BASE__/" class="logo"><img src="__SITE_BASE__/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
@@ -950,7 +950,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         <div class="footer-col"><h4>Company</h4><a href="__SITE_BASE__/about.html">About</a><a href="__SITE_BASE__/store.html">Store</a></div>
         <div class="footer-col"><h4>Legal</h4><a href="__SITE_BASE__/privacy.html">Privacy policy</a></div>
     </div>
-    <div class="footer-bottom"><span>&copy; YEAR_PLACEHOLDER Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
+    <div class="footer-bottom"><img src="__SITE_BASE__/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; YEAR_PLACEHOLDER Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
 </div></footer>
 
 <script>
@@ -1302,7 +1302,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 <body>
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
-    <a href="{b}/" class="logo"><img src="{b}/logo.png" alt="Abvorn"></a>
+    <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
@@ -1339,7 +1339,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
     <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
 </div>
-<div class="footer-bottom"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div></footer>
+<div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div></footer>
 
 <script>
 const APPS_SCRIPT_URL = "{form_url}";
@@ -1834,7 +1834,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 <body>
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
-    <a href="{b}/" class="logo"><img src="{b}/logo.png" alt="Abvorn"></a>
+    <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
@@ -1878,7 +1878,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
     <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
 </div>
-<div class="footer-bottom"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div></footer>
+<div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div></footer>
 
 <script>
 const APPS_SCRIPT_URL="{form_url}";
@@ -2501,9 +2501,9 @@ footer a{{color:#aaa;text-decoration:none}}
 </style></head>
 <body>
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
-<header><div class="header-inner"><a href="{b}/"><img src="{b}/logo.png" alt="Abvorn" class="logo-img"></a></div></header>
+<header><div class="header-inner"><a href="{b}/"><img src="{b}/logo.svg" alt="Abvorn" class="logo-img"></a></div></header>
 <main class="main"><h1>{title}</h1>{content}</main>
-<footer><p>&copy; {year} Abvorn</p></footer>
+<footer><img src="{b}/logo.svg" alt="Abvorn" style="max-height:24px;width:auto;filter:brightness(0.8);margin-bottom:8px"><p>&copy; {year} Abvorn</p></footer>
 </body></html>'''
             page_path.write_text(full_page)
             print(f"  Written: docs/{page_name}")
