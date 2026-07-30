@@ -2145,13 +2145,10 @@ Return a JSON object with:
     ai_temp = 0.7
     ai_max_tokens = 500
     if workflow_engine:
-        wf = workflow_engine.get_workflow_recommendation()
-        if wf and isinstance(wf, dict):
-            ai_temp = wf.get("temperature", 0.7)
-            ai_max_tokens = wf.get("max_tokens", 500)
-        elif wf:
-            ai_temp = getattr(wf, "temperature", 0.7)
-            ai_max_tokens = getattr(wf, "max_tokens", 500)
+        wf = workflow_engine.workflows.get("quality")
+        if wf:
+            ai_temp = wf.temperature
+            ai_max_tokens = wf.max_tokens
     t0 = time.time()
     result = ai_sql.query(QueryPlan(
         system_prompt="You are an expert content strategist returning structured JSON data.",
@@ -2198,15 +2195,11 @@ def write_draft(niche, products, outline, knowledge_core=None, workflow_engine=N
     ai_max_tokens_intro = 500
     ai_max_tokens_article = 2000
     if workflow_engine:
-        wf = workflow_engine.get_workflow_recommendation()
-        if wf and isinstance(wf, dict):
-            ai_temp = wf.get("temperature", 0.7)
-            ai_max_tokens_intro = wf.get("max_tokens", 500)
-            ai_max_tokens_article = wf.get("max_tokens", 2000)
-        elif wf:
-            ai_temp = getattr(wf, "temperature", 0.7)
-            ai_max_tokens_intro = getattr(wf, "max_tokens", 500)
-            ai_max_tokens_article = getattr(wf, "max_tokens", 2000)
+        wf = workflow_engine.workflows.get("quality")
+        if wf:
+            ai_temp = wf.temperature
+            ai_max_tokens_intro = wf.max_tokens
+            ai_max_tokens_article = wf.max_tokens
 
     intro_prompt = f"""Write the introduction for a buying guide titled '{post_title}' about {niche}.
 Angle: {angle}
