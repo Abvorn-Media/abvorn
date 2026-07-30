@@ -1122,7 +1122,7 @@ def build_homepage(state, form_url=""):
     <a href="{b}/{n["slug"]}/" class="read-link">Continue reading →</a>
 </div>'''
         section = f'''<div class="category-section">
-    <div class="category-section__header"><h2>{n["name"]}</h2><a href="{b}/{n["slug"]}/">View all →</a></div>
+    <div class="category-section__header"><h2>{n["name"]}</h2><a href="{b}/{n["slug"]}/">View all in {n["name"]} →</a></div>
     <div class="niche-grid">{card}</div>
 </div>'''
         group_buffer += section
