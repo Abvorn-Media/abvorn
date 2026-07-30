@@ -1272,8 +1272,9 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .subscribe-form .input {{ width:240px; background:#fff; border:2px solid var(--clr-light-gray); }}
         .subscribe-form .input:focus {{ border-color:var(--clr-accent); }}
         .subscribe-form .hp-field {{ position:absolute; left:-9999px; }}
-        .subscribe-form .btn {{ background:var(--clr-accent); color:#1a1200; font-weight:800; padding:0.85em 1.7em; box-shadow:0 4px 16px rgba(201,138,44,0.3); }}
-        .subscribe-form .btn:hover {{ background:#d4a03a; transform:scale(1.03); }}
+        .subscribe-form .btn {{ background:var(--clr-accent); color:#1a1200; font-size:1rem; font-weight:800; padding:0.85em 1.7em; gap:8px; box-shadow:0 6px 22px rgba(201,138,44,0.4); }}
+        .subscribe-form .btn:hover {{ background:#e0a23f; transform:scale(1.045); box-shadow:0 8px 28px rgba(201,138,44,0.55); }}
+        .subscribe-form .btn svg {{ width:18px; height:18px; }}
         .subscribe-msg {{ flex-basis:100%; font-size:0.85rem; color:#666; margin-top:6px; }}
         @media (max-width:700px) {{ .subscribe-inner {{ flex-direction:column; align-items:flex-start; }} .subscribe-form .input {{ width:100%; }} }}
 
@@ -1809,8 +1810,8 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .sidebar-box p {{ font-size:0.9rem; color:#ffffff; margin-bottom:var(--space-md); }}
         .sidebar-box .input {{ background:#1a1a1a; color:#fff; border-color:#333; }}
         .sidebar-box .input:focus {{ border-color:var(--clr-accent); }}
-        .sidebar-box .btn {{ background:var(--clr-accent); color:#1a1200; width:100%; font-weight:700; }}
-        .sidebar-box .btn:hover {{ background:#d4a03a; }}
+        .sidebar-box .btn {{ background:var(--clr-accent); color:#1a1200; width:100%; font-weight:800; font-size:1rem; padding:0.85em 1.7em; box-shadow:0 6px 22px rgba(201,138,44,0.4); border:none; border-radius:var(--radius-sm); cursor:pointer; transition:background 0.2s,transform 0.2s,box-shadow 0.2s; }}
+        .sidebar-box .btn:hover {{ background:#e0a23f; transform:scale(1.045); box-shadow:0 8px 28px rgba(201,138,44,0.55); }}
 
         .further-reading {{ margin-top:var(--space-xl); border-top:1px solid var(--clr-light-gray); padding-top:var(--space-lg); }}
         .further-reading h3 {{ font-size:var(--text-lg); margin-bottom:var(--space-md); }}
