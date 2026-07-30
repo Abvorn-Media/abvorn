@@ -2872,8 +2872,8 @@ def process_single_niche(niche: Dict, workflow_name: str = None) -> Dict:
                     pos_words = {"good", "great", "excellent", "best", "love", "amazing", "perfect", "recommend", "happy", "satisfied", "worth", "impressive", "outstanding"}
                     neg_words = {"bad", "worst", "hate", "terrible", "awful", "disappointed", "poor", "waste", "overpriced", "broken", "useless"}
                     words = text.lower().split()
-                    pos_count = sum(1 for w in words if w.strip(".,!?"'()[]") in pos_words)
-                    neg_count = sum(1 for w in words if w.strip(".,!?"'()[]") in neg_words)
+                    pos_count = sum(1 for w in words if w.strip(".,!?") in pos_words)
+                    neg_count = sum(1 for w in words if w.strip(".,!?") in neg_words)
                     polarity = (pos_count - neg_count) / max(len(words), 1)
                     total_polarity += polarity
                 avg_sentiment = total_polarity / max(len(items), 1)
@@ -3108,10 +3108,30 @@ def main(forced_niche=None, force=False, batch_mode=False):
         permission = social_perm.act(social_score, surplus_data=surplus, metrics=metrics)
         state['social_permission'] = {'level': permission.get('level'), 'actions': permission.get('actions', [])}
         save_state(state)
-        if permission.get('level') == 'critical' and permission.get('actions'):
-            logger.warning(f"CRITICAL social permission level: {permission['level']}")
     except Exception as e:
-        logger.warning(f"Economic/social permission check skipped: {e}")
+        logger.warning("Economic/social permission check skipped: " + str(e))
+
+    # --- Meta Evolution (every 10 cycles) ---
+    try:
+        state = load_state()
+        cycles = state.get("cycles_since_evolution", 0) + 1
+        state["cycles_since_evolution"] = cycles
+        if cycles >= 10:
+            from src.meta_evolution import MetaEvolutionEngine
+            deployed = state.get("deployed", [])
+            niches = [{"slug": slug, "niche": slug.replace("_", " ").title()} for slug in deployed]
+            if niches:
+                engine = MetaEvolutionEngine({})
+                result = engine.evolve(niches)
+                if result.get("best_config"):
+                    os.makedirs("data", exist_ok=True)
+                    with open("data/best_config.json", "w") as f:
+                        json.dump(result["best_config"], f)
+                state["cycles_since_evolution"] = 0
+                save_state(state)
+                logger.info("Evolution completed: converged=" + str(result.get("converged", False)))
+    except Exception as e:
+        logger.warning("Evolution check skipped: " + str(e))
 
     # Infrastructure cost summary
     try:
