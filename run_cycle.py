@@ -21,6 +21,8 @@ from src.social_permission import SocialPermissionFramework, create_social_permi
 
 logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
 
+ai_sql = None  # set by main()
+
 # ─── Secrets ────────────────────────────────────────────────────────────
 def get_secrets():
     """Get API secrets from env vars (GitHub Actions) or fallback to secrets.json."""
@@ -1605,8 +1607,6 @@ Return a JSON array. Each product must have:
         system_prompt="You are an expert product researcher returning structured JSON data.",
         user_prompt=prompt,
         params={"temperature": 0.3, "max_tokens": 1000, "format": "json"},
-        provider_preferences=["openai", "anthropic"],
-        fallback_chain=["deepseek", "gemini", "local"],
     )).content
     if not result:
         return None
@@ -1640,8 +1640,6 @@ Return a JSON object with:
         system_prompt="You are an expert content strategist returning structured JSON data.",
         user_prompt=prompt,
         params={"temperature": 0.7, "max_tokens": 500, "format": "json"},
-        provider_preferences=["openai", "anthropic", "deepseek"],
-        fallback_chain=["gemini", "local"],
     )).content
     if not result:
         return None
@@ -1673,8 +1671,6 @@ Return ONLY the HTML paragraphs, wrapped in <p> tags."""
         system_prompt="You write concise, honest product review copy.",
         user_prompt=intro_prompt,
         params={"temperature": 0.7, "max_tokens": 500},
-        provider_preferences=["openai", "anthropic"],
-        fallback_chain=["deepseek", "gemini", "local"],
     )).content
     if not intro_html:
         intro_html = "<p>We tested the top products to find the ones worth your money.</p>"
@@ -1694,8 +1690,6 @@ Return ONLY the HTML."""
         system_prompt="You write thorough, honest product reviews with specific details and real prices.",
         user_prompt=article_prompt,
         params={"temperature": 0.7, "max_tokens": 2000},
-        provider_preferences=["openai", "anthropic"],
-        fallback_chain=["deepseek", "gemini", "local"],
     )).content
     if not article_html:
         article_html = "<p>We're reviewing the top products in this category.</p>"
@@ -1913,8 +1907,6 @@ Return JSON:
         system_prompt="You are an expert content writer for Abvorn, an independent product review platform.",
         user_prompt=prompt,
         params={"temperature": 0.9, "max_tokens": 1500, "format": "json"},
-        provider_preferences=["openai", "anthropic"],
-        fallback_chain=["deepseek", "gemini", "local"],
     )).content
     if not result:
         plan["mode"] = "fallback"
@@ -2229,6 +2221,7 @@ def _register_sensors(nervous_system):
 
 # ─── Main ────────────────────────────────────────────────────────────────
 def main(forced_niche=None, force=False):
+    global ai_sql
     secrets = get_secrets()
     ai_sql = create_ai_sql()
 
