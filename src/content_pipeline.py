@@ -20,7 +20,7 @@ from src.economic_surplus import EconomicSurplusTracker, create_economic_surplus
 from src.entitlements import EntitlementsFramework, create_entitlements_framework
 from src.tools_registry import create_tool_registry, ToolAccess
 from src.change_management import create_change_manager, ChangeType, ChangeStatus
-from src.dag_scheduler import DAGScheduler
+from src.dag_scheduler import DAGScheduler, Task, DAG
 
 logger = logging.getLogger("abvorn.content_pipeline")
 
@@ -263,10 +263,10 @@ class ContentPipeline:
 
         # Track pipeline change
         try:
-            self.change_mgr.register_change(
+            self.change_mgr.create_change(
+                name=f"pipeline_run_{product_id}",
                 change_type=ChangeType.PIPELINE_RUN,
                 description=f"Pipeline run for {product_id}",
-                status=ChangeStatus.CANARY,
             )
         except Exception as e:
             logger.warning(f"  Change tracking skipped: {e}")

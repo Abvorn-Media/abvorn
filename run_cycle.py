@@ -2099,7 +2099,7 @@ _cost_per_1k = {
     "openai": 0.015, "anthropic": 0.018, "gemini": 0.001,
     "groq": 0.002, "glm": 0.003, "local": 0.0,
 }
-def _track_call(provider, tokens, latency_ms=0.0):
+def _track_call(niche: str, provider: str, tokens: int, latency_ms: float = 0.0):
     cost = tokens * (_cost_per_1k.get(provider, 0.002) / 1000.0)
     infra_reporter.report_article_cost("", provider, cost, latency_ms, tokens, niche)
     energy_accounting.record_usage(provider, tokens, latency_ms)
@@ -2116,12 +2116,15 @@ Return a JSON object with:
 - primary_keyword: the main SEO keyword for this guide
 - post_title: compelling title for the buying guide
 - meta_description: 1-2 sentence SEO description"""
+    t0 = time.time()
     result = ai_sql.query(QueryPlan(
         system_prompt="You are an expert content strategist returning structured JSON data.",
         user_prompt=prompt,
         params={"temperature": 0.7, "max_tokens": 500, "format": "json"},
-    )).content
-    if not result:
+    ))
+    result_text = result.content
+    _track_call(niche, result.provider_used, result.tokens_used, (time.time() - t0) * 1000)
+    if not result_text:
         return None
     try:
         return json.loads(result)
@@ -2147,11 +2150,14 @@ Products: {products_text}
 
 Write 2-3 short paragraphs (as HTML) that hook the reader, state the problem, and introduce the solution.
 Return ONLY the HTML paragraphs, wrapped in <p> tags."""
-    intro_html = ai_sql.query(QueryPlan(
+    t0 = time.time()
+    intro_result = ai_sql.query(QueryPlan(
         system_prompt="You write concise, honest product review copy.",
         user_prompt=intro_prompt,
         params={"temperature": 0.7, "max_tokens": 500},
-    )).content
+    ))
+    intro_html = intro_result.content
+    _track_call(niche, intro_result.provider_used, intro_result.tokens_used, (time.time() - t0) * 1000)
     if not intro_html:
         intro_html = "<p>We tested the top products to find the ones worth your money.</p>"
 
@@ -2166,11 +2172,14 @@ For each product, include: a brief intro, key features, pros/cons, and a bottom-
 Use <p> for paragraphs, <ul>/<li> for lists, <strong> for emphasis.
 Be honest, specific (use real prices/numbers), and scannable.
 Return ONLY the HTML."""
-    article_html = ai_sql.query(QueryPlan(
+    t0 = time.time()
+    article_result = ai_sql.query(QueryPlan(
         system_prompt="You write thorough, honest product reviews with specific details and real prices.",
         user_prompt=article_prompt,
         params={"temperature": 0.7, "max_tokens": 2000},
-    )).content
+    ))
+    article_html = article_result.content
+    _track_call(niche, article_result.provider_used, article_result.tokens_used, (time.time() - t0) * 1000)
     if not article_html:
         article_html = "<p>We're reviewing the top products in this category.</p>"
 
