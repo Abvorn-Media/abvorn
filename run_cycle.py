@@ -743,7 +743,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="icon" type="image/png" href="__SITE_BASE__/favicon.png">
     <title>Abvorn – Reviews Based on Real Testing, Not Spec Sheets</title>
     <meta name="description" content="Independent product reviews and buying guides. We test before we recommend.">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -862,15 +862,15 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
 <body>
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
-    <a href="/" class="logo"><img src="/logo.png" alt="Abvorn"></a>
+    <a href="__SITE_BASE__/" class="logo"><img src="__SITE_BASE__/logo.png" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
         <div class="nav-item"><a href="#niches">Categories ▾</a><div class="nav-dropdown">CATEGORY_DROPDOWN_PLACEHOLDER</div></div>
-        <a href="/store.html">Store</a>
-        <a href="/about.html">About</a>
-        <a href="/privacy.html">Privacy</a>
+        <a href="__SITE_BASE__/store.html">Store</a>
+        <a href="__SITE_BASE__/about.html">About</a>
+        <a href="__SITE_BASE__/privacy.html">Privacy</a>
     </nav>
 </div></header>
 <div class="trending-ticker"><div class="container"><div class="trending-ticker__inner"><span class="trending-ticker__label">Latest updates:</span><span id="trending-items">LATEST_UPDATES_PLACEHOLDER</span></div></div></div>
@@ -926,8 +926,8 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
             <div class="footer-social">FOOTER_SOCIAL_PLACEHOLDER</div>
         </div>
         <div class="footer-col"><h4>Categories</h4>FOOTER_CATEGORY_LINKS_PLACEHOLDER</div>
-        <div class="footer-col"><h4>Company</h4><a href="/about.html">About</a><a href="/store.html">Store</a></div>
-        <div class="footer-col"><h4>Legal</h4><a href="/privacy.html">Privacy policy</a></div>
+        <div class="footer-col"><h4>Company</h4><a href="__SITE_BASE__/about.html">About</a><a href="__SITE_BASE__/store.html">Store</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="__SITE_BASE__/privacy.html">Privacy policy</a></div>
     </div>
     <div class="footer-bottom"><span>&copy; YEAR_PLACEHOLDER Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
 </div></footer>
@@ -1036,7 +1036,7 @@ def build_homepage(state, form_url=""):
     total_products = total_posts * 3  # rough estimate
 
     # Build nav dropdown
-    nav_dd = "".join(f'<a href="/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    nav_dd = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
 
     # Build hero slides
     hero_slides = ""
@@ -1063,10 +1063,10 @@ def build_homepage(state, form_url=""):
         if card_count >= 3:
             break
         latest_cards += f'''<div class="niche-card">
-    <a href="/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
-    <h2><a href="/{n["slug"]}/">{n["name"]}</a></h2>
+    <a href="{b}/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
+    <h2><a href="{b}/{n["slug"]}/">{n["name"]}</a></h2>
     <p>{n["posts"]} expert-reviewed guide{"s" if n["posts"] > 1 else ""} with real testing results.</p>
-    <a href="/{n["slug"]}/" class="read-link">Browse guides →</a>
+    <a href="{b}/{n["slug"]}/" class="read-link">Browse guides →</a>
 </div>'''
         card_count += 1
 
@@ -1076,27 +1076,28 @@ def build_homepage(state, form_url=""):
         if not n["posts"]:
             continue
         card = f'''<div class="niche-card">
-    <a href="/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
-    <h2><a href="/{n["slug"]}/">{n["name"]}</a></h2>
+    <a href="{b}/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
+    <h2><a href="{b}/{n["slug"]}/">{n["name"]}</a></h2>
     <p>{n["posts"]} expert-reviewed guide{"s" if n["posts"] > 1 else ""} with real testing results.</p>
-    <a href="/{n["slug"]}/" class="read-link">Browse guides →</a>
+    <a href="{b}/{n["slug"]}/" class="read-link">Browse guides →</a>
 </div>'''
         cat_sections += f'''<div class="category-section">
-    <div class="category-section__header"><h2>{n["name"]}</h2><a href="/{n["slug"]}/">View all →</a></div>
+    <div class="category-section__header"><h2>{n["name"]}</h2><a href="{b}/{n["slug"]}/">View all →</a></div>
     <div class="niche-grid">{card}</div>
 </div>'''
 
     # Trending ticker items text
     ticker_items = " · ".join(
-        f'<a href="/{n["slug"]}/" class="trending-ticker__item">{n["name"]}</a>'
+        f'<a href="{b}/{n["slug"]}/" class="trending-ticker__item">{n["name"]}</a>'
         for n in niches if n["posts"]
     )
 
     # Footer
-    footer_cats = "".join(f'<a href="/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
     footer_social = render_footer_social()
 
     html = HOMEPAGE_TEMPLATE
+    html = html.replace("__SITE_BASE__", b)
     html = html.replace("CATEGORY_DROPDOWN_PLACEHOLDER", nav_dd)
     html = html.replace("HERO_SLIDES_PLACEHOLDER", hero_slides)
     html = html.replace("HERO_DOTS_PLACEHOLDER", hero_dots)
@@ -1133,19 +1134,19 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         slug = p.get("slug", f"reviews/{niche_slug}")
         img_src = carousel_img(niche_slug, b)
         post_cards += f'''<div class="post-card">
-    <a href="/{slug}/"><img src="{img_src}" alt="{html_mod.escape(title)}"></a>
+    <a href="{b}/{slug}/"><img src="{img_src}" alt="{html_mod.escape(title)}"></a>
     <div class="post-card__body">
-        <h3><a href="/{slug}/">{html_mod.escape(title)}</a></h3>
+        <h3><a href="{b}/{slug}/">{html_mod.escape(title)}</a></h3>
         <p>Expert-tested and reviewed. See why this made our list.</p>
-        <a href="/{slug}/" class="read-link">Read more →</a>
+        <a href="{b}/{slug}/" class="read-link">Read more →</a>
     </div>
 </div>'''
 
     # Nav dropdown
-    nav_dd = "".join(f'<a href="/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    nav_dd = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
 
     # Footer
-    footer_cats = "".join(f'<a href="/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
     footer_social = render_footer_social()
 
     # Subscribe form action
@@ -1161,7 +1162,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     return f'''<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="icon" type="image/png" href="{b}/favicon.png">
     <title>{blog_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1242,14 +1243,14 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 <body>
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
-    <a href="/" class="logo"><img src="/logo.png" alt="Abvorn"></a>
+    <a href="{b}/" class="logo"><img src="{b}/logo.png" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="/">Categories</a><div class="nav-dropdown">{nav_dd}</div></div>
-        <a href="/about.html">About</a>
-        <a href="/privacy.html">Privacy</a>
+        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown">{nav_dd}</div></div>
+        <a href="{b}/about.html">About</a>
+        <a href="{b}/privacy.html">Privacy</a>
     </nav>
 </div></header>
 
@@ -1277,7 +1278,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 <footer class="footer"><div class="footer-grid">
     <div class="footer-col"><h4>Abvorn</h4><p>Independent product reviews and buying guides.</p><div class="footer-social">{footer_social}</div></div>
     <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
-    <div class="footer-col"><h4>Company</h4><a href="/about.html">About</a></div>
+    <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
 </div>
 <div class="footer-bottom"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div></footer>
 
@@ -1572,7 +1573,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     further_reading_links = ""
     if related_niches:
         further_reading_links = "".join(
-            f'<li><a href="/reviews/{r["slug"]}/">{r["name"]} reviews</a></li>'
+            f'<li><a href="{b}/reviews/{r["slug"]}/">{r["name"]} reviews</a></li>'
             for r in related_niches
         )
 
@@ -1587,7 +1588,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="icon" type="image/png" href="{b}/favicon.png">
     <title>{title_escaped} | Abvorn</title>
     <meta name="description" content="{meta_escaped}">
     <link rel="canonical" href="{article_url}">
@@ -1696,14 +1697,14 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 <body>
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
-    <a href="/" class="logo"><img src="/logo.png" alt="Abvorn"></a>
+    <a href="{b}/" class="logo"><img src="{b}/logo.png" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="/">Categories</a><div class="nav-dropdown">{nav_dd}</div></div>
-        <a href="/about.html">About</a>
-        <a href="/privacy.html">Privacy</a>
+        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown">{nav_dd}</div></div>
+        <a href="{b}/about.html">About</a>
+        <a href="{b}/privacy.html">Privacy</a>
     </nav>
 </div></header>
 
@@ -1733,7 +1734,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 <footer class="footer"><div class="footer-grid">
     <div class="footer-col"><h4>Abvorn</h4><p>Independent product reviews and buying guides.</p><div class="footer-social">{footer_social}</div></div>
     <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
-    <div class="footer-col"><h4>Company</h4><a href="/about.html">About</a></div>
+    <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
 </div>
 <div class="footer-bottom"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div></footer>
 
