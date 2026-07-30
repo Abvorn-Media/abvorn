@@ -1249,7 +1249,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .footer-col a {{ display:block; color:#888; text-decoration:none; padding:3px 0; font-size:0.9rem; }}
         .footer-col a:hover {{ color:#fff; }}
         .footer-social {{ display:flex; gap:8px; margin-top:12px; }}
-        .footer-social a {{ width:40px; height:40px; border-radius:50%; background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#888; border:1px solid #2a2a2a; }}
+        .footer-social a {{ width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }}
         .footer-social a:hover {{ background:var(--clr-accent); color:#0a0a0a; }}
         .footer-social svg {{ width:16px; height:16px; }}
         .footer-bottom {{ border-top:1px solid #1a1a1a; padding-top:16px; display:flex; justify-content:space-between; flex-wrap:wrap; font-size:0.8rem; color:#555; max-width:1200px; margin:0 auto; padding-left:20px; padding-right:20px; }}
@@ -1701,7 +1701,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .footer-col a {{ display:block; color:#888; text-decoration:none; padding:3px 0; font-size:0.9rem; }}
         .footer-col a:hover {{ color:#fff; }}
         .footer-social {{ display:flex; gap:8px; margin-top:12px; }}
-        .footer-social a {{ width:40px; height:40px; border-radius:50%; background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#888; border:1px solid #2a2a2a; }}
+        .footer-social a {{ width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }}
         .footer-social a:hover {{ background:var(--clr-accent); color:#0a0a0a; }}
         .footer-social svg {{ width:16px; height:16px; }}
         .footer-bottom {{ border-top:1px solid #1a1a1a; padding-top:16px; display:flex; justify-content:space-between; flex-wrap:wrap; font-size:0.8rem; color:#555; max-width:1200px; margin:0 auto; padding-left:20px; padding-right:20px; }}
