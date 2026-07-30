@@ -13,6 +13,7 @@ from src.nervous_system import NervousSystem, create_nervous_system, AlertLevel
 from src.living_knowledge_core import create_living_knowledge_core
 from src.ai_sql import AISQL, create_ai_sql, QueryPlan, QueryResult
 from src.unified_memory import UnifiedMemory, create_unified_memory, MemoryTier
+from abvorn.core.verdict import render_verdict_card
 from src.close_feedback_loop import ClosedFeedbackLoop, create_feedback_loop
 from src.economic_surplus import EconomicSurplusTracker, create_economic_surplus_tracker
 from src.entitlements import EntitlementsFramework, create_entitlements_framework
@@ -174,7 +175,7 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
 {img}
 <div class="product-card-body">
 <h3>{html_mod.escape(name)}</h3>
-    <div class="price">{html_mod.escape(price or 'N/A')}</div>
+    <div class="price">{html_mod.escape(str(price or 'N/A'))}</div>
 <p>{html_mod.escape(summary)}</p>
 {"<ul>" + features_html + "</ul>" if features_html else ""}
 <a class="buy-btn" href="{aff_url}" target="_blank" rel="sponsored">Check Price on Amazon →</a>
