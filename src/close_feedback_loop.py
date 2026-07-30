@@ -483,6 +483,60 @@ class ClosedFeedbackLoop:
             "successful_deployments": sum(
                 1 for d in self.deployment_pipeline.deployments if d.get("status") == "deployed"
             ),
+            "prompt_variants_tested": len(self.prompt_optimizer.prompt_variants),
+        }
+
+    def feed_back_to_ai_sql(self, ai_sql_instance=None) -> None:
+        """Feed engagement data back to AISQL for provider selection and prompt optimization."""
+        recent_data = self.analytics.get_recent_engagement(days=7)
+        for provider, metrics in recent_data.get("by_provider", {}).items():
+            engagement_score = self._calculate_engagement_score(metrics)
+            if ai_sql_instance:
+                ai_sql_instance.update_provider_score(provider, engagement_score)
+
+        best_prompt = self.prompt_optimizer.get_best_prompt()
+        if best_prompt and ai_sql_instance:
+            system_prompt, user_prompt = best_prompt
+            ai_sql_instance.log_prompt_variant(
+                variant_id="best_prompt",
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                engagement_score=0.5,
+            )
+            logger.info("Optimized prompt fed back to AISQL")
+
+    def _calculate_engagement_score(self, metrics: dict) -> float:
+        """Calculate a normalized engagement score from metrics."""
+        score = 0.0
+        if metrics.get("clicks"):
+            score += min(metrics["clicks"] / 10, 0.4)
+        if metrics.get("conversions"):
+            score += min(metrics["conversions"] / 2, 0.3)
+        if metrics.get("scroll_depth"):
+            score += metrics["scroll_depth"] / 100 * 0.3
+        return min(score, 1.0)
+
+    def close_loop(self, ai_sql_instance=None) -> Dict[str, Any]:
+        """Close the entire feedback loop: collect data, update models, feed back."""
+        data = self.analytics.collect()
+        training_data = self.training_data_collector.from_analytics(data)
+
+        model_updated = False
+        if len(training_data) > 100:
+            try:
+                new_model = self.model_fine_tuner.fine_tune(training_data)
+                self.deployment_pipeline.deploy(new_model)
+                model_updated = True
+            except Exception as e:
+                logger.warning(f"Fine-tuning failed: {e}")
+
+        self.feed_back_to_ai_sql(ai_sql_instance)
+
+        return {
+            "data_collected": len(data),
+            "training_examples": len(training_data),
+            "model_updated": model_updated,
+            "feedback_sent_to_ai_sql": ai_sql_instance is not None,
         }
 
 
