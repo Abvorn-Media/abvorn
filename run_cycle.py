@@ -853,7 +853,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .guides-section { padding: var(--space-2xl) 0; }
         .latest-reviews-section { padding-top: var(--space-2xl); }
         .category-section { margin-bottom: var(--space-2xl); }
-        .niche-card { background: #ffffff; }
+        .niche-card { background: #ffffff; border: 1px solid var(--clr-light-gray); }
         .category-section__header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-light-gray); padding-bottom: var(--space-sm); }
         .category-section__header h2 { font-size: var(--text-2xl); margin:0; }
         .category-section__header a { font-size:0.85rem; font-weight:700; color: var(--clr-accent-text); text-decoration:none; white-space:nowrap; }
@@ -1196,7 +1196,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; }}
         {DESIGN_SYSTEM_CSS}
         .latest-reviews-section, .guides-section, .category-section {{ background: #f6f5f2; }}
-        .niche-card {{ background: #ffffff; }}
+        .niche-card {{ background: #ffffff; border: 1px solid var(--clr-light-gray); }}
         .top-bar {{ background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }}
         .top-bar .container {{ display:flex; justify-content:space-between; }}
         header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; }}
@@ -1629,7 +1629,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; }}
         {DESIGN_SYSTEM_CSS}
         .latest-reviews-section, .guides-section, .category-section {{ background: #f6f5f2; }}
-        .niche-card {{ background: #ffffff; }}
+        .niche-card {{ background: #ffffff; border: 1px solid var(--clr-light-gray); }}
         .top-bar {{ background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }}
         .top-bar .container {{ display:flex; justify-content:space-between; align-items:center; }}
         header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; }}
