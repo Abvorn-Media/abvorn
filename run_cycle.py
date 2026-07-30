@@ -759,8 +759,8 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         ''' + DESIGN_SYSTEM_CSS + '''
         /* ===== FIX: HERO — MATCH PREVIEW ===== */
         .hero { padding: var(--space-2xl) 0; }
-        .hero h1 { font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-md); color: #0a0a0a; font-weight: 700; }
-        .hero p { font-size: var(--text-lg); color: #555; max-width: 46ch; margin-bottom: var(--space-lg); line-height: 1.6; }
+        .hero h1 { font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-md); color: #0a0a0a; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+        .hero p { font-size: var(--text-lg); color: #555; max-width: 46ch; margin-bottom: var(--space-lg); line-height: 1.6; letter-spacing: normal; }
         .hero .btn { padding: 0.9em 2em; font-size: 0.9rem; }
         /* ===== FIX: STATS BAND — MATCH PREVIEW ===== */
         .stats-band { background: #0a0a0a; color: #fff; padding: var(--space-lg) 0; }
