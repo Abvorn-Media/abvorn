@@ -174,7 +174,7 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
 {img}
 <div class="product-card-body">
 <h3>{html_mod.escape(name)}</h3>
-<div class="price">{html_mod.escape(price)}</div>
+    <div class="price">{html_mod.escape(price or 'N/A')}</div>
 <p>{html_mod.escape(summary)}</p>
 {"<ul>" + features_html + "</ul>" if features_html else ""}
 <a class="buy-btn" href="{aff_url}" target="_blank" rel="sponsored">Check Price on Amazon →</a>
