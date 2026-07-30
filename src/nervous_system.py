@@ -184,6 +184,30 @@ class NervousSystem:
     def notify_team(self, intervention: Intervention) -> None:
         logger.info(f"Team notified: {intervention.reason}")
 
+    def scale_infrastructure(self) -> None:
+        logger.info("📈 Scaling infrastructure (placeholder)")
+
+    def pause_low_performing_niches(self) -> None:
+        logger.info("⏸️ Pausing low-performing niches (placeholder)")
+
+    def pause_expansion(self) -> None:
+        logger.info("⏸️ Pausing expansion into new niches (placeholder)")
+
+    def add_features(self) -> None:
+        logger.info("✨ Adding new features (placeholder)")
+
+    def increase_frequency(self) -> None:
+        logger.info("📅 Increasing content frequency (placeholder)")
+
+    def refine_content(self) -> None:
+        logger.info("🎯 Refining content quality (placeholder)")
+
+    def optimize_providers(self) -> None:
+        logger.info("🔧 Optimizing AI providers (placeholder)")
+
+    def expand_niches(self) -> None:
+        logger.info("🚀 Expanding into new niches (placeholder)")
+
     def start_monitoring(self, interval_seconds: int = 60) -> None:
         if self.is_running:
             logger.warning("Monitoring already running")

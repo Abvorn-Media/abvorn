@@ -161,14 +161,15 @@ ACTIONS = {
 
 
 class SocialPermissionFramework:
-    def __init__(self, data_dir: str = "data/social_permission"):
+    def __init__(self, data_dir: str = "data/social_permission", nervous_system=None):
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.nervous_system = nervous_system
         self.history: List[Dict[str, Any]] = []
         self.action_log: List[Dict[str, Any]] = []
 
     def act(
-        self, score: float, surplus_data: Dict[str, Any] = None
+        self, score: float, surplus_data: Dict[str, Any] = None, metrics: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
         Act on social permission score — execute appropriate actions.
@@ -176,6 +177,7 @@ class SocialPermissionFramework:
         Args:
             score: Social permission score (0.0 - 1.0)
             surplus_data: Optional surplus metrics for context
+            metrics: Optional metrics dict (economic_surplus, user_engagement, trust_score)
 
         Returns:
             Dict with actions taken, level, and recommendations
@@ -214,6 +216,7 @@ class SocialPermissionFramework:
             },
             "actions": executed_actions,
             "surplus_data": surplus_data or {},
+            "metrics": metrics or {},
             "recommendations": self._generate_recommendations(level, score),
             "timestamp": datetime.now().isoformat(),
         }
@@ -226,10 +229,34 @@ class SocialPermissionFramework:
     def _execute_action(
         self, action: SocialAction, score: float, level: str
     ) -> None:
-        """Execute an auto-execute action."""
+        """Execute an auto-execute action by routing to the Nervous System."""
         logger.info(
             f"AUTO-EXECUTING action '{action.action_type}' for level '{level}' (score={score:.2f})"
         )
+        if not self.nervous_system:
+            logger.warning("No NervousSystem available, action not executed")
+            return
+
+        action_map = {
+            "reduce": self.nervous_system.pause_low_performing_niches,
+            "halt_expansion": self.nervous_system.pause_expansion,
+            "stop_all": self.nervous_system.pause_expansion,
+            "scale": self.nervous_system.scale_infrastructure,
+            "expand": self.nervous_system.expand_niches,
+            "invest": self.nervous_system.add_features,
+            "maintain": self.nervous_system.increase_frequency,
+            "optimize": self.nervous_system.refine_content,
+            "refine": self.nervous_system.optimize_providers,
+        }
+
+        if action.action_type in action_map:
+            try:
+                action_map[action.action_type]()
+                logger.info(f"Action '{action.action_type}' executed via NervousSystem")
+            except Exception as e:
+                logger.error(f"Action {action.action_type} failed: {e}")
+        else:
+            logger.warning(f"Unknown action type '{action.action_type}' for NervousSystem mapping")
 
     def _generate_recommendations(
         self, level: str, score: float
@@ -309,5 +336,5 @@ class SocialPermissionFramework:
         }
 
 
-def create_social_permission_framework() -> SocialPermissionFramework:
-    return SocialPermissionFramework()
+def create_social_permission_framework(**kwargs) -> SocialPermissionFramework:
+    return SocialPermissionFramework(**kwargs)

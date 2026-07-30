@@ -3071,10 +3071,19 @@ def main(forced_niche=None, force=False, batch_mode=False):
         surplus_tracker = create_economic_surplus_tracker()
         surplus = surplus_tracker.measure()
         print(f"  Economic surplus score: {surplus.get('social_permission_score', 0):.2f}")
-        social_perm = create_social_permission_framework()
-        can_expand = social_perm.act("expand_content")
-        if not can_expand:
-            print(f"  Social permission: expansion halted — surplus score too low")
+        nervous = create_nervous_system()
+        social_perm = create_social_permission_framework(nervous_system=nervous)
+        metrics = {
+            'economic_surplus': surplus.get('total_profit', 0) / max(surplus.get('total_revenue', 1), 1),
+            'user_engagement': state.get('engagement_avg', 0.5),
+            'trust_score': state.get('trust_score', 0.7),
+        }
+        social_score = surplus.get('social_permission_score', 0.5)
+        permission = social_perm.act(social_score, surplus_data=surplus, metrics=metrics)
+        state['social_permission'] = {'level': permission.get('level'), 'actions': permission.get('actions', [])}
+        save_state(state)
+        if permission.get('level') == 'critical' and permission.get('actions'):
+            logger.warning(f"CRITICAL social permission level: {permission['level']}")
     except Exception as e:
         logger.warning(f"Economic/social permission check skipped: {e}")
 
