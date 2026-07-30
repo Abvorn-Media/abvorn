@@ -1,22 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="/abvorn/favicon.png"><title>About Abvorn | Abvorn</title>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/png" href="/abvorn/assets/favicon.png">
+<title>About Abvorn | Abvorn</title>
+<meta name="description" content="About Abvorn — independent product reviews based on real testing, not spec sheets or press releases.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;color:#333;line-height:1.6}
-.top-bar{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}
-.top-bar .container{display:flex;justify-content:space-between;max-width:1200px;margin:0 auto;padding:0 20px}
-header{background:#0a0a0a;padding:18px 0;border-bottom:1px solid #2a2a2a}
-.header-inner{display:flex;justify-content:space-between;align-items:center;max-width:1200px;margin:0 auto;padding:0 20px}
-.logo-img{max-height:44px;width:auto}
-.main{padding:60px 20px;max-width:800px;margin:0 auto}
-footer{background:#0a0a0a;color:#888;padding:40px 0;text-align:center;border-top:1px solid #2a2a2a}
-footer a{color:#aaa;text-decoration:none}
-</style></head>
+:root{--clr-bg:#fff;--clr-text:#1a1a2e;--clr-text-secondary:#6b7280;--clr-accent:#d4633e;--clr-accent-dark:#b84d2a;--radius:12px;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.04)}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,sans-serif;background:var(--clr-bg);color:var(--clr-text);line-height:1.7}
+a{color:var(--clr-accent);text-decoration:none}a:hover{text-decoration:underline}.container{max-width:720px;margin:0 auto;padding:0 24px}
+.skip-link{position:absolute;top:-100px;left:16px;background:var(--clr-accent);color:#fff;padding:8px 16px;border-radius:0 0 8px 8px;z-index:100}
+.skip-link:focus{top:0}.site-header{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid #f0f0f0}
+.logo{font-size:20px;font-weight:700;color:var(--clr-text)}nav a{margin-left:24px;color:var(--clr-text-secondary);font-size:14px;font-weight:500}
+nav a:hover{color:var(--clr-text)}.section{padding:48px 0}.hero{background:linear-gradient(135deg,var(--clr-accent) 0%,var(--clr-accent-dark) 100%);color:#fff;padding:64px 0 48px;text-align:center}
+.hero h1{font-size:38px;font-weight:800;margin-bottom:12px;line-height:1.2}.hero p{font-size:17px;opacity:.9;max-width:600px;margin:0 auto;line-height:1.6}
+h2{font-size:26px;font-weight:700;margin:32px 0 12px}h3{font-size:20px;font-weight:600;margin:24px 0 8px}p{margin-bottom:16px;color:var(--clr-text-secondary);max-width:65ch}
+ul{padding-left:24px;margin-bottom:16px}li{margin-bottom:8px;color:var(--clr-text-secondary)}.tagline{font-size:15px;color:var(--clr-text-secondary);margin-top:32px;font-style:italic}
+.site-footer{border-top:1px solid #f0f0f0;padding:32px 0;text-align:center;color:var(--clr-text-secondary);font-size:13px}
+.site-footer a{color:var(--clr-text-secondary)}.social-links{display:flex;gap:16px;justify-content:center;margin-top:16px}.social-links a{color:var(--clr-accent);font-weight:600}
+@media(max-width:640px){.hero h1{font-size:28px}h2{font-size:22px}.container{padding:0 16px}}
+</style>
+</head>
 <body>
-<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
-<header><div class="header-inner"><a href="/abvorn/"><img src="/abvorn/logo.png" alt="Abvorn" class="logo-img"></a></div></header>
-<main class="main"><h1>About Abvorn</h1><h2>About Abvorn</h2><p>We are an AI-powered media network delivering expert product reviews and buying guides.</p></main>
-<footer><p>&copy; 2026 Abvorn</p></footer>
-</body></html>
+<a href="#main" class="skip-link">Skip to content</a>
+<header class="site-header"><div class="container" style="display:flex;align-items:center;justify-content:space-between">
+<a href="/" class="logo">Abvorn</a>
+<nav><a href="/">Reviews</a><a href="/about.html">About</a><a href="/how-we-test/">Methodology</a><a href="/plans/">Plans</a></nav>
+</div></header>
+<section class="hero" id="main"><div class="container">
+<h1>About Abvorn</h1>
+<p>Independent product reviews based on real testing — not spec sheets, not press releases.</p>
+</div></section>
+<section class="section"><div class="container">
+<h2>The Problem We're Solving</h2>
+<p>Shopping for almost anything today means wading through sponsored placements, recycled spec sheets, and reviews that all seem to reach the same conclusion. You're left wondering: who actually tested this? Who paid for this review? Can I trust this?</p>
+<p>We felt the same frustration. So we built something different.</p>
+<p>Abvorn exists to cut through the noise. We bring together real pricing, technical specifications, and verified customer feedback — and lay it out clearly enough that you can make a confident decision without losing an evening to it.</p>
+
+<h2>How We Build Our Guides</h2>
+<p>Every guide starts with current, real data — live pricing, published specifications, and aggregated customer ratings across the products we cover.</p>
+<p>We organize that around the questions people actually ask before buying:</p>
+<ul>
+<li>What's the best overall option?</li>
+<li>What's the best value?</li>
+<li>What's worth skipping?</li>
+</ul>
+<p>Then we write it up in plain language, without the padding.</p>
+<p>We're a lean, technology-assisted operation. We use research tools and AI-assisted writing to help us cover more products and keep guides current as prices and options change — always grounded in real product data, not fabricated opinions.</p>
+
+<h2>What's Coming</h2>
+<p>We're building something bigger than a review site. Our system is designed to learn, adapt, and evolve — so that every guide you read is better than the last. We're working on:</p>
+<ul>
+<li>Personalized recommendations — products matched to your preferences, not just a generic "best"</li>
+<li>Regret prediction — know before you buy if a product is right for you</li>
+<li>Real-time price tracking — get alerted when your pick goes on sale</li>
+<li>Video deep-dives — visual walkthroughs of our testing process</li>
+<li>Community insights — what real users are saying, not just the marketing</li>
+</ul>
+<p>This is just the beginning. We're building the future of how people discover and buy products — one guide at a time.</p>
+
+<h2>How We Make Money</h2>
+<p>Abvorn earns a commission when you buy something through the links in our guides, at no extra cost to you.</p>
+<p>Our policy is that this never influences which products we recommend or how we rank them. We're here to help you make the best decision, not the most profitable one for us.</p>
+
+<h2>Why Trust Us?</h2>
+<p>We're not here to sell you anything. We're here to give you the truth.</p>
+<ul>
+<li><strong>Real data</strong> — we use live pricing, verified specs, and aggregated customer feedback</li>
+<li><strong>No sponsors</strong> — we don't accept payments from the brands we review</li>
+<li><strong>Complete transparency</strong> — we disclose every affiliate relationship and our methodology</li>
+<li><strong>Continuous updates</strong> — as prices and options change, so do our guides</li>
+</ul>
+
+<h2>Questions or Feedback?</h2>
+<p>We'd like to hear from you.</p>
+<p>Reach us at <a href="mailto:abvorn.hq@gmail.com">abvorn.hq@gmail.com</a> with questions, corrections, or suggestions for what to cover next.</p>
+
+<p class="tagline">Abvorn — outpace tomorrow.</p>
+</div></section>
+<footer class="site-footer"><div class="container">
+<p>&copy; 2026 Abvorn. Independent reviews since 2026.</p>
+<div class="social-links"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/disclaimer/">Disclaimer</a><a href="/plans/">Plans</a></div>
+</div></footer>
+</body>
+</html>
