@@ -858,6 +858,13 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .niche-card .read-link { font-weight:700; font-size:0.88rem; color: var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }
         .niche-card .read-link:hover { color: var(--clr-accent-text); }
 
+        .category-group { display: none; }
+        .category-group.visible { display: block; }
+        .show-more-btn { display: inline-flex; align-items: center; gap: var(--space-sm); margin: var(--space-xl) auto 0; padding: 0.85em 1.5em; font-family: var(--font-body); font-weight: 700; font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.06em; color: var(--clr-accent-text); background: none; border: 2px solid var(--clr-accent); border-radius: var(--radius-sm); cursor: pointer; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+        .show-more-btn:hover { background: var(--clr-accent); color: var(--clr-black); }
+        .show-more-btn svg { width: 16px; height: 16px; transition: transform var(--duration-fast) var(--ease-out); }
+        .show-more-btn:hover svg { transform: translateX(4px); }
+
         .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
         .footer-grid { display:grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
         .footer-col h4 { color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }
@@ -1003,6 +1010,24 @@ async function submitHomepageSubscribe(e) {
     } catch (err) { msg.innerText = 'Connection error. Please try later.'; }
 }
 
+// Show more categories — reveal next group of 4
+(function() {
+    const groups = document.querySelectorAll('.category-group');
+    const btn = document.querySelector('.show-more-btn');
+    if (btn && groups.length > 0) {
+        let nextIndex = 1;
+        btn.addEventListener('click', function() {
+            if (nextIndex < groups.length) {
+                groups[nextIndex].classList.add('visible');
+                nextIndex++;
+            }
+            if (nextIndex >= groups.length) {
+                btn.style.display = 'none';
+            }
+        });
+    }
+})();
+
 // Hero slider — auto-advance + dot navigation
 (function() {
     const slider = document.getElementById('hero-slider');
@@ -1083,8 +1108,10 @@ def build_homepage(state, form_url=""):
 </div>'''
         card_count += 1
 
-    # Build category sections with posts
-    cat_sections = ""
+    # Build category sections with posts — groups of 4, first visible
+    cat_groups = []
+    group_buffer = ""
+    group_count = 0
     for n in niches:
         if not n["posts"]:
             continue
@@ -1094,9 +1121,26 @@ def build_homepage(state, form_url=""):
     <p>{n["posts"]} expert-reviewed guide{"s" if n["posts"] > 1 else ""} with real testing results.</p>
     <a href="{b}/{n["slug"]}/" class="read-link">Continue reading →</a>
 </div>'''
-        cat_sections += f'''<div class="category-section">
+        section = f'''<div class="category-section">
     <div class="category-section__header"><h2>{n["name"]}</h2><a href="{b}/{n["slug"]}/">View all →</a></div>
     <div class="niche-grid">{card}</div>
+</div>'''
+        group_buffer += section
+        group_count += 1
+        if group_count % 4 == 0:
+            cat_groups.append(group_buffer)
+            group_buffer = ""
+    if group_buffer:
+        cat_groups.append(group_buffer)
+
+    cat_sections = ""
+    for i, group in enumerate(cat_groups):
+        cls = " visible" if i == 0 else ""
+        cat_sections += f'<div class="category-group{cls}">{group}</div>'
+
+    if len(cat_groups) > 1:
+        cat_sections += f'''<div style="text-align:center">
+    <button class="show-more-btn">View more categories<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
 </div>'''
 
     # Trending ticker items text

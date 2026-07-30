@@ -16,40 +16,54 @@
         :root { --niche-primary: #0a0a0a; --niche-accent: #c98a2c; }
         
 :root {
-    --clr-accent: #c98a2c;
-    --clr-accent-text: #8b6914;
-    --clr-white: #ffffff;
-    --clr-off-white: #f6f5f2;
-    --clr-light-gray: #e5e2dc;
-    --clr-mid-gray: #888;
-    --clr-primary: #0a0a0a;
-    --clr-black: #0a0a0a;
-    --font-display: 'Libre Franklin', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --space-xs: 4px; --space-sm: 8px; --space-md: 16px; --space-lg: 24px; --space-xl: 32px;
-    --space-2xl: 48px; --space-3xl: 64px;
-    --text-xs: 0.75rem; --text-sm: 0.875rem; --text-base: 1rem; --text-lg: 1.125rem;
-    --text-xl: 1.25rem; --text-2xl: 1.5rem; --text-3xl: 2rem; --text-4xl: 2.5rem;
-    --radius-sm: 6px; --radius-md: 12px; --radius-lg: 16px;
-    --shadow-sm: 0 1px 3px rgba(10,10,10,0.06);
-    --shadow-md: 0 4px 14px rgba(10,10,10,0.08);
-    --shadow-lg: 0 10px 30px rgba(10,10,10,0.1);
-    --duration-fast: 0.15s; --duration-base: 0.25s; --duration-slow: 0.4s;
-    --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --clr-black: #0a0a0a; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
+  --clr-mid-gray: #666; --clr-light-gray: #e8e8e8; --clr-off-white: #f6f5f2; --clr-white: #ffffff;
+  --clr-primary: var(--niche-primary, #1a1a1a); --clr-accent: var(--niche-accent, #c98a2c);
+  --clr-accent-text: var(--niche-accent-text, #996015);
+  --font-display: 'Libre Franklin', -apple-system, sans-serif; --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --scale-ratio: 1.25;
+  --text-xs: calc(1rem / var(--scale-ratio) / var(--scale-ratio)); --text-sm: calc(1rem / var(--scale-ratio));
+  --text-base: 1rem; --text-lg: calc(1rem * var(--scale-ratio)); --text-xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio));
+  --text-2xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
+  --text-3xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
+  --text-4xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
+  --space-xs: 0.25rem; --space-sm: 0.5rem; --space-md: 1rem; --space-lg: 2rem; --space-xl: 4rem; --space-2xl: 8rem;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08); --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12); --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 150ms; --duration-base: 300ms; --duration-slow: 500ms;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:16px;font-family:var(--font-body);-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
-body{color:var(--clr-primary);background:var(--clr-white);line-height:1.6}
-::selection{background:rgba(201,138,44,0.15)}
-.container{max-width:1200px;margin:0 auto;padding:0 20px}
-a{color:inherit;text-decoration:none}
-img{max-width:100%;height:auto}
-.btn{display:inline-block;border:none;cursor:pointer;font-family:var(--font-body);font-weight:700;padding:0.8em 1.6em;border-radius:var(--radius-sm);font-size:0.9rem;transition:all var(--duration-fast) var(--ease-out);text-decoration:none}
-.btn:hover{text-decoration:none}
-.input{font-family:var(--font-body);padding:10px 14px;border:2px solid var(--clr-light-gray);border-radius:var(--radius-sm);font-size:0.9rem;transition:border-color var(--duration-fast);outline:none;background:var(--clr-white);color:var(--clr-primary)}
-.input:focus{border-color:var(--clr-accent)}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: var(--clr-off-black); background: var(--clr-white); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; color: var(--clr-black); }
+h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 500; }
+h2 { font-size: var(--text-2xl); letter-spacing: -0.01em; }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+p { margin-bottom: var(--space-lg); max-width: 65ch; }
+.container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 var(--space-lg); }
+@media (max-width: 768px) { .container { padding: 0 var(--space-md); } h1 { font-size: var(--text-2xl); } h2 { font-size: var(--text-xl); } }
+.card { background: var(--clr-white); border: 1px solid var(--clr-light-gray); border-radius: var(--radius-md); padding: var(--space-lg); transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); }
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.btn { display: inline-flex; align-items: center; gap: var(--space-sm); padding: 0.75em 1.5em; font-family: var(--font-body); font-weight: 600; font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; color: var(--clr-white); background: var(--clr-primary); border: none; border-radius: var(--radius-sm); cursor: pointer; transition: background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-out); }
+.btn:hover { background: var(--clr-accent); transform: scale(1.03); box-shadow: var(--shadow-md); }
+.btn:active { transform: scale(0.97); }
+.input { width: 100%; padding: 0.75em 1em; font-family: var(--font-body); font-size: var(--text-base); color: var(--clr-off-black); background: var(--clr-off-white); border: 2px solid transparent; border-radius: var(--radius-sm); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+.input:focus { outline: none; border-color: var(--clr-accent); box-shadow: 0 0 0 3px rgba(90,125,154,0.15); }
+.header--scrolled { padding: 10px 0 !important; background: rgba(0,0,0,0.95) !important; box-shadow: 0 2px 20px rgba(0,0,0,0.3); backdrop-filter: blur(10px); }
+.signal-tag { position: relative; display: inline-flex; align-items: center; gap: 6px; background: var(--clr-accent); color: var(--clr-black); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.signal-tag--tag { padding: 6px 14px; border-radius: var(--radius-sm); font-size: 0.75rem; }
+.signal-tag--badge { position: absolute; top: 12px; left: 12px; padding: 5px 12px; border-radius: var(--radius-sm); font-size: 0.68rem; box-shadow: var(--shadow-sm); z-index: 2; }
+.rank-chip { display: inline-block; background: var(--clr-off-white); color: var(--clr-mid-gray); border: 1px solid var(--clr-light-gray); padding: 4px 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: var(--radius-sm); position: absolute; top: 12px; left: 12px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+@media (prefers-color-scheme: dark) { :root { --clr-black: #f0f0f0; --clr-off-black: #e0e0e0; --clr-mid-gray: #999; --clr-light-gray: #333; --clr-off-white: #1a1a1a; --clr-white: #111; } body { background: #111; color: #e0e0e0; } h1, h2, h3, h4 { color: #f0f0f0; } .card { background: #1a1a1a; border-color: #333; } .input { background: #222; color: #e0e0e0; } }
+@media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+:focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
 
+        
         .top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
         .top-bar .container { display:flex; justify-content:space-between; align-items:center; }
         header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; }
@@ -63,7 +77,7 @@ img{max-width:100%;height:auto}
         .nav-item > a::after { content:'▾'; font-size:0.6rem; opacity:0.5; }
         .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#1a1a1a; min-width:220px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:6px 0; border:1px solid #2a2a2a; z-index:30; }
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
-        .nav-dropdown a { display:block; color:#ccc; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }
+        .nav-dropdown a { display:block; color:#ffffff; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }
         .nav-dropdown a:hover { background:#2a2a2a; color:#fff; }
         .nav-toggle { display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }
         .nav-toggle svg { width:24px; height:24px; }
@@ -115,7 +129,7 @@ img{max-width:100%;height:auto}
         .sidebar { position:sticky; top:80px; }
         .sidebar-box { background:#0a0a0a; color:#fff; padding:var(--space-lg); border-radius:var(--radius-md); margin-bottom:var(--space-lg); }
         .sidebar-box h4 { color:var(--clr-accent); text-transform:uppercase; letter-spacing:0.08em; font-size:0.8rem; margin-bottom:var(--space-md); }
-        .sidebar-box p { font-size:0.9rem; color:#ccc; margin-bottom:var(--space-md); }
+        .sidebar-box p { font-size:0.9rem; color:#ffffff; margin-bottom:var(--space-md); }
         .sidebar-box .input { background:#1a1a1a; color:#fff; border-color:#333; }
         .sidebar-box .input:focus { border-color:var(--clr-accent); }
         .sidebar-box .btn { background:var(--clr-accent); color:#1a1200; width:100%; font-weight:700; }
@@ -134,7 +148,7 @@ img{max-width:100%;height:auto}
         .footer-col a { display:block; color:#888; text-decoration:none; padding:3px 0; font-size:0.9rem; }
         .footer-col a:hover { color:#fff; }
         .footer-social { display:flex; gap:8px; margin-top:12px; }
-        .footer-social a { width:40px; height:40px; border-radius:50%; background:#1a1a1a; display:flex; align-items:center; justify-content:center; color:#888; border:1px solid #2a2a2a; }
+        .footer-social a { width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
         .footer-social a:hover { background:var(--clr-accent); color:#0a0a0a; }
         .footer-social svg { width:16px; height:16px; }
         .footer-bottom { border-top:1px solid #1a1a1a; padding-top:16px; display:flex; justify-content:space-between; flex-wrap:wrap; font-size:0.8rem; color:#555; max-width:1200px; margin:0 auto; padding-left:20px; padding-right:20px; }
@@ -145,11 +159,11 @@ img{max-width:100%;height:auto}
 <style>
 #cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
 #cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
-#cookie-banner p{margin:0;color:#ccc;font-size:13px}
+#cookie-banner p{margin:0;color:#ffffff;font-size:13px}
 #cookie-banner a{color:var(--clr-accent,#c98a2c);text-decoration:underline}
 #cookie-banner .btn{background:var(--clr-accent,#c98a2c);color:#0a0a0a;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}
 #cookie-banner .btn:hover{background:#d4a03a}
-#cookie-banner .btn-secondary{background:transparent;color:#ccc;border:1px solid #555;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
+#cookie-banner .btn-secondary{background:transparent;color:#ffffff;border:1px solid #555;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
 #cookie-banner .btn-secondary:hover{border-color:#888}
 </style>
 <div id="cookie-banner" role="dialog" aria-label="Cookie consent">
@@ -206,12 +220,12 @@ img{max-width:100%;height:auto}
 <a href="https://pinterest.com/pin/create/button/?url=https://Abvorn-Media.github.io/abvorn/reviews/laptops/&description=Best Laptops" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem;color:var(--text-secondary);text-decoration:none;transition:all .15s" aria-label="Share on Pinterest"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146 1.124.347 2.317.535 3.554.535 6.607 0 11.974-5.367 11.974-11.987C23.97 5.367 18.603.001 12.017.001z"/></svg> Pinterest</a>
 <a href="mailto:?subject=Best Laptops&body=https://Abvorn-Media.github.io/abvorn/reviews/laptops/" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem;color:var(--text-secondary);text-decoration:none;transition:all .15s" aria-label="Share via Email"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg> Email</a>
 </div>
-        <section class="section"><div class="container"><div class="section-title">Related Categories</div><div class="grid-3"><a class="cat-card" href="/abvorn/wireless-headphones/"><div class="cat-name">Wireless Headphones</div><div class="cat-count">2 reviews</div></a><a class="cat-card" href="/abvorn/gaming-mice/"><div class="cat-name">Gaming Mice</div><div class="cat-count">2 reviews</div></a><a class="cat-card" href="/abvorn/4k-monitors/"><div class="cat-name">4K Monitors</div><div class="cat-count">2 reviews</div></a><a class="cat-card" href="/abvorn/streaming-devices/"><div class="cat-name">Streaming Devices</div><div class="cat-count">1 reviews</div></a></div></div></section>
+        <section class="section"><div class="container"><div class="section-title">Related Categories</div><div class="grid-3"><a class="cat-card" href="/abvorn/wireless-headphones/"><div class="cat-name">Wireless Headphones</div><div class="cat-count">3 reviews</div></a><a class="cat-card" href="/abvorn/gaming-mice/"><div class="cat-name">Gaming Mice</div><div class="cat-count">3 reviews</div></a><a class="cat-card" href="/abvorn/4k-monitors/"><div class="cat-name">4K Monitors</div><div class="cat-count">3 reviews</div></a><a class="cat-card" href="/abvorn/streaming-devices/"><div class="cat-name">Streaming Devices</div><div class="cat-count">2 reviews</div></a></div></div></section>
         <section class="section"><div class="container"><div class="section-title">Products Mentioned</div><div class="product-card">
 <img src="https://m.media-amazon.com/images/I/71pIODAIdhL._AC_UY654_QL65_.jpg" alt="HP Essential Laptop Computer" loading="lazy" style="width:160px;height:160px;object-fit:contain;background:#fff;border-radius:var(--radius-sm)">
 <div class="product-card-body">
 <h3>HP Essential Laptop Computer</h3>
-<div class="price">$289.99</div>
+    <div class="price">$289.99</div>
 <p>HP Essential Laptop Computer, 2026 Edition, 128GB SSD, Intel N150 CPU, Long Battery Life, Portable Design, 1TB Cloud Storage, Windows 11 with Microsoft 365</p>
 
 <a class="buy-btn" href="https://www.amazon.com/dp/B0H7DMZ68L?tag=viraltestco-20" target="_blank" rel="sponsored">Check Price on Amazon →</a>
@@ -220,7 +234,7 @@ img{max-width:100%;height:auto}
 <img src="https://m.media-amazon.com/images/I/71sTXs4lkqL._AC_UY654_QL65_.jpg" alt="HP 15.6&amp;quot; FHD Laptop 2026 Edition" loading="lazy" style="width:160px;height:160px;object-fit:contain;background:#fff;border-radius:var(--radius-sm)">
 <div class="product-card-body">
 <h3>HP 15.6&amp;quot; FHD Laptop 2026 Edition</h3>
-<div class="price">$399.99</div>
+    <div class="price">$399.99</div>
 <p>HP 15.6&amp;quot; FHD Laptop 2026 Edition, Intel Processor, 8GB RAM, 256GB SSD | Copilot AI, Long Battery Life, Lightweight 3.64 lbs, Microsoft 365, Windows 11 for Students &amp;amp; Office, with 5 in 1 hub</p>
 
 <a class="buy-btn" href="https://www.amazon.com/dp/B0GRVFY42Q?tag=viraltestco-20" target="_blank" rel="sponsored">Check Price on Amazon →</a>
@@ -229,7 +243,7 @@ img{max-width:100%;height:auto}
 <img src="https://m.media-amazon.com/images/I/71Ua0XOTqfL._AC_UY654_QL65_.jpg" alt="Dell Inspiron 14 2 in 1 Touchscreen Laptop 16GB DDR5 1TB SSD Intel Core 7 | 10-Cores Up to 5.4 GHz | 14&amp;quot; FHD+" loading="lazy" style="width:160px;height:160px;object-fit:contain;background:#fff;border-radius:var(--radius-sm)">
 <div class="product-card-body">
 <h3>Dell Inspiron 14 2 in 1 Touchscreen Laptop 16GB DDR5 1TB SSD Intel Core 7 | 10-Cores Up to 5.4 GHz | 14&amp;quot; FHD+</h3>
-<div class="price">$1,099.99</div>
+    <div class="price">$1,099.99</div>
 <p>Dell Inspiron 14 2 in 1 Touchscreen Laptop 16GB DDR5 1TB SSD Intel Core 7 | 10-Cores Up to 5.4 GHz | 14&amp;quot; FHD+, WVA, 300 nits | 5200 MT/s RAM | Fingerprint| backlit &amp;amp; Copilot key | Windows 11 Pro</p>
 
 <a class="buy-btn" href="https://www.amazon.com/dp/B0H8C4HBBF?tag=viraltestco-20" target="_blank" rel="sponsored">Check Price on Amazon →</a>
@@ -238,7 +252,7 @@ img{max-width:100%;height:auto}
 <img src="https://m.media-amazon.com/images/I/51qhN7a-AgL._AC_UY654_QL65_.jpg" alt="HP Latest Stream 14&amp;quot; HD Laptop" loading="lazy" style="width:160px;height:160px;object-fit:contain;background:#fff;border-radius:var(--radius-sm)">
 <div class="product-card-body">
 <h3>HP Latest Stream 14&amp;quot; HD Laptop</h3>
-<div class="price">$219.00</div>
+    <div class="price">$219.00</div>
 <p>HP Latest Stream 14&amp;quot; HD Laptop, Intel Celeron Processor, 4GB Memory, 64GB eMMC Storage, Fast Charge, HDMI, Up to 11 Hours Long Battery Life, Office 365 1-Year, Win 11 S, Microfiber Bundle, White</p>
 
 <a class="buy-btn" href="https://www.amazon.com/dp/B0C5S8626M?tag=viraltestco-20" target="_blank" rel="sponsored">Check Price on Amazon →</a>
@@ -247,7 +261,7 @@ img{max-width:100%;height:auto}
 <img src="https://m.media-amazon.com/images/I/71pkfQGcMKL._AC_UY654_QL65_.jpg" alt="Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI" loading="lazy" style="width:160px;height:160px;object-fit:contain;background:#fff;border-radius:var(--radius-sm)">
 <div class="product-card-body">
 <h3>Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI</h3>
-<div class="price">$1,259.99</div>
+    <div class="price">$1,259.99</div>
 <p>Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI, 13.6-inch Liquid Retina Display, 16GB Unified Memory, 512GB SSD, 12MP Center Stage Camera, Touch ID, Wi-Fi 7; Midnight</p>
 
 <a class="buy-btn" href="https://www.amazon.com/dp/B0GR1JTFP8?tag=viraltestco-20" target="_blank" rel="sponsored">Check Price on Amazon →</a>
@@ -268,7 +282,7 @@ img{max-width:100%;height:auto}
 </section>
 
 <footer class="footer"><div class="footer-grid">
-    <div class="footer-col"><h4>Abvorn</h4><p>Independent product reviews and buying guides.</p><div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a></div></div>
+    <div class="footer-col"><h4>Abvorn</h4><p>Independent product reviews and buying guides.</p><div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div></div>
     <div class="footer-col"><h4>Categories</h4><a href="/abvorn/wireless-headphones/">Wireless Headphones</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/smart-home/">Smart Home</a></div>
     <div class="footer-col"><h4>Company</h4><a href="/abvorn/about.html">About</a></div>
 </div>
