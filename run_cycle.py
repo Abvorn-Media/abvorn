@@ -798,10 +798,11 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
             .nav-dropdown a { color:#ccc; padding:7px 0; }
             .nav-dropdown a:hover { background:transparent; }
         }
-        .trending-ticker { background:#151515; color:#ccc; padding:9px 0; font-size:0.82rem; overflow:hidden; white-space:nowrap; border-bottom:1px solid #2a2a2a; }
+        .trending-ticker { background:var(--clr-accent); color:#1a1200; padding:9px 0; font-size:0.82rem; overflow:hidden; white-space:nowrap; }
         .trending-ticker__inner { display:inline-block; animation: ticker-scroll 24s linear infinite; }
-        .trending-ticker__label { font-weight:700; margin-right:15px; color:#fff; }
-        .trending-ticker__item { color:#ccc; text-decoration:none; padding:0 10px; }
+        .trending-ticker__label { font-weight:700; margin-right:15px; color:#1a1200; }
+        .trending-ticker__item { color:#1a1200; text-decoration:none; padding:0 10px; }
+        .trending-ticker__item:hover { color:#000; text-decoration:underline; }
         @keyframes ticker-scroll { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
         .hero { background:#f6f5f2; padding: var(--space-2xl) 0; }
         .hero-grid { display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items:center; }

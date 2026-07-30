@@ -91,10 +91,11 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
             .nav-dropdown a { color:#ccc; padding:7px 0; }
             .nav-dropdown a:hover { background:transparent; }
         }
-        .trending-ticker { background:#151515; color:#ccc; padding:9px 0; font-size:0.82rem; overflow:hidden; white-space:nowrap; border-bottom:1px solid #2a2a2a; }
+        .trending-ticker { background:var(--clr-accent); color:#1a1200; padding:9px 0; font-size:0.82rem; overflow:hidden; white-space:nowrap; }
         .trending-ticker__inner { display:inline-block; animation: ticker-scroll 24s linear infinite; }
-        .trending-ticker__label { font-weight:700; margin-right:15px; color:#fff; }
-        .trending-ticker__item { color:#ccc; text-decoration:none; padding:0 10px; }
+        .trending-ticker__label { font-weight:700; margin-right:15px; color:#1a1200; }
+        .trending-ticker__item { color:#1a1200; text-decoration:none; padding:0 10px; }
+        .trending-ticker__item:hover { color:#000; text-decoration:underline; }
         @keyframes ticker-scroll { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
         .hero { background:#f6f5f2; padding: var(--space-2xl) 0; }
         .hero-grid { display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items:center; }
@@ -203,9 +204,9 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 </div></section>
 
 <section class="stats-band"><div class="container stats-grid">
-    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="40">0</div><div class="stat-label">Guides published</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="41">0</div><div class="stat-label">Guides published</div></div>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="stat-number" data-target="10">0</div><div class="stat-label">Categories covered</div></div>
-    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="120">0</div><div class="stat-label">Products compared</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="123">0</div><div class="stat-label">Products compared</div></div>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3.5-7.1"/><path d="M21 3v6h-6"/></svg></div><div class="stat-number">Weekly</div><div class="stat-label">Review cycle</div></div>
 </div></section>
 
@@ -321,7 +322,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <div class="niche-grid"><div class="niche-card">
     <a href="/abvorn/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/wireless-headphones.svg" alt="Wireless Headphones" loading="lazy"></div></a>
     <h2><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></h2>
-    <p>4 expert-reviewed guides with real testing results.</p>
+    <p>5 expert-reviewed guides with real testing results.</p>
     <a href="/abvorn/wireless-headphones/" class="read-link">Continue reading →</a>
 </div></div>
 </div></div><div style="text-align:center">
@@ -344,7 +345,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 </div></footer>
 
 <script>
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxtu2kQ_OeFLE9Kz6cFUBsuqbLQEy_WiYBQaWALSNqsTtRqOM8s_7lL1pGYBK-LA2wL/exec";
+const APPS_SCRIPT_URL = "";
 
 // Mobile nav toggle
 (function() {
