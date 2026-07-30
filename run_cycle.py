@@ -16,6 +16,9 @@ from src.ai_sql import AISQL, create_ai_sql, QueryPlan, QueryResult
 from src.unified_memory import UnifiedMemory, create_unified_memory, MemoryTier
 from abvorn.core.verdict import render_verdict_card
 from src.close_feedback_loop import ClosedFeedbackLoop, create_feedback_loop
+from src.tools_registry import create_tool_registry, ToolAccess, Tool
+from src.change_management import create_change_manager, ChangeType, ChangeStatus
+from src.dag_scheduler import DAGScheduler, DAG, Task
 from src.economic_surplus import EconomicSurplusTracker, create_economic_surplus_tracker
 from src.entitlements import EntitlementsFramework, create_entitlements_framework
 from src.workflow_engine import WorkflowEngine, create_workflow_engine
@@ -35,6 +38,39 @@ OWN_USAGE_FILE = Path("data/openweb_usage.json")
 
 def _own_cache_key(query: str, source: str = "amazon") -> str:
     return hashlib.md5(f"{source}:{query}".encode()).hexdigest()
+
+
+def register_tools() -> None:
+    """Register core tools in the tool registry."""
+    registry = create_tool_registry()
+    registry.register(
+        name="fetch_products",
+        description="Fetch product data from Amazon via Open Web Ninja (cached)",
+        function=fetch_products_batch if "fetch_products_batch" in dir() else None,
+        access_level=ToolAccess.INTERNAL,
+        rate_limit=20
+    )
+    registry.register(
+        name="generate_outline",
+        description="Generate article outline using AI provider",
+        function=lambda niche, products: generate_outline(niche, products) if "generate_outline" in dir() else None,
+        access_level=ToolAccess.INTERNAL,
+        rate_limit=10
+    )
+    registry.register(
+        name="generate_draft",
+        description="Generate full article draft using AI provider",
+        function=lambda niche, products, outline: write_draft(niche, products, outline) if "write_draft" in dir() else None,
+        access_level=ToolAccess.INTERNAL,
+        rate_limit=10
+    )
+    registry.register(
+        name="pubish_page",
+        description="Publish a page to GitHub Pages",
+        function=lambda content, path: None,
+        access_level=ToolAccess.RESTRICTED
+    )
+    return registry
 
 
 def _own_load_cache() -> dict:
@@ -2704,6 +2740,20 @@ def main(forced_niche=None, force=False):
     ai_sql = create_ai_sql()
     feedback_loop = create_feedback_loop(ai_sql)
 
+    # Tool registry setup
+    tool_registry = create_tool_registry()
+
+    # Change management setup
+    change_mgr = create_change_manager()
+
+    # DAG scheduler for parallel AI calls
+    dag_scheduler = DAGScheduler()
+    dag_scheduler.register_provider("kilogateway", None)  # KiloGateway provider placeholder
+    dag_scheduler.priority_weights = {"kilogateway": 3, "deepseek": 2, "kimi": 2, "groq": 1, "local": 1, "openai": 1}
+
+    # Register cycle change
+    change_id = change_mgr.register_change(ChangeType.CYCLE, f"content_cycle_{niche_slug if 'niche_slug' in dir() else 'unknown'}", ChangeStatus.PENDING)
+
     # Load state
     state = load_state()
     print(f"State loaded: {len(state['niches'])} niches")
@@ -2836,6 +2886,10 @@ def main(forced_niche=None, force=False):
         logger.info(f"Feedback loop closed: {feedback_result.get('status', 'ok')}")
     except Exception as e:
         logger.warning(f"Feedback loop close failed: {e}")
+
+    # Mark cycle change as complete
+    if "change_id" in dir():
+        change_mgr.promote_change(change_id, ChangeStatus.PRODUCTION)
 
 
 if __name__ == "__main__":
