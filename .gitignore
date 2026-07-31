@@ -17,6 +17,7 @@ Thumbs.db
 *.db
 *.log
 cycle_state.json
+relentless_state.json
 products_cache.json
 personas.db
 

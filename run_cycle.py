@@ -3097,6 +3097,13 @@ def main(forced_niche=None, force=False, batch_mode=False):
     except Exception as e:
         logger.warning(f"Verdict weight update skipped: {e}")
 
+    # Relentless Core — measure, plan, act
+    try:
+        from abvorn.core.relentless_core import cycle_relentless_core
+        cycle_relentless_core()
+    except Exception as e:
+        logger.warning(f"Relentless Core skipped: {e}")
+
 
 from pathlib import Path
 
