@@ -35,7 +35,7 @@ from src.social_permission import SocialPermissionFramework, create_social_permi
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
-from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url
+from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS
 from src.click_tracker import get_clicks, register_articles_batch
 
 logger = logging.getLogger("run_cycle")
@@ -326,8 +326,16 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
 </table></div>
 </div></section>
 <div class="container"><div class="affiliate-banner">We earn from qualifying purchases.</div></div>
-<footer><p>Abvorn &middot; Independent reviews</p><div class="footer-links"><a href="{b}/privacy/">Privacy</a><a href="{b}/terms/">Terms</a><a href="{b}/disclaimer/">Disclaimer</a><a href="{b}/about/">About</a></div>{SOCIAL_HTML}</footer>
-{NAV_SCRIPT}</body></html>"""
+<footer class="footer"><div class="container">
+    <div class="footer-grid">
+        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{render_footer_social()}</div></div>
+        <div class="footer-col"><h4>Categories</h4>{build_footer_categories(b)}</div>
+        <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
+    </div>
+    <div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {datetime.now().year} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
+</div></footer>
+</body></html>"""
 
 CTA_BANNER = """
 <div class="cta-banner">
@@ -498,10 +506,11 @@ header{background:#0a0a0a;padding:18px 0;position:relative;z-index:20;border-bot
 .nav-item > a{padding:8px 16px;display:flex;align-items:center;gap:4px}
 .nav-item > a::after{content:'▾';font-size:0.6rem;opacity:0.5}
 .nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:8px}
-.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:8px;background:#1a1a1a;min-width:220px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:6px 0;z-index:30;border:1px solid #2a2a2a}
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:8px;background:#ffffff;min-width:240px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:8px 0;z-index:30}
 .nav-item:hover .nav-dropdown{display:block}
-.nav-dropdown a{display:block;color:#ffffff;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
-.nav-dropdown a:hover{background:#2a2a2a;color:#fff}
+.nav-dropdown a{display:block;color:#1a1a1a;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
+.nav-dropdown a:hover{background:#f6f5f2;color:#996015}
+""" + MEGA_MENU_CSS + """
 .nav-toggle{display:none;background:none;border:none;color:#fff;padding:6px;cursor:pointer}
 .nav-toggle svg{width:24px;height:24px}
 @media(max-width:640px){
@@ -567,15 +576,18 @@ article .content p{margin:16px 0;font-size:1.05rem;color:var(--text)}
 article .content h2{margin:32px 0 12px;font-size:1.35rem}
 article .content ul{padding-left:24px;margin:12px 0}
 article .content li{margin:6px 0;color:var(--text)}
-footer{padding:48px 0;border-top:1px solid var(--border);text-align:center}
-footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
-.footer-links{display:flex;justify-content:center;gap:24px;margin:12px 0;flex-wrap:wrap}
-.footer-links a{font-size:.8rem;color:var(--text-muted);text-decoration:none;transition:color .15s}
-.footer-links a:hover{color:var(--primary);text-decoration:underline}
-.social{margin-top:16px;display:flex;gap:20px;justify-content:center}
-.social a{color:var(--text-muted);text-decoration:none;display:flex;align-items:center;transition:color .15s}
-.social a:hover{color:var(--text)}
-.social svg{width:22px;height:22px;fill:currentColor}
+.footer{background:#0a0a0a;color:#999;padding:64px 0 32px}
+.footer-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:32px;margin-bottom:32px}
+.footer-col h4{color:#fff;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
+.footer-col p{color:#999;font-size:.9rem;max-width:32ch}
+.footer-col a{display:block;color:#999;text-decoration:none;padding:4px 0;font-size:.9rem}
+.footer-col a:hover{color:#fff}
+.footer-social{display:flex;gap:10px;margin-top:16px}
+.footer-social a{width:44px;height:44px;border-radius:50%;background:#1e1e1e;display:flex;align-items:center;justify-content:center;color:#ccc;transition:background .15s,color .15s}
+.footer-social a:hover{background:var(--accent,#c98a2c);color:#0a0a0a}
+.footer-social svg{width:16px;height:16px}
+.footer-bottom{border-top:1px solid #222;padding-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:.85rem;color:#777}
+@media(max-width:760px){.footer-grid{grid-template-columns:1fr 1fr}}
 .story-section{padding:clamp(40px,6vw,64px) 0;background:var(--bg-alt);border-top:1px solid var(--border)}
 .story-section .container{max-width:680px;margin:0 auto;padding:0 24px}
 .story-section h2{font-size:1.4rem;font-weight:700;margin-bottom:12px;text-align:center}
@@ -796,8 +808,8 @@ def _slugify_title(s):
 
 def nav_html(categories, current=""):
     b = SITE_BASE
-    dd_items = "".join(f'<a href="{b}/{c}/">{_slugify_title(c)}</a>' for c in categories)
-    dropdown = f'<div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown">{dd_items}</div></div>'
+    dd_items = build_category_dropdown(b)
+    dropdown = f'<div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{dd_items}</div></div>'
     return f'''
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
@@ -807,6 +819,7 @@ def nav_html(categories, current=""):
     </button>
     <nav class="nav-links" id="nav-links">
         {dropdown}
+        <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/privacy.html">Privacy</a>
     </nav>
@@ -963,6 +976,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     </button>
     <nav class="nav-links" id="nav-links">
         <div class="nav-item"><a href="#niches">Categories ▾</a><div class="nav-dropdown">CATEGORY_DROPDOWN_PLACEHOLDER</div></div>
+        <a href="__SITE_BASE__/">Home</a>
         <a href="__SITE_BASE__/about.html">About</a>
         <a href="__SITE_BASE__/privacy.html">Privacy</a>
     </nav>
@@ -1168,11 +1182,11 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     </div>
 </div>'''
 
-    # Nav dropdown
-    nav_dd = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    # Nav dropdown (white mega-menu)
+    nav_dd = build_category_dropdown(b)
 
     # Footer
-    footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    footer_cats = build_footer_categories(b)
     footer_social = render_footer_social()
 
     # Subscribe form action
@@ -1209,10 +1223,11 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .nav-item > a {{ padding:8px 16px; display:flex; align-items:center; gap:4px; }}
         .nav-item > a::after {{ content:'\u25be'; font-size:0.6rem; opacity:0.5; }}
         .nav-item::after {{ content:''; position:absolute; top:100%; left:0; right:0; height:4px; }}
-        .nav-dropdown {{ display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#1a1a1a; min-width:220px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:6px 0; border:1px solid #2a2a2a; z-index:30; }}
+        .nav-dropdown {{ display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }}
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown {{ display:block; }}
-        .nav-dropdown a {{ display:block; color:#ffffff; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }}
-        .nav-dropdown a:hover {{ background:#2a2a2a; color:#fff; }}
+        .nav-dropdown a {{ display:block; color:#1a1a1a; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }}
+        .nav-dropdown a:hover {{ background:#f6f5f2; color: var(--clr-accent-text); }}
+        {MEGA_MENU_CSS}
         .nav-toggle {{ display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }}
         .nav-toggle svg {{ width:24px; height:24px; }}
         @media (max-width:640px) {{
@@ -1256,17 +1271,18 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .post-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
         .post-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }}
 
-        .footer {{ background:#0a0a0a; color:#888; padding: var(--space-2xl) 0 var(--space-lg); border-top:1px solid #2a2a2a; }}
-        .footer-grid {{ display:grid; grid-template-columns:2fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); max-width:1200px; margin-left:auto; margin-right:auto; padding:0 20px; }}
-        .footer-col h4 {{ color:#fff; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px; }}
-        .footer-col a {{ display:block; color:#888; text-decoration:none; padding:3px 0; font-size:0.9rem; }}
+        .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
+        .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
+        .footer-col h4 {{ color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }}
+        .footer-col p {{ color:#999; font-size:0.9rem; max-width:32ch; }}
+        .footer-col a {{ display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }}
         .footer-col a:hover {{ color:#fff; }}
-        .footer-social {{ display:flex; gap:8px; margin-top:12px; }}
+        .footer-social {{ display:flex; gap:10px; margin-top:16px; }}
         .footer-social a {{ width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }}
         .footer-social a:hover {{ background:var(--clr-accent); color:#0a0a0a; }}
         .footer-social svg {{ width:16px; height:16px; }}
-        .footer-bottom {{ border-top:1px solid #1a1a1a; padding-top:16px; display:flex; justify-content:space-between; flex-wrap:wrap; font-size:0.8rem; color:#555; max-width:1200px; margin:0 auto; padding-left:20px; padding-right:20px; }}
-        @media (max-width:760px) {{ .footer-grid {{ grid-template-columns:1fr; }} }}
+        .footer-bottom {{ border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }}
+        @media (max-width:760px) {{ .footer-grid {{ grid-template-columns:1fr 1fr; }} }}
     </style>
 </head>
 <body>
@@ -1277,7 +1293,8 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown">{nav_dd}</div></div>
+        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
+        <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/privacy.html">Privacy</a>
     </nav>
@@ -1304,12 +1321,15 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     </form>
 </div></section>
 
-<footer class="footer"><div class="footer-grid">
-    <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides.</p><div class="footer-social">{footer_social}</div></div>
-    <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
-    <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
-</div>
-<div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div></footer>
+<footer class="footer"><div class="container">
+    <div class="footer-grid">
+        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{footer_social}</div></div>
+        <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
+        <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
+    </div>
+    <div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
+</div></footer>
 
 <script>
 const APPS_SCRIPT_URL = "{form_url}";
@@ -1626,9 +1646,9 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         )
         related_html = f'<section class="section"><div class="container"><div class="section-title">Related Categories</div><div class="grid-3">{cards}</div></div></section>'
     # Build nav dropdown
-    nav_dd = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    nav_dd = build_category_dropdown(b)
     # Footer
-    footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    footer_cats = build_footer_categories(b)
     footer_social = render_footer_social()
 
     if article_id:
@@ -1706,10 +1726,11 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .nav-item > a {{ padding:8px 16px; display:flex; align-items:center; gap:4px; }}
         .nav-item > a::after {{ content:'\u25be'; font-size:0.6rem; opacity:0.5; }}
         .nav-item::after {{ content:''; position:absolute; top:100%; left:0; right:0; height:4px; }}
-        .nav-dropdown {{ display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#1a1a1a; min-width:220px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:6px 0; border:1px solid #2a2a2a; z-index:30; }}
+        .nav-dropdown {{ display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }}
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown {{ display:block; }}
-        .nav-dropdown a {{ display:block; color:#ffffff; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }}
-        .nav-dropdown a:hover {{ background:#2a2a2a; color:#fff; }}
+        .nav-dropdown a {{ display:block; color:#1a1a1a; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }}
+        .nav-dropdown a:hover {{ background:#f6f5f2; color: var(--clr-accent-text); }}
+        {MEGA_MENU_CSS}
         .nav-toggle {{ display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }}
         .nav-toggle svg {{ width:24px; height:24px; }}
         @media (max-width:640px) {{
@@ -1791,18 +1812,19 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .further-reading a {{ color:var(--clr-primary); text-decoration:none; font-weight:600; }}
         .further-reading a:hover {{ color:var(--clr-accent-text); }}
 
-        .footer {{ background:#0a0a0a; color:#888; padding: var(--space-2xl) 0 var(--space-lg); border-top:1px solid #2a2a2a; }}
-        .footer-grid {{ display:grid; grid-template-columns:2fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); max-width:1200px; margin-left:auto; margin-right:auto; padding:0 20px; }}
-        .footer-col h4 {{ color:#fff; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px; }}
-        .footer-col a {{ display:block; color:#888; text-decoration:none; padding:3px 0; font-size:0.9rem; }}
+        .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
+        .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
+        .footer-col h4 {{ color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }}
+        .footer-col p {{ color:#999; font-size:0.9rem; max-width:32ch; }}
+        .footer-col a {{ display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }}
         .footer-col a:hover {{ color:#fff; }}
-        .footer-social {{ display:flex; gap:8px; margin-top:12px; }}
+        .footer-social {{ display:flex; gap:10px; margin-top:16px; }}
         .footer-social a {{ width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }}
         .footer-social a:hover {{ background:var(--clr-accent); color:#0a0a0a; }}
         .footer-social svg {{ width:16px; height:16px; }}
-        .footer-bottom {{ border-top:1px solid #1a1a1a; padding-top:16px; display:flex; justify-content:space-between; flex-wrap:wrap; font-size:0.8rem; color:#555; max-width:1200px; margin:0 auto; padding-left:20px; padding-right:20px; }}
+        .footer-bottom {{ border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }}
         @media (max-width:860px) {{ .content-wrapper {{ grid-template-columns:1fr; }} .product-card {{ grid-template-columns:1fr; }} }}
-        @media (max-width:760px) {{ .footer-grid {{ grid-template-columns:1fr; }} }}
+        @media (max-width:760px) {{ .footer-grid {{ grid-template-columns:1fr 1fr; }} }}
     </style>
     {COOKIE_CONSENT_SCRIPT}
 </head>
@@ -1814,7 +1836,8 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown">{nav_dd}</div></div>
+        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
+        <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/privacy.html">Privacy</a>
     </nav>
@@ -1848,12 +1871,15 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     </aside>
 </section>
 
-<footer class="footer"><div class="footer-grid">
-    <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides.</p><div class="footer-social">{footer_social}</div></div>
-    <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
-    <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
-</div>
-<div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div></footer>
+<footer class="footer"><div class="container">
+    <div class="footer-grid">
+        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{footer_social}</div></div>
+        <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
+        <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
+    </div>
+    <div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
+</div></footer>
 
 <script>
 const APPS_SCRIPT_URL="{form_url}";
@@ -2075,8 +2101,15 @@ def build_methodology_page(all_slugs, form_url=""):
 </ul>
 </div></section>
 {lead_form_html(form_url)}
-<footer><p>Abvorn &middot; Independent reviews since 2026</p><div class="footer-links"><a href="{b}/privacy/">Privacy</a><a href="{b}/terms/">Terms</a><a href="{b}/disclaimer/">Disclaimer</a><a href="{b}/about/">About</a></div>{SOCIAL_HTML}</footer>
-{NAV_SCRIPT}
+<footer class="footer"><div class="container">
+    <div class="footer-grid">
+        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{render_footer_social()}</div></div>
+        <div class="footer-col"><h4>Categories</h4>{build_footer_categories(b)}</div>
+        <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
+    </div>
+    <div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {datetime.now().year} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
+</div></footer>
 {CAROUSEL_JS}</body></html>"""
 
 

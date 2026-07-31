@@ -146,6 +146,63 @@ def _slugify_title(s):
     return s.replace("-", " ").title()
 
 
+# ── Category navigation (mega-menu + footer) ────────────────────────────
+CATEGORY_MAP = {
+    "Audio": ["wireless-earbuds", "wireless-headphones"],
+    "Computing & Monitors": ["4k-monitors", "laptops"],
+    "Fitness & Health": ["fitness-trackers"],
+    "Gaming": ["gaming-mice", "mechanical-keyboards"],
+    "Home & Lifestyle": ["smart-home", "streaming-devices"],
+    "Webcams & Accessories": ["webcams"],
+}
+
+CATEGORY_NAMES = {
+    "4k-monitors": "4K Monitors",
+    "fitness-trackers": "Fitness Trackers",
+    "gaming-mice": "Gaming Mice",
+    "laptops": "Laptops",
+    "mechanical-keyboards": "Mechanical Keyboards",
+    "smart-home": "Smart Home",
+    "streaming-devices": "Streaming Devices",
+    "webcams": "Webcams",
+    "wireless-earbuds": "Wireless Earbuds",
+    "wireless-headphones": "Wireless Headphones",
+}
+
+
+def _niche_name(slug):
+    return CATEGORY_NAMES.get(slug, _slugify_title(slug))
+
+
+def build_category_dropdown(b=""):
+    """White multi-column mega-menu markup (the inner .nav-dropdown content)."""
+    groups = ""
+    for label, slugs in CATEGORY_MAP.items():
+        links = "".join(f'<a href="{b}/{s}/">{_niche_name(s)}</a>' for s in slugs)
+        groups += f'<div class="category-group"><span class="category-label">{label}</span>{links}</div>'
+    return groups
+
+
+def build_footer_categories(b=""):
+    """Flat category links for the footer Categories column (order matches CATEGORY_NAMES)."""
+    return "".join(f'<a href="{b}/{s}/">{_niche_name(s)}</a>' for s in CATEGORY_NAMES)
+
+
+MEGA_MENU_CSS = """
+.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
+.nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
+.nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
+.nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent,#c98a2c); font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
+.nav-dropdown.nav-dropdown--mega a { padding:6px 20px; }
+@media (max-width:640px) {
+    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; }
+    .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 auto; }
+    .nav-dropdown.nav-dropdown--mega .category-label { padding:8px 0 2px; }
+    .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
+}
+"""
+
+
 def carousel_img(niche_slug, b):
     """Pick real hero JPG if uploaded, else fall back to generated SVG."""
     hero_path = f"docs/assets/hero/{niche_slug}.jpg"
@@ -219,8 +276,8 @@ def build_homepage(state, form_url=""):
     total_posts = sum(n["posts"] for n in niches)
     total_products = total_posts * 3  # rough estimate
 
-    # Build nav dropdown
-    nav_dd = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    # Build nav dropdown (white mega-menu)
+    nav_dd = build_category_dropdown(b)
 
     # Build hero slides
     hero_slides = ""
@@ -296,7 +353,7 @@ def build_homepage(state, form_url=""):
     )
 
     # Footer
-    footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    footer_cats = build_footer_categories(b)
     footer_social = render_footer_social()
 
     html = HOMEPAGE_TEMPLATE
@@ -312,6 +369,7 @@ def build_homepage(state, form_url=""):
     html = html.replace("CATEGORY_SECTIONS_PLACEHOLDER", cat_sections if cat_sections else '<div class="category-section"><div class="niche-card"><div class="niche-card__image-wrapper"><img src="' + b + '/assets/hero-home.svg" alt="Coming soon"></div><div class="niche-card__body"><h2>Our first guide is in testing</h2><p>Check back shortly for hands-on reviews.</p></div></div></div>')
     html = html.replace("FOOTER_SOCIAL_PLACEHOLDER", footer_social)
     html = html.replace("FOOTER_CATEGORY_LINKS_PLACEHOLDER", footer_cats)
+    html = html.replace("MEGA_MENU_CSS_PLACEHOLDER", MEGA_MENU_CSS)
     html = html.replace("__APPS_SCRIPT_URL__", form_url)
     html = html.replace("YEAR_PLACEHOLDER", str(datetime.now().year))
     return html
@@ -335,11 +393,11 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     </div>
 </div>'''
 
-    # Nav dropdown
-    nav_dd = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    # Nav dropdown (white mega-menu)
+    nav_dd = build_category_dropdown(b)
 
     # Footer
-    footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    footer_cats = build_footer_categories(b)
     footer_social = render_footer_social()
 
     # Subscribe form action
@@ -376,10 +434,11 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .nav-item > a {{ padding:8px 16px; display:flex; align-items:center; gap:4px; }}
         .nav-item > a::after {{ content:'\u25be'; font-size:0.6rem; opacity:0.5; }}
         .nav-item::after {{ content:''; position:absolute; top:100%; left:0; right:0; height:4px; }}
-        .nav-dropdown {{ display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#1a1a1a; min-width:220px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:6px 0; border:1px solid #2a2a2a; z-index:30; }}
+        .nav-dropdown {{ display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }}
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown {{ display:block; }}
-        .nav-dropdown a {{ display:block; color:#ffffff; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }}
-        .nav-dropdown a:hover {{ background:#2a2a2a; color:#fff; }}
+        .nav-dropdown a {{ display:block; color:#1a1a1a; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }}
+        .nav-dropdown a:hover {{ background:#f6f5f2; color: var(--clr-accent-text); }}
+        {MEGA_MENU_CSS}
         .nav-toggle {{ display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }}
         .nav-toggle svg {{ width:24px; height:24px; }}
         @media (max-width:640px) {{
@@ -423,17 +482,18 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .post-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
         .post-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }}
 
-        .footer {{ background:#0a0a0a; color:#888; padding: var(--space-2xl) 0 var(--space-lg); border-top:1px solid #2a2a2a; }}
-        .footer-grid {{ display:grid; grid-template-columns:2fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); max-width:1200px; margin-left:auto; margin-right:auto; padding:0 20px; }}
-        .footer-col h4 {{ color:#fff; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px; }}
-        .footer-col a {{ display:block; color:#888; text-decoration:none; padding:3px 0; font-size:0.9rem; }}
+        .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
+        .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
+        .footer-col h4 {{ color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }}
+        .footer-col p {{ color:#999; font-size:0.9rem; max-width:32ch; }}
+        .footer-col a {{ display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }}
         .footer-col a:hover {{ color:#fff; }}
-        .footer-social {{ display:flex; gap:8px; margin-top:12px; }}
+        .footer-social {{ display:flex; gap:10px; margin-top:16px; }}
         .footer-social a {{ width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }}
         .footer-social a:hover {{ background:var(--clr-accent); color:#0a0a0a; }}
         .footer-social svg {{ width:16px; height:16px; }}
-        .footer-bottom {{ border-top:1px solid #1a1a1a; padding-top:16px; display:flex; justify-content:space-between; flex-wrap:wrap; font-size:0.8rem; color:#555; max-width:1200px; margin:0 auto; padding-left:20px; padding-right:20px; }}
-        @media (max-width:760px) {{ .footer-grid {{ grid-template-columns:1fr; }} }}
+        .footer-bottom {{ border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }}
+        @media (max-width:760px) {{ .footer-grid {{ grid-template-columns:1fr 1fr; }} }}
     </style>
 </head>
 <body>
@@ -444,7 +504,8 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown">{nav_dd}</div></div>
+        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
+        <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/privacy.html">Privacy</a>
     </nav>
@@ -471,12 +532,15 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     </form>
 </div></section>
 
-<footer class="footer"><div class="footer-grid">
-    <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides.</p><div class="footer-social">{footer_social}</div></div>
-    <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
-    <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
-</div>
-<div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div></footer>
+<footer class="footer"><div class="container">
+    <div class="footer-grid">
+        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{footer_social}</div></div>
+        <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
+        <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
+    </div>
+    <div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
+</div></footer>
 
 <script>
 const APPS_SCRIPT_URL = "{form_url}";
@@ -793,10 +857,10 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             for r in related_niches
         )
         related_html = f'<section class="section"><div class="container"><div class="section-title">Related Categories</div><div class="grid-3">{cards}</div></div></section>'
-    # Build nav dropdown
-    nav_dd = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    # Build nav dropdown (white mega-menu)
+    nav_dd = build_category_dropdown(b)
     # Footer
-    footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
+    footer_cats = build_footer_categories(b)
     footer_social = render_footer_social()
 
     if article_id:
@@ -874,10 +938,11 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .nav-item > a {{ padding:8px 16px; display:flex; align-items:center; gap:4px; }}
         .nav-item > a::after {{ content:'\u25be'; font-size:0.6rem; opacity:0.5; }}
         .nav-item::after {{ content:''; position:absolute; top:100%; left:0; right:0; height:4px; }}
-        .nav-dropdown {{ display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#1a1a1a; min-width:220px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:6px 0; border:1px solid #2a2a2a; z-index:30; }}
+        .nav-dropdown {{ display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }}
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown {{ display:block; }}
-        .nav-dropdown a {{ display:block; color:#ffffff; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }}
-        .nav-dropdown a:hover {{ background:#2a2a2a; color:#fff; }}
+        .nav-dropdown a {{ display:block; color:#1a1a1a; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }}
+        .nav-dropdown a:hover {{ background:#f6f5f2; color: var(--clr-accent-text); }}
+        {MEGA_MENU_CSS}
         .nav-toggle {{ display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }}
         .nav-toggle svg {{ width:24px; height:24px; }}
         @media (max-width:640px) {{
@@ -959,18 +1024,19 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .further-reading a {{ color:var(--clr-primary); text-decoration:none; font-weight:600; }}
         .further-reading a:hover {{ color:var(--clr-accent-text); }}
 
-        .footer {{ background:#0a0a0a; color:#888; padding: var(--space-2xl) 0 var(--space-lg); border-top:1px solid #2a2a2a; }}
-        .footer-grid {{ display:grid; grid-template-columns:2fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); max-width:1200px; margin-left:auto; margin-right:auto; padding:0 20px; }}
-        .footer-col h4 {{ color:#fff; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px; }}
-        .footer-col a {{ display:block; color:#888; text-decoration:none; padding:3px 0; font-size:0.9rem; }}
+        .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
+        .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
+        .footer-col h4 {{ color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }}
+        .footer-col p {{ color:#999; font-size:0.9rem; max-width:32ch; }}
+        .footer-col a {{ display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }}
         .footer-col a:hover {{ color:#fff; }}
-        .footer-social {{ display:flex; gap:8px; margin-top:12px; }}
+        .footer-social {{ display:flex; gap:10px; margin-top:16px; }}
         .footer-social a {{ width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }}
         .footer-social a:hover {{ background:var(--clr-accent); color:#0a0a0a; }}
         .footer-social svg {{ width:16px; height:16px; }}
-        .footer-bottom {{ border-top:1px solid #1a1a1a; padding-top:16px; display:flex; justify-content:space-between; flex-wrap:wrap; font-size:0.8rem; color:#555; max-width:1200px; margin:0 auto; padding-left:20px; padding-right:20px; }}
+        .footer-bottom {{ border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }}
         @media (max-width:860px) {{ .content-wrapper {{ grid-template-columns:1fr; }} .product-card {{ grid-template-columns:1fr; }} }}
-        @media (max-width:760px) {{ .footer-grid {{ grid-template-columns:1fr; }} }}
+        @media (max-width:760px) {{ .footer-grid {{ grid-template-columns:1fr 1fr; }} }}
     </style>
     {COOKIE_CONSENT_SCRIPT}
 </head>
@@ -982,7 +1048,8 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown">{nav_dd}</div></div>
+        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
+        <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/privacy.html">Privacy</a>
     </nav>
@@ -1016,12 +1083,15 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     </aside>
 </section>
 
-<footer class="footer"><div class="footer-grid">
-    <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides.</p><div class="footer-social">{footer_social}</div></div>
-    <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
-    <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
-</div>
-<div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div></footer>
+<footer class="footer"><div class="container">
+    <div class="footer-grid">
+        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{footer_social}</div></div>
+        <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
+        <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
+    </div>
+    <div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
+</div></footer>
 
 <script>
 const APPS_SCRIPT_URL="{form_url}";
@@ -1330,8 +1400,8 @@ def faq_schema(questions: list) -> str:
 
 def nav_html(categories, current=""):
     b = SITE_BASE
-    dd_items = "".join(f'<a href="{b}/{c}/">{_slugify_title(c)}</a>' for c in categories)
-    dropdown = f'<div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown">{dd_items}</div></div>'
+    dd_items = build_category_dropdown(b)
+    dropdown = f'<div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{dd_items}</div></div>'
     return f'''
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
@@ -1341,6 +1411,7 @@ def nav_html(categories, current=""):
     </button>
     <nav class="nav-links" id="nav-links">
         {dropdown}
+        <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/privacy.html">Privacy</a>
     </nav>
@@ -1392,6 +1463,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
         .nav-dropdown a { display:block; color:#1a1a1a; padding:9px 20px; font-weight:500; font-size:0.9rem; text-decoration:none; }
         .nav-dropdown a:hover { background:#f6f5f2; color: var(--clr-accent-text); }
+        MEGA_MENU_CSS_PLACEHOLDER
         .nav-toggle { display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }
         .nav-toggle svg { width:24px; height:24px; }
         @media (max-width: 640px) {
@@ -1496,7 +1568,8 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="#niches">Categories ▾</a><div class="nav-dropdown">CATEGORY_DROPDOWN_PLACEHOLDER</div></div>
+        <div class="nav-item"><a href="#niches">Categories ▾</a><div class="nav-dropdown nav-dropdown--mega">CATEGORY_DROPDOWN_PLACEHOLDER</div></div>
+        <a href="__SITE_BASE__/">Home</a>
         <a href="__SITE_BASE__/about.html">About</a>
         <a href="__SITE_BASE__/privacy.html">Privacy</a>
     </nav>
