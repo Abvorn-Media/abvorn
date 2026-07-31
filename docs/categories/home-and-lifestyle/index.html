@@ -2,8 +2,8 @@
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="/abvorn/assets/favicon.png">
-    <title>Best 4K Monitors Reviews | Abvorn</title>
-    <meta name="description" content="Expert 4k monitors reviews and buying guides. Independent testing, real recommendations.">
+    <title>Home &amp; Lifestyle Reviews | Abvorn</title>
+    <meta name="description" content="Independent home & lifestyle reviews and buying guides. We test before we recommend.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -68,7 +68,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .nav-links > a:hover, .nav-item > a:hover { background:rgba(255,255,255,0.08); color: var(--clr-accent); }
         .nav-item { position:relative; }
         .nav-item > a { padding:8px 16px; display:flex; align-items:center; gap:4px; }
-        .nav-item > a::after { content:'▾'; font-size:0.6rem; opacity:0.5; }
+        .nav-item > a::after { content:'\25be'; font-size:0.6rem; opacity:0.5; }
         .nav-item::after { content:''; position:absolute; top:100%; left:0; right:0; height:4px; }
         .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
@@ -104,6 +104,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .category-hero { background:var(--clr-off-white); padding: var(--space-2xl) 0; border-bottom:1px solid var(--clr-light-gray); }
         .category-hero h1 { font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-sm); }
         .category-hero p { font-size: var(--text-lg); color: var(--clr-mid-gray); max-width:50ch; }
+        .category-hero__meta { display:inline-block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-accent-text); margin-bottom: var(--space-md); }
 
         .subscribe-band { background:var(--clr-off-white); padding: var(--space-xl) 0; border-top:1px solid var(--clr-light-gray); }
         .subscribe-inner { display:flex; justify-content:space-between; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }
@@ -119,16 +120,17 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .subscribe-msg { flex-basis:100%; font-size:0.85rem; color:#666; margin-top:6px; }
         @media (max-width:700px) { .subscribe-inner { flex-direction:column; align-items:flex-start; } .subscribe-form .input { width:100%; } }
 
-        .posts-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }
-        .post-card { border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); }
-        .post-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
-        .post-card img { width:100%; height:200px; object-fit:cover; }
-        .post-card__body { padding:var(--space-md); }
-        .post-card h3 { font-size:var(--text-lg); margin:0 0 6px; }
-        .post-card h3 a { color:inherit; text-decoration:none; }
-        .post-card .post-meta { font-size:0.8rem; color:var(--clr-mid-gray); margin-bottom:8px; }
-        .post-card p { font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }
-        .post-card .read-link { font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }
+        .posts-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }
+        .niche-card { border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); }
+        .niche-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
+        .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; }
+        .niche-card img { width:100%; height:100%; object-fit:cover; }
+        .niche-card h2 { font-size:var(--text-lg); margin: var(--space-md) 0 8px; }
+        .niche-card h2 a { color:inherit; text-decoration:none; }
+        .niche-card p { font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }
+        .niche-card .read-link { font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }
+        .review-card__banner { display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
+        .review-card__banner + h2 { margin: 6px var(--space-md) 8px; }
 
         .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
         .footer-grid { display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }
@@ -160,22 +162,26 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 </div></header>
 
 <section class="category-hero"><div class="container">
-    <h1>Best 4K Monitors Reviews</h1>
+    <span class="category-hero__meta">Home &amp; Lifestyle · 2 reviews published</span>
+    <h1>Home &amp; Lifestyle Reviews</h1>
     <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
 </div></section>
 
-<section class="container posts-grid"><div class="post-card">
-    <a href="/abvorn/reviews/4k-monitors/"><img src="/abvorn/assets/4k-monitors.svg" alt="Best 4K Monitors"></a>
-    <div class="post-card__body">
-        <h3><a href="/abvorn/reviews/4k-monitors/">Best 4K Monitors</a></h3>
-        <p>Expert-tested and reviewed. See why this made our list.</p>
-        <a href="/abvorn/reviews/4k-monitors/" class="read-link">Read more →</a>
-    </div>
+<section class="container posts-grid"><div class="niche-card review-card">
+    <a href="/abvorn/reviews/smart-home/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/smart-home.png" alt="Best Smart Home" loading="lazy"></div></a>
+    <span class="review-card__banner">Home & Lifestyle · Smart Home</span>
+    <h2><a href="/abvorn/reviews/smart-home/">Best Smart Home</a></h2>
+    <a href="/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+</div><div class="niche-card review-card">
+    <a href="/abvorn/reviews/streaming-devices/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/streaming-devices.png" alt="Best Streaming Devices" loading="lazy"></div></a>
+    <span class="review-card__banner">Home & Lifestyle · Streaming Devices</span>
+    <h2><a href="/abvorn/reviews/streaming-devices/">Best Streaming Devices</a></h2>
+    <a href="/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
 </div></section>
 
 <section class="subscribe-band"><div class="container subscribe-inner">
     <div class="subscribe-copy">
-        <h2>Get alerted when we publish a new 4K Monitors review</h2>
+        <h2>Get alerted when we publish a new Home &amp; Lifestyle review</h2>
         <p>One email whenever we publish a new guide in this category. No spam, unsubscribe anytime.</p>
     </div>
     <form class="subscribe-form" id="category-subscribe-form" onsubmit="submitCategorySubscribe(event)">
@@ -199,8 +205,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 
 <script>
 const APPS_SCRIPT_URL = "";
-const CATEGORY_SLUG = "4k-monitors";
-const CATEGORY_NAME = "4K Monitors";
+const CATEGORY_SLUG = "home-and-lifestyle";
+const CATEGORY_NAME = "Home &amp; Lifestyle";
 
 (function() {
     const btn = document.getElementById('nav-toggle');

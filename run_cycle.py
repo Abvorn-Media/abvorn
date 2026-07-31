@@ -35,7 +35,7 @@ from src.social_permission import SocialPermissionFramework, create_social_permi
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
-from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS
+from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, build_category_listing_page, scan_published_reviews, _category_slug, _title_slug
 from src.click_tracker import get_clicks, register_articles_batch
 
 logger = logging.getLogger("run_cycle")
@@ -1171,14 +1171,16 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     post_cards = ""
     for p in posts:
         title = p.get("title", niche_name)
-        slug = p.get("slug", f"reviews/{niche_slug}")
+        slug = p.get("slug", f"reviews/{niche_slug}/").strip("/")
+        slug = slug if slug.endswith(".html") else slug.rstrip("/") + "/"
+        link = f"{b}/{slug}"
         img_src = carousel_img(niche_slug, b)
         post_cards += f'''<div class="post-card">
-    <a href="{b}/{slug}/"><img src="{img_src}" alt="{html_mod.escape(title)}"></a>
+    <a href="{link}"><img src="{img_src}" alt="{html_mod.escape(title)}"></a>
     <div class="post-card__body">
-        <h3><a href="{b}/{slug}/">{html_mod.escape(title)}</a></h3>
+        <h3><a href="{link}">{html_mod.escape(title)}</a></h3>
         <p>Expert-tested and reviewed. See why this made our list.</p>
-        <a href="{b}/{slug}/" class="read-link">Read more →</a>
+        <a href="{link}" class="read-link">Read more →</a>
     </div>
 </div>'''
 
@@ -2429,18 +2431,43 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     hero_images = hero_images or {}
     niche_name = next((n["name"] for n in state["niches"] if n["slug"] == niche_slug), niche_slug.replace("-", " ").title())
 
-    # Collect all posts across niches
-    all_posts = []
-    for n in state["niches"]:
-        for p in articles.get(n["slug"], []):
-            all_posts.append({"title": p.get("post_title", ""), "slug": n["slug"]})
+    # Published reviews for homepage + category listing pages. Start from the
+    # pages already on disk, then overlay the articles written this cycle so a
+    # brand-new review appears immediately.
+    reviews = scan_published_reviews("docs")
+    today = datetime.now().strftime("%Y-%m-%d")
 
     docs = Path("docs")
     docs.mkdir(exist_ok=True)
+    for slug, post_list in articles.items():
+        for a in post_list:
+            reviews.append({
+                "slug": slug,
+                "name": next((n["name"] for n in state["niches"] if n["slug"] == slug), slug.replace("-", " ").title()),
+                "title": a.get("post_title", ""),
+                "updated": today,
+                "rel": f"/reviews/{slug}/",
+            })
+
+    # Collect all published posts across niches (drives feed, sitemap, niche pages)
+    all_posts = [{"title": r["title"], "slug": r["rel"].lstrip("/")} for r in reviews]
 
     # Write root index (premium homepage)
-    (docs / "index.html").write_text(build_homepage(state, form_url), encoding="utf-8")
+    (docs / "index.html").write_text(build_homepage(state, form_url, reviews=reviews, base=SITE_BASE), encoding="utf-8")
     print(f"  Written: docs/index.html")
+
+    # Write category listing pages (one per category, e.g. /categories/audio/)
+    for cat_name, cat_slugs in CATEGORY_MAP.items():
+        cat_slug = _category_slug(cat_name)
+        cat_items = [r for r in reviews if r["slug"] in cat_slugs]
+        cat_items.sort(key=lambda r: r["updated"], reverse=True)
+        cat_dir = docs / "categories" / cat_slug
+        cat_dir.mkdir(parents=True, exist_ok=True)
+        (cat_dir / "index.html").write_text(
+            build_category_listing_page(cat_name, cat_slug, cat_items, all_slugs, base=SITE_BASE, affiliate_tag=amazon_tag),
+            encoding="utf-8",
+        )
+        print(f"  Written: docs/categories/{cat_slug}/index.html")
 
     # Generate static pages if they don't exist
     b = SITE_BASE
@@ -2480,7 +2507,9 @@ footer a{{color:#aaa;text-decoration:none}}
 
     # Write category pages (post slugs point to reviews/{slug} for article pages)
     for n in state["niches"]:
-        niche_posts = [{"title": a.get("post_title", ""), "slug": f"reviews/{n['slug']}"} for a in articles.get(n["slug"], [])]
+        niche_reviews = [r for r in reviews if r["slug"] == n["slug"]]
+        niche_posts = [{"title": r["title"], "slug": r["rel"].lstrip("/")} for r in niche_reviews] or \
+                      [{"title": a.get("post_title", ""), "slug": f"reviews/{n['slug']}"} for a in articles.get(n["slug"], [])]
         cat_dir = docs / n["slug"]
         cat_dir.mkdir(exist_ok=True)
         (cat_dir / "index.html").write_text(build_category_page(n["slug"], n["name"], niche_posts, all_slugs, amazon_tag), encoding="utf-8")
@@ -2500,7 +2529,9 @@ footer a{{color:#aaa;text-decoration:none}}
             )
             print(f"  Written: comparisons/{n['slug']}.html")
 
-    # Write article pages (under docs/reviews/{slug}/ to avoid overwriting category page)
+    # Write article pages (under docs/reviews/{slug}/). Each article gets its own
+    # dated file so published reviews accumulate; index.html always mirrors the
+    # latest so existing links (and category pages) keep working.
     for slug, post_list in articles.items():
         for i, a in enumerate(post_list):
             post_dir = docs / "reviews" / slug
@@ -2508,14 +2539,18 @@ footer a{{color:#aaa;text-decoration:none}}
             hero_img_html = hero_images.get(slug, "")
             _sorted_niches = sorted(state["niches"], key=lambda n: n["name"].lower())
             related = [n for n in _sorted_niches if n["slug"] != slug][:4]
-            (post_dir / "index.html").write_text(
-                build_article_page(slug, niche_name, a["post_title"], a["article_html"],
-                                   a["intro"], a["product_name"], a["meta_description"],
-                                   all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
-                                   related_niches=related, article_id=f"{slug}-{i}"),
-                encoding="utf-8"
-            )
-            print(f"  Written: docs/reviews/{slug}/index.html (article)")
+            article_html = build_article_page(slug, niche_name, a["post_title"], a["article_html"],
+                                              a["intro"], a["product_name"], a["meta_description"],
+                                              all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
+                                              related_niches=related, article_id=f"{slug}-{i}")
+            date_str = datetime.now().strftime("%Y-%m-%d")
+            suffix = "" if i == 0 else f"-{i}"
+            fname = f"{_title_slug(a['post_title'])}-{date_str}{suffix}.html"
+            (post_dir / fname).write_text(article_html, encoding="utf-8")
+            print(f"  Written: docs/reviews/{slug}/{fname} (article)")
+            if i == len(post_list) - 1:
+                (post_dir / "index.html").write_text(article_html, encoding="utf-8")
+                print(f"  Written: docs/reviews/{slug}/index.html (latest)")
             # Update the post slug in all_posts for root index links
             for p in all_posts:
                 if p.get("title") == a.get("post_title") and p.get("slug") == slug:
@@ -2532,6 +2567,8 @@ footer a{{color:#aaa;text-decoration:none}}
     for p in all_posts:
         title = p.get("title", "")
         slug_path = p.get("slug", "")
+        if not slug_path.endswith("/"):
+            slug_path = slug_path.rsplit("/", 1)[0] + "/"
         items.append({"title": title, "slug": slug_path,
                       "date": datetime.date.today().isoformat() if 'datetime' in dir() else "2025-01-01"})
     rss_xml = '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Abvorn Reviews</title><link>https://abvorn.com</link><description>Product reviews you can trust</description>'

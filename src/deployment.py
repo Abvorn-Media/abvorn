@@ -6,6 +6,7 @@ import html as html_mod
 import json
 import logging
 import os
+import re
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, List, Optional
@@ -174,6 +175,72 @@ def _niche_name(slug):
     return CATEGORY_NAMES.get(slug, _slugify_title(slug))
 
 
+def _category_slug(name):
+    """Slugify a category name for URLs. 'Computing & Monitors' -> 'computing-and-monitors'."""
+    return name.lower().replace(" & ", "-and-").replace("&", "and").replace(" ", "-").replace("--", "-")
+
+
+def _title_slug(title):
+    """Slugify a review title for its filename. 'Best Wireless Earbuds' -> 'best-wireless-earbuds'."""
+    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+    return slug or "review"
+
+
+def review_img(niche_slug, b):
+    """Pick the generated PNG hero for a review card, else fall back to the SVG."""
+    png = f"docs/assets/{niche_slug}.png"
+    if os.path.exists(png):
+        return f"{b}/assets/{niche_slug}.png"
+    return carousel_img(niche_slug, b)
+
+
+def scan_published_reviews(docs_dir="docs"):
+    """Enumerate every published review page under docs/reviews/*.
+
+    Each directory is one niche. When a niche has per-article pages (dated
+    files) they are returned (and its index.html is skipped so the latest
+    review is not double-counted); otherwise index.html is the single card.
+    Returns a list of dicts: {slug, name, title, updated, rel}.
+    """
+    base = Path(docs_dir) / "reviews"
+    reviews = []
+    if not base.is_dir():
+        return reviews
+    for niche_dir in sorted(base.iterdir()):
+        if not niche_dir.is_dir():
+            continue
+        slug = niche_dir.name
+        pages = sorted(p for p in niche_dir.glob("*.html") if p.name != "index.html")
+        if not pages:
+            index = niche_dir / "index.html"
+            pages = [index] if index.exists() else []
+        for p in pages:
+            html = p.read_text(encoding="utf-8")
+            h1 = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.S)
+            title = html_mod.unescape(re.sub(r"<[^>]+>", "", h1.group(1))).strip() if h1 else ""
+            upd = re.search(r"Updated:\s*(\d{4}-\d{2}-\d{2})", html)
+            rel = f"/reviews/{slug}/" if p.name == "index.html" else f"/reviews/{slug}/{p.name}"
+            reviews.append({
+                "slug": slug,
+                "name": _niche_name(slug),
+                "title": title or _niche_name(slug),
+                "updated": upd.group(1) if upd else "",
+                "rel": rel,
+            })
+    return reviews
+
+
+def review_card(item, category, b):
+    """One review card with a category+niche banner, for homepage and category pages."""
+    title = html_mod.escape(item["title"])
+    return f'''<div class="niche-card review-card">
+    <a href="{b}{item["rel"]}"><div class="niche-card__image-wrapper"><img src="{review_img(item["slug"], b)}" alt="{title}" loading="lazy"></div></a>
+    <span class="review-card__banner">{category} · {item["name"]}</span>
+    <h2><a href="{b}{item["rel"]}">{title}</a></h2>
+    <a href="{b}{item["rel"]}" class="read-link">Read review →</a>
+</div>'''
+
+
 def build_category_dropdown(b=""):
     """White multi-column mega-menu markup (the inner .nav-dropdown content)."""
     groups = ""
@@ -268,13 +335,16 @@ def deploy_single_page(page_path: str, content: str) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Deploy failed for {page_path}: {e}")
         return {"status": "failed", "path": page_path, "error": str(e)}
-def build_homepage(state, form_url=""):
+def build_homepage(state, form_url="", reviews=None, base=None):
     """Build the premium homepage with hero slider, stats, and category sections."""
     niches = sorted(state["niches"], key=lambda n: n["name"].lower())
     all_slugs = sorted([n["slug"] for n in niches], key=lambda s: _slugify_title(s).lower())
-    b = SITE_BASE
+    b = base or SITE_BASE
     total_posts = sum(n["posts"] for n in niches)
     total_products = total_posts * 3  # rough estimate
+
+    # Published reviews — one card per review page (up to 3 per category).
+    review_list = reviews if reviews is not None else scan_published_reviews()
 
     # Build nav dropdown (white mega-menu)
     nav_dd = build_category_dropdown(b)
@@ -311,40 +381,27 @@ def build_homepage(state, form_url=""):
 </div>'''
         card_count += 1
 
-    # Build category sections with posts — groups of 4, first visible
-    cat_groups = []
-    group_buffer = ""
-    group_count = 0
-    for n in niches:
-        if not n["posts"]:
-            continue
-        card = f'''<div class="niche-card">
-    <a href="{b}/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
-    <h2><a href="{b}/{n["slug"]}/">{n["name"]}</a></h2>
-    <p>{n["posts"]} expert-reviewed guide{"s" if n["posts"] > 1 else ""} with real testing results.</p>
-    <a href="{b}/{n["slug"]}/" class="read-link">Continue reading →</a>
-</div>'''
-        section = f'''<div class="category-section">
-    <div class="category-section__header"><h2>{n["name"]}</h2><a href="{b}/{n["slug"]}/">View all in {n["name"]} →</a></div>
-    <div class="niche-grid">{card}</div>
-</div>'''
-        group_buffer += section
-        group_count += 1
-        if group_count % 4 == 0:
-            cat_groups.append(group_buffer)
-            group_buffer = ""
-    if group_buffer:
-        cat_groups.append(group_buffer)
-
+    # Build category sections — one per category, alphabetical, latest 3 reviews each.
     cat_sections = ""
-    for i, group in enumerate(cat_groups):
-        cls = " visible" if i == 0 else ""
-        cat_sections += f'<div class="category-group{cls}">{group}</div>'
-
-    if len(cat_groups) > 1:
-        cat_sections += f'''<div style="text-align:center">
-    <button class="show-more-btn">View more categories<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+    for cat_name, slugs in CATEGORY_MAP.items():
+        cat_items = [r for r in review_list if r["slug"] in slugs]
+        cat_items.sort(key=lambda r: r["updated"], reverse=True)
+        top = cat_items[:3]
+        if top:
+            cards = "".join(review_card(r, cat_name, b) for r in top)
+        else:
+            cards = f'''<div class="niche-card">
+    <div class="niche-card__image-wrapper"><img src="{b}/assets/hero-home.svg" alt="Coming soon" loading="lazy"></div>
+    <span class="review-card__banner">{cat_name}</span>
+    <h2>Reviews coming soon</h2>
+    <p>We're testing products in this category now.</p>
 </div>'''
+        cat_sections += f'''<div class="category-section">
+    <div class="category-section__header"><h2>{cat_name}</h2><a href="{b}/categories/{_category_slug(cat_name)}/">View all in {cat_name} →</a></div>
+    <div class="niche-grid">{cards}</div>
+</div>'''
+    if not cat_sections:
+        cat_sections = '<div class="category-section"><div class="niche-card"><div class="niche-card__image-wrapper"><img src="' + b + '/assets/hero-home.svg" alt="Coming soon"></div><div class="niche-card__body"><h2>Our first guide is in testing</h2><p>Check back shortly for hands-on reviews.</p></div></div></div>'
 
     # Trending ticker items text
     ticker_items = " · ".join(
@@ -382,14 +439,16 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     post_cards = ""
     for p in posts:
         title = p.get("title", niche_name)
-        slug = p.get("slug", f"reviews/{niche_slug}")
+        slug = p.get("slug", f"reviews/{niche_slug}/").strip("/")
+        slug = slug if slug.endswith(".html") else slug.rstrip("/") + "/"
+        link = f"{b}/{slug}"
         img_src = carousel_img(niche_slug, b)
         post_cards += f'''<div class="post-card">
-    <a href="{b}/{slug}/"><img src="{img_src}" alt="{html_mod.escape(title)}"></a>
+    <a href="{link}"><img src="{img_src}" alt="{html_mod.escape(title)}"></a>
     <div class="post-card__body">
-        <h3><a href="{b}/{slug}/">{html_mod.escape(title)}</a></h3>
+        <h3><a href="{link}">{html_mod.escape(title)}</a></h3>
         <p>Expert-tested and reviewed. See why this made our list.</p>
-        <a href="{b}/{slug}/" class="read-link">Read more →</a>
+        <a href="{link}" class="read-link">Read more →</a>
     </div>
 </div>'''
 
@@ -545,6 +604,205 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 <script>
 const APPS_SCRIPT_URL = "{form_url}";
 const CATEGORY_SLUG = "{niche_slug}";
+const CATEGORY_NAME = "{title_escaped}";
+
+(function() {{
+    const btn = document.getElementById('nav-toggle');
+    const nav = document.getElementById('nav-links');
+    if (!btn || !nav) return;
+    btn.addEventListener('click', () => {{
+        const open = nav.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }});
+}})();
+
+async function submitCategorySubscribe(e) {{
+    e.preventDefault();
+    const f = e.target;
+    const msg = document.getElementById('category-subscribe-msg');
+    if (f._gotcha.value !== "") {{ msg.innerText = 'Success! Check your inbox.'; return; }}
+    const email = document.getElementById('category-subscribe-email').value.trim();
+    if (!email) return;
+    msg.innerText = 'Sending...';
+    try {{
+        const response = await fetch(APPS_SCRIPT_URL, {{
+            method: 'POST', headers: {{'Content-Type': 'application/json'}},
+            body: JSON.stringify({{ email: email, niche: CATEGORY_SLUG, source: 'category_page', lead_magnet: `New ${{CATEGORY_NAME}} reviews` }})
+        }});
+        const result = await response.json();
+        msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
+    }} catch (err) {{ msg.innerText = 'Connection error. Please try later.'; }}
+}}
+</script>
+</body>
+</html>'''
+
+
+def build_category_listing_page(category_name, category_slug, items, all_slugs, base=None, affiliate_tag=""):
+    """Full page listing every review published in a category (e.g. /categories/audio/)."""
+    b = base or SITE_BASE
+
+    # Nav dropdown (white mega-menu)
+    nav_dd = build_category_dropdown(b)
+
+    # Footer
+    footer_cats = build_footer_categories(b)
+    footer_social = render_footer_social()
+
+    # Subscribe form action
+    form_url = os.environ.get("APPS_SCRIPT_URL", "")
+
+    title_escaped = html_mod.escape(category_name)
+    year_str = str(datetime.now().year)
+
+    blog_title = f"{title_escaped} Reviews"
+    meta_desc = f"Independent {category_name.lower()} reviews and buying guides. We test before we recommend."
+
+    cards = "".join(review_card(r, category_name, b) for r in items)
+    if not cards:
+        cards = '<p style="grid-column:1/-1;text-align:center;color:var(--clr-mid-gray);padding:40px 0">Reviews coming soon.</p>'
+
+    count = len(items)
+    count_label = f"{count} review{'s' if count != 1 else ''} published"
+
+    return f'''<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{b}/assets/favicon.png">
+    <title>{blog_title} | Abvorn</title>
+    <meta name="description" content="{meta_desc}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; }}
+        {DESIGN_SYSTEM_CSS}
+        
+        .top-bar {{ background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }}
+        .top-bar .container {{ display:flex; justify-content:space-between; }}
+        header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; }}
+        .navbar {{ display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }}
+        .logo img {{ max-height:44px; width:auto; }}
+        .nav-links {{ display:flex; align-items:center; gap:8px; }}
+        .nav-links > a, .nav-item > a {{ color:#fff; text-decoration:none; padding:8px 16px; font-weight:600; font-size:0.9rem; border-radius:var(--radius-sm); transition: background var(--duration-fast); }}
+        .nav-links > a:hover, .nav-item > a:hover {{ background:rgba(255,255,255,0.08); color: var(--clr-accent); }}
+        .nav-item {{ position:relative; }}
+        .nav-item > a {{ padding:8px 16px; display:flex; align-items:center; gap:4px; }}
+        .nav-item > a::after {{ content:'\\25be'; font-size:0.6rem; opacity:0.5; }}
+        .nav-item::after {{ content:''; position:absolute; top:100%; left:0; right:0; height:4px; }}
+        .nav-dropdown {{ display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }}
+        .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown {{ display:block; }}
+        .nav-dropdown a {{ display:block; color:#1a1a1a; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }}
+        .nav-dropdown a:hover {{ background:#f6f5f2; color: var(--clr-accent-text); }}
+        {MEGA_MENU_CSS}
+        .nav-toggle {{ display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }}
+        .nav-toggle svg {{ width:24px; height:24px; }}
+        @media (max-width:640px) {{
+            .nav-toggle {{ display:block; }}
+            .nav-links {{ display:none; position:absolute; top:100%; left:0; right:0; background:#0a0a0a; flex-direction:column; padding:8px 20px 20px; border-top:1px solid #2a2a2a; }}
+            .nav-links.open {{ display:flex; }}
+            .nav-links > a, .nav-item {{ margin:0; }}
+            .nav-links > a, .nav-item > a {{ padding:10px 0; }}
+            .nav-item > a::after {{ display:none; }}
+            .nav-dropdown {{ position:static; box-shadow:none; margin-top:0; padding-left:16px; display:block; background:transparent; border:none; }}
+            .nav-dropdown a {{ color:#888; padding:6px 0; font-size:0.8rem; }}
+            .nav-dropdown a:hover {{ background:transparent; color:#fff; }}
+        }}
+
+        .category-hero {{ background:var(--clr-off-white); padding: var(--space-2xl) 0; border-bottom:1px solid var(--clr-light-gray); }}
+        .category-hero h1 {{ font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-sm); }}
+        .category-hero p {{ font-size: var(--text-lg); color: var(--clr-mid-gray); max-width:50ch; }}
+        .category-hero__meta {{ display:inline-block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-accent-text); margin-bottom: var(--space-md); }}
+
+        .subscribe-band {{ background:var(--clr-off-white); padding: var(--space-xl) 0; border-top:1px solid var(--clr-light-gray); }}
+        .subscribe-inner {{ display:flex; justify-content:space-between; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }}
+        .subscribe-copy h2 {{ font-size: var(--text-xl); margin-bottom:4px; }}
+        .subscribe-copy p {{ margin:0; color:var(--clr-mid-gray); max-width:40ch; font-size:0.95rem; }}
+        .subscribe-form {{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }}
+        .subscribe-form .input {{ width:240px; background:#fff; border:2px solid var(--clr-light-gray); }}
+        .subscribe-form .input:focus {{ border-color:var(--clr-accent); }}
+        .subscribe-form .hp-field {{ position:absolute; left:-9999px; }}
+        .subscribe-form .btn {{ background:var(--clr-accent); color:#1a1200; font-size:1rem; font-weight:800; padding:0.85em 1.7em; gap:8px; box-shadow:0 6px 22px rgba(201,138,44,0.4); }}
+        .subscribe-form .btn:hover {{ background:#e0a23f; transform:scale(1.045); box-shadow:0 8px 28px rgba(201,138,44,0.55); }}
+        .subscribe-form .btn svg {{ width:18px; height:18px; }}
+        .subscribe-msg {{ flex-basis:100%; font-size:0.85rem; color:#666; margin-top:6px; }}
+        @media (max-width:700px) {{ .subscribe-inner {{ flex-direction:column; align-items:flex-start; }} .subscribe-form .input {{ width:100%; }} }}
+
+        .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }}
+        .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); }}
+        .niche-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
+        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; }}
+        .niche-card img {{ width:100%; height:100%; object-fit:cover; }}
+        .niche-card h2 {{ font-size:var(--text-lg); margin: var(--space-md) 0 8px; }}
+        .niche-card h2 a {{ color:inherit; text-decoration:none; }}
+        .niche-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
+        .niche-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }}
+        .review-card__banner {{ display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }}
+        .review-card__banner + h2 {{ margin: 6px var(--space-md) 8px; }}
+
+        .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
+        .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
+        .footer-col h4 {{ color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }}
+        .footer-col p {{ color:#999; font-size:0.9rem; max-width:32ch; }}
+        .footer-col a {{ display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }}
+        .footer-col a:hover {{ color:#fff; }}
+        .footer-social {{ display:flex; gap:10px; margin-top:16px; }}
+        .footer-social a {{ width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }}
+        .footer-social a:hover {{ background:var(--clr-accent); color:#0a0a0a; }}
+        .footer-social svg {{ width:16px; height:16px; }}
+        .footer-bottom {{ border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }}
+        @media (max-width:760px) {{ .footer-grid {{ grid-template-columns:1fr 1fr; }} }}
+    </style>
+</head>
+<body>
+<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
+<header><div class="container navbar">
+    <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn"></a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav-links" id="nav-links">
+        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
+        <a href="{b}/">Home</a>
+        <a href="{b}/about.html">About</a>
+        <a href="{b}/privacy.html">Privacy</a>
+    </nav>
+</div></header>
+
+<section class="category-hero"><div class="container">
+    <span class="category-hero__meta">{title_escaped} · {count_label}</span>
+    <h1>{blog_title}</h1>
+    <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
+</div></section>
+
+<section class="container posts-grid">{cards}</section>
+
+<section class="subscribe-band"><div class="container subscribe-inner">
+    <div class="subscribe-copy">
+        <h2>Get alerted when we publish a new {title_escaped} review</h2>
+        <p>One email whenever we publish a new guide in this category. No spam, unsubscribe anytime.</p>
+    </div>
+    <form class="subscribe-form" id="category-subscribe-form" onsubmit="submitCategorySubscribe(event)">
+        <input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off">
+        <label for="category-subscribe-email" class="sr-only">Email address</label>
+        <input type="email" class="input" id="category-subscribe-email" placeholder="you@example.com" required>
+        <button type="submit" class="btn">Notify Me</button>
+        <p class="subscribe-msg" id="category-subscribe-msg" aria-live="polite"></p>
+    </form>
+</div></section>
+
+<footer class="footer"><div class="container">
+    <div class="footer-grid">
+        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{footer_social}</div></div>
+        <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
+        <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
+    </div>
+    <div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
+</div></footer>
+
+<script>
+const APPS_SCRIPT_URL = "{form_url}";
+const CATEGORY_SLUG = "{category_slug}";
 const CATEGORY_NAME = "{title_escaped}";
 
 (function() {{
@@ -1198,18 +1456,41 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     hero_images = hero_images or {}
     niche_name = next((n["name"] for n in state["niches"] if n["slug"] == niche_slug), niche_slug.replace("-", " ").title())
 
-    # Collect all posts across niches
-    all_posts = []
-    for n in state["niches"]:
-        for p in articles.get(n["slug"], []):
-            all_posts.append({"title": p.get("post_title", ""), "slug": n["slug"]})
+    # Published reviews for homepage + category listing pages.
+    reviews = scan_published_reviews("docs")
+    today = datetime.now().strftime("%Y-%m-%d")
 
     docs = Path("docs")
     docs.mkdir(exist_ok=True)
+    for slug, post_list in articles.items():
+        for a in post_list:
+            reviews.append({
+                "slug": slug,
+                "name": next((n["name"] for n in state["niches"] if n["slug"] == slug), slug.replace("-", " ").title()),
+                "title": a.get("post_title", ""),
+                "updated": today,
+                "rel": f"/reviews/{slug}/",
+            })
+
+    # Collect all published posts across niches (drives feed, sitemap, niche pages)
+    all_posts = [{"title": r["title"], "slug": r["rel"].lstrip("/")} for r in reviews]
 
     # Write root index (premium homepage)
-    (docs / "index.html").write_text(build_homepage(state, form_url), encoding="utf-8")
+    (docs / "index.html").write_text(build_homepage(state, form_url, reviews=reviews, base=SITE_BASE), encoding="utf-8")
     print(f"  Written: docs/index.html")
+
+    # Write category listing pages (one per category, e.g. /categories/audio/)
+    for cat_name, cat_slugs in CATEGORY_MAP.items():
+        cat_slug = _category_slug(cat_name)
+        cat_items = [r for r in reviews if r["slug"] in cat_slugs]
+        cat_items.sort(key=lambda r: r["updated"], reverse=True)
+        cat_dir = docs / "categories" / cat_slug
+        cat_dir.mkdir(parents=True, exist_ok=True)
+        (cat_dir / "index.html").write_text(
+            build_category_listing_page(cat_name, cat_slug, cat_items, all_slugs, base=SITE_BASE, affiliate_tag=amazon_tag),
+            encoding="utf-8",
+        )
+        print(f"  Written: docs/categories/{cat_slug}/index.html")
 
     # Generate static pages if they don't exist
     b = SITE_BASE
@@ -1249,7 +1530,8 @@ footer a{{color:#aaa;text-decoration:none}}
 
     # Write category pages (post slugs point to reviews/{slug} for article pages)
     for n in state["niches"]:
-        niche_posts = [{"title": a.get("post_title", ""), "slug": f"reviews/{n['slug']}"} for a in articles.get(n["slug"], [])]
+        niche_posts = [{"title": r["title"], "slug": r["rel"].lstrip("/")} for r in reviews if r["slug"] == n["slug"]] or \
+                      [{"title": a.get("post_title", ""), "slug": f"reviews/{n['slug']}"} for a in articles.get(n["slug"], [])]
         cat_dir = docs / n["slug"]
         cat_dir.mkdir(exist_ok=True)
         (cat_dir / "index.html").write_text(build_category_page(n["slug"], n["name"], niche_posts, all_slugs, amazon_tag), encoding="utf-8")
@@ -1269,7 +1551,9 @@ footer a{{color:#aaa;text-decoration:none}}
             )
             print(f"  Written: comparisons/{n['slug']}.html")
 
-    # Write article pages (under docs/reviews/{slug}/ to avoid overwriting category page)
+    # Write article pages (under docs/reviews/{slug}/). Each article gets its own
+    # dated file so published reviews accumulate; index.html always mirrors the
+    # latest so existing links (and category pages) keep working.
     for slug, post_list in articles.items():
         for i, a in enumerate(post_list):
             post_dir = docs / "reviews" / slug
@@ -1277,14 +1561,18 @@ footer a{{color:#aaa;text-decoration:none}}
             hero_img_html = hero_images.get(slug, "")
             _sorted_niches = sorted(state["niches"], key=lambda n: n["name"].lower())
             related = [n for n in _sorted_niches if n["slug"] != slug][:4]
-            (post_dir / "index.html").write_text(
-                build_article_page(slug, niche_name, a["post_title"], a["article_html"],
-                                   a["intro"], a["product_name"], a["meta_description"],
-                                   all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
-                                   related_niches=related, article_id=f"{slug}-{i}"),
-                encoding="utf-8"
-            )
-            print(f"  Written: docs/reviews/{slug}/index.html (article)")
+            article_html = build_article_page(slug, niche_name, a["post_title"], a["article_html"],
+                                              a["intro"], a["product_name"], a["meta_description"],
+                                              all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
+                                              related_niches=related, article_id=f"{slug}-{i}")
+            date_str = datetime.now().strftime("%Y-%m-%d")
+            suffix = "" if i == 0 else f"-{i}"
+            fname = f"{_title_slug(a['post_title'])}-{date_str}{suffix}.html"
+            (post_dir / fname).write_text(article_html, encoding="utf-8")
+            print(f"  Written: docs/reviews/{slug}/{fname} (article)")
+            if i == len(post_list) - 1:
+                (post_dir / "index.html").write_text(article_html, encoding="utf-8")
+                print(f"  Written: docs/reviews/{slug}/index.html (latest)")
             # Update the post slug in all_posts for root index links
             for p in all_posts:
                 if p.get("title") == a.get("post_title") and p.get("slug") == slug:
@@ -1301,6 +1589,8 @@ footer a{{color:#aaa;text-decoration:none}}
     for p in all_posts:
         title = p.get("title", "")
         slug_path = p.get("slug", "")
+        if not slug_path.endswith("/"):
+            slug_path = slug_path.rsplit("/", 1)[0] + "/"
         items.append({"title": title, "slug": slug_path,
                       "date": datetime.date.today().isoformat() if 'datetime' in dir() else "2025-01-01"})
     rss_xml = '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Abvorn Reviews</title><link>https://abvorn.com</link><description>Product reviews you can trust</description>'
@@ -1538,6 +1828,8 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .niche-card p { font-size:0.92rem; color: var(--clr-mid-gray); margin-bottom: var(--space-sm); max-width:none; }
         .niche-card .read-link { font-weight:700; font-size:0.88rem; color: var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }
         .niche-card .read-link:hover { color: var(--clr-accent-text); }
+        .review-card__banner { display:inline-block; margin-top: var(--space-md); padding:3px 10px; border-radius:4px; background: var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
+        .review-card__banner + h2 { margin-top: 6px; }
 
         .category-group { display: none; }
         .category-group.visible { display: block; }

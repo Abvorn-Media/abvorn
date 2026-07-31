@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="/abvorn/assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" href="/abvorn/assets/favicon.png">
     <title>Best Wireless Earbuds Reviews | Abvorn</title>
     <meta name="description" content="Expert wireless earbuds reviews and buying guides. Independent testing, real recommendations.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -68,12 +68,25 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .nav-links > a:hover, .nav-item > a:hover { background:rgba(255,255,255,0.08); color: var(--clr-accent); }
         .nav-item { position:relative; }
         .nav-item > a { padding:8px 16px; display:flex; align-items:center; gap:4px; }
-        .nav-item > a::after { content:'\25be'; font-size:0.6rem; opacity:0.5; }
+        .nav-item > a::after { content:'▾'; font-size:0.6rem; opacity:0.5; }
         .nav-item::after { content:''; position:absolute; top:100%; left:0; right:0; height:4px; }
-        .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }
+        .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
         .nav-dropdown a { display:block; color:#1a1a1a; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }
-        .nav-dropdown a:hover { background:#f6f5f2; color:var(--clr-accent-text); }
+        .nav-dropdown a:hover { background:#f6f5f2; color: var(--clr-accent-text); }
+        
+.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
+.nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
+.nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
+.nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent,#c98a2c); font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
+.nav-dropdown.nav-dropdown--mega a { padding:6px 20px; }
+@media (max-width:640px) {
+    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; }
+    .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 auto; }
+    .nav-dropdown.nav-dropdown--mega .category-label { padding:8px 0 2px; }
+    .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
+}
+
         .nav-toggle { display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }
         .nav-toggle svg { width:24px; height:24px; }
         @media (max-width:640px) {
@@ -118,31 +131,18 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .post-card .read-link { font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }
 
         .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
-        .footer-grid { display:grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
-        .footer-col p { color:#999; font-size:0.9rem; max-width:32ch; }
+        .footer-grid { display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }
         .footer-col h4 { color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }
+        .footer-col p { color:#999; font-size:0.9rem; max-width:32ch; }
         .footer-col a { display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }
         .footer-col a:hover { color:#fff; }
         .footer-social { display:flex; gap:10px; margin-top:16px; }
         .footer-social a { width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
-        .footer-social a:hover { background: var(--clr-accent); color:#0a0a0a; }
+        .footer-social a:hover { background:var(--clr-accent); color:#0a0a0a; }
         .footer-social svg { width:16px; height:16px; }
         .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
-        @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
-    
-.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
-.nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
-.nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
-.nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent,#c98a2c); font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
-.nav-dropdown.nav-dropdown--mega a { padding:6px 20px; }
-@media (max-width:640px) {
-    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; }
-    .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 auto; }
-    .nav-dropdown.nav-dropdown--mega .category-label { padding:8px 0 2px; }
-    .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
-}
-
-</style>
+        @media (max-width:760px) { .footer-grid { grid-template-columns:1fr 1fr; } }
+    </style>
 </head>
 <body>
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
@@ -164,7 +164,14 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
 </div></section>
 
-<section class="container posts-grid"><p style="grid-column:1/-1;text-align:center;color:var(--clr-mid-gray);padding:40px 0">Reviews coming soon.</p></section>
+<section class="container posts-grid"><div class="post-card">
+    <a href="/abvorn/reviews/wireless-earbuds/"><img src="/abvorn/assets/wireless-earbuds.svg" alt="Best Wireless Earbuds"></a>
+    <div class="post-card__body">
+        <h3><a href="/abvorn/reviews/wireless-earbuds/">Best Wireless Earbuds</a></h3>
+        <p>Expert-tested and reviewed. See why this made our list.</p>
+        <a href="/abvorn/reviews/wireless-earbuds/" class="read-link">Read more →</a>
+    </div>
+</div></section>
 
 <section class="subscribe-band"><div class="container subscribe-inner">
     <div class="subscribe-copy">
@@ -182,11 +189,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 
 <footer class="footer"><div class="container">
     <div class="footer-grid">
-        <div class="footer-col">
-            <img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px">
-            <p>Independent product reviews and buying guides, based on real testing.</p>
-            <div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div>
-        </div>
+        <div class="footer-col"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div></div>
         <div class="footer-col"><h4>Categories</h4><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/laptops/">Laptops</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div>
         <div class="footer-col"><h4>Company</h4><a href="/abvorn/about.html">About</a></div>
         <div class="footer-col"><h4>Legal</h4><a href="/abvorn/privacy.html">Privacy policy</a></div>

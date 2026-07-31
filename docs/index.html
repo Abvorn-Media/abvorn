@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="/abvorn/assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" href="/abvorn/assets/favicon.png">
     <title>Abvorn – Reviews Based on Real Testing, Not Spec Sheets</title>
     <meta name="description" content="Independent product reviews and buying guides. We test before we recommend.">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,10 +75,23 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .nav-item { position:relative; margin-left:28px; }
         .nav-item > a { margin-left:0; }
         .nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:14px}
-        .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }
+        .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#fff; min-width:240px; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding:8px 0; z-index:30; }
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
         .nav-dropdown a { display:block; color:#1a1a1a; padding:9px 20px; font-weight:500; font-size:0.9rem; text-decoration:none; }
         .nav-dropdown a:hover { background:#f6f5f2; color: var(--clr-accent-text); }
+        
+.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
+.nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
+.nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
+.nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent,#c98a2c); font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
+.nav-dropdown.nav-dropdown--mega a { padding:6px 20px; }
+@media (max-width:640px) {
+    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; }
+    .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 auto; }
+    .nav-dropdown.nav-dropdown--mega .category-label { padding:8px 0 2px; }
+    .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
+}
+
         .nav-toggle { display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }
         .nav-toggle svg { width:24px; height:24px; }
         @media (max-width: 640px) {
@@ -153,6 +166,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .niche-card p { font-size:0.92rem; color: var(--clr-mid-gray); margin-bottom: var(--space-sm); max-width:none; }
         .niche-card .read-link { font-weight:700; font-size:0.88rem; color: var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }
         .niche-card .read-link:hover { color: var(--clr-accent-text); }
+        .review-card__banner { display:inline-block; margin-top: var(--space-md); padding:3px 10px; border-radius:4px; background: var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
+        .review-card__banner + h2 { margin-top: 6px; }
 
         .category-group { display: none; }
         .category-group.visible { display: block; }
@@ -173,20 +188,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .footer-social svg { width:16px; height:16px; }
         .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
         @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
-    
-.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
-.nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
-.nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
-.nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent,#c98a2c); font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
-.nav-dropdown.nav-dropdown--mega a { padding:6px 20px; }
-@media (max-width:640px) {
-    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; }
-    .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 auto; }
-    .nav-dropdown.nav-dropdown--mega .category-label { padding:8px 0 2px; }
-    .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
-}
-
-</style>
+    </style>
 </head>
 <body>
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
@@ -207,8 +209,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 <section class="hero"><div class="container hero-grid">
     <div>
         <span class="hero-eyebrow">How we work</span>
-        <h1>Clear, honest guidance on what's actually worth your money.</h1>
-        <p>Every guide starts with the same question: what would actually be worth buying? We compare real prices, specifications, and verified customer feedback, then break down the trade-offs in plain language &mdash; so you can go from confused to confident in minutes, not hours.</p>
+        <h1>We buy it, test it, and tell you what's actually worth your money.</h1>
+        <p>Every recommendation on Abvorn comes from hands-on testing against real alternatives &mdash; not spec sheets, not press releases.</p>
         <a href="#niches" class="btn">See our latest guides</a>
     </div>
     <div class="hero-slider" id="hero-slider">
@@ -218,9 +220,9 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 </div></section>
 
 <section class="stats-band"><div class="container stats-grid">
-    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="77">0</div><div class="stat-label">Guides published</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="81">0</div><div class="stat-label">Guides published</div></div>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="stat-number" data-target="10">0</div><div class="stat-label">Categories covered</div></div>
-    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="231">0</div><div class="stat-label">Products compared</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="243">0</div><div class="stat-label">Products compared</div></div>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3.5-7.1"/><path d="M21 3v6h-6"/></svg></div><div class="stat-number">Weekly</div><div class="stat-label">Review cycle</div></div>
 </div></section>
 
@@ -259,88 +261,74 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 </section>
 
 <section class="guides-section container" id="niches">
-    <div class="category-group visible"><div class="category-section">
-    <div class="category-section__header"><h2>4K Monitors</h2><a href="/abvorn/4k-monitors/">View all in 4K Monitors →</a></div>
-    <div class="niche-grid"><div class="niche-card">
-    <a href="/abvorn/4k-monitors/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/4k-monitors.svg" alt="4K Monitors" loading="lazy"></div></a>
-    <h2><a href="/abvorn/4k-monitors/">4K Monitors</a></h2>
-    <p>7 expert-reviewed guides with real testing results.</p>
-    <a href="/abvorn/4k-monitors/" class="read-link">Continue reading →</a>
+    <div class="category-section">
+    <div class="category-section__header"><h2>Audio</h2><a href="/abvorn/categories/audio/">View all in Audio →</a></div>
+    <div class="niche-grid"><div class="niche-card review-card">
+    <a href="/abvorn/reviews/wireless-earbuds/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/wireless-earbuds.png" alt="Best Wireless Earbuds" loading="lazy"></div></a>
+    <span class="review-card__banner">Audio · Wireless Earbuds</span>
+    <h2><a href="/abvorn/reviews/wireless-earbuds/">Best Wireless Earbuds</a></h2>
+    <a href="/abvorn/reviews/wireless-earbuds/" class="read-link">Read review →</a>
+</div><div class="niche-card review-card">
+    <a href="/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/wireless-headphones.png" alt="The Ultimate Wireless Headphones Buying Guide: Compare, Review, and Choose the Best" loading="lazy"></div></a>
+    <span class="review-card__banner">Audio · Wireless Headphones</span>
+    <h2><a href="/abvorn/reviews/wireless-headphones/">The Ultimate Wireless Headphones Buying Guide: Compare, Review, and Choose the Best</a></h2>
+    <a href="/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
 </div></div>
 </div><div class="category-section">
-    <div class="category-section__header"><h2>Fitness Trackers</h2><a href="/abvorn/fitness-trackers/">View all in Fitness Trackers →</a></div>
-    <div class="niche-grid"><div class="niche-card">
-    <a href="/abvorn/fitness-trackers/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/fitness-trackers.svg" alt="Fitness Trackers" loading="lazy"></div></a>
-    <h2><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></h2>
-    <p>8 expert-reviewed guides with real testing results.</p>
-    <a href="/abvorn/fitness-trackers/" class="read-link">Continue reading →</a>
+    <div class="category-section__header"><h2>Computing & Monitors</h2><a href="/abvorn/categories/computing-and-monitors/">View all in Computing & Monitors →</a></div>
+    <div class="niche-grid"><div class="niche-card review-card">
+    <a href="/abvorn/reviews/4k-monitors/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/4k-monitors.png" alt="Best 4K Monitors" loading="lazy"></div></a>
+    <span class="review-card__banner">Computing & Monitors · 4K Monitors</span>
+    <h2><a href="/abvorn/reviews/4k-monitors/">Best 4K Monitors</a></h2>
+    <a href="/abvorn/reviews/4k-monitors/" class="read-link">Read review →</a>
+</div><div class="niche-card review-card">
+    <a href="/abvorn/reviews/laptops/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/laptops.png" alt="Best Laptops" loading="lazy"></div></a>
+    <span class="review-card__banner">Computing & Monitors · Laptops</span>
+    <h2><a href="/abvorn/reviews/laptops/">Best Laptops</a></h2>
+    <a href="/abvorn/reviews/laptops/" class="read-link">Read review →</a>
 </div></div>
 </div><div class="category-section">
-    <div class="category-section__header"><h2>Gaming Mice</h2><a href="/abvorn/gaming-mice/">View all in Gaming Mice →</a></div>
-    <div class="niche-grid"><div class="niche-card">
-    <a href="/abvorn/gaming-mice/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/gaming-mice.svg" alt="Gaming Mice" loading="lazy"></div></a>
-    <h2><a href="/abvorn/gaming-mice/">Gaming Mice</a></h2>
-    <p>11 expert-reviewed guides with real testing results.</p>
-    <a href="/abvorn/gaming-mice/" class="read-link">Continue reading →</a>
+    <div class="category-section__header"><h2>Fitness & Health</h2><a href="/abvorn/categories/fitness-and-health/">View all in Fitness & Health →</a></div>
+    <div class="niche-grid"><div class="niche-card review-card">
+    <a href="/abvorn/reviews/fitness-trackers/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/fitness-trackers.png" alt="Best Fitness Trackers" loading="lazy"></div></a>
+    <span class="review-card__banner">Fitness & Health · Fitness Trackers</span>
+    <h2><a href="/abvorn/reviews/fitness-trackers/">Best Fitness Trackers</a></h2>
+    <a href="/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
 </div></div>
 </div><div class="category-section">
-    <div class="category-section__header"><h2>Laptops</h2><a href="/abvorn/laptops/">View all in Laptops →</a></div>
-    <div class="niche-grid"><div class="niche-card">
-    <a href="/abvorn/laptops/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/laptops.svg" alt="Laptops" loading="lazy"></div></a>
-    <h2><a href="/abvorn/laptops/">Laptops</a></h2>
-    <p>7 expert-reviewed guides with real testing results.</p>
-    <a href="/abvorn/laptops/" class="read-link">Continue reading →</a>
-</div></div>
-</div></div><div class="category-group"><div class="category-section">
-    <div class="category-section__header"><h2>Mechanical Keyboards</h2><a href="/abvorn/mechanical-keyboards/">View all in Mechanical Keyboards →</a></div>
-    <div class="niche-grid"><div class="niche-card">
-    <a href="/abvorn/mechanical-keyboards/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/mechanical-keyboards.svg" alt="Mechanical Keyboards" loading="lazy"></div></a>
-    <h2><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></h2>
-    <p>7 expert-reviewed guides with real testing results.</p>
-    <a href="/abvorn/mechanical-keyboards/" class="read-link">Continue reading →</a>
+    <div class="category-section__header"><h2>Gaming</h2><a href="/abvorn/categories/gaming/">View all in Gaming →</a></div>
+    <div class="niche-grid"><div class="niche-card review-card">
+    <a href="/abvorn/reviews/gaming-mice/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/gaming-mice.png" alt="Best Gaming Mice" loading="lazy"></div></a>
+    <span class="review-card__banner">Gaming · Gaming Mice</span>
+    <h2><a href="/abvorn/reviews/gaming-mice/">Best Gaming Mice</a></h2>
+    <a href="/abvorn/reviews/gaming-mice/" class="read-link">Read review →</a>
+</div><div class="niche-card review-card">
+    <a href="/abvorn/reviews/mechanical-keyboards/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/mechanical-keyboards.png" alt="Best Mechanical Keyboards of 2024: Wired, Hot-Swap &amp; Wireless Compared" loading="lazy"></div></a>
+    <span class="review-card__banner">Gaming · Mechanical Keyboards</span>
+    <h2><a href="/abvorn/reviews/mechanical-keyboards/">Best Mechanical Keyboards of 2024: Wired, Hot-Swap &amp; Wireless Compared</a></h2>
+    <a href="/abvorn/reviews/mechanical-keyboards/" class="read-link">Read review →</a>
 </div></div>
 </div><div class="category-section">
-    <div class="category-section__header"><h2>Smart Home</h2><a href="/abvorn/smart-home/">View all in Smart Home →</a></div>
-    <div class="niche-grid"><div class="niche-card">
-    <a href="/abvorn/smart-home/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/smart-home.svg" alt="Smart Home" loading="lazy"></div></a>
-    <h2><a href="/abvorn/smart-home/">Smart Home</a></h2>
-    <p>7 expert-reviewed guides with real testing results.</p>
-    <a href="/abvorn/smart-home/" class="read-link">Continue reading →</a>
+    <div class="category-section__header"><h2>Home & Lifestyle</h2><a href="/abvorn/categories/home-and-lifestyle/">View all in Home & Lifestyle →</a></div>
+    <div class="niche-grid"><div class="niche-card review-card">
+    <a href="/abvorn/reviews/smart-home/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/smart-home.png" alt="Best Smart Home" loading="lazy"></div></a>
+    <span class="review-card__banner">Home & Lifestyle · Smart Home</span>
+    <h2><a href="/abvorn/reviews/smart-home/">Best Smart Home</a></h2>
+    <a href="/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+</div><div class="niche-card review-card">
+    <a href="/abvorn/reviews/streaming-devices/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/streaming-devices.png" alt="Best Streaming Devices" loading="lazy"></div></a>
+    <span class="review-card__banner">Home & Lifestyle · Streaming Devices</span>
+    <h2><a href="/abvorn/reviews/streaming-devices/">Best Streaming Devices</a></h2>
+    <a href="/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
 </div></div>
 </div><div class="category-section">
-    <div class="category-section__header"><h2>Streaming Devices</h2><a href="/abvorn/streaming-devices/">View all in Streaming Devices →</a></div>
-    <div class="niche-grid"><div class="niche-card">
-    <a href="/abvorn/streaming-devices/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/streaming-devices.svg" alt="Streaming Devices" loading="lazy"></div></a>
-    <h2><a href="/abvorn/streaming-devices/">Streaming Devices</a></h2>
-    <p>7 expert-reviewed guides with real testing results.</p>
-    <a href="/abvorn/streaming-devices/" class="read-link">Continue reading →</a>
+    <div class="category-section__header"><h2>Webcams & Accessories</h2><a href="/abvorn/categories/webcams-and-accessories/">View all in Webcams & Accessories →</a></div>
+    <div class="niche-grid"><div class="niche-card review-card">
+    <a href="/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/webcams.png" alt="Best Webcams" loading="lazy"></div></a>
+    <span class="review-card__banner">Webcams & Accessories · Webcams</span>
+    <h2><a href="/abvorn/reviews/webcams/">Best Webcams</a></h2>
+    <a href="/abvorn/reviews/webcams/" class="read-link">Read review →</a>
 </div></div>
-</div><div class="category-section">
-    <div class="category-section__header"><h2>Webcams</h2><a href="/abvorn/webcams/">View all in Webcams →</a></div>
-    <div class="niche-grid"><div class="niche-card">
-    <a href="/abvorn/webcams/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/webcams.svg" alt="Webcams" loading="lazy"></div></a>
-    <h2><a href="/abvorn/webcams/">Webcams</a></h2>
-    <p>7 expert-reviewed guides with real testing results.</p>
-    <a href="/abvorn/webcams/" class="read-link">Continue reading →</a>
-</div></div>
-</div></div><div class="category-group"><div class="category-section">
-    <div class="category-section__header"><h2>Wireless Earbuds</h2><a href="/abvorn/wireless-earbuds/">View all in Wireless Earbuds →</a></div>
-    <div class="niche-grid"><div class="niche-card">
-    <a href="/abvorn/wireless-earbuds/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/wireless-earbuds.svg" alt="Wireless Earbuds" loading="lazy"></div></a>
-    <h2><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a></h2>
-    <p>6 expert-reviewed guides with real testing results.</p>
-    <a href="/abvorn/wireless-earbuds/" class="read-link">Continue reading →</a>
-</div></div>
-</div><div class="category-section">
-    <div class="category-section__header"><h2>Wireless Headphones</h2><a href="/abvorn/wireless-headphones/">View all in Wireless Headphones →</a></div>
-    <div class="niche-grid"><div class="niche-card">
-    <a href="/abvorn/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/wireless-headphones.svg" alt="Wireless Headphones" loading="lazy"></div></a>
-    <h2><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></h2>
-    <p>10 expert-reviewed guides with real testing results.</p>
-    <a href="/abvorn/wireless-headphones/" class="read-link">Continue reading →</a>
-</div></div>
-</div></div><div style="text-align:center">
-    <button class="show-more-btn">View more categories<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
 </div>
 </section>
 
@@ -348,7 +336,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <div class="footer-grid">
         <div class="footer-col">
             <img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px">
-            <p>Independent product reviews and buying guides, based on real testing.</p>
+            <p>Independent product research and buying guides, built to help you decide faster.</p>
             <div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div>
         </div>
         <div class="footer-col"><h4>Categories</h4><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/laptops/">Laptops</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div>
@@ -359,7 +347,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 </div></footer>
 
 <script>
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxtu2kQ_OeFLE9Kz6cFUBsuqbLQEy_WiYBQaWALSNqsTtRqOM8s_7lL1pGYBK-LA2wL/exec";
+const APPS_SCRIPT_URL = "";
 
 // Mobile nav toggle
 (function() {

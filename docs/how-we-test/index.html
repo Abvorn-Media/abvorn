@@ -38,12 +38,25 @@ header{background:#0a0a0a;padding:18px 0;position:relative;z-index:20;border-bot
 .nav-links > a:hover,.nav-item > a:hover{background:rgba(255,255,255,0.08);color:var(--clr-accent,#c98a2c)}
 .nav-item{position:relative}
 .nav-item > a{padding:8px 16px;display:flex;align-items:center;gap:4px}
-.nav-item > a::after{content:'\25be';font-size:0.6rem;opacity:0.5}
+.nav-item > a::after{content:'▾';font-size:0.6rem;opacity:0.5}
 .nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:8px}
-.nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:8px;background:#ffffff;min-width:240px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:8px 0;z-index:30}
 .nav-item:hover .nav-dropdown{display:block}
 .nav-dropdown a{display:block;color:#1a1a1a;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
-.nav-dropdown a:hover{background:#f6f5f2;color:var(--clr-accent-text)}
+.nav-dropdown a:hover{background:#f6f5f2;color:#996015}
+
+.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
+.nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
+.nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
+.nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent,#c98a2c); font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
+.nav-dropdown.nav-dropdown--mega a { padding:6px 20px; }
+@media (max-width:640px) {
+    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; }
+    .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 auto; }
+    .nav-dropdown.nav-dropdown--mega .category-label { padding:8px 0 2px; }
+    .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
+}
+
 .nav-toggle{display:none;background:none;border:none;color:#fff;padding:6px;cursor:pointer}
 .nav-toggle svg{width:24px;height:24px}
 @media(max-width:640px){
@@ -109,15 +122,18 @@ article .content p{margin:16px 0;font-size:1.05rem;color:var(--text)}
 article .content h2{margin:32px 0 12px;font-size:1.35rem}
 article .content ul{padding-left:24px;margin:12px 0}
 article .content li{margin:6px 0;color:var(--text)}
-footer{padding:48px 0;border-top:1px solid var(--border);text-align:center}
-footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
-.footer-links{display:flex;justify-content:center;gap:24px;margin:12px 0;flex-wrap:wrap}
-.footer-links a{font-size:.8rem;color:var(--text-muted);text-decoration:none;transition:color .15s}
-.footer-links a:hover{color:var(--primary);text-decoration:underline}
-.social{margin-top:16px;display:flex;gap:20px;justify-content:center}
-.social a{color:var(--text-muted);text-decoration:none;display:flex;align-items:center;transition:color .15s}
-.social a:hover{color:var(--text)}
-.social svg{width:22px;height:22px;fill:currentColor}
+.footer{background:#0a0a0a;color:#999;padding:64px 0 32px}
+.footer-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:32px;margin-bottom:32px}
+.footer-col h4{color:#fff;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
+.footer-col p{color:#999;font-size:.9rem;max-width:32ch}
+.footer-col a{display:block;color:#999;text-decoration:none;padding:4px 0;font-size:.9rem}
+.footer-col a:hover{color:#fff}
+.footer-social{display:flex;gap:10px;margin-top:16px}
+.footer-social a{width:44px;height:44px;border-radius:50%;background:#1e1e1e;display:flex;align-items:center;justify-content:center;color:#ccc;transition:background .15s,color .15s}
+.footer-social a:hover{background:var(--accent,#c98a2c);color:#0a0a0a}
+.footer-social svg{width:16px;height:16px}
+.footer-bottom{border-top:1px solid #222;padding-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:.85rem;color:#777}
+@media(max-width:760px){.footer-grid{grid-template-columns:1fr 1fr}}
 .story-section{padding:clamp(40px,6vw,64px) 0;background:var(--bg-alt);border-top:1px solid var(--border)}
 .story-section .container{max-width:680px;margin:0 auto;padding:0 24px}
 .story-section h2{font-size:1.4rem;font-weight:700;margin-bottom:12px;text-align:center}
@@ -255,33 +271,6 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 #cookie-banner .btn:hover{background:#b84d2a}
 #cookie-banner .btn-secondary{background:transparent;color:#e3dbd4;border:1px solid #6b6560;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
 #cookie-banner .btn-secondary:hover{border-color:#9e9690}
-
-.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
-.nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
-.nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
-.nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent,#c98a2c); font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
-.nav-dropdown.nav-dropdown--mega a { padding:6px 20px; }
-@media (max-width:640px) {
-    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; }
-    .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 auto; }
-    .nav-dropdown.nav-dropdown--mega .category-label { padding:8px 0 2px; }
-    .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
-}
-
-        .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
-        .footer .container { max-width:1200px; margin:0 auto; padding:0 24px; }
-        .footer-grid { display:grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
-        .footer-col h4 { color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }
-        .footer-col p { color:#999; font-size:0.9rem; max-width:32ch; }
-        .footer-col a { display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }
-        .footer-col a:hover { color:#fff; }
-        .footer-social { display:flex; gap:10px; margin-top:16px; }
-        .footer-social a { width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
-        .footer-social a:hover { background: var(--clr-accent); color:#0a0a0a; }
-        .footer-social svg { width:16px; height:16px; }
-        .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
-        @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
-
 </style>
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -299,7 +288,9 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
         <a href="/abvorn/privacy.html">Privacy</a>
     </nav>
 </div></header>
-
+<script>
+(function(){var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")})})();
+</script>
 <section class="hero" id="main"><div class="container">
 <img src="/abvorn/assets/hero-home.svg" alt="Abvorn testing" style="width:100%;max-width:900px;height:auto;border-radius:var(--radius-md);margin-bottom:24px;display:block;box-shadow:var(--shadow-md)">
 <h1>How We Test</h1>
@@ -330,7 +321,7 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 <div class="container">
 <h2>Get our free buying guides</h2>
 <p>Get expert buying advice and exclusive deals delivered to your inbox.</p>
-<form action="https://script.google.com/macros/s/AKfycbxtu2kQ_OeFLE9Kz6cFUBsuqbLQEy_WiYBQaWALSNqsTtRqOM8s_7lL1pGYBK-LA2wL/exec" method="POST" target="_blank">
+<form action="#" method="POST" target="_blank">
 <input type="email" name="email" placeholder="your@email.com" required>
 <input type="hidden" name="source" value="abvorn-hq">
 <button type="submit">Subscribe →</button>
@@ -340,16 +331,11 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 </section>
 <footer class="footer"><div class="container">
     <div class="footer-grid">
-        <div class="footer-col">
-            <img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px">
-            <p>Independent product reviews and buying guides, based on real testing.</p>
-            <div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div>
-        </div>
+        <div class="footer-col"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div></div>
         <div class="footer-col"><h4>Categories</h4><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/laptops/">Laptops</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div>
         <div class="footer-col"><h4>Company</h4><a href="/abvorn/about.html">About</a></div>
         <div class="footer-col"><h4>Legal</h4><a href="/abvorn/privacy.html">Privacy policy</a></div>
     </div>
     <div class="footer-bottom"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; 2026 Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
 </div></footer>
-<script>(function(){var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")})})();</script>
 <script>(function(){var c=document.querySelector('.carousel');if(!c)return;var t=c.querySelector('.carousel-track');if(!t)return;var s=t.querySelectorAll('.carousel-slide');if(s.length<2)return;var dots=c.querySelectorAll('.carousel-dot');var prev=c.querySelector('.carousel-arrow.prev');var next=c.querySelector('.carousel-arrow.next');var i=0,n=s.length;var go=function(idx){i=((idx%n)+n)%n;t.style.transform='translateX(-'+(i*100)+'%)';dots.forEach(function(d){d.classList.toggle('active',parseInt(d.dataset.slide)===i)})};dots.forEach(function(d){d.addEventListener('click',function(){go(parseInt(this.dataset.slide))})});if(prev){prev.addEventListener('click',function(){go(i-1)})}if(next){next.addEventListener('click',function(){go(i+1)})};var iv=setInterval(function(){go(i+1)},5000);c.addEventListener('mouseenter',function(){clearInterval(iv)});c.addEventListener('mouseleave',function(){iv=setInterval(function(){go(i+1)},5000)})})();</script></body></html>
