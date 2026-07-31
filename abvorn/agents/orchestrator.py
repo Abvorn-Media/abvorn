@@ -258,7 +258,7 @@ STORY_HTML = """<section class="story-section">
 </section>"""
 
 SITE_BASE = "/abvorn"
-FORCE_LOGO = f'<link rel="icon" type="image/png" href="{SITE_BASE}/assets/favicon.png">'
+FORCE_LOGO = f'<link rel="icon" type="image/png" href="{SITE_BASE}/assets/favicon-32x32.png">'
 
 class SiteDeployer:
     """Generates Wirecutter-style HTML pages and deploys to GitHub Pages."""

@@ -242,7 +242,7 @@ def regenerate_article(niche, existing_html, products=None):
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title}</title>
 <meta name="description" content="{meta_desc}">
-<link rel="icon" type="image/png" href="{SITE_BASE}/assets/favicon.png">
+<link rel="icon" type="image/png" href="{SITE_BASE}/assets/favicon-32x32.png">
 <!-- apple-touch-icon removed -->
 <link rel="canonical" href="https://Abvorn-Media.github.io/abvorn/reviews/{niche}/">
 {ANALYTICS_SCRIPT}
