@@ -218,6 +218,44 @@ def affiliate_url(product_url, tag=""):
     sep = "&" if "?" in product_url else "?"
     return f"{product_url}{sep}tag={t}"
 
+def render_price_sparkline(history: list, width: int = 200, height: int = 60) -> str:
+    """Render a minimal SVG sparkline from price history (dot for 1 point, polyline for 2+)."""
+    if not history:
+        return ""
+    prices = []
+    for h in history:
+        try:
+            prices.append(float(h["price"]))
+        except (ValueError, TypeError):
+            continue
+    if not prices:
+        return ""
+    min_p, max_p = min(prices), max(prices)
+    if max_p == min_p:
+        max_p = min_p + 1.0
+    if len(prices) == 1:
+        price = prices[0]
+        y = height - ((price - min_p) / (max_p - min_p)) * (height - 4) - 2
+        return (
+            f'<svg viewBox="0 0 {width} {height}" width="{width}" height="{height}"'
+            f' style="display:block;margin-top:8px">'
+            f'<circle cx="{width/2:.1f}" cy="{y:.1f}" r="3" fill="#c98a2c"/>'
+            f'</svg>'
+        )
+    points = []
+    for i, price in enumerate(prices):
+        x = (i / (len(prices) - 1)) * width
+        y = height - ((price - min_p) / (max_p - min_p)) * (height - 4) - 2
+        points.append(f"{x:.1f},{y:.1f}")
+    polyline = " ".join(points)
+    return (
+        f'<svg viewBox="0 0 {width} {height}" width="{width}" height="{height}"'
+        f' style="display:block;margin-top:8px">'
+        f'<polyline points="{polyline}" fill="none" stroke="#c98a2c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+        f'</svg>'
+    )
+
+
 def product_card_html(product, pexels_key="", amazon_tag=""):
     """HTML for a product card with real Amazon image + affiliate buy button."""
     name = product.get("name", "Product")
@@ -243,16 +281,27 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
     if not img:
         img = '<div style="width:160px;height:160px;background:linear-gradient(135deg,var(--bg-alt),var(--border));border-radius:var(--radius-sm);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.8rem">Product</div>'
     features_html = "".join(f"<li>{f}</li>" for f in features[:4])
+    # Price history sparkline
+    history = []
+    try:
+        from src.price_tracker import PriceTracker
+        tracker = PriceTracker()
+        product_id = product.get("asin") or _title_slug(product.get("name", "product"))
+        history = tracker.get_history(product_id, days=30)
+    except Exception:
+        pass
+    sparkline = render_price_sparkline(history)
     return f"""<div class="product-card">
-{img}
-<div class="product-card-body">
-<h3>{html_mod.escape(name)}</h3>
-    <div class="price">{html_mod.escape(str(price or 'N/A'))}</div>
-<p>{html_mod.escape(summary)}</p>
-{"<ul>" + features_html + "</ul>" if features_html else ""}
-<a class="buy-btn" href="{aff_url}" target="_blank" rel="sponsored">Check Price on Amazon →</a>
-</div>
-</div>"""
+ {img}
+ <div class="product-card-body">
+ <h3>{html_mod.escape(name)}</h3>
+     <div class="price">{html_mod.escape(str(price or 'N/A'))}</div>
+ {sparkline}
+ <p>{html_mod.escape(summary)}</p>
+ {"<ul>" + features_html + "</ul>" if features_html else ""}
+ <a class="buy-btn" href="{aff_url}" target="_blank" rel="sponsored">Check Price on Amazon →</a>
+ </div>
+ </div>"""
 
 def lead_form_html(form_url=""):
     url = form_url or "#"
@@ -2793,6 +2842,17 @@ def main(forced_niche=None, force=False, batch_mode=False):
         print("ERROR: No products found")
         sys.exit(1)
     print(f"Found {len(products)} products: {[p.get('name','?') for p in products]}")
+
+    try:
+        from src.price_tracker import PriceTracker
+        tracker = PriceTracker()
+        for p in products:
+            tracker.record_price(
+                product_id=p.get("asin") or _title_slug(p.get("name", "product")),
+                price=p.get("price"),
+            )
+    except Exception as e:
+        logger.warning(f"Price history recording skipped: {e}")
 
     social_data = fetch_social_sentiment(niche_slug)
 
