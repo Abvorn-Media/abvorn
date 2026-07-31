@@ -282,6 +282,9 @@ class SiteDeployer:
         try:
             niches = niches or []
             posts = posts or []
+            if not niches or not posts:
+                logger.warning("[SiteDeployer] Skipping root index deploy: need both niches and posts (otherwise would deploy placeholder)")
+                return False
             cats = ""
             for n in niches:
                 slug = n if isinstance(n, str) else n.get("slug", "")
@@ -351,6 +354,10 @@ class SiteDeployer:
         try:
             posts = posts or []
             all_categories = all_categories or []
+            if not posts:
+                logger.warning(f"[SiteDeployer] Skipping category deploy for {niche}: no posts available (would deploy placeholder)")
+                return False
+            b = SITE_BASE
             post_rows = ""
             for i, p in enumerate(posts[:5]):
                 title = p.get("title") or p.get("post_title", "")
@@ -369,7 +376,6 @@ class SiteDeployer:
 <a href="{b}/{slug}/" style="margin-left:12px">Read full review →</a>
 </div></div>"""
 
-            b = SITE_BASE
             nav_links = "".join(f'<a class="nav-link" href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in all_categories[:4])
             more_items = "".join(f'<a href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in all_categories[4:])
             dropdown = f'<div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu">{more_items}</div></div>' if all_categories[4:] else ""

@@ -119,3 +119,25 @@ def test_page_includes_persuasion_when_brand_and_state():
         assert "abvorn-persuasion" in html, "Persuasion widget not found in output"
         assert "Sony" in html, "Product name not found in widget"
 
+
+def test_deploy_html_blocks_placeholder_content():
+    """Placeholder pages ('coming soon') must never be pushed, regardless of caller."""
+    deployer = GitHubDeployer(token="fake", repo="user/repo")
+    result = deployer.deploy_html("<html>Categories coming soon</html>", "index.html")
+    assert result["status"] == "error"
+    assert "placeholder" in result["message"]
+
+
+def test_deploy_html_blocks_category_placeholder():
+    deployer = GitHubDeployer(token="fake", repo="user/repo")
+    result = deployer.deploy_html("<html>Reviews for this category are being researched</html>", "fitness/index.html")
+    assert result["status"] == "error"
+
+
+def test_deploy_html_allows_real_content():
+    deployer = GitHubDeployer(token="fake", repo="user/repo")
+    result = deployer.deploy_html("<html>Abvorn — real reviews here</html>", "index.html")
+    # Without a real token the GitHub call fails, but it must NOT be blocked as a placeholder.
+    assert result["status"] != "placeholder blocked"
+    assert result.get("message") != "placeholder content blocked"
+

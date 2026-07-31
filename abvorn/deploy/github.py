@@ -5,6 +5,12 @@ from urllib.parse import quote
 
 logger = logging.getLogger("abvorn.deploy")
 
+PLACEHOLDER_MARKERS = (
+    "Categories coming soon",
+    "Reviews coming soon",
+    "Reviews for this category are being researched",
+)
+
 DNA_CSS = {
     "tech": (
         "--font-family: 'Inter', -apple-system, sans-serif;\n"
@@ -117,6 +123,13 @@ class GitHubDeployer:
 
     def deploy_html(self, html_content: str, output_path: str) -> dict:
         """Push a raw HTML string to a specific path in the repo."""
+        for marker in PLACEHOLDER_MARKERS:
+            if marker in html_content:
+                logger.warning(
+                    f"Skipping deploy of {output_path}: content contains placeholder marker {marker!r} "
+                    "(refusing to overwrite real page with placeholder)"
+                )
+                return {"status": "error", "message": "placeholder content blocked", "path": output_path}
         from github import Github, InputGitTreeElement
         try:
             g = Github(self.token)
