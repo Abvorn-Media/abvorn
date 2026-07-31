@@ -159,21 +159,37 @@ class PriceTracker:
             return []
 
     def get_enriched_history(self, product_id: str, days: int = 30) -> List[Dict[str, Any]]:
-        """Return merged history: local DB first, CamelCamelCamel as fallback."""
+        """Return merged history: local DB first, CamelCamelCamel, then PriceGhost as fallback."""
         local = self.get_history(product_id, days=days)
         if len(local) >= 3:
             return local
         camel = self.fetch_camel_history(product_id)
-        if not camel:
-            return local
-        if not local:
-            cutoff = datetime.now() - timedelta(days=days)
-            return [p for p in camel if p.get("date", "") >= cutoff.isoformat()]
-        seen = {p["date"] for p in local}
-        merged = list(local)
-        for p in camel:
-            if p["date"] not in seen:
-                merged.append(p)
-                seen.add(p["date"])
-        merged.sort(key=lambda x: x["date"])
-        return merged
+        if camel and len(camel) > len(local):
+            return camel
+        ghost = self._fetch_priceghost_history(product_id)
+        if ghost and len(ghost) > len(local):
+            return ghost
+        return local
+
+    def _fetch_priceghost_history(self, product_id: str) -> List[Dict[str, Any]]:
+        try:
+            from src.priceghost_client import get_priceghost
+            client = get_priceghost()
+            watches = client.get_watches(limit=50)
+            watch = next((w for w in watches if product_id in w.get("url", "")), None)
+            if not watch:
+                watch = client.create_watch(url=f"https://www.amazon.com/dp/{product_id}")
+            if not watch:
+                return []
+            history = client.get_price_history(watch["id"], limit=30)
+            return [{"date": h.get("created_at", ""), "price": float(h.get("price", 0))} for h in history if h.get("price") is not None]
+        except Exception:
+            return []
+
+    def create_priceghost_watch(self, product_id: str, product_url: str, target_price: Optional[float] = None) -> Optional[Dict[str, Any]]:
+        try:
+            from src.priceghost_client import get_priceghost
+            client = get_priceghost()
+            return client.create_watch(url=product_url, target_price=target_price)
+        except Exception:
+            return None

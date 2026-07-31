@@ -3017,6 +3017,25 @@ def main(forced_niche=None, force=False, batch_mode=False):
         logger.warning(f"Price snapshot export skipped: {e}")
 
     try:
+        from src.price_tracker import PriceTracker
+        tracker = PriceTracker()
+        for p in products:
+            asin = p.get("asin") or _title_slug(p.get("name", "product"))
+            url = p.get("url", "")
+            if not url:
+                continue
+            try:
+                price_f = float(str(p.get("price", "")).replace("$","").replace(",","").strip())
+            except (ValueError, TypeError):
+                price_f = None
+            watch = tracker.create_priceghost_watch(asin, url, target_price=price_f)
+            if watch:
+                p["priceghost_watch_id"] = watch.get("id")
+                p["priceghost_url"] = watch.get("url")
+    except Exception as e:
+        logger.warning(f"PriceGhost watch creation skipped: {e}")
+
+    try:
         from src.price_alerts import PriceAlertSystem
         alert_system = PriceAlertSystem()
         for p in products:

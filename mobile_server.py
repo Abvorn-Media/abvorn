@@ -102,6 +102,16 @@ async def provider_stats():
     return {"providers": router.get_stats()}
 
 
+@app.get("/api/priceghost/health")
+async def priceghost_health():
+    try:
+        from src.priceghost_client import get_priceghost
+        client = get_priceghost()
+        return client.health()
+    except Exception as e:
+        return {"status": "unavailable", "error": str(e)}
+
+
 def _call_ai_subprocess(prompt: str) -> str:
     """Call AI in a subprocess with hard timeout. Kills if hung."""
     import subprocess as sp, sys
