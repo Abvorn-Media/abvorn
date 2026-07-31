@@ -57,6 +57,44 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 :focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
 
+/* ── Compare & Watchlist ──────────────────────────────────────── */
+.av-compare-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; color: var(--clr-accent); border: 1px solid var(--clr-accent);
+  padding: 4px 12px; border-radius: 100px; font-size: 0.78rem; font-weight: 700;
+  cursor: pointer; font-family: var(--font-body); transition: all .15s; margin-top: 8px;
+}
+.av-compare-btn:hover { background: var(--clr-accent); color: var(--clr-white); }
+.av-compare-btn.added { background: var(--clr-primary); color: var(--clr-white); border-color: var(--clr-primary); }
+.av-compare-icon { font-size: 1rem; font-weight: 700; }
+#av-compare-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
+  background: var(--clr-black); color: var(--clr-white);
+  padding: 12px 24px; display: none; align-items: center; justify-content: space-between;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.15); border-top: 2px solid var(--clr-accent);
+  font-family: var(--font-body);
+}
+#av-compare-bar.show { display: flex; }
+#av-compare-bar .av-compare-items { display: flex; gap: 12px; overflow-x: auto; flex: 1; align-items: center; }
+#av-compare-bar .av-compare-pill {
+  display: flex; align-items: center; gap: 8px; background: var(--clr-dark-gray);
+  padding: 6px 12px; border-radius: 100px; font-size: 0.82rem; white-space: nowrap; min-width: fit-content;
+}
+#av-compare-bar .av-compare-pill img { width: 24px; height: 24px; border-radius: 4px; object-fit: contain; }
+#av-compare-bar .av-compare-remove { background: none; border: none; color: var(--clr-mid-gray); cursor: pointer; font-size: 1rem; padding: 0 2px; }
+#av-compare-bar .av-compare-remove:hover { color: #ff6b6b; }
+#av-compare-bar .av-compare-cta {
+  background: var(--clr-accent); color: var(--clr-black); border: none; padding: 8px 20px;
+  border-radius: var(--radius-sm); font-weight: 700; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
+}
+#av-compare-bar .av-compare-cta:hover { filter: brightness(1.1); }
+#av-compare-bar .av-compare-clear { background: none; border: none; color: var(--clr-mid-gray); cursor: pointer; font-size: 0.8rem; text-decoration: underline; margin-right: 16px; white-space: nowrap; }
+@media (max-width: 640px) {
+  #av-compare-bar { flex-wrap: wrap; gap: 8px; padding: 10px 16px; }
+  #av-compare-bar .av-compare-cta { width: 100%; justify-content: center; }
+  #av-compare-bar .av-compare-clear { width: 100%; margin: 0; text-align: center; }
+}
+
         
         .top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
         .top-bar .container { display:flex; justify-content:space-between; }
@@ -162,15 +200,20 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 </div></header>
 
 <section class="category-hero"><div class="container">
-    <span class="category-hero__meta">Audio · 8 reviews published</span>
+    <span class="category-hero__meta">Audio · 9 reviews published</span>
     <h1>Audio Reviews</h1>
     <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
 </div></section>
 
 <section class="container posts-grid"><div class="niche-card review-card">
-    <a href="/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones in 2024: From Budget-Friendly to ANC Powerhouses" loading="lazy"></div></a>
+    <a href="/abvorn/reviews/wireless-headphones/best-wireless-headphones-in-2024-from-budget-friendly-to-anc-powerhouses-2026-07-31.html"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones in 2024: From Budget-Friendly to ANC Powerhouses" loading="lazy"></div></a>
     <span class="review-card__banner">Audio · Wireless Headphones</span>
-    <h2><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones in 2024: From Budget-Friendly to ANC Powerhouses</a></h2>
+    <h2><a href="/abvorn/reviews/wireless-headphones/best-wireless-headphones-in-2024-from-budget-friendly-to-anc-powerhouses-2026-07-31.html">Best Wireless Headphones in 2024: From Budget-Friendly to ANC Powerhouses</a></h2>
+    <a href="/abvorn/reviews/wireless-headphones/best-wireless-headphones-in-2024-from-budget-friendly-to-anc-powerhouses-2026-07-31.html" class="read-link">Read review →</a>
+</div><div class="niche-card review-card">
+    <a href="/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones 2024: Our Top Picks for Sound Quality, Battery Life &amp; Noise Cancelling" loading="lazy"></div></a>
+    <span class="review-card__banner">Audio · Wireless Headphones</span>
+    <h2><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones 2024: Our Top Picks for Sound Quality, Battery Life &amp; Noise Cancelling</a></h2>
     <a href="/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="/abvorn/reviews/wireless-earbuds/best-wireless-earbuds-2026-07-30.html"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/wireless-earbuds.png" alt="Best Wireless Earbuds" loading="lazy"></div></a>
