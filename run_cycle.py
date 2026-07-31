@@ -2567,8 +2567,6 @@ footer a{{color:#aaa;text-decoration:none}}
     for p in all_posts:
         title = p.get("title", "")
         slug_path = p.get("slug", "")
-        if not slug_path.endswith("/"):
-            slug_path = slug_path.rsplit("/", 1)[0] + "/"
         items.append({"title": title, "slug": slug_path,
                       "date": datetime.date.today().isoformat() if 'datetime' in dir() else "2025-01-01"})
     rss_xml = '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Abvorn Reviews</title><link>https://abvorn.com</link><description>Product reviews you can trust</description>'
