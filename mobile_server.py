@@ -275,6 +275,40 @@ async def list_price_alerts(email: Optional[str] = None, chat_id: Optional[str] 
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class SubscribeRequest(BaseModel):
+    email: str
+    name: Optional[str] = ""
+    list_name: Optional[str] = "Abvorn Subscribers"
+
+
+@app.post("/api/newsletter/subscribe")
+async def newsletter_subscribe(req: SubscribeRequest):
+    try:
+        from src.listmonk_client import get_listmonk
+        listmonk = get_listmonk()
+        list_id = listmonk.get_or_create_list(req.list_name or "Abvorn Subscribers")
+        if not list_id:
+            raise HTTPException(status_code=503, detail="Listmonk unavailable")
+        sub = listmonk.create_subscriber(req.email, req.name or "", [list_id])
+        if not sub:
+            raise HTTPException(status_code=400, detail="Subscribe failed")
+        return {"status": "ok", "list_id": list_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/newsletter/lists")
+async def newsletter_lists():
+    try:
+        from src.listmonk_client import get_listmonk
+        listmonk = get_listmonk()
+        return {"lists": listmonk.get_lists()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     import socket
     hostname = socket.gethostname()

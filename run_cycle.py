@@ -2704,6 +2704,62 @@ footer a{{color:#aaa;text-decoration:none}}
     print(f"  Written: docs/feed.xml, docs/sitemap.xml")
 
 
+# ─── Newsletter Automation ──────────────────────────────────────────
+def generate_newsletter_html(deployed: List[Dict[str, Any]], site_base: str = SITE_BASE) -> str:
+    today = datetime.now().strftime("%B %d, %Y")
+    items = ""
+    for entry in deployed[:8]:
+        title = html_mod.escape(entry.get("title", ""))
+        slug = entry.get("slug", "")
+        url = f"{site_base}/{slug}/"
+        items += f'<li style="margin-bottom:12px"><a href="{url}" style="color:#c98a2c;text-decoration:none;font-weight:600">{title}</a></li>'
+    return f"""<!DOCTYPE html>
+<html><body style="font-family:Inter,sans-serif;background:#f6f5f2;margin:0;padding:0">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f6f5f2">
+  <tr><td align="center" style="padding:32px 16px">
+    <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.07)">
+      <tr><td style="background:#0a0a0a;padding:24px 32px;color:#fff;font-family:Libre Franklin,Georgia,serif;font-size:22px;font-weight:700">Abvorn Weekly Digest</td></tr>
+      <tr><td style="padding:24px 32px;color:#2a2724;font-size:15px;line-height:1.6">
+        <p style="margin:0 0 16px">Here are the latest reviews from Abvorn, {today}.</p>
+        <ul style="padding-left:20px;margin:0">{items}</ul>
+        <p style="margin:24px 0 0;font-size:13px;color:#6b6560">— Abvorn, your trusted product review platform.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>"""
+
+
+def send_newsletter_automated(state: Dict[str, Any]) -> None:
+    try:
+        from src.listmonk_client import get_listmonk
+        listmonk = get_listmonk()
+    except Exception as e:
+        logger.warning("Listmonk not available for newsletter: %s", e)
+        return
+    if listmonk.health().get("status") == "unavailable":
+        return
+    deployed = state.get("deployed", [])
+    if not deployed:
+        return
+    list_id = listmonk.get_or_create_list("Abvorn Subscribers", "Weekly product review digest.")
+    if not list_id:
+        return
+    subject = f"New Product Reviews from Abvorn — {datetime.now().strftime('%B %d, %Y')}"
+    html = generate_newsletter_html(deployed)
+    result = listmonk.create_campaign(
+        name=f"Weekly Digest {datetime.now().strftime('%Y-%m-%d')}",
+        subject=subject,
+        body_html=html,
+        list_ids=[list_id],
+    )
+    if result:
+        print(f"📧 Newsletter campaign created: {result.get('id')}")
+    else:
+        logger.warning("Newsletter campaign creation failed")
+
+
+
 def _register_sensors(nervous_system):
         """Register all monitoring sensors."""
         nervous_system.register_sensor(
@@ -2975,6 +3031,15 @@ def main(forced_niche=None, force=False, batch_mode=False):
                 for alert in triggered:
                     print(f"  ⚠️ Price alert triggered: {asin} <= ${price_f} (target ${alert['target_price']})")
                     alert_system.trigger_alert(alert["id"])
+                    if alert.get("email"):
+                        alert_system.send_price_alert(
+                            email=alert["email"],
+                            asin=asin,
+                            product_title=p.get("name", "Product"),
+                            current_price=price_f,
+                            target_price=alert["target_price"],
+                            product_url=p.get("url", ""),
+                        )
     except Exception as e:
         logger.warning(f"Price alert check skipped: {e}")
 
@@ -3235,6 +3300,12 @@ def main(forced_niche=None, force=False, batch_mode=False):
         )
     except Exception as e:
         logger.warning(f"Relentless Core skipped: {e}")
+
+    # Newsletter automation (non-blocking)
+    try:
+        send_newsletter_automated(state)
+    except Exception as e:
+        logger.warning(f"Newsletter send skipped: {e}")
 
 
 from pathlib import Path
