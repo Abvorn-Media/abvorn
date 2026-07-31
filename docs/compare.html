@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Compare Products — Abvorn</title>
+<meta name="description" content="Compare products side-by-side with live prices and Abvorn Verdict scores.">
+<link rel="icon" type="image/png" sizes="32x32" href="/abvorn/assets/favicon-32x32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--clr-black:#0a0a0a;--clr-off-black:#1a1a1a;--clr-dark-gray:#2a2a2a;--clr-mid-gray:#666;--clr-light-gray:#e8e8e8;--clr-off-white:#f6f5f2;--clr-white:#ffffff;--clr-primary:#1a1a1a;--clr-accent:#c98a2c;--clr-accent-text:#996015;--font-display:'Libre Franklin',-apple-system,sans-serif;--font-body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;--radius-sm:4px;--radius-md:8px;--radius-lg:16px;--shadow-sm:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 12px rgba(0,0,0,.1);--shadow-lg:0 8px 30px rgba(0,0,0,.12)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;font-family:var(--font-body);-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{color:var(--clr-off-black);background:var(--clr-white);line-height:1.6}
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+header{background:#0a0a0a;padding:16px 0;border-bottom:1px solid #2a2a2a;position:sticky;top:0;z-index:20}
+header .container{display:flex;justify-content:space-between;align-items:center}
+.logo{color:#fff;text-decoration:none;font-family:var(--font-display);font-weight:700;font-size:1.2rem}
+.logo:hover{color:#fff}
+h1{font-family:var(--font-display);font-size:clamp(1.6rem,3vw,2rem);font-weight:700;margin-bottom:8px;letter-spacing:-.02em}
+.lead{color:var(--clr-mid-gray);font-size:1rem;margin-bottom:24px}
+.av-table{width:100%;border-collapse:separate;border-spacing:0;margin-top:24px;border:1px solid var(--clr-light-gray);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.av-table th,.av-table td{padding:18px 20px;text-align:left;border-bottom:1px solid var(--clr-light-gray);vertical-align:top;font-size:0.95rem}
+.av-table thead{background:var(--clr-off-white)}
+.av-table th{font-family:var(--font-display);font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--clr-mid-gray);white-space:nowrap}
+.av-table tbody tr:last-child td{border-bottom:none}
+.av-table tbody tr:hover{background:rgba(0,0,0,.015)}
+.av-product-img{width:100px;height:100px;object-fit:contain;border-radius:var(--radius-sm);background:var(--clr-off-white);display:block}
+.av-product-name{font-family:var(--font-display);font-weight:600;font-size:1rem;color:var(--clr-black);margin-top:8px;line-height:1.3}
+.av-price{font-size:1.15rem;font-weight:700;color:var(--clr-black);margin-top:6px}
+.av-price.live{color:#2d6b47}
+.av-price.unknown{color:var(--clr-mid-gray);font-weight:500;font-size:1rem}
+.av-score{font-size:1.8rem;font-weight:700;font-family:var(--font-display);line-height:1;letter-spacing:-.03em}
+.av-label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:4px;display:inline-block;padding:2px 10px;border-radius:100px}
+.av-sparkline svg{display:block;max-width:160px;height:44px}
+.av-empty{text-align:center;padding:64px 24px;color:var(--clr-mid-gray)}
+.av-empty h2{font-family:var(--font-display);font-size:1.4rem;margin-bottom:12px;color:var(--clr-black)}
+.av-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.av-actions a{font-size:.85rem;padding:6px 14px;border-radius:var(--radius-sm);background:var(--clr-accent);color:var(--clr-white);text-decoration:none;font-weight:600;transition:background .15s}
+.av-actions a:hover{background:#b07820}
+.av-watch-btn{padding:6px 14px;border-radius:100px;border:1px solid var(--clr-light-gray);background:var(--clr-white);cursor:pointer;font-size:.82rem;font-weight:600;font-family:var(--font-body);transition:all .15s}
+.av-watch-btn:hover{border-color:var(--clr-accent);color:var(--clr-accent)}
+.av-watch-btn.watching{border-color:var(--clr-accent);color:var(--clr-accent);background:rgba(201,138,44,.08)}
+.av-bar{background:var(--clr-off-white);border-bottom:1px solid var(--clr-light-gray);padding:16px 0;display:none}
+.av-bar.show{display:block}
+.av-bar-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.av-bar-title{font-family:var(--font-display);font-weight:700;font-size:1rem}
+.av-bar-list{display:flex;gap:10px;overflow-x:auto;flex:1;padding:4px 0}
+.av-bar-pill{display:flex;align-items:center;gap:8px;background:var(--clr-white);border:1px solid var(--clr-light-gray);padding:6px 12px;border-radius:100px;font-size:.82rem;white-space:nowrap;min-width:fit-content;box-shadow:var(--shadow-sm)}
+.av-bar-pill img{width:24px;height:24px;border-radius:4px;object-fit:contain}
+.av-bar-remove{background:none;border:none;color:var(--clr-mid-gray);cursor:pointer;font-size:1rem}
+.av-bar-remove:hover{color:#ff6b6b}
+.av-bar-cta{background:var(--clr-accent);color:var(--clr-white);border:none;padding:8px 18px;border-radius:var(--radius-sm);font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap;font-family:var(--font-body)}
+.av-bar-cta:hover{background:#b07820}
+.av-bar-clear{background:none;border:none;color:var(--clr-mid-gray);cursor:pointer;font-size:.8rem;text-decoration:underline;font-family:var(--font-body)}
+footer{padding:32px 0;border-top:1px solid var(--clr-light-gray);text-align:center;font-size:.85rem;color:var(--clr-mid-gray)}
+footer a{color:var(--clr-mid-gray)}
+@media(max-width:720px){
+  .av-table{display:block;overflow-x:auto}
+  .av-product-img{width:80px;height:80px}
+  .av-bar-inner{flex-direction:column;align-items:stretch}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<header><div class="container">
+  <a href="/abvorn/" class="logo">Abvorn</a>
+  <nav style="display:flex;gap:20px">
+    <a href="/abvorn/" style="color:#999;text-decoration:none;font-size:.9rem">Home</a>
+    <a href="/abvorn/about.html" style="color:#999;text-decoration:none;font-size:.9rem">About</a>
+  </nav>
+</div></header>
+
+<section style="padding:48px 0 24px;background:var(--clr-off-white);border-bottom:1px solid var(--clr-light-gray)">
+  <div class="container">
+    <h1>Compare Products</h1>
+    <p class="lead">Add products from our buying guides to build your personal comparison.</p>
+  </div>
+</section>
+
+<section style="padding:32px 0 48px"><div class="container">
+
+  <div id="av-compare-bar" class="av-bar">
+    <div class="av-bar-inner">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:1">
+        <span class="av-bar-title">Comparing:</span>
+        <div id="av-bar-list" class="av-bar-list"></div>
+        <button id="av-bar-clear" class="av-bar-clear">Clear all</button>
+        <button onclick="document.getElementById('av-compare-bar').classList.remove('show')" class="av-bar-clear">Hide</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="av-empty" class="av-empty">
+    <h2>Nothing to compare yet</h2>
+    <p>Browse our buying guides and tap <strong>⊕ Compare</strong> on any product card to add it here.</p>
+    <div class="av-actions" style="justify-content:center;margin-top:20px">
+      <a href="/abvorn/laptops/">Laptops</a>
+      <a href="/abvorn/gaming-mice/">Gaming Mice</a>
+      <a href="/abvorn/fitness-trackers/">Fitness Trackers</a>
+      <a href="/abvorn/smart-home/">Smart Home</a>
+      <a href="/abvorn/4k-monitors/">4K Monitors</a>
+      <a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a>
+    </div>
+  </div>
+
+  <div id="compare-root"></div>
+
+  <footer><div class="container">
+    <p>Prices are refreshed daily. Affiliate links help support independent review journalism.</p>
+    <p style="margin-top:8px"><a href="/abvorn/">← Back to Abvorn</a></p>
+  </div></footer>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'av_compare_list';
+  const WATCH_KEY = 'av_watch_list';
+
+  function loadCompare() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+  function saveCompare(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+  function loadWatch() {
+    try { return JSON.parse(localStorage.getItem(WATCH_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+  function saveWatch(items) { localStorage.setItem(WATCH_KEY, JSON.stringify(items)); }
+
+  function readUrlParams() {
+    const p = new URLSearchParams(window.location.search);
+    const item = {};
+    const fields = ['asin','name','price','image','url','score','label'];
+    let hasData = false;
+    fields.forEach(f => {
+      const v = p.get(f);
+      if (v) { item[f] = v; hasData = true; }
+    });
+    if (!hasData) return null;
+    return item;
+  }
+
+  function parseHash() {
+    const h = (window.location.hash || '').replace('#compare', '').replace(/^#\/?|\/$/g, '').trim();
+    if (!h) return loadCompare();
+    const hashAsins = h.split(',').filter(Boolean).map(s => s.toUpperCase());
+    const current = loadCompare();
+    const currentAsins = new Set(current.map(i => i.asin));
+    let changed = false;
+    hashAsins.forEach(asin => { if (!currentAsins.has(asin)) { current.push({ asin }); changed = true; } });
+    if (changed) saveCompare(current);
+    return current;
+  }
+
+  function priceHTML(item, prices) {
+    const p = item.price || prices[item.asin];
+    if (p) return `<div class="av-price live">$${Number(p).toFixed(2)}</div>`;
+    return `<div class="av-price unknown">Check price on Amazon</div>`;
+  }
+
+  function scoreHTML(item) {
+    if (!item.score && !item.label) return '<div class="av-price unknown">No score</div>';
+    const label = item.label || '';
+    const colorMap = { 'Great': '#2d6b47', 'Average': '#78350f', 'Poor': '#7f1d1d', '': '#333' };
+    const bgMap = { 'Great': '#d6f0df', 'Average': '#fffbeb', 'Poor': '#fef2f2', '': '#f0f0f0' };
+    const c = colorMap[label] || colorMap[''];
+    const b = bgMap[label] || bgMap[''];
+    return `<div class="av-score">${item.score || ''}</div>` +
+      (label ? `<div class="av-label" style="color:${c};background:${b}">${label}</div>` : '');
+  }
+
+  function sparklineHTML(history) {
+    if (!history || history.length < 1) return '';
+    if (history.length === 1) {
+      return '<svg width="160" height="44" viewBox="0 0 160 44"><circle cx="80" cy="22" r="3.5" fill="#c98a2c"/></svg>';
+    }
+    const prices = history.map(h => h.price);
+    const min = Math.min(...prices), max = Math.max(...prices);
+    const range = max - min || 1;
+    const w = 160, h = 44, pad = 4;
+    const pts = prices.map((p, i) => {
+      const x = pad + (i / (prices.length - 1)) * (w - pad * 2);
+      const y = h - pad - ((p - min) / range) * (h - pad * 2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    return `<svg width="160" height="44" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+      <polyline points="${pts.join(' ')}" vector-effect="non-scaling-stroke" />
+      <circle cx="${pts[pts.length-1].split(',')[0]}" cy="${pts[pts.length-1].split(',')[1]}" r="3" fill="#c98a2c" />
+    </svg>`;
+  }
+
+  let priceCache = {};
+  let sparkCache = {};
+
+  function loadData() {
+    Promise.all([
+      fetch('/abvorn/data/latest_prices.json').then(r => r.json()).catch(() => ({})),
+      fetch('/abvorn/data/price_sparklines.json').then(r => r.json()).catch(() => []))
+    ]).then(([p, s]) => {
+      priceCache = p || {};
+      sparkCache = {};
+      (s || []).forEach(x => { sparkCache[x.id] = x.prices; });
+      render();
+    }).catch(render);
+  }
+
+  function removeItem(asin) {
+    saveCompare(loadCompare().filter(i => i.asin !== asin));
+    render();
+  }
+  function toggleWatch(asin) {
+    const list = loadWatch();
+    const idx = list.indexOf(asin);
+    if (idx >= 0) list.splice(idx, 1); else list.push(asin);
+    saveWatch(list);
+    render();
+  }
+  window.removeItem = removeItem;
+  window.toggleWatch = toggleWatch;
+
+  function render() {
+    const root = document.getElementById('compare-root');
+    const empty = document.getElementById('av-empty');
+    const bar = document.getElementById('av-compare-bar');
+    const barList = document.getElementById('av-bar-list');
+    const list = parseHash();
+
+    if (!list.length) {
+      root.innerHTML = '';
+      empty.style.display = 'block';
+      bar.classList.remove('show');
+      return;
+    }
+    empty.style.display = 'none';
+    bar.classList.add('show');
+
+    barList.innerHTML = list.slice(0, 8).map(item => `
+      <div class="av-bar-pill">
+        ${item.image ? `<img src="${item.image}" alt="">` : '<div style="width:24px"></div>'}
+        <span>${item.name || item.asin}</span>
+        <button class="av-bar-remove" onclick="removeItem('${item.asin}')" aria-label="Remove">×</button>
+      </div>
+    `).join('');
+
+    const watch = loadWatch();
+    root.innerHTML = '<div style="overflow-x:auto"><table class="av-table">' +
+      '<thead><tr><th>Product</th><th>Latest Price</th><th>Abvorn Score</th><th>Price Trend (30d)</th><th>Watch</th></tr></thead><tbody>' +
+      list.map(item => {
+        const history = sparkCache[item.asin] || [];
+        return `<tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:14px">
+              ${item.image ? `<img src="${item.image}" alt="" class="av-product-img">` : '<div class="av-product-img" style="display:flex;align-items:center;justify-content:center;color:var(--clr-mid-gray);font-size:.75rem">No image</div>'}
+              <div>
+                <div class="av-product-name">${item.name || item.asin}</div>
+                ${item.url ? `<a href="${item.url}" target="_blank" rel="sponsored" style="font-size:.85rem;color:var(--clr-accent);text-decoration:none">View on Amazon →</a>` : ''}
+              </div>
+            </div>
+          </td>
+          <td>${priceHTML(item, priceCache)}</td>
+          <td>${scoreHTML(item)}</td>
+          <td style="min-width:170px"><div class="av-sparkline">${sparklineHTML(history)}</div></td>
+          <td>
+            <button class="av-watch-btn ${watch.includes(item.asin) ? 'watching' : ''}" onclick="toggleWatch('${item.asin}')">${watch.includes(item.asin) ? '★ Watching' : '☆ Watch'}</button>
+          </td>
+        </tr>`;
+      }).join('') +
+    '</tbody></table></div>';
+  }
+
+  document.getElementById('av-bar-clear').addEventListener('click', () => {
+    saveCompare([]); saveWatch([]); render();
+  });
+
+  window.addEventListener('hashchange', () => { parseHash(); render(); });
+
+  // If arriving from a "Compare" link with product data in query params, persist to localStorage
+  const urlItem = readUrlParams();
+  if (urlItem && urlItem.asin) {
+    const current = loadCompare();
+    if (!current.find(i => i.asin === urlItem.asin)) {
+      current.push(urlItem);
+      saveCompare(current);
+    }
+  }
+
+  if (window.location.hash.includes('compare') || urlItem) {
+    window.location.hash = '#compare';
+    loadData();
+  } else {
+    render();
+  }
+})();
+</script>
+</body>
+</html>

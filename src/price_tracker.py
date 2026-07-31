@@ -97,3 +97,22 @@ class PriceTracker:
         if history:
             return history[-1].get("price")
         return None
+
+    def get_latest_prices(self) -> Dict[str, float]:
+        try:
+            con = sqlite3.connect(self.db_path)
+            cur = con.cursor()
+            cur.execute(
+                """
+                SELECT product_id, MAX(timestamp), price
+                FROM price_history
+                GROUP BY product_id
+                ORDER BY product_id
+                """
+            )
+            rows = cur.fetchall()
+            con.close()
+            return {row[0]: row[2] for row in rows if row[2] is not None}
+        except Exception as e:
+            logger.warning("Latest prices fetch failed: %s", e)
+            return {}

@@ -64,6 +64,44 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 @media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 :focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
+
+/* ── Compare & Watchlist ──────────────────────────────────────── */
+.av-compare-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; color: var(--clr-accent); border: 1px solid var(--clr-accent);
+  padding: 4px 12px; border-radius: 100px; font-size: 0.78rem; font-weight: 700;
+  cursor: pointer; font-family: var(--font-body); transition: all .15s; margin-top: 8px;
+}
+.av-compare-btn:hover { background: var(--clr-accent); color: var(--clr-white); }
+.av-compare-btn.added { background: var(--clr-primary); color: var(--clr-white); border-color: var(--clr-primary); }
+.av-compare-icon { font-size: 1rem; font-weight: 700; }
+#av-compare-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
+  background: var(--clr-black); color: var(--clr-white);
+  padding: 12px 24px; display: none; align-items: center; justify-content: space-between;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.15); border-top: 2px solid var(--clr-accent);
+  font-family: var(--font-body);
+}
+#av-compare-bar.show { display: flex; }
+#av-compare-bar .av-compare-items { display: flex; gap: 12px; overflow-x: auto; flex: 1; align-items: center; }
+#av-compare-bar .av-compare-pill {
+  display: flex; align-items: center; gap: 8px; background: var(--clr-dark-gray);
+  padding: 6px 12px; border-radius: 100px; font-size: 0.82rem; white-space: nowrap; min-width: fit-content;
+}
+#av-compare-bar .av-compare-pill img { width: 24px; height: 24px; border-radius: 4px; object-fit: contain; }
+#av-compare-bar .av-compare-remove { background: none; border: none; color: var(--clr-mid-gray); cursor: pointer; font-size: 1rem; padding: 0 2px; }
+#av-compare-bar .av-compare-remove:hover { color: #ff6b6b; }
+#av-compare-bar .av-compare-cta {
+  background: var(--clr-accent); color: var(--clr-black); border: none; padding: 8px 20px;
+  border-radius: var(--radius-sm); font-weight: 700; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
+}
+#av-compare-bar .av-compare-cta:hover { filter: brightness(1.1); }
+#av-compare-bar .av-compare-clear { background: none; border: none; color: var(--clr-mid-gray); cursor: pointer; font-size: 0.8rem; text-decoration: underline; margin-right: 16px; white-space: nowrap; }
+@media (max-width: 640px) {
+  #av-compare-bar { flex-wrap: wrap; gap: 8px; padding: 10px 16px; }
+  #av-compare-bar .av-compare-cta { width: 100%; justify-content: center; }
+  #av-compare-bar .av-compare-clear { width: 100%; margin: 0; text-align: center; }
+}
 """
 CLICK_DOMAIN = os.environ.get("CLICK_DOMAIN", "https://abvorn.com")
 _SITE_URL = os.environ.get("SITE_URL", "https://abvorn-media.github.io/abvorn").rstrip("/")
@@ -85,7 +123,15 @@ def affiliate_url(product_url, tag=""):
     return f"{product_url}{sep}tag={t}"
 
 
-def product_card_html(product, pexels_key="", amazon_tag=""):
+def extract_asin(product_url: str) -> str:
+    """Extract Amazon ASIN from a product URL."""
+    if not product_url:
+        return ""
+    m = re.search(r"/dp/([A-Z0-9]{10})", product_url)
+    return (m.group(1) if m else "").upper()
+
+
+def product_card_html(product, pexels_key="", amazon_tag="", include_compare: bool = True):
     """Minimal product card HTML for standalone deployment use."""
     name = product.get("name", "Product")
     price = product.get("price", "Check price")
@@ -93,17 +139,49 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
     summary = product.get("description", "")
     product_url = product.get("url", "")
     product_image = product.get("image", "")
+    verdict_score = product.get("verdict_score", "")
+    verdict_label = product.get("verdict_label", "")
+    asin = extract_asin(product_url)
+    data_attrs = (
+        f' data-asin="{asin}" data-name="{html_mod.escape(name)}" '
+        f'data-price="{html_mod.escape(str(price or ""))}" '
+        f'data-image="{html_mod.escape(product_image or "")}" '
+        f'data-url="{html_mod.escape(product_url or "")}" '
+        f'data-score="{html_mod.escape(str(verdict_score or ""))}" '
+        f'data-label="{html_mod.escape(verdict_label or "")}"'
+    )
     img = ""
     if product_image:
         img = f'<img src="{product_image}" alt="{html_mod.escape(name)}" loading="lazy" style="width:100px;height:100px;object-fit:contain;background:var(--clr-white);border-radius:var(--radius-sm)">'
     else:
         img = '<div style="width:160px;height:160px;background:linear-gradient(135deg,var(--bg-alt),var(--border));border-radius:var(--radius-sm);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.8rem">Product</div>'
-    return f"""<div class="product-card">
+    compare_btn = ""
+    if include_compare and asin:
+        from urllib.parse import urlencode
+        qs = urlencode({
+            "asin": asin,
+            "name": name,
+            "price": price or "",
+            "image": product_image or "",
+            "url": product_url or "",
+            "score": verdict_score or "",
+            "label": verdict_label or "",
+        })
+        compare_btn = (
+            f'<a class="av-compare-btn" data-asin="{asin}" '
+            f'data-name="{html_mod.escape(name)}" data-price="{html_mod.escape(str(price or ""))}" '
+            f'data-image="{html_mod.escape(product_image or "")}" data-url="{html_mod.escape(product_url or "")}" '
+            f'data-score="{html_mod.escape(str(verdict_score or ""))}" data-label="{html_mod.escape(verdict_label or "")}" '
+            f'href="/abvorn/compare?{qs}"><span class="av-compare-icon">⊕</span> Compare</a>'
+        )
+    summary_escaped = html_mod.escape(summary)
+    return f"""<div class="product-card"{data_attrs}>
 {img}
 <div class="product-card-body">
 <h3>{html_mod.escape(name)}</h3>
 <div class="price">{html_mod.escape(str(price or 'N/A'))}</div>
-<p>{html_mod.escape(summary)}</p>
+<p>{summary_escaped}</p>
+{compare_btn}
 <a class="buy-btn" href="{affiliate_url(product_url, amazon_tag) or '#'}" target="_blank" rel="sponsored">Check Price on Amazon &rarr;</a>
 </div>
 </div>"""
@@ -113,6 +191,8 @@ def render_verdict_card(verdict: dict, product_name: str, affiliate_url: str = "
     """Minimal verdict card renderer for standalone deployment use."""
     return f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(product_name)}</div><a class="buy-btn" href="{affiliate_url or '#'}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
 
+def render_compare_bar(product: dict, include_compare: bool = True) -> str:
+    return ""
 
 
 def generate_click_url(article_id: str, product_index: int, product_url: str = "") -> str:

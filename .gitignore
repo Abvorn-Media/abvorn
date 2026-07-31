@@ -20,6 +20,9 @@ cycle_state.json
 relentless_state.json
 products_cache.json
 personas.db
+docs/data/*.json
+data/social_permission/
+data/social_sentiment/
 
 # SaaS product landing pages — local only, not for public repo
 saas-products/

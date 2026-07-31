@@ -2854,6 +2854,40 @@ def main(forced_niche=None, force=False, batch_mode=False):
     except Exception as e:
         logger.warning(f"Price history recording skipped: {e}")
 
+    try:
+        from src.price_tracker import PriceTracker
+        import sqlite3
+        from datetime import datetime, timedelta
+        t = PriceTracker()
+        latest = t.get_latest_prices()
+        sparkline_buf = []
+        try:
+            cutoff = datetime.now() - timedelta(days=30)
+            con = sqlite3.connect(str(t.db_path))
+            cur = con.cursor()
+            cur.execute(
+                "SELECT product_id, timestamp, price FROM price_history WHERE timestamp > ? ORDER BY product_id ASC, timestamp ASC",
+                (cutoff.isoformat(),),
+            )
+            rows = cur.fetchall()
+            con.close()
+            by_id = {}
+            for pid, ts, price in rows:
+                by_id.setdefault(pid, []).append({"date": ts, "price": price})
+            for pid, hist in by_id.items():
+                prices = [r["price"] for r in hist]
+                if prices:
+                    sparkline_buf.append({"id": pid, "prices": prices[-14:]})
+        except Exception:
+            pass
+        snapshots_path = Path("docs/data")
+        snapshots_path.mkdir(parents=True, exist_ok=True)
+        (snapshots_path / "latest_prices.json").write_text(json.dumps(latest, indent=2), encoding="utf-8")
+        (snapshots_path / "price_sparklines.json").write_text(json.dumps(sparkline_buf, indent=2), encoding="utf-8")
+        print(f"Price snapshots: {len(latest)} products, {len(sparkline_buf)} sparklines")
+    except Exception as e:
+        logger.warning(f"Price snapshot export skipped: {e}")
+
     social_data = fetch_social_sentiment(niche_slug)
 
     # 2. Outline — enriched with knowledge core insights and social data
