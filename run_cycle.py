@@ -3099,8 +3099,16 @@ def main(forced_niche=None, force=False, batch_mode=False):
 
     # Relentless Core — measure, plan, act
     try:
-        from abvorn.core.relentless_core import cycle_relentless_core
-        cycle_relentless_core()
+        from abvorn.core.relentless_core import RelentlessCore
+
+        core = RelentlessCore()
+        result = core.cycle()
+        logger.info(
+            "Relentless Core: drive_score=%.3f, action=%s, result=%s",
+            result.get("drive_score", 0.0),
+            result.get("action", "none"),
+            result.get("result", ""),
+        )
     except Exception as e:
         logger.warning(f"Relentless Core skipped: {e}")
 
