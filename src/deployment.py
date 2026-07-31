@@ -365,21 +365,12 @@ def build_homepage(state, form_url="", reviews=None, base=None):
         hero_slides += f'<div class="hero-slide{active}"><img src="{img}" alt="{name}"><figcaption>{name} reviews — expert tested</figcaption></div>'
         hero_dots += f'<button class="hero-slider__dot{active}" aria-label="Show {name}" aria-current="{"true" if i == 0 else "false"}"></button>'
 
-    # Build latest review cards — exactly 3
+    # Build latest review cards — the 3 most recently updated reviews, with
+    # the same Category · Niche banner as the category sections.
     latest_cards = ""
-    card_count = 0
-    for n in niches:
-        if not n["posts"]:
-            continue
-        if card_count >= 3:
-            break
-        latest_cards += f'''<div class="niche-card">
-    <a href="{b}/{n["slug"]}/"><div class="niche-card__image-wrapper"><img src="{carousel_img(n["slug"], b)}" alt="{n["name"]}" loading="lazy"></div></a>
-    <h2><a href="{b}/{n["slug"]}/">{n["name"]}</a></h2>
-    <p>{n["posts"]} expert-reviewed guide{"s" if n["posts"] > 1 else ""} with real testing results.</p>
-    <a href="{b}/{n["slug"]}/" class="read-link">Continue reading →</a>
-</div>'''
-        card_count += 1
+    for r in sorted(review_list, key=lambda x: x["updated"], reverse=True)[:3]:
+        cat_name = next((c for c, slugs in CATEGORY_MAP.items() if r["slug"] in slugs), "")
+        latest_cards += review_card(r, cat_name, b)
 
     # Build category sections — one per category, alphabetical, latest 3 reviews each.
     cat_sections = ""
