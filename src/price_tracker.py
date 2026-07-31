@@ -50,6 +50,10 @@ class PriceTracker:
         if not product_id or price is None:
             return
         try:
+            price = float(str(price).replace("$", "").replace(",", "").strip())
+        except (ValueError, TypeError):
+            return
+        try:
             con = sqlite3.connect(self.db_path)
             cur = con.cursor()
             cur.execute(
@@ -57,7 +61,7 @@ class PriceTracker:
                 INSERT OR REPLACE INTO price_history (product_id, timestamp, price, retailer)
                 VALUES (?, ?, ?, ?)
                 """,
-                (product_id, datetime.now().isoformat(), float(price), retailer),
+                (product_id, datetime.now().isoformat(), price, retailer),
             )
             con.commit()
             con.close()
