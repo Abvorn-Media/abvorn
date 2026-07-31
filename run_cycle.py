@@ -35,7 +35,8 @@ from src.social_permission import SocialPermissionFramework, create_social_permi
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
-from src.deployment import build_homepage, push_single_file, deploy_single_page
+from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url
+from src.click_tracker import get_clicks, register_articles_batch
 
 logger = logging.getLogger("run_cycle")
 logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
@@ -1512,7 +1513,7 @@ renderRPS(regret,primaryProduct.name,rpsData.products);
 </script>"""
 
 
-def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None, published_date=None, updated_date=None):
+def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None, published_date=None, updated_date=None, article_id=None):
     b = SITE_BASE
     t = amazon_tag or os.environ.get("AMAZON_TAG", "viraltestco-20")
     article_url = f"{_SITE_URL}/reviews/{niche_slug}/"
@@ -1629,6 +1630,10 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     # Footer
     footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
     footer_social = render_footer_social()
+
+    if article_id:
+        article_html = rewrite_affiliate_urls(article_html, article_id)
+        product_cards = rewrite_affiliate_urls(product_cards, article_id)
 
     # Assemble full article body content
     article_body_content = f'''{FTC_DISCLOSURE}
@@ -2474,7 +2479,7 @@ footer a{{color:#aaa;text-decoration:none}}
                 build_article_page(slug, niche_name, a["post_title"], a["article_html"],
                                    a["intro"], a["product_name"], a["meta_description"],
                                    all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
-                                   related_niches=related),
+                                   related_niches=related, article_id=f"{slug}-{i}"),
                 encoding="utf-8"
             )
             print(f"  Written: docs/reviews/{slug}/index.html (article)")
@@ -2641,6 +2646,14 @@ def process_single_niche(niche: Dict, workflow_name: str = None) -> Dict:
         write_files(niche_slug, articles, state,
                     pexels_key=get_secrets().get("PEXELS_KEY", ""),
                     amazon_tag=get_secrets().get("AMAZON_TAG", "viraltestco-20"))
+        draft["article_id"] = f"{niche_slug}-0"
+        register_articles_batch([
+            {
+                "article_id": draft.get("article_id"),
+                "niche": niche_slug,
+                "post_title": draft.get("post_title"),
+            }
+        ])
         niche["posts"] = niche.get("posts", 0) + 1
         save_state(state)
     except Exception as e:
@@ -2761,6 +2774,7 @@ def main(forced_niche=None, force=False, batch_mode=False):
 
     # 4. WRITE FILES
     print(f"\n--- WRITE: {niche_slug} ---")
+    draft["article_id"] = f"{niche_slug}-0"
     articles = {niche_slug: [draft]}
     write_files(niche_slug, articles, state,
                 pexels_key=secrets.get("PEXELS_KEY", ""),
@@ -2769,7 +2783,14 @@ def main(forced_niche=None, force=False, batch_mode=False):
                 hero_images=hero_images,
                 google_client_id=secrets.get("GOOGLE_CLIENT_ID", ""))
 
-    # Track affiliate clicks (simulated until real Amazon API keys)
+    # Register articles for click tracking
+    register_articles_batch([{
+        "article_id": draft.get("article_id"),
+        "niche": niche_slug,
+        "post_title": draft.get("post_title"),
+    }])
+
+    # Track affiliate clicks (real clicks via SQLite + click_server)
     state.setdefault("affiliate_clicks", 0)
     state.setdefault("affiliate_clicks_by_article", {})
     simulated_clicks = max(0, min(5, len(products)))

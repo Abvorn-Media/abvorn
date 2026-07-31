@@ -15,6 +15,34 @@ logger = logging.getLogger(__name__)
 # Helpers shared with run_cycle.py
 SITE_BASE = "https://abvorn-media.github.io/abvorn"
 DESIGN_SYSTEM_CSS = ""
+CLICK_DOMAIN = os.environ.get("CLICK_DOMAIN", "https://abvorn.com")
+
+
+def generate_click_url(article_id: str, product_index: int, product_url: str = "") -> str:
+    return f"{CLICK_DOMAIN}/click/{article_id}/{product_index}"
+
+
+def rewrite_affiliate_urls(html: str, article_id: str) -> str:
+    import re, html as html_mod
+    pattern = re.compile(r'(<a\s[^>]*href=")(https?://[^"]*(?:amazon|amzn)[^"]*?)("[^>]*>)', re.IGNORECASE)
+    product_index = 0
+    seen_indices = {}
+
+    def replace_match(match):
+        nonlocal product_index
+        prefix, original_url, suffix = match.group(1), match.group(2), match.group(3)
+        if "abvorn.com/click/" in original_url:
+            return match.group(0)
+        if original_url in seen_indices:
+            idx = seen_indices[original_url]
+        else:
+            idx = product_index
+            seen_indices[original_url] = idx
+            product_index += 1
+        click_url = generate_click_url(article_id, idx)
+        return f'{prefix}{click_url}{suffix}'
+
+    return pattern.sub(replace_match, html)
 
 
 def _slugify_title(s):
@@ -557,7 +585,7 @@ renderRPS(regret,primaryProduct.name,rpsData.products);
 
 
 
-def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None, published_date=None, updated_date=None):
+def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None, published_date=None, updated_date=None, article_id=None):
     b = SITE_BASE
     t = amazon_tag or os.environ.get("AMAZON_TAG", "viraltestco-20")
     article_url = f"{_SITE_URL}/reviews/{niche_slug}/"
@@ -674,6 +702,10 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     # Footer
     footer_cats = "".join(f'<a href="{b}/{s}/">{_slugify_title(s)}</a>' for s in all_slugs)
     footer_social = render_footer_social()
+
+    if article_id:
+        article_html = rewrite_affiliate_urls(article_html, article_id)
+        product_cards = rewrite_affiliate_urls(product_cards, article_id)
 
     # Assemble full article body content
     article_body_content = f'''{FTC_DISCLOSURE}
@@ -1083,7 +1115,7 @@ footer a{{color:#aaa;text-decoration:none}}
                 build_article_page(slug, niche_name, a["post_title"], a["article_html"],
                                    a["intro"], a["product_name"], a["meta_description"],
                                    all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
-                                   related_niches=related),
+                                   related_niches=related, article_id=f"{slug}-{i}"),
                 encoding="utf-8"
             )
             print(f"  Written: docs/reviews/{slug}/index.html (article)")
