@@ -194,6 +194,17 @@ def review_img(niche_slug, b):
     return carousel_img(niche_slug, b)
 
 
+def load_verdict_weights() -> dict:
+    """Load persisted Verdict Engine weight overrides from data/verdict_weights.json."""
+    try:
+        path = Path("data/verdict_weights.json")
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return {}
+
+
 def scan_published_reviews(docs_dir="docs"):
     """Enumerate every published review page under docs/reviews/*.
 
@@ -228,6 +239,23 @@ def scan_published_reviews(docs_dir="docs"):
                 "rel": rel,
             })
     return reviews
+
+
+def verify_page(html_content: str) -> bool:
+    """Quick regression guard for generated article pages.
+
+    Raises ValueError if a required asset is missing from the rendered HTML.
+    """
+    missing = []
+    if 'id="abvorn-rps-data"' not in html_content:
+        missing.append("abvorn-rps-data")
+    if 'cdn.jsdelivr.net/npm/chart.js' not in html_content:
+        missing.append("chart.js")
+    if 'class="av-bar-row"' not in html_content:
+        missing.append("av-bar-row")
+    if missing:
+        raise ValueError(f"Missing required page assets: {', '.join(missing)}")
+    return True
 
 
 def review_card(item, category, b):
@@ -1024,7 +1052,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         # Abvorn Verdict Engine — score the product
         try:
             from abvorn.core.verdict import AbvornVerdictEngine
-            engine = AbvornVerdictEngine()
+            engine = AbvornVerdictEngine(weight_overrides=load_verdict_weights())
             verdict = engine.score_product(niche_slug, p0)
             detail_url = f"{b}/reviews/{niche_slug}/"
             verdict_html = render_verdict_card(verdict, html_mod.escape(p0.get('name', product_name)), p0_aff, detail_url)
@@ -1085,7 +1113,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     rps_data = {"products": [], "niche": niche_slug}
     try:
         from abvorn.core.verdict import AbvornVerdictEngine
-        ve = AbvornVerdictEngine()
+        ve = AbvornVerdictEngine(weight_overrides=load_verdict_weights())
         for prod in (products or []):
             v = ve.score_product(niche_slug, prod)
             rps_data["products"].append({

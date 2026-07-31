@@ -276,7 +276,7 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
     rows = ""
     try:
         from abvorn.core.verdict import AbvornVerdictEngine
-        engine = AbvornVerdictEngine()
+        engine = AbvornVerdictEngine(weight_overrides=load_verdict_weights())
     except Exception:
         engine = None
     for i, prod in enumerate(products[:6]):
@@ -1565,7 +1565,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         # Abvorn Verdict Engine — score the product
         try:
             from abvorn.core.verdict import AbvornVerdictEngine
-            engine = AbvornVerdictEngine()
+            engine = AbvornVerdictEngine(weight_overrides=load_verdict_weights())
             verdict = engine.score_product(niche_slug, p0)
             detail_url = f"{b}/reviews/{niche_slug}/"
             verdict_html = render_verdict_card(verdict, html_mod.escape(p0.get('name', product_name)), p0_aff, detail_url)
@@ -1626,7 +1626,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     rps_data = {"products": [], "niche": niche_slug}
     try:
         from abvorn.core.verdict import AbvornVerdictEngine
-        ve = AbvornVerdictEngine()
+        ve = AbvornVerdictEngine(weight_overrides=load_verdict_weights())
         for prod in (products or []):
             v = ve.score_product(niche_slug, prod)
             rps_data["products"].append({
@@ -3005,6 +3005,89 @@ def main(forced_niche=None, force=False, batch_mode=False):
             )
     except Exception as e:
         logger.warning(f"A/B test ingestion skipped: {e}")
+
+    # Update Verdict Engine weights from real engagement data (clicks, reactions)
+    try:
+        from abvorn.feedback_loop.learner import FeedbackLearner
+        from abvorn.core.verdict import AbvornVerdictEngine
+        import sqlite3
+
+        engine = AbvornVerdictEngine(weight_overrides=load_verdict_weights())
+        learner = FeedbackLearner(verdict_engine=engine)
+        engagement = get_engagement_data()
+        updated = 0
+        for article_id, data in engagement.items():
+            niche = data.get("niche", article_id.split("-")[0] if "-" in article_id else article_id)
+            product = {"name": data.get("title", "")}
+            try:
+                verdict = engine.score_product(niche, product)
+            except Exception:
+                verdict = {"overall": 7.0, "label": "", "breakdown": {}}
+            interactions = {
+                "page_views": data.get("page_views", 1),
+                "affiliate_clicks": data.get("affiliate_clicks", 0),
+                "conversions": data.get("conversions", 0),
+                "revenue": data.get("revenue", 0.0),
+            }
+            learner.update_from_engagement(niche, article_id, verdict, interactions)
+            updated += 1
+        if updated:
+            save_verdict_weights(learner.overrides)
+            logger.info(f"Verdict weights updated from {updated} articles")
+    except Exception as e:
+        logger.warning(f"Verdict weight update skipped: {e}")
+
+
+from pathlib import Path
+
+def load_verdict_weights() -> dict:
+    """Load persisted Verdict Engine weight overrides from data/verdict_weights.json."""
+    try:
+        path = Path("data/verdict_weights.json")
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return {}
+
+
+def get_engagement_data() -> dict:
+    """Aggregate engagement data from clicks.db for the feedback learner."""
+    import sqlite3
+    from pathlib import Path
+    db_path = Path("data/clicks.db")
+    if not db_path.exists():
+        return {}
+    con = sqlite3.connect(db_path)
+    cur = con.cursor()
+    cur.execute("SELECT article_id, COUNT(*) FROM clicks GROUP BY article_id")
+    clicks = {row[0]: row[1] for row in cur.fetchall()}
+    cur.execute("SELECT article_id, niche, title FROM articles")
+    articles = {row[0]: {"niche": row[1], "title": row[2]} for row in cur.fetchall()}
+    con.close()
+    result = {}
+    for article_id, click_count in clicks.items():
+        article = articles.get(article_id, {})
+        niche = article.get("niche", article_id.split("-")[0] if "-" in article_id else article_id)
+        result[article_id] = {
+            "niche": niche,
+            "title": article.get("title", ""),
+            "affiliate_clicks": click_count,
+            "page_views": max(click_count, 1),
+            "conversions": 0,
+            "revenue": 0.0,
+        }
+    return result
+
+
+def save_verdict_weights(weights: dict) -> None:
+    """Persist Verdict Engine weight overrides to data/verdict_weights.json."""
+    try:
+        path = Path("data/verdict_weights.json")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(weights, indent=2, default=str), encoding="utf-8")
+    except Exception as e:
+        logger.warning(f"Failed to save verdict weights: {e}")
 
 
 if __name__ == "__main__":
