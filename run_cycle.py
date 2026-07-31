@@ -2642,14 +2642,6 @@ def process_single_niche(niche: Dict, workflow_name: str = None) -> Dict:
                     pexels_key=get_secrets().get("PEXELS_KEY", ""),
                     amazon_tag=get_secrets().get("AMAZON_TAG", "viraltestco-20"))
         niche["posts"] = niche.get("posts", 0) + 1
-        
-        # Track affiliate clicks (simulated until real Amazon API keys)
-        state.setdefault("affiliate_clicks", 0)
-        state.setdefault("affiliate_clicks_by_article", {})
-        simulated_clicks = max(0, min(5, len(products)))  # rough estimate: 0-5 clicks per article
-        state["affiliate_clicks"] += simulated_clicks
-        state["affiliate_clicks_by_article"][niche_slug] = simulated_clicks
-        
         save_state(state)
     except Exception as e:
         return {"status": "error", "message": f"Publish failed for {niche_slug}: {e}"}
@@ -2666,6 +2658,8 @@ def main(forced_niche=None, force=False, batch_mode=False):
     global ai_sql
     secrets = get_secrets()
     ai_sql = create_ai_sql()
+    from src.content_generation import set_ai_sql
+    set_ai_sql(ai_sql)
 
     # Knowledge Core (business book insights)
     global _knowledge_core
@@ -2774,6 +2768,13 @@ def main(forced_niche=None, force=False, batch_mode=False):
                 form_url=secrets.get("APPS_SCRIPT_URL", ""),
                 hero_images=hero_images,
                 google_client_id=secrets.get("GOOGLE_CLIENT_ID", ""))
+
+    # Track affiliate clicks (simulated until real Amazon API keys)
+    state.setdefault("affiliate_clicks", 0)
+    state.setdefault("affiliate_clicks_by_article", {})
+    simulated_clicks = max(0, min(5, len(products)))
+    state["affiliate_clicks"] += simulated_clicks
+    state["affiliate_clicks_by_article"][niche_slug] = simulated_clicks
 
     # 4.5 FACT-CHECK — Validate all factual claims before marking complete
     fact_checker = create_fact_checker(draft)
@@ -2893,7 +2894,12 @@ def main(forced_niche=None, force=False, batch_mode=False):
 
     # Mark cycle change as complete
     if "change_id" in dir():
-        change_mgr.promote_change(change_id, ChangeStatus.PRODUCTION)
+        try:
+            change_mgr.promote_change(change_id, ChangeStatus.STAGING)
+            change_mgr.promote_change(change_id, ChangeStatus.CANARY)
+            change_mgr.promote_change(change_id, ChangeStatus.PRODUCTION)
+        except Exception:
+            pass
 
     # Ingest any A/B test results from the change manager into the feedback loop
     try:

@@ -5,9 +5,25 @@ All functions that generate article content, outlines, and social data live here
 import json
 import logging
 import os
+import re
+import time
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from pathlib import Path
+
+from src.ai_sql import QueryPlan
+from src.infrastructure import infra_reporter
+from src.energy_accounting import energy_accounting
+
+_cost_per_1k = {
+    "openai": 0.002,
+    "anthropic": 0.003,
+    "gemini": 0.001,
+    "deepseek": 0.0005,
+    "kimi": 0.0008,
+    "kilogateway": 0.0005,
+    "default": 0.0005,
+}
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +35,12 @@ def set_ai_sql(instance):
     """Set the global AISQL instance."""
     global ai_sql
     ai_sql = instance
+
+
+def _track_call(niche: str, provider: str, tokens: int, latency_ms: float = 0.0):
+    cost = tokens * (_cost_per_1k.get(provider, _cost_per_1k["default"]) / 1000.0)
+    infra_reporter.report_article_cost("", provider, cost, latency_ms, tokens, niche)
+    energy_accounting.record_usage(provider, tokens, latency_ms)
 
 
 def generate_outline(niche, products, knowledge_core=None, workflow_engine=None, social_data=None):
@@ -80,9 +102,9 @@ Return a JSON object with:
     if not result_text:
         return None
     try:
-        return json.loads(result)
+        return json.loads(result_text)
     except:
-        m = re.search(r'\{.*\}', result, re.DOTALL)
+        m = re.search(r'\{.*\}', result_text, re.DOTALL)
         if m:
             try: return json.loads(m.group(0))
             except: pass

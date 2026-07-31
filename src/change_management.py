@@ -78,7 +78,7 @@ class ChangeManager:
         )
         self.changes[change_id] = change
         logger.info(f"Change created: {change_id}")
-        return change
+        return change_id
 
     def promote_change(self, change_id: str, target_status: ChangeStatus) -> bool:
         if change_id not in self.changes:

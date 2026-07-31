@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Helpers shared with run_cycle.py
 SITE_BASE = "https://abvorn-media.github.io/abvorn"
+DESIGN_SYSTEM_CSS = ""
 
 
 def _slugify_title(s):
@@ -1421,7 +1422,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <div class="footer-grid">
         <div class="footer-col">
             <img src="__SITE_BASE__/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px">
-            <p>Independent product reviews and buying guides, based on real testing.</p>
+            <p>Independent product research and buying guides, built to help you decide faster.</p>
             <div class="footer-social">FOOTER_SOCIAL_PLACEHOLDER</div>
         </div>
         <div class="footer-col"><h4>Categories</h4>FOOTER_CATEGORY_LINKS_PLACEHOLDER</div>
