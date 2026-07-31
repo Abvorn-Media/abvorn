@@ -1,0 +1,69 @@
+{
+  "social_permission_score": 0.35948411999999996,
+  "level": "caution",
+  "thresholds": {
+    "community_min": 0.7,
+    "country_min": 0.6,
+    "global_min": 0.8,
+    "critical_min": 0.3
+  },
+  "actions": [
+    {
+      "action_type": "halt_expansion",
+      "description": "Halt all AI resource expansion immediately",
+      "priority": 1,
+      "estimated_impact": -0.1,
+      "auto_execute": true,
+      "executed": true,
+      "executed_at": "2026-07-31T10:06:47.635553"
+    },
+    {
+      "action_type": "emergency_audit",
+      "description": "Run emergency social permission audit",
+      "priority": 2,
+      "estimated_impact": 0.0,
+      "auto_execute": false,
+      "executed": false,
+      "executed_at": null
+    }
+  ],
+  "surplus_data": {
+    "saas": {
+      "revenue": 0,
+      "user_value_per_user": 0.0,
+      "cost_savings": 0.0,
+      "revenue_count": 0,
+      "user_value_count": 0,
+      "cost_savings_count": 0,
+      "data_points": 0
+    },
+    "community": {
+      "total_time_saved_hours": 0.0,
+      "avg_decision_improvement": 0.0,
+      "community_growth_rate": 0.0,
+      "avg_satisfaction": 0.0,
+      "time_saved_count": 0,
+      "data_points": 0
+    },
+    "country": {
+      "avg_productivity_gain": 0.0,
+      "avg_innovation_index": 0.0,
+      "total_economic_impact": 0.0,
+      "productivity_gain_count": 0,
+      "data_points": 0
+    },
+    "social_permission_score": 0.0,
+    "measured_at": "2026-07-31T10:06:47.635460"
+  },
+  "metrics": {
+    "economic_surplus": 0.0,
+    "user_engagement": 0.5,
+    "trust_score": 0.7
+  },
+  "recommendations": [
+    "Social permission is at risk. Halt all expansion immediately.",
+    "Conduct audit of all AI resource consumption.",
+    "Develop restitution plan for affected communities."
+  ],
+  "timestamp": "2026-07-31T10:06:47.635673"
+}
