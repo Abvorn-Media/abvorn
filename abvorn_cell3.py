@@ -316,10 +316,10 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <meta property="og:image" content="__SITE_BASE_PATH__/logo.svg">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="alternate" type="application/rss+xml" title="Abvorn RSS Feed" href="__SITE_BASE_PATH__/rss.xml">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Abvorn","url":"__SITE_URL__","potentialAction":{"@type":"SearchAction","target":"__SITE_URL__/search?q={search_term_string}","query-input":"required name=search_term_string"}}</script>
     <style>
-:root{--clr-primary:#5a7d9a;--clr-secondary:#0cc0df;--clr-accent:#b4b4b4;--clr-neutral:#d9d9d9;--clr-white:#ffffff;--clr-orange:#f8aa25;--clr-black:#000000;--clr-mid-gray:#888;--radius:12px;--radius-lg:16px}
+:root{--clr-primary:#1a1a1a;--clr-secondary:#c98a2c;--clr-accent:#b4b4b4;--clr-neutral:#d9d9d9;--clr-white:#ffffff;--clr-orange:#f8aa25;--clr-black:#000000;--clr-mid-gray:#888;--radius:12px;--radius-lg:16px}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:var(--clr-white);color:#333;line-height:1.6}
 /* ── top bar ── */
@@ -347,7 +347,7 @@ header{background:var(--clr-black);border-bottom:4px solid var(--clr-primary);pa
 .dropdown a:hover{color:var(--clr-white);background:rgba(255,255,255,0.05)}
 /* ── trending posts slider ── */
 .trending-section{padding:40px 0 20px;max-width:1200px;margin:0 auto}
-.trending-section h2{font-family:'Playfair Display',serif;font-size:1.8rem;margin-bottom:16px;padding:0 24px;display:flex;align-items:center;gap:8px}
+.trending-section h2{font-family:'Libre Franklin',-apple-system,sans-serif;font-size:1.8rem;margin-bottom:16px;padding:0 24px;display:flex;align-items:center;gap:8px}
 .trending-section h2 span{font-size:1.6rem}
 .trending-scroll{display:flex;gap:16px;overflow-x:auto;padding:8px 24px 16px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
 .trending-scroll::-webkit-scrollbar{height:4px}
@@ -362,7 +362,7 @@ header{background:var(--clr-black);border-bottom:4px solid var(--clr-primary);pa
 .trending-slide-body h3 a:hover{color:var(--clr-primary)}
 /* ── hero ── */
 .hero{background:linear-gradient(135deg,var(--clr-black) 0%,#1a1a2e 50%,var(--clr-black) 100%);color:var(--clr-white);text-align:center;padding:80px 24px 60px}
-.hero h1{font-family:'Playfair Display',serif;font-size:3.6rem;margin-bottom:12px;letter-spacing:-0.02em}
+.hero h1{font-family:'Libre Franklin',-apple-system,sans-serif;font-size:3.6rem;margin-bottom:12px;letter-spacing:-0.02em}
 .hero h1 span{color:var(--clr-primary)}
 .hero p{font-size:1.15rem;opacity:0.8;max-width:620px;margin:0 auto 28px;line-height:1.7}
 .hero-cta{background:var(--clr-orange);color:var(--clr-black);padding:14px 44px;text-decoration:none;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;display:inline-block;border-radius:8px;transition:transform 0.2s,box-shadow 0.2s}
@@ -380,7 +380,7 @@ header{background:var(--clr-black);border-bottom:4px solid var(--clr-primary);pa
 @keyframes ticker-scroll{0%{transform:translateX(100vw)}100%{transform:translateX(-100%)}}
 /* ── category tabs + grid ── */
 .section-title{text-align:center;max-width:1200px;margin:48px auto 0;padding:0 24px}
-.section-title h2{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--clr-black)}
+.section-title h2{font-family:'Libre Franklin',-apple-system,sans-serif;font-size:2.2rem;color:var(--clr-black)}
 .section-title p{color:var(--clr-mid-gray);margin-top:6px;font-size:0.95rem}
 .category-tabs{display:flex;justify-content:center;gap:10px;margin:24px auto;padding:0 24px;flex-wrap:wrap}
 .category-tab{padding:6px 18px;border:2px solid var(--clr-accent);border-radius:20px;background:transparent;color:#555;cursor:pointer;font-weight:600;font-size:0.85rem;transition:all 0.2s}
@@ -391,7 +391,7 @@ header{background:var(--clr-black);border-bottom:4px solid var(--clr-primary);pa
 .niche-card:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(0,0,0,0.1)}
 .niche-card img{width:100%;height:180px;object-fit:cover;display:block}
 .niche-card-body{padding:16px 20px 16px;display:flex;flex-direction:column;flex:1}
-.niche-card-body h2{font-family:'Playfair Display',serif;font-size:1.3rem;margin:0 0 6px}
+.niche-card-body h2{font-family:'Libre Franklin',-apple-system,sans-serif;font-size:1.3rem;margin:0 0 6px}
 .niche-card-body h2 a{color:var(--clr-black);text-decoration:none}
 .niche-card-body h2 a:hover{color:var(--clr-primary)}
 .niche-card-body p{font-size:0.85rem;color:#666;margin-bottom:10px;flex:1;line-height:1.5}
@@ -497,7 +497,7 @@ NICHE_CATEGORIES = {
 }
 
 STATIC_PAGE_STYLES = '''
-:root{--clr-primary:#5a7d9a;--clr-secondary:#0cc0df;--clr-accent:#b4b4b4;--clr-neutral:#d9d9d9;--clr-white:#ffffff;--clr-warning:#f8aa25;--clr-black:#000000;--clr-mid-gray:#888}
+:root{--clr-primary:#1a1a1a;--clr-secondary:#c98a2c;--clr-accent:#b4b4b4;--clr-neutral:#d9d9d9;--clr-white:#ffffff;--clr-warning:#f8aa25;--clr-black:#000000;--clr-mid-gray:#888}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:var(--clr-white);color:#333;line-height:1.7}
 header{background:var(--clr-black);padding:16px 0;border-bottom:4px solid var(--clr-primary)}
@@ -508,7 +508,7 @@ header{background:var(--clr-black);padding:16px 0;border-bottom:4px solid var(--
 .header-inner .social-icon{display:inline-flex;width:20px;height:20px;opacity:0.8;transition:opacity 0.2s}
 .header-inner .social-icon:hover{opacity:1}
 main{max-width:800px;margin:0 auto;padding:60px 24px}
-main h1{font-family:'Playfair Display',serif;font-size:2.4rem;margin-bottom:24px;color:var(--clr-black)}
+main h1{font-family:'Libre Franklin',-apple-system,sans-serif;font-size:2.4rem;margin-bottom:24px;color:var(--clr-black)}
 main h2{font-size:1.3rem;margin:24px 0 12px;color:#444}
 main p{margin-bottom:16px;color:#555;font-size:1rem}
 main a{color:var(--clr-primary)}
@@ -545,7 +545,7 @@ def build_homepage(state):
         if slug not in deployed: deployed.append(slug)
 
     if not deployed:
-        cards = '<div class="niche-card"><div style="padding:60px;text-align:center;background:var(--clr-black);color:var(--clr-white)"><h2 style="font-family:Playfair Display,serif">Our First Guide is Brewing</h2><p style="opacity:0.7;margin-top:8px">Stay tuned for expert reviews and guides.</p></div></div>'
+        cards = '<div class="niche-card"><div style="padding:60px;text-align:center;background:var(--clr-black);color:var(--clr-white)"><h2 style="font-family:Libre Franklin,-apple-system,sans-serif">Our First Guide is Brewing</h2><p style="opacity:0.7;margin-top:8px">Stay tuned for expert reviews and guides.</p></div></div>'
         trending_html = '<p style="padding:24px;color:var(--clr-mid-gray)">No guides yet. Check back soon!</p>'
         dropdown_items = ''
         cat_tabs = ''
@@ -612,7 +612,7 @@ def build_homepage(state):
         ("privacy.html", "Privacy Policy", "<h2>Privacy Policy</h2><p><em>Last updated: "+datetime.now().strftime('%B %d, %Y')+"</em></p><h3>Information We Collect</h3><p>We use cookies and similar tracking technologies to analyze traffic, personalize content, and serve targeted advertisements. When you visit our site, we may collect: browser type, device information, pages visited, time spent, and referral URLs.</p><h3>Google AdSense</h3><p>We use Google AdSense to display advertisements. Google uses cookies (including the DoubleClick DART cookie) to serve ads based on your previous visits to our site or other websites. You can opt out of the DART cookie by visiting Google's Ads Settings at <a href=\"https://adssettings.google.com\" target=\"_blank\">adssettings.google.com</a>.</p><p>Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to this site and other websites. Users may opt out of personalized advertising by visiting <a href=\"https://www.aboutads.info/choices\" target=\"_blank\">AboutAds.info/choices</a> or <a href=\"https://www.youronlinechoices.com\" target=\"_blank\">YourOnlineChoices.com</a> (EU).</p><h3>Affiliate Links</h3><p>Our site contains affiliate links. If you click on an affiliate link and make a purchase, we may earn a commission at no extra cost to you. These links use cookies to track referrals for commission purposes.</p><h3>Email Collection</h3><p>Email addresses collected through our lead magnet forms are used solely to deliver the requested content and occasional updates. You can unsubscribe at any time. We do not sell or share your email with third parties.</p><h3>Data Retention</h3><p>We retain your data only as long as necessary to provide our services. You may request deletion of your data by contacting us.</p><h3>Contact</h3><p>For privacy-related inquiries: <a href=\"mailto:"+CONTACT_EMAIL+"\">"+CONTACT_EMAIL+"</a></p>")
     ]:
         page_path = EMPIRE_DIR / page_name
-        full = f'''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="icon" type="image/svg+xml" href="{SITE_BASE_PATH}/favicon.svg"><title>{title} | Abvorn</title><meta name="description" content="{html_escape(content[:150].replace('"',''))}"><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"><style>{STATIC_PAGE_STYLES}</style></head><body><header><div class="header-inner"><a href="{SITE_BASE_PATH}/"><img src="{SITE_BASE_PATH}/logo.svg" alt="Abvorn" class="logo-img"></a><nav><a href="{SITE_BASE_PATH}/">Home</a><a href="{SITE_BASE_PATH}/about.html">About</a><a href="{SITE_BASE_PATH}/contact.html">Contact</a><a href="{SITE_BASE_PATH}/privacy.html">Privacy</a>{HEADER_SOCIALS}</nav></div></header><main><h1>{title}</h1>{content}</main><footer><div class="fsocials">{FOOTER_SOCIALS}</div><nav><a href="{SITE_BASE_PATH}/">Home</a><a href="{SITE_BASE_PATH}/about.html">About</a><a href="{SITE_BASE_PATH}/contact.html">Contact</a><a href="{SITE_BASE_PATH}/privacy.html">Privacy</a><a href="{SITE_BASE_PATH}/rss.xml">RSS Feed</a></nav><img src="{SITE_BASE_PATH}/logo.svg" alt="Abvorn" class="footer-logo"><p style="margin-top:8px;font-size:0.8rem">Contact: <a href="mailto:{CONTACT_EMAIL}" style="color:var(--clr-accent);text-decoration:none">{CONTACT_EMAIL}</a></p><p>&copy; {datetime.now().year} Abvorn. All rights reserved.</p></footer></body></html>'''
+        full = f'''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="icon" type="image/svg+xml" href="{SITE_BASE_PATH}/favicon.svg"><title>{title} | Abvorn</title><meta name="description" content="{html_escape(content[:150].replace('"',''))}"><link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"><style>{STATIC_PAGE_STYLES}</style></head><body><header><div class="header-inner"><a href="{SITE_BASE_PATH}/"><img src="{SITE_BASE_PATH}/logo.svg" alt="Abvorn" class="logo-img"></a><nav><a href="{SITE_BASE_PATH}/">Home</a><a href="{SITE_BASE_PATH}/about.html">About</a><a href="{SITE_BASE_PATH}/contact.html">Contact</a><a href="{SITE_BASE_PATH}/privacy.html">Privacy</a>{HEADER_SOCIALS}</nav></div></header><main><h1>{title}</h1>{content}</main><footer><div class="fsocials">{FOOTER_SOCIALS}</div><nav><a href="{SITE_BASE_PATH}/">Home</a><a href="{SITE_BASE_PATH}/about.html">About</a><a href="{SITE_BASE_PATH}/contact.html">Contact</a><a href="{SITE_BASE_PATH}/privacy.html">Privacy</a><a href="{SITE_BASE_PATH}/rss.xml">RSS Feed</a></nav><img src="{SITE_BASE_PATH}/logo.svg" alt="Abvorn" class="footer-logo"><p style="margin-top:8px;font-size:0.8rem">Contact: <a href="mailto:{CONTACT_EMAIL}" style="color:var(--clr-accent);text-decoration:none">{CONTACT_EMAIL}</a></p><p>&copy; {datetime.now().year} Abvorn. All rights reserved.</p></footer></body></html>'''
         page_path.write_text(full)
     return html
 

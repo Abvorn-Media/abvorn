@@ -37,11 +37,11 @@ def build_amazon_affiliate_url(query):
 
 DESIGN_SYSTEM_CSS = '''
 :root {
-  --clr-black: #000000; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
-  --clr-mid-gray: #b4b4b4; --clr-light-gray: #d9d9d9; --clr-off-white: #f5f5f5; --clr-white: #ffffff;
-  --clr-primary: var(--niche-primary, #5a7d9a); --clr-accent: var(--niche-accent, #0cc0df);
+  --clr-black: #0a0a0a; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
+  --clr-mid-gray: #666; --clr-light-gray: #e8e8e8; --clr-off-white: #f6f5f2; --clr-white: #ffffff;
+  --clr-primary: var(--niche-primary, #1a1a1a); --clr-accent: var(--niche-accent, #c98a2c);
   --clr-success: #2ecc71; --clr-warning: #f8aa25;
-  --font-display: 'Playfair Display', Georgia, serif; --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Libre Franklin', -apple-system, sans-serif; --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --scale-ratio: 1.25;
   --text-xs: calc(1rem / var(--scale-ratio) / var(--scale-ratio)); --text-sm: calc(1rem / var(--scale-ratio));
   --text-base: 1rem; --text-lg: calc(1rem * var(--scale-ratio)); --text-xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio));
@@ -77,7 +77,7 @@ a:hover{opacity:0.8}
 .input{width:100%;padding:0.75em 1em;font-family:var(--font-body);font-size:var(--text-base);color:var(--clr-off-black);background:var(--clr-off-white);border:2px solid transparent;border-radius:var(--radius-sm);transition:border-color var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out)}
 .input:focus{outline:none;border-color:var(--clr-accent);box-shadow:0 0 0 3px rgba(90,125,154,0.15)}
 .header--scrolled{padding:10px 0 !important;background:rgba(0,0,0,0.95) !important;box-shadow:0 2px 20px rgba(0,0,0,0.3);backdrop-filter:blur(10px)}
-.product-card{position:relative;display:flex;gap:var(--space-lg);align-items:flex-start;flex-wrap:wrap;padding:var(--space-lg);border:1px solid var(--clr-light-gray);border-radius:var(--radius-md);margin-bottom:var(--space-lg);background:var(--clr-white);transition:box-shadow var(--duration-base) var(--ease-out)}.product-card:hover{box-shadow:var(--shadow-md)}@media(max-width:768px){.product-card{flex-direction:column;padding:var(--space-md)}}.product-card__image-wrapper{position:relative;flex:0 0 280px}@media(max-width:768px){.product-card__image-wrapper{flex:1 1 100%}}.product-card .product-details{flex:1;min-width:250px}.product-card__badge{position:absolute;top:12px;left:12px;font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:4px 10px;border-radius:var(--radius-sm);z-index:2;color:#fff}.product-card__badge--top{background:#f8aa25}.product-card__badge--budget{background:#5a7d9a}.product-card__badge--upgrade{background:#0cc0df}.product-card__price{font-size:var(--text-xl);font-weight:700;color:var(--clr-black);margin:var(--space-sm) 0}.product-card__price-as-of{font-size:var(--text-xs);color:var(--clr-mid-gray);margin-bottom:var(--space-sm)}.product-card .btn{background:#f8aa25;color:#fff;font-weight:700;text-transform:none;letter-spacing:0;padding:0.6em 1.2em;border-radius:var(--radius-sm);font-size:var(--text-sm)}.product-card .btn:hover{background:#e09520;transform:none}
+.product-card{position:relative;display:flex;gap:var(--space-lg);align-items:flex-start;flex-wrap:wrap;padding:var(--space-lg);border:1px solid var(--clr-light-gray);border-radius:var(--radius-md);margin-bottom:var(--space-lg);background:var(--clr-white);transition:box-shadow var(--duration-base) var(--ease-out)}.product-card:hover{box-shadow:var(--shadow-md)}@media(max-width:768px){.product-card{flex-direction:column;padding:var(--space-md)}}.product-card__image-wrapper{position:relative;flex:0 0 280px}@media(max-width:768px){.product-card__image-wrapper{flex:1 1 100%}}.product-card .product-details{flex:1;min-width:250px}.product-card__badge{position:absolute;top:12px;left:12px;font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:4px 10px;border-radius:var(--radius-sm);z-index:2;color:#fff}.product-card__badge--top{background:#f8aa25}.product-card__badge--budget{background:#5a7d9a}.product-card__badge--upgrade{background:#c98a2c}.product-card__price{font-size:var(--text-xl);font-weight:700;color:var(--clr-black);margin:var(--space-sm) 0}.product-card__price-as-of{font-size:var(--text-xs);color:var(--clr-mid-gray);margin-bottom:var(--space-sm)}.product-card .btn{background:#f8aa25;color:#fff;font-weight:700;text-transform:none;letter-spacing:0;padding:0.6em 1.2em;border-radius:var(--radius-sm);font-size:var(--text-sm)}.product-card .btn:hover{background:#e09520;transform:none}
 .star-rating{display:flex;align-items:center;gap:2px;margin:var(--space-sm) 0}.star{color:var(--clr-warning);font-size:1.1rem;cursor:default}.rating-text{font-size:var(--text-sm);color:var(--clr-mid-gray);margin-left:var(--space-sm)}
 .product-card__image,.hero__image{opacity:0;transform:translateY(20px);transition:opacity 0.6s var(--ease-out),transform 0.6s var(--ease-out)}
 .product-card__image.revealed,.hero__image.revealed{opacity:1;transform:translateY(0)}
@@ -986,7 +986,7 @@ def route_or_create_niche(niche_slug, niche_name):
         index_html = index_html.replace('__CANONICAL__', html_escape(f"{SITE_URL}/{slug}/"))
         index_html = index_html.replace('__POST_LIST__', '<p style="text-align:center;padding:40px;color:#666">Our first review is coming soon.</p>')
         index_html = index_html.replace('__PRIMARY_COLOR__', theme.get("primary_color", "#5A7D9A"))
-        index_html = index_html.replace('__ACCENT_COLOR__', theme.get("accent_color", "#0CC0DF"))
+        index_html = index_html.replace('__ACCENT_COLOR__', theme.get("accent_color", "#C98A2C"))
         index_html = index_html.replace('__YEAR__', str(datetime.now().year))
         index_html = index_html.replace('__SOCIALS__', SOCIALS_HTML)
         index_html = index_html.replace('__FOOTER_SOCIALS__', FOOTER_SOCIALS)
@@ -1754,7 +1754,7 @@ def process_niche(task, state):
         blog_index = blog_index.replace('__FEATURED_POST__', featured_html)
         blog_index = blog_index.replace('__POST_LIST__', post_list_html)
         blog_index = blog_index.replace('__PRIMARY_COLOR__', theme.get("primary_color", "#5A7D9A"))
-        blog_index = blog_index.replace('__ACCENT_COLOR__', theme.get("accent_color", "#0CC0DF"))
+        blog_index = blog_index.replace('__ACCENT_COLOR__', theme.get("accent_color", "#C98A2C"))
         blog_index = blog_index.replace('__YEAR__', str(datetime.now().year))
         blog_index = blog_index.replace('__SOCIALS__', SOCIALS_HTML)
         blog_index = blog_index.replace('__FOOTER_SOCIALS__', FOOTER_SOCIALS)
@@ -1890,7 +1890,7 @@ def process_niche(task, state):
         rendered = rendered.replace('__BREADCRUMB_SCHEMA__', breadcrumb_schema)
         rendered = rendered.replace('__COOKIE_CONSENT__', COOKIE_CONSENT_SCRIPT.replace('__SITE_BASE_PATH__', SITE_BASE_PATH))
         rendered = rendered.replace('__PRIMARY_COLOR__', theme.get("primary_color","#5A7D9A"))
-        rendered = rendered.replace('__ACCENT_COLOR__', theme.get("accent_color","#0CC0DF"))
+        rendered = rendered.replace('__ACCENT_COLOR__', theme.get("accent_color","#C98A2C"))
         rendered = rendered.replace('__YEAR__', str(datetime.now().year))
         rendered = rendered.replace('__SOCIALS__', SOCIALS_HTML)
         rendered = rendered.replace('__FOOTER_SOCIALS__', FOOTER_SOCIALS)
@@ -1998,7 +1998,7 @@ def process_niche(task, state):
             blog_index = blog_index.replace('__FEATURED_POST__', featured_html2)
             blog_index = blog_index.replace('__POST_LIST__', post_list_html)
             blog_index = blog_index.replace('__PRIMARY_COLOR__', theme.get("primary_color","#5A7D9A"))
-            blog_index = blog_index.replace('__ACCENT_COLOR__', theme.get("accent_color","#0CC0DF"))
+            blog_index = blog_index.replace('__ACCENT_COLOR__', theme.get("accent_color","#C98A2C"))
             blog_index = blog_index.replace('__YEAR__', str(datetime.now().year))
             blog_index = blog_index.replace('__SOCIALS__', SOCIALS_HTML)
             blog_index = blog_index.replace('__FOOTER_SOCIALS__', FOOTER_SOCIALS)
@@ -2019,7 +2019,7 @@ def process_niche(task, state):
                 page_html = page_html.replace('__SITE_NAME__', html_escape(blog_title))
                 page_html = page_html.replace('__PAGE_CONTENT__', page_content)
                 page_html = page_html.replace('__PRIMARY_COLOR__', theme.get("primary_color","#5A7D9A"))
-                page_html = page_html.replace('__ACCENT_COLOR__', theme.get("accent_color","#0CC0DF"))
+                page_html = page_html.replace('__ACCENT_COLOR__', theme.get("accent_color","#C98A2C"))
                 page_html = page_html.replace('__YEAR__', str(datetime.now().year))
                 page_html = page_html.replace('__SOCIALS__', SOCIALS_HTML)
                 page_html = page_html.replace('__FOOTER_SOCIALS__', FOOTER_SOCIALS)

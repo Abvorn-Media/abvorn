@@ -17,13 +17,13 @@ COLORS = {
     "background": "#ffffff",
     "surface": "#fafaf8",
     "border": "#e5e5e5",
-    "accent": "#1a1a1a",
-    "link": "#0066cc",
+    "accent": "#c98a2c",
+    "link": "#996015",
 }
 
 FONTS = {
-    "heading": "'Inter', -apple-system, sans-serif",
-    "body": "'Merriweather', Georgia, serif",
+    "heading": "'Libre Franklin', -apple-system, sans-serif",
+    "body": "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
     "mono": "Inconsolata, 'Courier New', monospace",
 }
 

@@ -15,7 +15,55 @@ logger = logging.getLogger(__name__)
 
 # Helpers shared with run_cycle.py
 SITE_BASE = "https://abvorn-media.github.io/abvorn"
-DESIGN_SYSTEM_CSS = ""
+DESIGN_SYSTEM_CSS = """
+:root {
+  --clr-black: #0a0a0a; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
+  --clr-mid-gray: #666; --clr-light-gray: #e8e8e8; --clr-off-white: #f6f5f2; --clr-white: #ffffff;
+  --clr-primary: var(--niche-primary, #1a1a1a); --clr-accent: var(--niche-accent, #c98a2c);
+  --clr-accent-text: var(--niche-accent-text, #996015);
+  --font-display: 'Libre Franklin', -apple-system, sans-serif; --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --scale-ratio: 1.25;
+  --text-xs: calc(1rem / var(--scale-ratio) / var(--scale-ratio)); --text-sm: calc(1rem / var(--scale-ratio));
+  --text-base: 1rem; --text-lg: calc(1rem * var(--scale-ratio)); --text-xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio));
+  --text-2xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
+  --text-3xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
+  --text-4xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
+  --space-xs: 0.25rem; --space-sm: 0.5rem; --space-md: 1rem; --space-lg: 2rem; --space-xl: 4rem; --space-2xl: 8rem;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08); --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12); --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 150ms; --duration-base: 300ms; --duration-slow: 500ms;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: var(--clr-off-black); background: var(--clr-white); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; color: var(--clr-black); }
+h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 500; }
+h2 { font-size: var(--text-2xl); letter-spacing: -0.01em; }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+p { margin-bottom: var(--space-lg); max-width: 65ch; }
+.container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 var(--space-lg); }
+@media (max-width: 768px) { .container { padding: 0 var(--space-md); } h1 { font-size: var(--text-2xl); } h2 { font-size: var(--text-xl); } }
+.card { background: var(--clr-white); border: 1px solid var(--clr-light-gray); border-radius: var(--radius-md); padding: var(--space-lg); transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); }
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.btn { display: inline-flex; align-items: center; gap: var(--space-sm); padding: 0.75em 1.5em; font-family: var(--font-body); font-weight: 600; font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; color: var(--clr-white); background: var(--clr-primary); border: none; border-radius: var(--radius-sm); cursor: pointer; transition: background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-out); }
+.btn:hover { background: var(--clr-accent); transform: scale(1.03); box-shadow: var(--shadow-md); }
+.btn:active { transform: scale(0.97); }
+.input { width: 100%; padding: 0.75em 1em; font-family: var(--font-body); font-size: var(--text-base); color: var(--clr-off-black); background: var(--clr-off-white); border: 2px solid transparent; border-radius: var(--radius-sm); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+.input:focus { outline: none; border-color: var(--clr-accent); box-shadow: 0 0 0 3px rgba(90,125,154,0.15); }
+.header--scrolled { padding: 10px 0 !important; background: rgba(0,0,0,0.95) !important; box-shadow: 0 2px 20px rgba(0,0,0,0.3); backdrop-filter: blur(10px); }
+.signal-tag { position: relative; display: inline-flex; align-items: center; gap: 6px; background: var(--clr-accent); color: var(--clr-black); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.signal-tag--tag { padding: 6px 14px; border-radius: var(--radius-sm); font-size: 0.75rem; }
+.signal-tag--badge { position: absolute; top: 12px; left: 12px; padding: 5px 12px; border-radius: var(--radius-sm); font-size: 0.68rem; box-shadow: var(--shadow-sm); z-index: 2; }
+.rank-chip { display: inline-block; background: var(--clr-off-white); color: var(--clr-mid-gray); border: 1px solid var(--clr-light-gray); padding: 4px 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: var(--radius-sm); position: absolute; top: 12px; left: 12px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+@media (prefers-color-scheme: dark) { :root { --clr-black: #f0f0f0; --clr-off-black: #e0e0e0; --clr-mid-gray: #999; --clr-light-gray: #333; --clr-off-white: #1a1a1a; --clr-white: #111; } body { background: #111; color: #e0e0e0; } h1, h2, h3, h4 { color: #f0f0f0; } .card { background: #1a1a1a; border-color: #333; } .input { background: #222; color: #e0e0e0; } }
+@media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+:focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
+"""
 CLICK_DOMAIN = os.environ.get("CLICK_DOMAIN", "https://abvorn.com")
 _SITE_URL = os.environ.get("SITE_URL", "https://abvorn-media.github.io/abvorn").rstrip("/")
 
