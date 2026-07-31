@@ -114,7 +114,8 @@ class InstanceSpawner:
         try:
             from run_cycle import (
                 get_secrets, load_state, pick_niche, save_state,
-                write_files, research_products, generate_outline, write_draft,
+                write_files, research_products, fetch_social_sentiment,
+                generate_outline, write_draft,
             )
             from src.ai_sql import create_ai_sql, QueryPlan
             from src.change_management import create_change_manager, ChangeType, ChangeStatus
@@ -135,10 +136,11 @@ class InstanceSpawner:
                 products = research_products(niche_slug)
                 if not products:
                     continue
-                outline = generate_outline(niche_slug, products)
+                social_data = fetch_social_sentiment(niche_slug) or {}
+                outline = generate_outline(niche_slug, products, social_data=social_data)
                 if not outline:
                     continue
-                draft = write_draft(niche_slug, products, outline)
+                draft = write_draft(niche_slug, products, outline, social_data=social_data)
                 if not draft:
                     continue
                 state = load_state()

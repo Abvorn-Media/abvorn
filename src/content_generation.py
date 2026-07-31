@@ -14,6 +14,7 @@ from pathlib import Path
 from src.ai_sql import QueryPlan
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
+from src.agent_reach_adapter import get_agent_reach_adapter
 
 _cost_per_1k = {
     "openai": 0.002,
