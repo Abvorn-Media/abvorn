@@ -1,0 +1,5 @@
+economic:
+  mode: "estimated"
+  estimated_conversion_rate: 0.07
+  estimated_commission_rate: 0.06
+  average_order_value: 50

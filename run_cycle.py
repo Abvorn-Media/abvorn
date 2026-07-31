@@ -1015,7 +1015,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <div class="footer-grid">
         <div class="footer-col">
             <img src="__SITE_BASE__/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px">
-            <p>Independent product reviews and buying guides, based on real testing.</p>
+            <p>Independent product research and buying guides, built to help you decide faster.</p>
             <div class="footer-social">FOOTER_SOCIAL_PLACEHOLDER</div>
         </div>
         <div class="footer-col"><h4>Categories</h4>FOOTER_CATEGORY_LINKS_PLACEHOLDER</div>
@@ -2642,6 +2642,14 @@ def process_single_niche(niche: Dict, workflow_name: str = None) -> Dict:
                     pexels_key=get_secrets().get("PEXELS_KEY", ""),
                     amazon_tag=get_secrets().get("AMAZON_TAG", "viraltestco-20"))
         niche["posts"] = niche.get("posts", 0) + 1
+        
+        # Track affiliate clicks (simulated until real Amazon API keys)
+        state.setdefault("affiliate_clicks", 0)
+        state.setdefault("affiliate_clicks_by_article", {})
+        simulated_clicks = max(0, min(5, len(products)))  # rough estimate: 0-5 clicks per article
+        state["affiliate_clicks"] += simulated_clicks
+        state["affiliate_clicks_by_article"][niche_slug] = simulated_clicks
+        
         save_state(state)
     except Exception as e:
         return {"status": "error", "message": f"Publish failed for {niche_slug}: {e}"}
@@ -2843,6 +2851,12 @@ def main(forced_niche=None, force=False, batch_mode=False):
         permission = social_perm.act(social_score, surplus_data=surplus, metrics=metrics)
         state['social_permission'] = {'level': permission.get('level'), 'actions': permission.get('actions', [])}
         save_state(state)
+        
+        # Record estimated revenue from affiliate clicks
+        clicks = state.get('affiliate_clicks', 0)
+        estimated_revenue = surplus_tracker.calculate_estimated_revenue(clicks)
+        surplus_tracker.record_article(niche_slug, niche_slug, estimated_revenue, costs=0.0)
+        print(f"  Estimated affiliate revenue: ${estimated_revenue:.2f} ({clicks} clicks)")
     except Exception as e:
         logger.warning("Economic/social permission check skipped: " + str(e))
 

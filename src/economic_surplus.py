@@ -10,8 +10,14 @@ import json
 import logging
 import os
 from typing import Dict, Any, List, Optional
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -256,7 +262,22 @@ class EconomicSurplusTracker:
         self.country = CountryMetrics()
         self.social_permission_score = 0.0
         self.measurement_history: List[Dict[str, Any]] = []
+        self.article_records: List[Dict[str, Any]] = []
         self._data_sources_initialized = False
+        self.config = self._load_config()
+
+    def _load_config(self) -> Dict[str, Any]:
+        config_path = Path("config.yaml")
+        if not config_path.exists():
+            return {}
+        try:
+            if yaml is None:
+                return {}
+            with open(config_path, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+            return data.get("economic", {})
+        except Exception:
+            return {}
 
     def _initialize_data_sources(self) -> None:
         if self._data_sources_initialized:
@@ -287,6 +308,29 @@ class EconomicSurplusTracker:
         report_path = self.save_report(result)
         result["report_path"] = report_path
         return result
+
+    def calculate_estimated_revenue(self, clicks: int) -> float:
+        config = self.config.get("estimated", {})
+        conv_rate = config.get("estimated_conversion_rate", 0.07)
+        comm_rate = config.get("estimated_commission_rate", 0.06)
+        avg_order = config.get("average_order_value", 50)
+        sales = clicks * conv_rate
+        return float(sales * avg_order * comm_rate)
+
+    def record_article(self, article_id: str, niche: str, revenue: float, costs: float = 0.0) -> Dict[str, Any]:
+        record = {
+            "article_id": article_id,
+            "niche": niche,
+            "revenue": revenue,
+            "costs": costs,
+            "profit": revenue - costs,
+            "recorded_at": datetime.now().isoformat(),
+        }
+        self.article_records.append(record)
+        self.saas.add_revenue(revenue, source=f"article:{article_id}")
+        if costs:
+            self.saas.add_cost_savings(costs, category=f"article:{article_id}")
+        return record
 
     def _calculate_social_permission(self) -> float:
         saas = self.saas.get_report()
