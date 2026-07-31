@@ -263,6 +263,7 @@ class EconomicSurplusTracker:
         self.social_permission_score = 0.0
         self.measurement_history: List[Dict[str, Any]] = []
         self.article_records: List[Dict[str, Any]] = []
+        self.load_records()
         self._data_sources_initialized = False
         self.config = self._load_config()
 
@@ -330,7 +331,26 @@ class EconomicSurplusTracker:
         self.saas.add_revenue(revenue, source=f"article:{article_id}")
         if costs:
             self.saas.add_cost_savings(costs, category=f"article:{article_id}")
+        self.save_records()
         return record
+
+    def save_records(self):
+        """Save all article records to disk."""
+        filepath = self.data_dir / "economic_records.json"
+        data = [dict(r) for r in self.article_records]
+        filepath.write_text(json.dumps(data, indent=2, default=str, ensure_ascii=False), encoding="utf-8")
+        logger.info(f"Saved {len(self.article_records)} economic records")
+
+    def load_records(self):
+        """Load article records from disk."""
+        filepath = self.data_dir / "economic_records.json"
+        if filepath.exists():
+            try:
+                data = json.loads(filepath.read_text(encoding="utf-8"))
+                self.article_records = [dict(r) for r in data]
+                logger.info(f"Loaded {len(self.article_records)} economic records")
+            except Exception as e:
+                logger.warning(f"Failed to load economic records: {e}")
 
     def _calculate_social_permission(self) -> float:
         saas = self.saas.get_report()

@@ -16,6 +16,8 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from src.deployment import deploy_single_page
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -275,7 +277,11 @@ class DeploymentPipeline:
         self.deployments: List[Dict[str, Any]] = []
 
     def deploy(
-        self, model_info: Dict[str, Any], evaluation: Dict[str, Any] = None
+        self,
+        model_info: Dict[str, Any],
+        evaluation: Dict[str, Any] = None,
+        page_path: str = None,
+        html_content: str = None,
     ) -> Dict[str, Any]:
         if evaluation and not evaluation.get("tests_passed", False):
             logger.warning(
@@ -296,6 +302,25 @@ class DeploymentPipeline:
             "samples_used": model_info.get("samples_used", 0),
             "evaluation_score": evaluation.get("score", 0) if evaluation else None,
         }
+
+        if page_path and html_content:
+            try:
+                result = deploy_single_page(page_path, html_content)
+                if result.get("status") == "deployed":
+                    logger.info(f"Page deployed: {page_path}")
+                    deployment["page_deployed"] = True
+                    deployment["page_url"] = result.get("url")
+                else:
+                    logger.error(f"Page deployment failed: {result.get('error', 'unknown')}")
+                    deployment["page_deployed"] = False
+                    deployment["page_error"] = result.get("error", "unknown")
+            except Exception as e:
+                logger.error(f"Page deployment exception: {e}")
+                deployment["page_deployed"] = False
+                deployment["page_error"] = str(e)
+        else:
+            deployment["page_deployed"] = False
+
         self.deployments.append(deployment)
         logger.info(f"Model deployed: {deployment['model_version']}")
         return deployment
@@ -597,7 +622,7 @@ class ClosedFeedbackLoop:
             score += metrics["scroll_depth"] / 100 * 0.3
         return min(score, 1.0)
 
-    def close_loop(self, ai_sql_instance=None) -> Dict[str, Any]:
+    def close_loop(self, ai_sql_instance=None, page_path: str = None, html_content: str = None) -> Dict[str, Any]:
         """Close the entire feedback loop: collect data, update models, feed back."""
         data = self.analytics.collect()
         training_data = self.training_data_collector.from_analytics(data)
@@ -606,7 +631,11 @@ class ClosedFeedbackLoop:
         if len(training_data) > 100:
             try:
                 new_model = self.model_fine_tuner.fine_tune(training_data)
-                self.deployment_pipeline.deploy(new_model)
+                self.deployment_pipeline.deploy(
+                    new_model,
+                    page_path=page_path,
+                    html_content=html_content,
+                )
                 model_updated = True
             except Exception as e:
                 logger.warning(f"Fine-tuning failed: {e}")
