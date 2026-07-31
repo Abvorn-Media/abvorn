@@ -9,6 +9,7 @@ import json
 import logging
 import re
 import html as html_mod
+from urllib.parse import urlencode
 import requests as http_requests
 import hashlib
 import time
@@ -264,6 +265,7 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
     summary = product.get("description", "")
     product_url = product.get("url", "")
     product_image = product.get("image", "")
+    asin = product.get("asin") or _title_slug(name)
     # Build affiliate URL: prefer real product URL, fall back to search link
     if product_url:
         aff_url = affiliate_url(product_url, amazon_tag)
@@ -286,11 +288,18 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
     try:
         from src.price_tracker import PriceTracker
         tracker = PriceTracker()
-        product_id = product.get("asin") or _title_slug(product.get("name", "product"))
-        history = tracker.get_history(product_id, days=30)
+        history = tracker.get_history(asin, days=30)
     except Exception:
         pass
     sparkline = render_price_sparkline(history)
+    compare_qs = urlencode({
+        "asin": asin,
+        "name": name,
+        "price": str(price or ""),
+        "image": product_image or "",
+        "url": product_url or "",
+    })
+    compare_btn = f'<a class="buy-btn" href="/abvorn/compare?{compare_qs}" target="_self" style="background:transparent;color:var(--clr-accent);border:1px solid var(--clr-accent);box-shadow:none;margin-left:8px;font-size:0.85rem;padding:6px 16px">⊕ Compare</a>'
     return f"""<div class="product-card">
  {img}
  <div class="product-card-body">
@@ -300,6 +309,7 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
  <p>{html_mod.escape(summary)}</p>
  {"<ul>" + features_html + "</ul>" if features_html else ""}
  <a class="buy-btn" href="{aff_url}" target="_blank" rel="sponsored">Check Price on Amazon →</a>
+ {compare_btn}
  </div>
  </div>"""
 
@@ -1874,8 +1884,10 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .footer-social a:hover {{ background:var(--clr-accent); color:#0a0a0a; }}
         .footer-social svg {{ width:16px; height:16px; }}
         .footer-bottom {{ border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }}
-        @media (max-width:860px) {{ .content-wrapper {{ grid-template-columns:1fr; }} .product-card {{ grid-template-columns:1fr; }} }}
         @media (max-width:760px) {{ .footer-grid {{ grid-template-columns:1fr 1fr; }} }}
+        .av-compare-btn {{ display:inline-flex; align-items:center; gap:6px; background:transparent; color:var(--clr-accent); border:1px solid var(--clr-accent); padding:4px 12px; border-radius:100px; font-size:0.78rem; font-weight:700; cursor:pointer; text-decoration:none; margin-left:8px; transition:all .15s; font-family:var(--font-body); }}
+        .av-compare-btn:hover {{ background:var(--clr-accent); color:#fff; }}
+        @media (max-width:860px) {{ .content-wrapper {{ grid-template-columns:1fr; }} .product-card {{ grid-template-columns:1fr; }} }}
     </style>
     {COOKIE_CONSENT_SCRIPT}
 </head>
@@ -2024,6 +2036,26 @@ document.addEventListener('DOMContentLoaded', function() {{
         }}
     }});
 }});
+</script>
+<script>
+(function(){{
+  const STORAGE_KEY = 'av_compare_list';
+  const p = new URLSearchParams(window.location.search);
+  const asin = p.get('asin');
+  if (asin) {{
+    const name = p.get('name') || '';
+    const price = p.get('price') || '';
+    const image = p.get('image') || '';
+    const url = p.get('url') || '';
+    let list;
+    try {{ list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }} catch(e) {{ list = []; }}
+    const exists = list.find(i => i.asin === asin);
+    if (!exists) {{
+      list.push({{ asin: asin, name: name, price: price, image: image, url: url }});
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }}
+  }}
+}})();
 </script>
 </body></html>'''
 
