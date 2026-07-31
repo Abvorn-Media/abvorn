@@ -2,6 +2,7 @@
 
 All functions that deploy pages to GitHub live here.
 """
+import html as html_mod
 import json
 import logging
 import os
@@ -16,6 +17,53 @@ logger = logging.getLogger(__name__)
 SITE_BASE = "https://abvorn-media.github.io/abvorn"
 DESIGN_SYSTEM_CSS = ""
 CLICK_DOMAIN = os.environ.get("CLICK_DOMAIN", "https://abvorn.com")
+_SITE_URL = os.environ.get("SITE_URL", "https://abvorn-media.github.io/abvorn").rstrip("/")
+
+CTA_BANNER = """
+<div class="cta-banner">
+<h3>Ready to buy?</h3>
+<p>We've done the research. Now get the best price on Amazon.</p>
+<a class="buy-btn" href="https://www.amazon.com/s?k={query}&tag={tag}" target="_blank" rel="sponsored">Shop all picks on Amazon &rarr;</a>
+</div>"""
+
+
+def affiliate_url(product_url, tag=""):
+    """Append Amazon affiliate tag to a product URL."""
+    t = tag or os.environ.get("AMAZON_TAG", "")
+    if not t:
+        return product_url
+    sep = "&" if "?" in product_url else "?"
+    return f"{product_url}{sep}tag={t}"
+
+
+def product_card_html(product, pexels_key="", amazon_tag=""):
+    """Minimal product card HTML for standalone deployment use."""
+    name = product.get("name", "Product")
+    price = product.get("price", "Check price")
+    features = product.get("features", [])
+    summary = product.get("description", "")
+    product_url = product.get("url", "")
+    product_image = product.get("image", "")
+    img = ""
+    if product_image:
+        img = f'<img src="{product_image}" alt="{html_mod.escape(name)}" loading="lazy" style="width:100px;height:100px;object-fit:contain;background:var(--clr-white);border-radius:var(--radius-sm)">'
+    else:
+        img = '<div style="width:160px;height:160px;background:linear-gradient(135deg,var(--bg-alt),var(--border));border-radius:var(--radius-sm);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.8rem">Product</div>'
+    return f"""<div class="product-card">
+{img}
+<div class="product-card-body">
+<h3>{html_mod.escape(name)}</h3>
+<div class="price">{html_mod.escape(str(price or 'N/A'))}</div>
+<p>{html_mod.escape(summary)}</p>
+<a class="buy-btn" href="{affiliate_url(product_url, amazon_tag) or '#'}" target="_blank" rel="sponsored">Check Price on Amazon &rarr;</a>
+</div>
+</div>"""
+
+
+def render_verdict_card(verdict: dict, product_name: str, affiliate_url: str = "", detail_url: str = "") -> str:
+    """Minimal verdict card renderer for standalone deployment use."""
+    return f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(product_name)}</div><a class="buy-btn" href="{affiliate_url or '#'}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
+
 
 
 def generate_click_url(article_id: str, product_index: int, product_url: str = "") -> str:
