@@ -1584,6 +1584,11 @@ footer a{{color:#aaa;text-decoration:none}}
                                               a["intro"], a["product_name"], a["meta_description"],
                                               all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
                                               related_niches=related, article_id=f"{slug}-{i}")
+            try:
+                verify_page(article_html)
+            except ValueError as e:
+                logger.error(f"❌ Page verification failed for {slug}/{fname}: {e}")
+                raise
             date_str = datetime.now().strftime("%Y-%m-%d")
             suffix = "" if i == 0 else f"-{i}"
             fname = f"{_title_slug(a['post_title'])}-{date_str}{suffix}.html"
