@@ -116,3 +116,64 @@ class PriceTracker:
         except Exception as e:
             logger.warning("Latest prices fetch failed: %s", e)
             return {}
+
+    # ── CamelCamelCamel Integration ─────────────────────────────────────
+    def fetch_camel_history(self, asin: str) -> List[Dict[str, Any]]:
+        """Best-effort CamelCamelCamel price-history fetch.
+
+        CamelCamelCamel does not expose a public JSON API anymore, so this
+        attempts a lightweight page scrape of the product history table as a
+        fallback when our own price_history.db has sparse data.
+        """
+        if not asin:
+            return []
+        try:
+            import requests  # local import so the module still loads without requests
+            url = f"https://camelcamelcamel.com/product/{asin}"
+            headers = {
+                "User-Agent": "Mozilla/5.0 (compatible; Abvorn/1.0; +https://abvorn.com)",
+                "Accept": "text/html,application/xhtml+xml",
+            }
+            resp = requests.get(url, headers=headers, timeout=12)
+            if resp.status_code != 200:
+                return []
+            text = resp.text
+            # Extract price history table rows from CamelCamelCamel HTML
+            # The history table has rows like: <td>2024-01-01</td><td>$199.99</td>...
+            import re
+            rows = re.findall(
+                r'<td>(\d{4}-\d{2}-\d{2})</td>\s*<td[^>]*>\s*\$?([0-9]+(?:\.[0-9]{2})?)',
+                text,
+            )
+            if not rows:
+                return []
+            result = []
+            for date_str, price_str in rows[:120]:
+                try:
+                    result.append({"date": date_str, "price": float(price_str)})
+                except ValueError:
+                    continue
+            return result
+        except Exception as e:
+            logger.warning("CamelCamelCamel fetch failed for %s: %s", asin, e)
+            return []
+
+    def get_enriched_history(self, product_id: str, days: int = 30) -> List[Dict[str, Any]]:
+        """Return merged history: local DB first, CamelCamelCamel as fallback."""
+        local = self.get_history(product_id, days=days)
+        if len(local) >= 3:
+            return local
+        camel = self.fetch_camel_history(product_id)
+        if not camel:
+            return local
+        if not local:
+            cutoff = datetime.now() - timedelta(days=days)
+            return [p for p in camel if p.get("date", "") >= cutoff.isoformat()]
+        seen = {p["date"] for p in local}
+        merged = list(local)
+        for p in camel:
+            if p["date"] not in seen:
+                merged.append(p)
+                seen.add(p["date"])
+        merged.sort(key=lambda x: x["date"])
+        return merged

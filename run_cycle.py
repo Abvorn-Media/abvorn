@@ -283,15 +283,47 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
     if not img:
         img = '<div style="width:160px;height:160px;background:linear-gradient(135deg,var(--bg-alt),var(--border));border-radius:var(--radius-sm);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.8rem">Product</div>'
     features_html = "".join(f"<li>{f}</li>" for f in features[:4])
-    # Price history sparkline
+    # Price history: local DB first, CamelCamelCamel as fallback
     history = []
+    camel_history = []
     try:
         from src.price_tracker import PriceTracker
         tracker = PriceTracker()
-        history = tracker.get_history(asin, days=30)
+        history = tracker.get_enriched_history(asin, days=30)
+        if len(history) < 3:
+            camel_history = tracker.fetch_camel_history(asin)
+            if camel_history and len(camel_history) > len(history):
+                history = camel_history
     except Exception:
         pass
     sparkline = render_price_sparkline(history)
+    # CamelCamelCamel chart block (hidden data + canvas)
+    camel_chart_html = ""
+    if camel_history and len(camel_history) >= 2:
+        camel_json = json.dumps(camel_history)
+        camel_chart_html = f"""
+        <div class="av-price-chart" style="margin-top:10px">
+          <canvas width="200" height="60" style="width:100%;height:60px"></canvas>
+          <div class="av-price-chart-data" style="display:none">{html_mod.escape(camel_json)}</div>
+          <div style="margin-top:6px">
+            <a href="https://camelcamelcamel.com/product/{asin}" target="_blank" rel="noopener" style="font-size:.8rem;color:var(--clr-accent);text-decoration:none">Price history on CamelCamelCamel ↗</a>
+          </div>
+        </div>"""
+    # Alert button
+    price_val = None
+    try:
+        price_val = float(str(price).replace("$","").replace(",","").strip())
+    except (ValueError, TypeError):
+        pass
+    alert_btn = ""
+    if asin and price_val:
+        alert_btn = (
+            f'<button class="av-alert-btn" data-asin="{asin}" data-price="{price_val}" '
+            f'onclick="setPriceAlert(\'{asin}\', {price_val})" '
+            f'style="background:transparent;color:var(--clr-mid-gray);border:1px solid var(--clr-light-gray);'
+            f'border-radius:100px;padding:4px 12px;font-size:.78rem;cursor:pointer;margin-left:8px;font-family:var(--font-body)">'
+            f'🔔 Alert me</button>'
+        )
     compare_qs = urlencode({
         "asin": asin,
         "name": name,
@@ -306,10 +338,12 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
  <h3>{html_mod.escape(name)}</h3>
      <div class="price">{html_mod.escape(str(price or 'N/A'))}</div>
  {sparkline}
+ {camel_chart_html}
  <p>{html_mod.escape(summary)}</p>
  {"<ul>" + features_html + "</ul>" if features_html else ""}
  <a class="buy-btn" href="{aff_url}" target="_blank" rel="sponsored">Check Price on Amazon →</a>
  {compare_btn}
+ {alert_btn}
  </div>
  </div>"""
 
@@ -1824,6 +1858,11 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .chart-note {{ text-align:center; font-size:0.8rem; color:var(--clr-mid-gray); margin-top:var(--space-sm); margin-bottom:0; }}
         @media (max-width:600px) {{ .chart-wrapper {{ height:300px; }} }}
 
+        .av-price-chart {{ margin-top:10px; }}
+        .av-price-chart canvas {{ width:100% !important; height:60px !important; }}
+        .av-alert-btn {{ background:transparent; color:var(--clr-mid-gray); border:1px solid var(--clr-light-gray); border-radius:100px; padding:4px 12px; font-size:.78rem; cursor:pointer; margin-left:8px; font-family:var(--font-body); transition:all .15s; }}
+        .av-alert-btn:hover {{ border-color:var(--clr-accent); color:var(--clr-accent); }}
+
         .content-wrapper {{ display:grid; grid-template-columns:1fr 320px; gap: var(--space-xl); padding: var(--space-2xl) 0; max-width:1200px; margin:0 auto; padding-left:20px; padding-right:20px; }}
         .article-body {{ font-size:1.05rem; line-height:1.8; }}
         .article-body h2 {{ margin:40px 0 16px; color:var(--clr-primary); font-size:var(--text-xl); }}
@@ -2057,6 +2096,7 @@ document.addEventListener('DOMContentLoaded', function() {{
   }}
 }})();
 </script>
+<script src="/abvorn/js/price-charts.js"></script>
 </body></html>'''
 
 
@@ -2919,6 +2959,24 @@ def main(forced_niche=None, force=False, batch_mode=False):
         print(f"Price snapshots: {len(latest)} products, {len(sparkline_buf)} sparklines")
     except Exception as e:
         logger.warning(f"Price snapshot export skipped: {e}")
+
+    try:
+        from src.price_alerts import PriceAlertSystem
+        alert_system = PriceAlertSystem()
+        for p in products:
+            asin = p.get("asin") or _title_slug(p.get("name", "product"))
+            price = p.get("price")
+            if asin and price:
+                try:
+                    price_f = float(str(price).replace("$","").replace(",","").strip())
+                except (ValueError, TypeError):
+                    continue
+                triggered = alert_system.check_alerts(asin, price_f)
+                for alert in triggered:
+                    print(f"  ⚠️ Price alert triggered: {asin} <= ${price_f} (target ${alert['target_price']})")
+                    alert_system.trigger_alert(alert["id"])
+    except Exception as e:
+        logger.warning(f"Price alert check skipped: {e}")
 
     social_data = fetch_social_sentiment(niche_slug)
 

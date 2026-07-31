@@ -235,6 +235,46 @@ async def clear_history():
     return {"status": "ok"}
 
 
+class PriceAlertRequest(BaseModel):
+    email: Optional[str] = None
+    chat_id: Optional[str] = None
+    asin: str
+    target_price: float
+    current_price: Optional[float] = None
+
+
+@app.post("/api/price-alerts")
+async def create_price_alert(req: PriceAlertRequest):
+    try:
+        from src.price_alerts import PriceAlertSystem
+        system = PriceAlertSystem()
+        ok = system.add_alert(
+            asin=req.asin,
+            target_price=req.target_price,
+            current_price=req.current_price,
+            email=req.email,
+            chat_id=req.chat_id,
+        )
+        if not ok:
+            raise HTTPException(status_code=400, detail="Invalid alert payload")
+        return {"status": "ok", "message": "Alert saved"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/price-alerts")
+async def list_price_alerts(email: Optional[str] = None, chat_id: Optional[str] = None):
+    try:
+        from src.price_alerts import PriceAlertSystem
+        system = PriceAlertSystem()
+        items = system.get_alerts_for_user(email=email, chat_id=chat_id)
+        return {"alerts": items}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     import socket
     hostname = socket.gethostname()
