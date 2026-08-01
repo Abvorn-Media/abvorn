@@ -112,6 +112,20 @@ async def priceghost_health():
         return {"status": "unavailable", "error": str(e)}
 
 
+@app.get("/api/win/health")
+async def win_health():
+    """win.sh loop status for the Relentless Core dashboard."""
+    try:
+        from abvorn.core.win_sh_bridge import get_win_sh_bridge
+        bridge = get_win_sh_bridge()
+        return {
+            "status": "ok" if bridge.is_ready() else "no_loops",
+            "metrics": bridge.get_all_metrics(),
+        }
+    except Exception as e:
+        return {"status": "unavailable", "error": str(e)}
+
+
 def _call_ai_subprocess(prompt: str) -> str:
     """Call AI in a subprocess with hard timeout. Kills if hung."""
     import subprocess as sp, sys

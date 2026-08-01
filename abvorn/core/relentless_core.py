@@ -33,6 +33,15 @@ class RelentlessCore:
         self.last_action = None
         self.history = []
 
+        # Optional win.sh integration (never fatal if unavailable)
+        self.win_sh = None
+        try:
+            from abvorn.core.win_sh_bridge import get_win_sh_bridge
+
+            self.win_sh = get_win_sh_bridge()
+        except Exception as e:
+            logger.warning(f"win.sh bridge unavailable: {e}")
+
     def _read_clicks(self) -> Dict[str, int]:
         """Read total clicks per article from clicks.db."""
         try:
@@ -105,12 +114,28 @@ class RelentlessCore:
             + 0.10 * self.ambition_level
         )
 
+    def _read_win_metrics(self) -> Dict:
+        """Read win.sh loop activity for diagnostics and decisioning."""
+        if self.win_sh is None:
+            return {}
+        try:
+            if not self.win_sh.is_ready():
+                return {}
+            return self.win_sh.get_all_metrics()
+        except Exception as e:
+            logger.warning(f"Could not read win.sh metrics: {e}")
+            return {}
+
     def _decide_action(self, drive_score: float) -> str:
         """Decide what action to take based on the drive score."""
         # Read current state to understand what's happening
         state = self._read_cycle_state()
         deployed = len(state.get("deployed", []))
         queue = len(state.get("queue", []))
+
+        # win.sh metrics can push a loop into rotation when signals warrant it
+        win_metrics = self._read_win_metrics()
+        win_runs = win_metrics.get("total_runs", 0) if win_metrics else 0
 
         # If drive score is low, take aggressive actions
         if drive_score < 0.3:
@@ -124,6 +149,9 @@ class RelentlessCore:
             return "refine_quality"
         else:
             # High drive score: push into new territory
+            if win_metrics and win_runs < 5:
+                # Rotate a win.sh growth loop in before exploring new domains
+                return "run_traffic_optimizer"
             return "explore_new_domain"
 
     def _execute_action(self, action: str) -> str:
@@ -165,6 +193,26 @@ class RelentlessCore:
                 return "New domain exploration triggered"
             except Exception:
                 return "Agent-Reach not available"
+
+        # ── win.sh loop actions ──────────────────────────────────────
+        win_handlers = {
+            "run_seo_growth": lambda: self.win_sh.run_seo_growth(),
+            "run_traffic_optimizer": lambda: self.win_sh.run_traffic_optimizer(),
+            "run_conversion_optimizer": lambda: self.win_sh.run_conversion_optimizer(),
+            "run_feedback_to_fix": lambda: self.win_sh.run_feedback_to_fix(),
+            "run_ads_budget_guard": lambda: self.win_sh.run_ads_budget_guard(),
+        }
+        if action in win_handlers:
+            if self.win_sh is None:
+                return "win.sh loop requested but bridge is unavailable"
+            try:
+                run = win_handlers[action]()
+                run_id = run.get("id", "unknown") if isinstance(run, dict) else "unknown"
+                status = run.get("status", "created") if isinstance(run, dict) else "created"
+                return f"win.sh loop triggered ({action}): run {run_id} status={status}"
+            except Exception as e:
+                logger.warning(f"win.sh loop {action} failed: {e}")
+                return f"win.sh loop failed: {e}"
         else:
             return f"Unknown action: {action}"
 
@@ -206,5 +254,6 @@ class RelentlessCore:
             "action": action,
             "result": result,
             "ambition_level": self.ambition_level,
+            "win_metrics": self._read_win_metrics(),
         }
 
