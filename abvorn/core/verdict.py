@@ -4,11 +4,8 @@ This is our moat. Weights, categories, and logic are ours alone.
 Every product gets an objective, data-driven score displayed on every review.
 """
 
+import html as _html
 import re
-
-from src.humanizer_engine import HumanizerEngine
-
-_humanizer = HumanizerEngine()
 
 # ── Proprietary category weights per niche ──────────────────────────────
 # Each category has a weight (sums to 1.0) and a display label.
@@ -109,8 +106,8 @@ VERDICT_HTML = """<div class="abvorn-verdict">
     <span class="av-outof">/10</span>
   </div>
   <div class="av-label-row">
+    <h3 class="av-product">{product_name}</h3>
     <span class="av-label">{label}</span>
-    <span class="av-product">{product_name}</span>
   </div>
 </div>
 <div class="av-breakdown">
@@ -187,7 +184,6 @@ class AbvornVerdictEngine:
         best = max(weights, key=lambda c: scores.get(c, 0))
         worst = min(weights, key=lambda c: scores.get(c, 0))
         summary = self._summary(product_data, weights[best]["label"], weights[worst]["label"])
-        summary = _humanizer.humanize_verdict_summary(summary)
 
         breakdown = {}
         for cat in weights:
@@ -287,7 +283,7 @@ class AbvornVerdictEngine:
 
     def _summary(self, data: dict, best_label: str, worst_label: str) -> str:
         """One-sentence verdict summary."""
-        name = data.get("name", "This product")
+        name = clean_product_name(data.get("name", "This product"))
         return f"{name} excels in {best_label} but falls short on {worst_label}. Our view: {self._final_judgment(data, best_label)}"
 
     def _final_judgment(self, data: dict, best_label: str) -> str:
@@ -307,6 +303,21 @@ class AbvornVerdictEngine:
         return "Solid performance at a fair price. Easy recommendation."
 
 
+def clean_product_name(name: str) -> str:
+    """Clean a raw product name for display.
+
+    Amazon titles sometimes contain HTML-encoded and doubled quote characters
+    (e.g. `1.1&quot;&quot;`), which render as ugly `1.1""`. This normalises
+    entities and collapses doubled quotes to a single inch-mark.
+    """
+    if not name:
+        return name
+    cleaned = _html.unescape(str(name))
+    cleaned = cleaned.replace('""', '"')
+    cleaned = re.sub(r'\s{2,}', ' ', cleaned).strip()
+    return cleaned
+
+
 def render_verdict_card(verdict: dict, product_name: str, affiliate_url: str = "", detail_url: str = "") -> str:
     """Render verdict dict into the HTML verdict card."""
     bars = ""
@@ -318,7 +329,7 @@ def render_verdict_card(verdict: dict, product_name: str, affiliate_url: str = "
     return VERDICT_HTML.format(
         overall=verdict["overall"],
         label=verdict["label"],
-        product_name=product_name,
+        product_name=_html.escape(clean_product_name(product_name), quote=True),
         summary=verdict["summary"],
         breakdown_bars=bars,
         affiliate_url=affiliate_url or "#",

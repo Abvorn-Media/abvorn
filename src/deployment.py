@@ -60,7 +60,6 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 .signal-tag--badge { position: absolute; top: 12px; left: 12px; padding: 5px 12px; border-radius: var(--radius-sm); font-size: 0.68rem; box-shadow: var(--shadow-sm); z-index: 2; }
 .rank-chip { display: inline-block; background: var(--clr-off-white); color: var(--clr-mid-gray); border: 1px solid var(--clr-light-gray); padding: 4px 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: var(--radius-sm); position: absolute; top: 12px; left: 12px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
-@media (prefers-color-scheme: dark) { :root { --clr-black: #f0f0f0; --clr-off-black: #e0e0e0; --clr-mid-gray: #999; --clr-light-gray: #333; --clr-off-white: #1a1a1a; --clr-white: #111; } body { background: #111; color: #e0e0e0; } h1, h2, h3, h4 { color: #f0f0f0; } .card { background: #1a1a1a; border-color: #333; } .input { background: #222; color: #e0e0e0; } }
 @media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 :focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
@@ -103,6 +102,31 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
   #av-compare-bar .av-compare-clear { width: 100%; margin: 0; text-align: center; }
 }
 """
+
+VERDICT_CARD_CSS = """
+.abvorn-verdict{padding:28px 32px;margin:32px 0;border-top:1px solid #e8e8e8;border-bottom:1px solid #e8e8e8;background:transparent;position:relative;overflow:hidden}
+.av-badge{display:inline-flex;align-items:center;gap:6px;background:#1a1a1a;color:#fff;font-size:.7rem;font-weight:700;padding:4px 14px;border-radius:100px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
+.av-badge::before{content:'\\01F525';font-size:.8rem}
+.av-score-row{display:flex;align-items:center;gap:20px;margin-bottom:20px}
+.av-score{display:flex;align-items:baseline;gap:2px}
+.av-number{font-size:3rem;font-weight:700;font-family:'Libre Franklin',Georgia,sans-serif;color:#1a1a1a;line-height:1;letter-spacing:-.03em}
+.av-outof{font-size:1.2rem;color:#666;font-weight:600}
+.av-label-row{display:flex;flex-direction:column;gap:2px}
+.av-label{font-size:1.1rem;font-weight:700;color:#c98a2c;font-family:'Libre Franklin',Georgia,sans-serif}
+.av-product{font-size:1.2rem;font-weight:800;color:#1a1a1a;font-family:'Libre Franklin',Georgia,sans-serif;line-height:1.3;margin:0 0 4px}
+.av-breakdown{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.av-bar-row{display:flex;align-items:center;gap:12px}
+.av-bar-label{flex:0 0 140px;font-size:.82rem;font-weight:600;color:#888;text-align:right}
+.av-bar-track{flex:1;height:8px;background:#e8e8e8;border-radius:100px;overflow:hidden}
+.av-bar-fill{height:100%;border-radius:100px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.av-bar-score{flex:0 0 36px;font-size:.85rem;font-weight:700;color:#1a1a1a;text-align:right}
+.av-summary{font-size:.95rem;color:#888;line-height:1.5;margin-bottom:20px}
+.av-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.av-detail-link{font-size:.9rem;color:#666;text-decoration:none;font-weight:600}
+.av-detail-link:hover{color:#1a1a1a;text-decoration:none}
+@media(max-width:640px){.av-score-row{flex-direction:column;align-items:flex-start;gap:8px}.av-bar-label{flex:0 0 100px;font-size:.75rem}.abvorn-verdict{padding:20px 16px}}
+"""
+
 CLICK_DOMAIN = os.environ.get("CLICK_DOMAIN", "https://abvorn.com")
 _SITE_URL = os.environ.get("SITE_URL", "https://abvorn-media.github.io/abvorn").rstrip("/")
 
@@ -133,7 +157,8 @@ def extract_asin(product_url: str) -> str:
 
 def product_card_html(product, pexels_key="", amazon_tag="", include_compare: bool = True):
     """Minimal product card HTML for standalone deployment use."""
-    name = product.get("name", "Product")
+    from abvorn.core.verdict import clean_product_name
+    name = clean_product_name(product.get("name", "Product"))
     price = product.get("price", "Check price")
     features = product.get("features", [])
     summary = product.get("description", "")
@@ -188,8 +213,9 @@ def product_card_html(product, pexels_key="", amazon_tag="", include_compare: bo
 
 
 def render_verdict_card(verdict: dict, product_name: str, affiliate_url: str = "", detail_url: str = "") -> str:
-    """Minimal verdict card renderer for standalone deployment use."""
-    return f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(product_name)}</div><a class="buy-btn" href="{affiliate_url or '#'}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
+    """Render the full Abvorn Verdict card (single source of truth in abvorn.core.verdict)."""
+    from abvorn.core.verdict import render_verdict_card as _render
+    return _render(verdict, product_name, affiliate_url, detail_url)
 
 def render_compare_bar(product: dict, include_compare: bool = True) -> str:
     return ""
@@ -582,7 +608,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         
         .top-bar {{ background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }}
         .top-bar .container {{ display:flex; justify-content:space-between; }}
-        header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; }}
+        header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100; }}
         .navbar {{ display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }}
         .logo img {{ max-height:44px; width:auto; }}
         .nav-links {{ display:flex; align-items:center; gap:8px; }}
@@ -778,7 +804,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         
         .top-bar {{ background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }}
         .top-bar .container {{ display:flex; justify-content:space-between; }}
-        header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; }}
+        header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100; }}
         .navbar {{ display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }}
         .logo img {{ max-height:44px; width:auto; }}
         .nav-links {{ display:flex; align-items:center; gap:8px; }}
@@ -1103,6 +1129,7 @@ renderRPS(regret,primaryProduct.name,rpsData.products);
 
 
 def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None, published_date=None, updated_date=None, article_id=None):
+    from abvorn.core.verdict import clean_product_name
     b = SITE_BASE
     t = amazon_tag or os.environ.get("AMAZON_TAG", "viraltestco-20")
     article_url = f"{_SITE_URL}/reviews/{niche_slug}/"
@@ -1120,7 +1147,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             use_cases = ["Best Overall", "Best Value", "Premium Pick"]
             uc = use_cases[i] if i < len(use_cases) else "Also Great"
             why = prod.get("description", "Top-rated product after extensive testing.")
-            matrix_rows += f"<tr><td>{uc}</td><td>{html_mod.escape(prod.get('name','Product'))}</td><td>{html_mod.escape(why)}</td></tr>"
+            matrix_rows += f"<tr><td>{uc}</td><td>{html_mod.escape(clean_product_name(prod.get('name','Product')))}</td><td>{html_mod.escape(why)}</td></tr>"
     matrix_html = f'<div class="decision-matrix"><table><thead><tr><th>Use Case</th><th>Product</th><th>Why</th></tr></thead><tbody>{matrix_rows}</tbody></table></div>' if matrix_rows else ""
     verdict_html = ""
     hero_img_html = ""
@@ -1135,9 +1162,9 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             engine = AbvornVerdictEngine(weight_overrides=load_verdict_weights())
             verdict = engine.score_product(niche_slug, p0)
             detail_url = f"{b}/reviews/{niche_slug}/"
-            verdict_html = render_verdict_card(verdict, html_mod.escape(p0.get('name', product_name)), p0_aff, detail_url)
+            verdict_html = render_verdict_card(verdict, p0.get('name', product_name), p0_aff, detail_url)
         except Exception:
-            verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(p0.get('name', product_name))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="{p0_aff}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
+            verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(clean_product_name(p0.get('name', product_name)))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="{p0_aff}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
             verdict = None
         # Build verdict data JSON for the radar chart
         verdict_chart_data = {}
@@ -1146,7 +1173,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
                 "overall": verdict.get("overall", 0),
                 "label": verdict.get("label", ""),
                 "breakdown": verdict["breakdown"],
-                "productName": p0.get("name", product_name)
+                "productName": clean_product_name(p0.get("name", product_name))
             }
         elif products and len(products) > 0:
             # Fallback: estimate from product data
@@ -1177,12 +1204,12 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
                     score = min(9.0, 5.0 + feat_count)
                 breakdown[label] = score
             overall = sum(breakdown.values()) / len(breakdown) if breakdown else 7.0
-            verdict_chart_data = {"overall": round(overall, 1), "label": "", "breakdown": breakdown, "productName": p0.get("name", product_name)}
+            verdict_chart_data = {"overall": round(overall, 1), "label": "", "breakdown": breakdown, "productName": clean_product_name(p0.get("name", product_name))}
         # Build hero image from hero_img or first product
         if hero_img:
             hero_img_html = hero_img
         elif p0.get("image"):
-            hero_img_html = f'<img src="{html_mod.escape(p0["image"])}" alt="{html_mod.escape(p0.get("name", product_name))}" loading="eager">'
+            hero_img_html = f'<img src="{html_mod.escape(p0["image"])}" alt="{html_mod.escape(clean_product_name(p0.get("name", product_name)))}" loading="eager">'
     verdict_json = html_mod.escape(json.dumps(verdict_chart_data))
     bread = breadcrumb_schema([
         ("Abvorn", "/"),
@@ -1197,7 +1224,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         for prod in (products or []):
             v = ve.score_product(niche_slug, prod)
             rps_data["products"].append({
-                "name": prod.get("name", "Product"),
+                "name": clean_product_name(prod.get("name", "Product")),
                 "price": prod.get("price", ""),
                 "scores": v["breakdown"],
                 "overall": v["overall"],
@@ -1282,10 +1309,11 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     <style>
         :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; }}
         {DESIGN_SYSTEM_CSS}
+        {VERDICT_CARD_CSS}
         
         .top-bar {{ background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }}
         .top-bar .container {{ display:flex; justify-content:space-between; align-items:center; }}
-        header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; }}
+        header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100; }}
         .navbar {{ display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }}
         .logo img {{ max-height:44px; width:auto; }}
         .nav-links {{ display:flex; align-items:center; gap:8px; }}
@@ -1611,7 +1639,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
 *{{box-sizing:border-box;margin:0;padding:0}}body{{font-family:'Inter',sans-serif;color:#333;line-height:1.6}}
 .top-bar{{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}}
 .top-bar .container{{display:flex;justify-content:space-between;max-width:1200px;margin:0 auto;padding:0 20px}}
-header{{background:#0a0a0a;padding:18px 0;border-bottom:1px solid #2a2a2a}}
+header{{background:#0a0a0a;padding:18px 0;border-bottom:1px solid #2a2a2a;position:sticky;top:0;z-index:100}}
 .header-inner{{display:flex;justify-content:space-between;align-items:center;max-width:1200px;margin:0 auto;padding:0 20px}}
 .logo-img{{max-height:44px;width:auto}}
 .main{{padding:60px 20px;max-width:800px;margin:0 auto}}
@@ -1624,7 +1652,7 @@ footer a{{color:#aaa;text-decoration:none}}
 <main class="main"><h1>{title}</h1>{content}</main>
 <footer><img src="{b}/logo.svg" alt="Abvorn" style="max-height:24px;width:auto;filter:brightness(0.8);margin-bottom:8px"><p>&copy; {year} Abvorn</p></footer>
 </body></html>'''
-            page_path.write_text(full_page)
+            page_path.write_text(full_page, encoding="utf-8")
             print(f"  Written: docs/{page_name}")
 
     # Write category pages (post slugs point to reviews/{slug} for article pages)
@@ -1844,7 +1872,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
            black). Hardcoded values below are deliberate, not an oversight. */
         .top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
         .top-bar .container { display:flex; justify-content:space-between; }
-        header { background:#0a0a0a; padding:18px 0; position:relative; z-index:20; }
+        header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100; box-shadow:0 2px 10px rgba(0,0,0,0.25); }
         .navbar { display:flex; justify-content:space-between; align-items:center; }
         .logo img { max-height:44px; width:auto; }
         .nav-links { display:flex; align-items:center; }
@@ -1943,7 +1971,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .show-more-btn:hover svg { transform: translateX(4px); }
 
         .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
-        .footer-grid { display:grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
+        .footer-grid { display:grid; grid-template-columns: 1.6fr 2fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
         .footer-col h4 { color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }
         .footer-col p { color:#999; font-size:0.9rem; max-width:32ch; }
         .footer-col a { display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }
@@ -1975,8 +2003,8 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
 <section class="hero"><div class="container hero-grid">
     <div>
         <span class="hero-eyebrow">How we work</span>
-        <h1>We buy it, test it, and tell you what's actually worth your money.</h1>
-        <p>Every recommendation on Abvorn comes from hands-on testing against real alternatives &mdash; not spec sheets, not press releases.</p>
+        <h1>Clear, honest guidance on what's actually worth your money.</h1>
+        <p>Every guide starts with the same question: what would actually be worth buying? We compare real prices, specifications, and verified customer feedback, then break down the trade-offs in plain language &mdash; so you can go from confused to confident in minutes, not hours.</p>
         <a href="#niches" class="btn">See our latest guides</a>
     </div>
     <div class="hero-slider" id="hero-slider">
@@ -2023,8 +2051,10 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
             <div class="footer-social">FOOTER_SOCIAL_PLACEHOLDER</div>
         </div>
         <div class="footer-col"><h4>Categories</h4>FOOTER_CATEGORY_LINKS_PLACEHOLDER</div>
-        <div class="footer-col"><h4>Company</h4><a href="__SITE_BASE__/about.html">About</a></div>
-        <div class="footer-col"><h4>Legal</h4><a href="__SITE_BASE__/privacy.html">Privacy policy</a></div>
+        <div class="footer-col">
+            <h4>Company</h4><a href="__SITE_BASE__/about.html">About</a>
+            <h4>Legal</h4><a href="__SITE_BASE__/privacy.html">Privacy policy</a>
+        </div>
     </div>
     <div class="footer-bottom"><img src="__SITE_BASE__/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; YEAR_PLACEHOLDER Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
 </div></footer>

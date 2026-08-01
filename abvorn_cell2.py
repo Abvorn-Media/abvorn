@@ -992,7 +992,7 @@ def route_or_create_niche(niche_slug, niche_name):
         index_html = index_html.replace('__FOOTER_SOCIALS__', FOOTER_SOCIALS)
         index_html = index_html.replace('__DESIGN_SYSTEM_CSS__', DESIGN_SYSTEM_CSS.replace('__SITE_BASE_PATH__', SITE_BASE_PATH))
         niche_folder.mkdir(exist_ok=True)
-        (niche_folder / "index.html").write_text(index_html)
+        (niche_folder / "index.html").write_text(index_html, encoding="utf-8")
         assets_file.write_text(json.dumps(assets, indent=2))
         track_economic_surplus(state, slug, 'niche_created', affiliate_links=0)
         print(f"   Created new niche blog: {slug}")
@@ -1645,7 +1645,7 @@ def process_niche(task, state):
         rendered = rendered.replace('__META__', f'<div class="post-meta"><span>📅 {datetime.now().strftime("%B %d, %Y")}</span><span>📁 {html_escape(blog_title)}</span><span>📌 {html_escape(pname)}</span></div>')
 
         post_path = niche_folder / post_filename
-        post_path.write_text(rendered)
+        post_path.write_text(rendered, encoding="utf-8")
         print(f"   Wrote product spotlight: {post_filename}")
         track_economic_surplus(state, actual_niche_slug, 'article', affiliate_links=1)
 
@@ -1759,7 +1759,7 @@ def process_niche(task, state):
         blog_index = blog_index.replace('__SOCIALS__', SOCIALS_HTML)
         blog_index = blog_index.replace('__FOOTER_SOCIALS__', FOOTER_SOCIALS)
         blog_index = blog_index.replace('__DESIGN_SYSTEM_CSS__', DESIGN_SYSTEM_CSS.replace('__SITE_BASE_PATH__', SITE_BASE_PATH))
-        (niche_folder / "index.html").write_text(blog_index)
+        (niche_folder / "index.html").write_text(blog_index, encoding="utf-8")
         track_economic_surplus(state, actual_niche_slug, 'blog_index', affiliate_links=0)
 
         task['stage'] = 'deployed'
@@ -1908,12 +1908,12 @@ def process_niche(task, state):
         else:
             rendered = rendered.replace('__GA_TRACKING__', '')
         rendered = rendered.replace('__META__', f'<div class="post-meta"><span>📅 {datetime.now().strftime("%B %d, %Y")}</span><span>📁 {html_escape(blog_title)}</span><span>📌 {", ".join(html_escape(t) for t in tags[:3])}</span></div>')
-        post_path.write_text(rendered)
+        post_path.write_text(rendered, encoding="utf-8")
         print(f"   Wrote: {post_filename}")
 
         # Write lead magnet page
         lead_html = f'''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>{html_escape(lead_magnet_title)} | Abvorn</title><link rel="icon" href="{SITE_BASE_PATH}/favicon.svg"><style>body{{font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f4f4f4;padding:20px}}.card{{background:#fff;padding:40px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.1);max-width:500px;width:100%;text-align:center}}h1{{font-size:1.8rem;margin-bottom:16px}}.btn{{display:inline-block;background:#5A7D9A;color:#fff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;margin-top:16px}}</style></head><body><div class="card"><h1>{html_escape(lead_magnet_title)}</h1><p>{html_escape(lead_magnet_desc)}</p><p style="font-size:0.9rem;color:#666">Enter your email to get instant access.</p><form style="display:flex;flex-direction:column;gap:12px;margin-top:24px"><input type="email" placeholder="you@email.com" required style="padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:1rem"><input type="text" name="website" style="position:absolute;left:-9999px" tabindex="-1" autocomplete="off"><button type="submit" class="btn">Get Free Guide</button></form><p style="font-size:0.8rem;color:#999;margin-top:16px">No spam. Unsubscribe anytime.</p></div></body></html>'''
-        (niche_folder / "lead-magnet.html").write_text(lead_html)
+        (niche_folder / "lead-magnet.html").write_text(lead_html, encoding="utf-8")
 
         # Self-reflection
         self_reflect_and_store(niche_name, article_html)
@@ -2003,7 +2003,7 @@ def process_niche(task, state):
             blog_index = blog_index.replace('__SOCIALS__', SOCIALS_HTML)
             blog_index = blog_index.replace('__FOOTER_SOCIALS__', FOOTER_SOCIALS)
             blog_index = blog_index.replace('__DESIGN_SYSTEM_CSS__', DESIGN_SYSTEM_CSS.replace('__SITE_BASE_PATH__', SITE_BASE_PATH))
-            (niche_folder / "index.html").write_text(blog_index)
+            (niche_folder / "index.html").write_text(blog_index, encoding="utf-8")
 
             for page_name, page_title, ai_prompt in [
                 ("store.html", f"{niche_name.title()} Store", f"Write a short store page for {niche_name}."),
@@ -2024,7 +2024,7 @@ def process_niche(task, state):
                 page_html = page_html.replace('__SOCIALS__', SOCIALS_HTML)
                 page_html = page_html.replace('__FOOTER_SOCIALS__', FOOTER_SOCIALS)
                 page_html = page_html.replace('__DESIGN_SYSTEM_CSS__', DESIGN_SYSTEM_CSS.replace('__SITE_BASE_PATH__', SITE_BASE_PATH))
-                (niche_folder / page_name).write_text(page_html)
+                (niche_folder / page_name).write_text(page_html, encoding="utf-8")
 
         (niche_folder / "socials.json").write_text(json.dumps(content.get("socials", {}), indent=2))
 
