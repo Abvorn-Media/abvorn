@@ -22,5 +22,13 @@
     "costs": 0.0,
     "profit": 1.05,
     "recorded_at": "2026-07-31T21:49:15.532120"
+  },
+  {
+    "article_id": "wireless-headphones",
+    "niche": "wireless-headphones",
+    "revenue": 1.05,
+    "costs": 0.0,
+    "profit": 1.05,
+    "recorded_at": "2026-08-01T07:55:05.438149"
   }
 ]

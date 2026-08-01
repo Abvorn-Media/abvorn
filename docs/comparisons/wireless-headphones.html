@@ -22,7 +22,6 @@
 
 <style>
 :root{--primary:#d4633e;--primary-dark:#b84d2a;--primary-light:#fce9e1;--accent:#1a8a7a;--accent-dark:#147062;--accent-light:#d4ede8;--green:#3a8a5c;--green-light:#d6f0df;--purple:#8b6fba;--purple-light:#ebe3f5;--bg:#faf6f1;--bg-alt:#f0ebe3;--text:#2a2724;--text-secondary:#6b6560;--text-muted:#9e9690;--border:#e3dbd4;--shadow-sm:0 1px 3px rgba(42,39,36,.06);--shadow-md:0 4px 14px rgba(42,39,36,.07);--shadow-lg:0 10px 30px rgba(42,39,36,.08);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--font-display:'Fraunces',Georgia,'Times New Roman',serif;--font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-@media(prefers-color-scheme:dark){:root{--bg:#1a1715;--bg-alt:#221f1c;--text:#e8e2dc;--text-secondary:#a69e96;--text-muted:#7e756d;--border:#34302b}}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;font-family:var(--font-body);-webkit-font-smoothing:antialiased;scroll-behavior:smooth;touch-action:manipulation}
 body{color:var(--text);background:var(--bg);line-height:1.6}
@@ -32,7 +31,7 @@ a{color:var(--primary);text-decoration:none;transition:color .15s}
 a:hover{color:var(--primary-dark);text-decoration:underline}
 .top-bar{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}
 .top-bar .container{display:flex;justify-content:space-between}
-header{background:#0a0a0a;padding:18px 0;position:sticky;top:0;z-index:100;border-bottom:1px solid #2a2a2a}
+header{background:#0a0a0a;padding:18px 0;position:sticky;top:0;z-index:100;border-bottom:1px solid #2a2a2a;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 .navbar{display:flex;justify-content:space-between;align-items:center}
 .logo img{max-height:44px;width:auto}
 .nav-links{display:flex;align-items:center;gap:8px}
@@ -215,8 +214,7 @@ article .content li{margin:6px 0;color:var(--text)}
 @media(prefers-reduced-motion:reduce){.carousel-track{transition:none}}
 
 /* ── Abvorn Verdict Card ────────────────────────────────────────── */
-.abvorn-verdict{border:2px solid var(--border);border-radius:var(--radius-lg);padding:28px 32px;margin:32px 0;background:linear-gradient(135deg,var(--bg),var(--bg-alt));box-shadow:var(--shadow-md);position:relative;overflow:hidden}
-.abvorn-verdict::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--primary),var(--accent))}
+.abvorn-verdict{padding:28px 32px;margin:32px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:transparent;position:relative;overflow:hidden}
 .av-badge{display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:#fff;font-size:.7rem;font-weight:700;padding:4px 14px;border-radius:100px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
 .av-badge::before{content:'\01F525';font-size:.8rem}
 .av-score-row{display:flex;align-items:center;gap:20px;margin-bottom:20px}
@@ -225,14 +223,14 @@ article .content li{margin:6px 0;color:var(--text)}
 .av-outof{font-size:1.2rem;color:var(--text-muted);font-weight:600}
 .av-label-row{display:flex;flex-direction:column;gap:2px}
 .av-label{font-size:1.1rem;font-weight:700;color:var(--accent);font-family:var(--font-display)}
-.av-product{font-size:.85rem;color:var(--text-secondary)}
+.av-product{font-size:1.2rem;font-weight:800;color:var(--text);font-family:var(--font-display);line-height:1.3;margin:0 0 4px}
 .av-breakdown{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
 .av-bar-row{display:flex;align-items:center;gap:12px}
 .av-bar-label{flex:0 0 140px;font-size:.82rem;font-weight:600;color:var(--text-secondary);text-align:right}
 .av-bar-track{flex:1;height:8px;background:var(--border);border-radius:100px;overflow:hidden}
 .av-bar-fill{height:100%;border-radius:100px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .av-bar-score{flex:0 0 36px;font-size:.85rem;font-weight:700;color:var(--text);text-align:right}
-.av-summary{font-size:.95rem;color:var(--text-secondary);line-height:1.5;margin-bottom:20px;padding:16px;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--accent);font-style:italic}
+.av-summary{font-size:.95rem;color:var(--text-secondary);line-height:1.5;margin-bottom:20px}
 .av-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .av-detail-link{font-size:.9rem;color:var(--text-muted);text-decoration:none;font-weight:600}
 .av-detail-link:hover{color:var(--primary);text-decoration:none}
