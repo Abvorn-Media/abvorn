@@ -1289,9 +1289,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     post_cards = ""
     for p in posts:
         title = p.get("title", niche_name)
-        slug = p.get("slug", f"reviews/{niche_slug}/").strip("/")
-        slug = slug if slug.endswith(".html") else slug.rstrip("/") + "/"
-        link = f"{b}/{slug}"
+        link = f"{b}/reviews/{niche_slug}/"
         img_src = carousel_img(niche_slug, b)
         post_cards += f'''<div class="post-card">
     <a href="{link}"><img src="{img_src}" alt="{html_mod.escape(title)}"></a>
@@ -2656,7 +2654,8 @@ footer a{{color:#aaa;text-decoration:none}}
     # Write category pages (post slugs point to reviews/{slug} for article pages)
     for n in state["niches"]:
         niche_reviews = [r for r in reviews if r["slug"] == n["slug"]]
-        niche_posts = [{"title": r["title"], "slug": r["rel"].lstrip("/")} for r in niche_reviews] or \
+        latest = max(niche_reviews, key=lambda r: r.get("updated", "")) if niche_reviews else None
+        niche_posts = [{"title": latest["title"], "slug": f"reviews/{n['slug']}"}] if latest else \
                       [{"title": a.get("post_title", ""), "slug": f"reviews/{n['slug']}"} for a in articles.get(n["slug"], [])]
         cat_dir = docs / n["slug"]
         cat_dir.mkdir(exist_ok=True)

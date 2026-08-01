@@ -367,11 +367,12 @@ def verify_page(html_content: str) -> bool:
 def review_card(item, category, b):
     """One review card with a category+niche banner, for homepage and category pages."""
     title = html_mod.escape(item["title"])
+    href = f'{b}/reviews/{item["slug"]}/'
     return f'''<div class="niche-card review-card">
-    <a href="{b}{item["rel"]}"><div class="niche-card__image-wrapper"><img src="{review_img(item["slug"], b)}" alt="{title}" loading="lazy"></div></a>
+    <a href="{href}"><div class="niche-card__image-wrapper"><img src="{review_img(item["slug"], b)}" alt="{title}" loading="lazy"></div></a>
     <span class="review-card__banner">{category} · {item["name"]}</span>
-    <h2><a href="{b}{item["rel"]}">{title}</a></h2>
-    <a href="{b}{item["rel"]}" class="read-link">Read review →</a>
+    <h2><a href="{href}">{title}</a></h2>
+    <a href="{href}" class="read-link">Read review →</a>
 </div>'''
 
 
@@ -564,9 +565,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     post_cards = ""
     for p in posts:
         title = p.get("title", niche_name)
-        slug = p.get("slug", f"reviews/{niche_slug}/").strip("/")
-        slug = slug if slug.endswith(".html") else slug.rstrip("/") + "/"
-        link = f"{b}/{slug}"
+        link = f"{b}/reviews/{niche_slug}/"
         img_src = carousel_img(niche_slug, b)
         post_cards += f'''<div class="post-card">
     <a href="{link}"><img src="{img_src}" alt="{html_mod.escape(title)}"></a>
@@ -1657,7 +1656,9 @@ footer a{{color:#aaa;text-decoration:none}}
 
     # Write category pages (post slugs point to reviews/{slug} for article pages)
     for n in state["niches"]:
-        niche_posts = [{"title": r["title"], "slug": r["rel"].lstrip("/")} for r in reviews if r["slug"] == n["slug"]] or \
+        niche_reviews = [r for r in reviews if r["slug"] == n["slug"]]
+        latest = max(niche_reviews, key=lambda r: r.get("updated", "")) if niche_reviews else None
+        niche_posts = [{"title": latest["title"], "slug": f"reviews/{n['slug']}"}] if latest else \
                       [{"title": a.get("post_title", ""), "slug": f"reviews/{n['slug']}"} for a in articles.get(n["slug"], [])]
         cat_dir = docs / n["slug"]
         cat_dir.mkdir(exist_ok=True)
