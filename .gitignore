@@ -52,6 +52,9 @@ mobile_server/
 # Agents & skills
 .agents/
 .superpowers/
+
+# gstack skill dump (third-party tooling, not project code)
+.opencode/skills/
 LongCat-Video/
 
 # Stale test/sandbox files
