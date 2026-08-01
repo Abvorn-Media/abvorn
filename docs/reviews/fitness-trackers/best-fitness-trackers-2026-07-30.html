@@ -218,6 +218,151 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .av-compare-btn { display:inline-flex; align-items:center; gap:6px; background:transparent; color:var(--clr-accent); border:1px solid var(--clr-accent); padding:4px 12px; border-radius:100px; font-size:0.78rem; font-weight:700; cursor:pointer; text-decoration:none; margin-left:8px; transition:all .15s; font-family:var(--font-body); }
         .av-compare-btn:hover { background:var(--clr-accent); color:#fff; }
         @media (max-width:860px) { .content-wrapper { grid-template-columns:1fr; } .product-card { grid-template-columns:1fr; } }
+
+        /* ═══════ Abvorn review polish (homepage design language) ═══════ */
+        :root {
+          --bg:#ffffff; --bg-alt:#f6f5f2; --text:#1a1a1a; --text-secondary:#666;
+          --text-muted:#888; --border:#e8e8e8;
+          --primary:var(--clr-accent); --primary-dark:#996015; --primary-light:#f8efdd;
+          --accent:var(--clr-accent); --accent-dark:#996015; --accent-light:#f8efdd;
+          --green:#3a8a5c; --green-light:#e6f2ea; --purple:#8b6fba; --purple-light:#efebf6;
+          --clr-gold-rgb:201,138,44;
+        }
+        ::selection { background:rgba(var(--clr-gold-rgb),0.18); }
+        h2, h3 { scroll-margin-top:96px; }
+
+        /* Hero verdict chip */
+        .hero-verdict { display:inline-flex; align-items:center; gap:10px; margin-top:var(--space-md);
+          background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12);
+          border-radius:100px; padding:8px 16px 8px 10px; }
+        .hero-verdict .hv-score { font-family:var(--font-display); font-weight:800; font-size:1.25rem;
+          color:var(--clr-accent); letter-spacing:-0.02em; line-height:1; }
+        .hero-verdict .hv-meta { display:flex; flex-direction:column; line-height:1.25; }
+        .hero-verdict .hv-label { font-size:0.62rem; font-weight:700; text-transform:uppercase;
+          letter-spacing:0.08em; color:var(--clr-accent); }
+        .hero-verdict .hv-sub { font-size:0.72rem; color:#ccc; }
+        .hero-image-wrapper::after { content:''; position:absolute; inset:0; border-radius:inherit;
+          background:radial-gradient(ellipse at 50% 110%, rgba(var(--clr-gold-rgb),0.22), transparent 62%);
+          pointer-events:none; }
+
+        /* CTA banner */
+        .cta-banner { position:relative; overflow:hidden; margin:var(--space-xl) 0;
+          padding:clamp(28px,4vw,44px) clamp(20px,3vw,32px);
+          background:linear-gradient(135deg,#0a0a0a 0%, #1a1a1a 55%, #2a1c05 130%);
+          border-radius:var(--radius-md); text-align:center; color:#fff;
+          box-shadow:var(--shadow-lg); }
+        .cta-banner::before { content:''; position:absolute; inset:0;
+          background:radial-gradient(circle at 82% 18%, rgba(var(--clr-gold-rgb),0.28), transparent 48%);
+          pointer-events:none; }
+        .cta-banner h3 { font-size:1.45rem; color:#fff; margin-bottom:6px; }
+        .cta-banner p { color:#c9c4bb; max-width:46ch; margin:0 auto 18px; font-size:0.95rem; }
+        .cta-banner .buy-btn { position:relative; background:var(--clr-accent); color:#1a1200;
+          font-weight:800; font-size:0.85rem; padding:0.85em 1.8em; box-shadow:0 6px 22px rgba(var(--clr-gold-rgb),0.4);
+          transition:transform .2s var(--ease-spring), box-shadow .2s; }
+        .cta-banner .buy-btn:hover { background:#e0a23f; transform:translateY(-2px); box-shadow:0 10px 30px rgba(var(--clr-gold-rgb),0.55); }
+
+        /* Decision matrix */
+        .decision-matrix { margin:var(--space-xl) 0; overflow-x:auto;
+          border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); }
+        .decision-matrix table { width:100%; border-collapse:collapse; font-size:0.9rem; min-width:560px; }
+        .decision-matrix th { background:var(--clr-off-white); text-align:left; padding:12px 16px;
+          font-weight:700; color:var(--clr-black); font-family:var(--font-display);
+          text-transform:uppercase; font-size:0.72rem; letter-spacing:0.06em;
+          border-bottom:2px solid var(--clr-accent); }
+        .decision-matrix td { padding:12px 16px; border-bottom:1px solid var(--clr-light-gray);
+          color:var(--clr-mid-gray); vertical-align:top; line-height:1.5; }
+        .decision-matrix tr:last-child td { border-bottom:none; }
+        .decision-matrix td:first-child { font-weight:700; color:var(--clr-off-black); white-space:nowrap; }
+
+        /* Reactions */
+        .reactions-bar { display:flex; gap:10px; margin:var(--space-lg) 0;
+          padding-top:var(--space-md); border-top:1px solid var(--clr-light-gray); }
+        .reaction-btn { display:inline-flex; align-items:center; gap:8px; padding:8px 18px;
+          border:1px solid var(--clr-light-gray); border-radius:100px; background:var(--clr-white);
+          cursor:pointer; font-size:0.88rem; color:var(--clr-mid-gray); font-family:var(--font-body);
+          transition:all .15s var(--ease-out); }
+        .reaction-btn:hover { border-color:var(--clr-accent); color:var(--clr-accent-text); transform:translateY(-1px); }
+        .reaction-btn.active { border-color:var(--clr-accent); color:var(--clr-accent-text); background:var(--accent-light); }
+        .reaction-btn.loved { border-color:#c0392b; color:#c0392b; background:#fdecec; }
+        .reaction-icon { font-size:1.02rem; }
+        .reaction-count { font-weight:700; min-width:12px; }
+
+        /* Share buttons */
+        .share-buttons a { transition:background .15s var(--ease-out), border-color .15s, color .15s; }
+        .share-buttons a:hover { background:var(--clr-accent) !important; border-color:var(--clr-accent) !important;
+          color:#1a1200 !important; }
+
+        /* Related categories */
+        .section { margin-top:var(--space-xl); }
+        .grid-3 { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:var(--space-md); }
+        .cat-card { display:block; background:var(--clr-off-white); border:1px solid var(--clr-light-gray);
+          border-radius:var(--radius-md); padding:var(--space-md); text-decoration:none;
+          transition:transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); }
+        .cat-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); text-decoration:none; }
+        .cat-name { font-family:var(--font-display); font-weight:700; color:var(--clr-black); font-size:1.05rem; margin-bottom:4px; }
+        .cat-count { font-size:0.75rem; color:var(--clr-mid-gray); text-transform:uppercase; letter-spacing:0.05em; }
+
+        /* Product placeholder tile */
+        .prod-ph { width:100px; height:100px; border-radius:var(--radius-sm); flex-shrink:0;
+          display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+          background:var(--clr-off-white); border:1px dashed var(--clr-light-gray);
+          color:var(--clr-mid-gray); font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em; }
+        .prod-ph svg { color:var(--clr-mid-gray); }
+
+        /* Rating stars */
+        .stars { display:flex; align-items:center; gap:2px; margin-top:8px; flex-wrap:wrap; }
+        .stars svg { width:15px; height:15px; }
+        .stars-note { font-size:0.78rem; color:var(--clr-mid-gray); font-weight:600; margin-left:6px; }
+
+        /* Verdict card uplift */
+        .abvorn-verdict { background:linear-gradient(180deg,#ffffff 0%,#fbfaf7 100%);
+          border-top:1px solid var(--clr-light-gray); border-bottom:1px solid var(--clr-light-gray); }
+        .av-number { background:linear-gradient(135deg,var(--clr-accent) 0%,#d4a03a 100%);
+          -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent; }
+
+        /* RPS widget */
+        .rps-container { border:1px solid var(--clr-light-gray); border-radius:var(--radius-md);
+          padding:24px 28px; margin:var(--space-lg) 0; background:var(--clr-white); box-shadow:var(--shadow-sm); position:relative; }
+        .rps-container::before { content:''; position:absolute; top:0; left:0; right:0; height:3px;
+          background:linear-gradient(90deg,var(--clr-accent),rgba(var(--clr-gold-rgb),0.2)); border-radius:var(--radius-md) var(--radius-md) 0 0; }
+        .rps-badge { display:inline-flex; align-items:center; gap:6px; font-size:0.7rem; font-weight:700;
+          color:var(--clr-mid-gray); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px; }
+        .rps-badge::before { content:'\01F52E'; font-size:0.8rem; }
+        .rps-header { border-left:4px solid var(--clr-accent); padding-left:16px; margin-bottom:16px; }
+        .rps-score { display:flex; align-items:baseline; gap:8px; margin-bottom:4px; }
+        .rps-number { font-size:2.2rem; font-weight:700; font-family:var(--font-display); line-height:1; letter-spacing:-0.03em; }
+        .rps-product-name { font-size:0.9rem; color:var(--clr-mid-gray); font-weight:500; }
+        .rps-section-title { font-size:0.82rem; font-weight:700; color:var(--clr-black); margin-bottom:8px;
+          text-transform:uppercase; letter-spacing:0.05em; }
+        .rps-reasons { margin-bottom:16px; }
+        .rps-reason { padding:10px 14px; border-radius:var(--radius-sm); margin-bottom:8px; font-size:0.88rem;
+          line-height:1.5; border-left:3px solid; }
+        .rps-reason.rps-mismatch { background:#fdecec; border-color:#c0392b; color:#7f1d1d; }
+        .rps-reason.rps-notice { background:#fbf3dd; border-color:#d4a03e; color:#78350f; }
+        .rps-tip { font-size:0.85rem; color:var(--clr-mid-gray); padding:12px; background:var(--clr-off-white);
+          border-radius:var(--radius-sm); margin-bottom:16px; line-height:1.4; }
+        .rps-alt-title { font-size:0.82rem; font-weight:700; color:var(--clr-black); margin-bottom:10px;
+          text-transform:uppercase; letter-spacing:0.05em; }
+        .rps-alt-item { display:flex; align-items:center; gap:12px; padding:12px 14px;
+          border:1px solid var(--clr-light-gray); border-radius:var(--radius-sm); margin-bottom:8px;
+          text-decoration:none; transition:all .15s; background:var(--clr-off-white); }
+        .rps-alt-item:hover { text-decoration:none; border-color:var(--clr-accent); box-shadow:var(--shadow-sm); }
+        .rps-alt-name { flex:1; font-weight:600; color:var(--clr-black); font-size:0.9rem; }
+        .rps-alt-prob { font-size:0.78rem; font-weight:600; white-space:nowrap; }
+        .rps-alt-price { font-size:0.8rem; color:var(--clr-mid-gray); }
+        .rps-footer { font-size:0.78rem; color:var(--clr-mid-gray); display:flex; align-items:center; gap:12px;
+          margin-top:12px; padding-top:12px; border-top:1px solid var(--clr-light-gray); }
+        .rps-reset { background:none; border:1px solid var(--clr-light-gray); border-radius:100px;
+          padding:4px 12px; font-size:0.75rem; color:var(--clr-mid-gray); cursor:pointer;
+          font-family:inherit; transition:all .15s; }
+        .rps-reset:hover { border-color:var(--clr-accent); color:var(--clr-accent-text); }
+
+        /* Product card polish */
+        .product-section { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-lg); }
+        .product-card { grid-template-columns:100px 1fr; align-items:start; }
+        .product-card-body h3 { font-size:0.95rem; line-height:1.35; }
+        .buy-btn { transition:background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast); }
+        .buy-btn:hover { transform:translateY(-1px); box-shadow:var(--shadow-md); }
     </style>
     
 <style>
@@ -260,6 +405,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         <h1>Best Fitness Trackers</h1>
         <div class="meta">By Abvorn · <span class="published-date">Published: 2026-08-01</span> <span class="updated-date">Updated: 2026-08-01</span></div>
         <p class="excerpt">Fitness Tracker with Heart Rate/Blood Pressure/Pedometer/Calories/Sleep | Activity Tracker with 1.1&quot; AMOLED Screen — Find the best Fitness Trackers.</p>
+        <div class="hero-verdict"><span class="hv-score">7.0</span><span class="hv-meta"><span class="hv-label">Abvorn Verdict</span><span class="hv-sub">Good · out of 10</span></span></div>
     </div>
     <div class="hero-image-wrapper">
         <img src="https://m.media-amazon.com/images/I/618Y6apfa0L._AC_UY654_QL65_.jpg" alt="Fitness Tracker with Heart Rate/Blood Pressure/Pedometer/Calories/Sleep | Activity Tracker with 1.1&quot; AMOLED Screen" loading="eager">
@@ -304,13 +450,6 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
             </div>
             <p class="chart-note">Scores out of 10. Based on the Abvorn Verdict Engine.</p>
         </div>
-        <p class="chart-note">Scores out of 10. Based on the Abvorn Verdict Engine.</p>
-        </div>
-        <p class="chart-note">Scores out of 10. Based on the Abvorn Verdict Engine.</p>
-        </div>
-        <p class="chart-note">Scores out of 10. Based on the Abvorn Verdict Engine.</p>
-        </div>
-        User Safety: safe
         <h2>Introduction</h2>
 <p>Shopping for the <strong>best fitness-trackers</strong> can feel overwhelming when you're staring at hundreds of options ranging from $20 budget bands to $400 premium smartwatches. The real problem? Most trackers either oversell features they don't deliver, lock you into expensive ecosystems, or skimp on the basics like heart rate accuracy and sleep tracking. You end up wasting money on a device that either annoys you with false data or collects dust after two weeks.</p>
 <p>This guide cuts through the noise. We've reviewed five current fitness trackers available on Amazon right now — from ultra-budget options under $30 to a premium Apple Watch — and broken down exactly what each one does well and where it falls short. Whether you need a simple step counter or a full health monitoring hub, there's a right answer for your wallet and your goals.</p>
@@ -389,7 +528,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 </ul>
 <p><strong>Pros:</strong></p>
 <ul>
-<li>Lowest price point on the list at $28.9
+<li>Lowest price point on the list at $28.99</li>
+</ul>
         <div class="reactions-bar">
         <button class="reaction-btn" onclick="toggleReaction('like',this)" aria-label="Like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
         <button class="reaction-btn" onclick="toggleReaction('love',this)" aria-label="Love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
@@ -407,7 +547,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
  <div class="product-card-body">
  <h3>Fitness Tracker with Heart Rate/Blood Pressure/Pedometer/Calories/Sleep | Activity Tracker with 1.1&quot; AMOLED Screen</h3>
      <div class="price">$29.99</div>
- <svg viewBox="0 0 200 60" width="200" height="60" style="display:block;margin-top:8px"><circle cx="100.0" cy="58.0" r="3" fill="#c98a2c"/></svg>
+  <div class="stars" aria-label="Rated 4.2 out of 5"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#c98a2c" d="M12 2l2.9 6.26 6.6.9-4.8 4.6 1.2 6.5L12 17.8 6.1 20.3l1.2-6.5L2.5 9.2l6.6-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#c98a2c" d="M12 2l2.9 6.26 6.6.9-4.8 4.6 1.2 6.5L12 17.8 6.1 20.3l1.2-6.5L2.5 9.2l6.6-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#c98a2c" d="M12 2l2.9 6.26 6.6.9-4.8 4.6 1.2 6.5L12 17.8 6.1 20.3l1.2-6.5L2.5 9.2l6.6-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#c98a2c" d="M12 2l2.9 6.26 6.6.9-4.8 4.6 1.2 6.5L12 17.8 6.1 20.3l1.2-6.5L2.5 9.2l6.6-.9z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="star5" x1="0" y1="0" x2="1" y2="0"><stop offset="20%" stop-color="#c98a2c"/><stop offset="20%" stop-color="#e8e8e8"/></linearGradient></defs><path fill="url(#star5)" d="M12 2l2.9 6.26 6.6.9-4.8 4.6 1.2 6.5L12 17.8 6.1 20.3l1.2-6.5L2.5 9.2l6.6-.9z"/></svg><span class="stars-note">4.2/5 (364 ratings)</span></div>
  
  <p>Fitness Tracker with Heart Rate/Blood Pressure/Pedometer/Calories/Sleep | Activity Tracker with 1.1&amp;quot;&amp;quot; AMOLED Screen, Step Tracker for Android iPhones Women Men</p>
  
@@ -416,7 +556,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
  <button class="av-alert-btn" data-asin="B0GYNL6QFV" data-price="29.99" onclick="setPriceAlert('B0GYNL6QFV', 29.99)" style="background:transparent;color:var(--clr-mid-gray);border:1px solid var(--clr-light-gray);border-radius:100px;padding:4px 12px;font-size:.78rem;cursor:pointer;margin-left:8px;font-family:var(--font-body);display:inline-flex;align-items:center;gap:5px"><svg aria-hidden="true" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg> Alert me</button>
  </div>
  </div><div class="product-card">
- <div style="width:160px;height:160px;background:linear-gradient(135deg,var(--bg-alt),var(--border));border-radius:var(--radius-sm);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.8rem">Product</div>
+ <div class="prod-ph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>Image unavailable</span></div>
  <div class="product-card-body">
  <h3>Google Fitbit Inspire 3 - Midnight Zen/Black - Small and Large Bands | Stress management</h3>
      <div class="price">Check price</div>
@@ -429,7 +569,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
  
  </div>
  </div><div class="product-card">
- <div style="width:160px;height:160px;background:linear-gradient(135deg,var(--bg-alt),var(--border));border-radius:var(--radius-sm);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.8rem">Product</div>
+ <div class="prod-ph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>Image unavailable</span></div>
  <div class="product-card-body">
  <h3>Fitness Tracker with 24/7 Heart Rate Blood Pressure Blood Oxygen Sleep Monitor</h3>
      <div class="price">Check price</div>
@@ -442,7 +582,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
  
  </div>
  </div><div class="product-card">
- <div style="width:160px;height:160px;background:linear-gradient(135deg,var(--bg-alt),var(--border));border-radius:var(--radius-sm);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.8rem">Product</div>
+ <div class="prod-ph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>Image unavailable</span></div>
  <div class="product-card-body">
  <h3>Apple Watch Series 11 [GPS 46mm] Smartwatch with Jet Black Aluminum Case with Black Sport Band - M/L. Sleep Score</h3>
      <div class="price">Check price</div>
@@ -455,7 +595,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
  
  </div>
  </div><div class="product-card">
- <div style="width:160px;height:160px;background:linear-gradient(135deg,var(--bg-alt),var(--border));border-radius:var(--radius-sm);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.8rem">Product</div>
+ <div class="prod-ph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>Image unavailable</span></div>
  <div class="product-card-body">
  <h3>Google Fitbit Air Performance Loop Band - One Size - Obsidian | Only compatible with Fitbit Air</h3>
      <div class="price">Check price</div>
@@ -506,6 +646,22 @@ const LEAD_MAGNET_TITLE = "Fitness Tracker with Heart Rate/Blood Pressure/Pedome
         btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
 })();
+
+window.toggleReaction = function(type, el) {
+    if (!el) return;
+    const countEl = el.querySelector('.reaction-count');
+    const isActive = el.classList.toggle('active');
+    if (isActive) {
+        countEl.textContent = parseInt(countEl.textContent || '0', 10) + 1;
+    } else {
+        countEl.textContent = Math.max(0, parseInt(countEl.textContent || '0', 10) - 1);
+    }
+};
+
+window.setPriceAlert = function(asin, price) {
+    const msg = asin ? ('Alert set for ' + asin + ' at $' + price) : 'Alert set';
+    alert(msg);
+};
 
 async function submitLead(e) {
     e.preventDefault();
@@ -606,7 +762,7 @@ function renderRPS(regret,productName,allProducts){
   var severityColors={low:'#3a8a5c',moderate:'#d4a03e',high:'#d4633e',very_high:'#c0392b'};
   var severityLabels={low:'Low Regret Risk',moderate:'Moderate Regret Risk',high:'High Regret Risk',very_high:'Very High Regret Risk'};
   var severityTips={low:'This product aligns well with your preferences.',
-    moderate:'Some of your priorities don't match this product.',
+    moderate:"Some of your priorities don't match this product.",
     high:'This product may not be right for you.',
     very_high:'Based on your preferences, this is likely the wrong choice.'};
   var c=severityColors[regret.severity]||'#9e9690';
