@@ -985,7 +985,7 @@ RPS_JS = """<script>
 var DATA = document.getElementById('abvorn-rps-data');
 if(!DATA)return;
 var rpsData;
-try{rpsData=JSON.parse(DATA.textContent)}catch(e){return}
+try{rpsData=JSON.parse(DATA.textContent.replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&'))}catch(e){return}
 if(!rpsData||!rpsData.products||!rpsData.products.length)return;
 
 // Preference-to-score label mapping (mirrors PREFERENCE_MAP in rps.py)
@@ -1209,7 +1209,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             hero_img_html = hero_img
         elif p0.get("image"):
             hero_img_html = f'<img src="{html_mod.escape(p0["image"])}" alt="{html_mod.escape(clean_product_name(p0.get("name", product_name)))}" loading="eager">'
-    verdict_json = html_mod.escape(json.dumps(verdict_chart_data))
+    verdict_json = json.dumps(verdict_chart_data, ensure_ascii=False).replace('<', '\\u003c')
     bread = breadcrumb_schema([
         ("Abvorn", "/"),
         (f"Best {niche_name}", f"/{niche_slug}/"),
@@ -1232,7 +1232,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             })
     except Exception:
         pass
-    rps_json = html_mod.escape(json.dumps(rps_data))
+    rps_json = json.dumps(rps_data, ensure_ascii=False).replace('<', '\\u003c')
     related_html = ""
     if related_niches:
         cards = "".join(
@@ -1517,7 +1517,7 @@ document.addEventListener('DOMContentLoaded', function() {{
     var dataEl = document.getElementById('abvorn-verdict-data');
     if (!dataEl) return;
     var verdictData;
-    try {{ verdictData = JSON.parse(dataEl.textContent); }} catch(e) {{ return; }}
+    try {{ verdictData = JSON.parse(dataEl.textContent.replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&')); }} catch(e) {{ return; }}
     if (!verdictData || !verdictData.breakdown || Object.keys(verdictData.breakdown).length === 0) return;
     var labels = Object.keys(verdictData.breakdown);
     var scores = labels.map(function(l) {{ return verdictData.breakdown[l]; }});

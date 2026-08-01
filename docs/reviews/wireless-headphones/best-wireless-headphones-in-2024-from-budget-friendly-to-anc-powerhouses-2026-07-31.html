@@ -522,7 +522,7 @@ async function submitLead(e) {
 var DATA = document.getElementById('abvorn-rps-data');
 if(!DATA)return;
 var rpsData;
-try{rpsData=JSON.parse(DATA.textContent)}catch(e){return}
+try{rpsData=JSON.parse(DATA.textContent.replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&'))}catch(e){return}
 if(!rpsData||!rpsData.products||!rpsData.products.length)return;
 
 // Preference-to-score label mapping (mirrors PREFERENCE_MAP in rps.py)
@@ -667,7 +667,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var dataEl = document.getElementById('abvorn-verdict-data');
     if (!dataEl) return;
     var verdictData;
-    try { verdictData = JSON.parse(dataEl.textContent); } catch(e) { return; }
+    try { verdictData = JSON.parse(dataEl.textContent.replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&')); } catch(e) { return; }
     if (!verdictData || !verdictData.breakdown || Object.keys(verdictData.breakdown).length === 0) return;
     var labels = Object.keys(verdictData.breakdown);
     var scores = labels.map(function(l) { return verdictData.breakdown[l]; });
