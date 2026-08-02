@@ -166,7 +166,13 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .subscribe-msg { flex-basis:100%; font-size:0.85rem; color:#666; margin-top:6px; }
         @media (max-width:700px) { .subscribe-inner { flex-direction:column; align-items:flex-start; } .subscribe-form .input { width:100%; } }
 
-        .posts-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }
+        .posts-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }
+        .category-section { margin-bottom: var(--space-2xl); scroll-margin-top: 90px; }
+        .category-section__header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-light-gray); padding-bottom: var(--space-sm); }
+        .category-section__header h2 { font-size: var(--text-2xl); margin:0; }
+        .category-section__count { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-mid-gray); }
+        html { scroll-behavior:smooth; }
+        @media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } }
         .niche-card { border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }
         .niche-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
         .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; }
@@ -214,9 +220,9 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
 </div></section>
 
-<nav class="category-index" aria-label="Guides in this category"><div class="container category-index__inner"><span class="category-index__label">In this category</span><div class="category-index__links"><a class="category-index__link is-current" aria-current="page" href="https://abvorn-media.github.io/abvorn/categories/fitness-and-health/"><span class="category-index__tick" style="--cat:#b7ddc0"></span>All reviews</a><a class="category-index__link" href="https://abvorn-media.github.io/abvorn/fitness-trackers/"><span class="category-index__tick" style="--cat:#b7ddc0"></span>Fitness Trackers</a></div></div></nav>
+<nav class="category-index" aria-label="Guides in this category"><div class="container category-index__inner"><span class="category-index__label">In this category</span><div class="category-index__links"><a class="category-index__link is-current" aria-current="true" href="#latest"><span class="category-index__tick" style="--cat:#b7ddc0"></span>All reviews</a><a class="category-index__link" href="#fitness-trackers"><span class="category-index__tick" style="--cat:#b7ddc0"></span>Fitness Trackers</a></div></div></nav>
 
-<section class="container posts-grid"><div class="niche-card review-card">
+<section class="category-section" id="latest"><div class="category-section__header"><h2>Our latest Fitness &amp; Health Reviews</h2></div><div class="posts-grid"><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/fitness-trackers.png" alt="Best Fitness Trackers" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#b7ddc0">Fitness & Health · Fitness Trackers</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/">Best Fitness Trackers</a></h2>
@@ -228,7 +234,19 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/">The Ultimate Buying Guide to Fitness Trackers: Find the Best One for Your Needs</a></h2>
     <p class="review-card__snippet">With the numerous fitness trackers available in the market, finding the right one can be overwhelming. Fitness trackers have become an essential tool for monitoring our daily…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
-</div></section>
+</div></div></section><section class="category-section" id="fitness-trackers"><div class="category-section__header"><h2>Fitness Trackers</h2><span class="category-section__count">2 reviews</span></div><div class="posts-grid"><div class="niche-card review-card">
+    <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/fitness-trackers.png" alt="Best Fitness Trackers" loading="lazy"></div></a>
+    <span class="review-card__banner" style="background:#b7ddc0">Fitness & Health · Fitness Trackers</span>
+    <h2><a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/">Best Fitness Trackers</a></h2>
+    <p class="review-card__snippet">Shopping for the best fitness-trackers can feel overwhelming when you&#x27;re staring at hundreds of options ranging from $20 budget bands to $400 premium smartwatches. The real…</p>
+    <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
+</div><div class="niche-card review-card">
+    <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/fitness-trackers.png" alt="The Ultimate Buying Guide to Fitness Trackers: Find the Best One for Your Needs" loading="lazy"></div></a>
+    <span class="review-card__banner" style="background:#b7ddc0">Fitness & Health · Fitness Trackers</span>
+    <h2><a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/">The Ultimate Buying Guide to Fitness Trackers: Find the Best One for Your Needs</a></h2>
+    <p class="review-card__snippet">With the numerous fitness trackers available in the market, finding the right one can be overwhelming. Fitness trackers have become an essential tool for monitoring our daily…</p>
+    <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
+</div></div></section>
 
 <section class="subscribe-band"><div class="container subscribe-inner">
     <div class="subscribe-copy">
@@ -267,6 +285,28 @@ const CATEGORY_NAME = "Fitness &amp; Health";
         const open = nav.classList.toggle('open');
         btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
+})();
+
+(function() {
+    const links = [...document.querySelectorAll('.category-index__link')];
+    if (!links.length || !('IntersectionObserver' in window)) return;
+    const targets = links
+        .map(l => document.querySelector(l.getAttribute('href')))
+        .filter(Boolean);
+    if (!targets.length) return;
+    const io = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            links.forEach(l => {
+                const active = l.getAttribute('href') === '#' + e.target.id;
+                l.classList.toggle('is-current', active);
+                if (active) l.setAttribute('aria-current', 'true');
+                else l.removeAttribute('aria-current');
+            });
+            return;
+        }
+    }, { rootMargin: '-10% 0px -70% 0px', threshold: 0 });
+    targets.forEach(t => io.observe(t));
 })();
 
 async function submitCategorySubscribe(e) {

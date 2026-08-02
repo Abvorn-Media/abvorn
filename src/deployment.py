@@ -441,22 +441,24 @@ def build_footer_categories(b=""):
     return "".join(f'<a href="{b}/{s}/">{_niche_name(s)}</a>' for s in CATEGORY_NAMES)
 
 
-def build_category_index(category_name, b=""):
-    """Contents rail under the hero listing every niche in this category.
+def build_category_index(category_name, b="", niche_slugs=None):
+    """Contents rail under the hero; each link scrolls to its section.
 
-    "All reviews" anchors the current page; each niche is a child link. Every
-    link carries a tick in the category's banner color, tying the rail to the
-    site's per-category color language. As niches grow this rail fills out and
-    is the natural seam to graduate into a dropdown.
+    "All reviews" jumps to the latest section (#latest); each niche jumps to
+    its own section (#<slug>). Every link carries a tick in the category's
+    banner color, tying the rail to the site's per-category color language.
+    Only niches with a section on the page are listed, so every anchor lands.
+    As niches grow the rail fills out and is the seam to graduate into a
+    dropdown.
     """
-    slugs = CATEGORY_MAP.get(category_name, [])
+    slugs = niche_slugs if niche_slugs is not None else CATEGORY_MAP.get(category_name, [])
     color = category_color(category_name)
     links = [
-        f'<a class="category-index__link is-current" aria-current="page" href="{b}/categories/{_category_slug(category_name)}/"><span class="category-index__tick" style="--cat:{color}"></span>All reviews</a>'
+        f'<a class="category-index__link is-current" aria-current="true" href="#latest"><span class="category-index__tick" style="--cat:{color}"></span>All reviews</a>'
     ]
     for s in slugs:
         links.append(
-            f'<a class="category-index__link" href="{b}/{s}/"><span class="category-index__tick" style="--cat:{color}"></span>{html_mod.escape(_niche_name(s))}</a>'
+            f'<a class="category-index__link" href="#{s}"><span class="category-index__tick" style="--cat:{color}"></span>{html_mod.escape(_niche_name(s))}</a>'
         )
     return (
         '<nav class="category-index" aria-label="Guides in this category">'
@@ -859,11 +861,39 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     blog_title = f"{title_escaped} Reviews"
     meta_desc = f"Independent {category_name.lower()} reviews and buying guides. We test before we recommend."
 
-    cards = "".join(review_card(r, category_name, b) for r in items)
-    if not cards:
-        cards = '<p style="grid-column:1/-1;text-align:center;color:var(--clr-mid-gray);padding:40px 0">Reviews coming soon.</p>'
+    # Group reviews by niche; sort niche sections alphabetically by display name.
+    by_niche: dict = {}
+    for r in items:
+        by_niche.setdefault(r["slug"], []).append(r)
+    niche_order = sorted(by_niche, key=lambda s: _niche_name(s).lower())
 
-    index_nav = build_category_index(category_name, b)
+    # "Our latest … Reviews" = the newest reviews across the category (max 4).
+    latest_items = sorted(items, key=lambda r: r.get("updated", ""), reverse=True)[:4]
+
+    sections = []
+    if items:
+        latest_cards = "".join(review_card(r, category_name, b) for r in latest_items)
+        sections.append(
+            f'<section class="category-section" id="latest">'
+            f'<div class="category-section__header"><h2>Our latest {title_escaped} Reviews</h2></div>'
+            f'<div class="posts-grid">{latest_cards}</div></section>'
+        )
+        for slug in niche_order:
+            n = len(by_niche[slug])
+            niche_cards = "".join(review_card(r, category_name, b) for r in by_niche[slug])
+            sections.append(
+                f'<section class="category-section" id="{slug}">'
+                f'<div class="category-section__header"><h2>{html_mod.escape(_niche_name(slug))}</h2>'
+                f'<span class="category-section__count">{n} review{"s" if n != 1 else ""}</span></div>'
+                f'<div class="posts-grid">{niche_cards}</div></section>'
+            )
+    else:
+        sections.append(
+            '<p style="grid-column:1/-1;text-align:center;color:var(--clr-mid-gray);padding:40px 0">Reviews coming soon.</p>'
+        )
+    sections_html = "".join(sections)
+
+    index_nav = build_category_index(category_name, b, niche_slugs=niche_order or None) if items else ""
     count = len(items)
     count_label = f"{count} review{'s' if count != 1 else ''} published"
 
@@ -938,7 +968,13 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         .subscribe-msg {{ flex-basis:100%; font-size:0.85rem; color:#666; margin-top:6px; }}
         @media (max-width:700px) {{ .subscribe-inner {{ flex-direction:column; align-items:flex-start; }} .subscribe-form .input {{ width:100%; }} }}
 
-        .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }}
+        .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }}
+        .category-section {{ margin-bottom: var(--space-2xl); scroll-margin-top: 90px; }}
+        .category-section__header {{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-light-gray); padding-bottom: var(--space-sm); }}
+        .category-section__header h2 {{ font-size: var(--text-2xl); margin:0; }}
+        .category-section__count {{ font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-mid-gray); }}
+        html {{ scroll-behavior:smooth; }}
+        @media (prefers-reduced-motion: reduce) {{ html {{ scroll-behavior:auto; }} }}
         .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }}
         .niche-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
         .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; }}
@@ -988,7 +1024,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
 
 {index_nav}
 
-<section class="container posts-grid">{cards}</section>
+{sections_html}
 
 <section class="subscribe-band"><div class="container subscribe-inner">
     <div class="subscribe-copy">
@@ -1027,6 +1063,28 @@ const CATEGORY_NAME = "{title_escaped}";
         const open = nav.classList.toggle('open');
         btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     }});
+}})();
+
+(function() {{
+    const links = [...document.querySelectorAll('.category-index__link')];
+    if (!links.length || !('IntersectionObserver' in window)) return;
+    const targets = links
+        .map(l => document.querySelector(l.getAttribute('href')))
+        .filter(Boolean);
+    if (!targets.length) return;
+    const io = new IntersectionObserver((entries) => {{
+        for (const e of entries) {{
+            if (!e.isIntersecting) continue;
+            links.forEach(l => {{
+                const active = l.getAttribute('href') === '#' + e.target.id;
+                l.classList.toggle('is-current', active);
+                if (active) l.setAttribute('aria-current', 'true');
+                else l.removeAttribute('aria-current');
+            }});
+            return;
+        }}
+    }}, {{ rootMargin: '-10% 0px -70% 0px', threshold: 0 }});
+    targets.forEach(t => io.observe(t));
 }})();
 
 async function submitCategorySubscribe(e) {{

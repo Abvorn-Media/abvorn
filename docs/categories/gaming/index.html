@@ -166,7 +166,13 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .subscribe-msg { flex-basis:100%; font-size:0.85rem; color:#666; margin-top:6px; }
         @media (max-width:700px) { .subscribe-inner { flex-direction:column; align-items:flex-start; } .subscribe-form .input { width:100%; } }
 
-        .posts-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }
+        .posts-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }
+        .category-section { margin-bottom: var(--space-2xl); scroll-margin-top: 90px; }
+        .category-section__header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-light-gray); padding-bottom: var(--space-sm); }
+        .category-section__header h2 { font-size: var(--text-2xl); margin:0; }
+        .category-section__count { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-mid-gray); }
+        html { scroll-behavior:smooth; }
+        @media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } }
         .niche-card { border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }
         .niche-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
         .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; }
@@ -214,9 +220,9 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
 </div></section>
 
-<nav class="category-index" aria-label="Guides in this category"><div class="container category-index__inner"><span class="category-index__label">In this category</span><div class="category-index__links"><a class="category-index__link is-current" aria-current="page" href="https://abvorn-media.github.io/abvorn/categories/gaming/"><span class="category-index__tick" style="--cat:#cfc0ee"></span>All reviews</a><a class="category-index__link" href="https://abvorn-media.github.io/abvorn/gaming-mice/"><span class="category-index__tick" style="--cat:#cfc0ee"></span>Gaming Mice</a><a class="category-index__link" href="https://abvorn-media.github.io/abvorn/mechanical-keyboards/"><span class="category-index__tick" style="--cat:#cfc0ee"></span>Mechanical Keyboards</a></div></div></nav>
+<nav class="category-index" aria-label="Guides in this category"><div class="container category-index__inner"><span class="category-index__label">In this category</span><div class="category-index__links"><a class="category-index__link is-current" aria-current="true" href="#latest"><span class="category-index__tick" style="--cat:#cfc0ee"></span>All reviews</a><a class="category-index__link" href="#gaming-mice"><span class="category-index__tick" style="--cat:#cfc0ee"></span>Gaming Mice</a><a class="category-index__link" href="#mechanical-keyboards"><span class="category-index__tick" style="--cat:#cfc0ee"></span>Mechanical Keyboards</a></div></div></nav>
 
-<section class="container posts-grid"><div class="niche-card review-card">
+<section class="category-section" id="latest"><div class="category-section__header"><h2>Our latest Gaming Reviews</h2></div><div class="posts-grid"><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/gaming-mice.png" alt="Best Gaming Mice" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#cfc0ee">Gaming · Gaming Mice</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/">Best Gaming Mice</a></h2>
@@ -240,13 +246,37 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/">The Ultimate Gaming Mouse Buying Guide: Top Picks and Expert Reviews</a></h2>
     <p class="review-card__snippet">Welcome to the ultimate gaming mouse buying guide, where we&#x27;ll help you navigate the complex world of gaming mice and find the perfect one for your needs. With so many options…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/" class="read-link">Read review →</a>
+</div></div></section><section class="category-section" id="gaming-mice"><div class="category-section__header"><h2>Gaming Mice</h2><span class="category-section__count">2 reviews</span></div><div class="posts-grid"><div class="niche-card review-card">
+    <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/gaming-mice.png" alt="Best Gaming Mice" loading="lazy"></div></a>
+    <span class="review-card__banner" style="background:#cfc0ee">Gaming · Gaming Mice</span>
+    <h2><a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/">Best Gaming Mice</a></h2>
+    <p class="review-card__snippet">Finding the right gaming mouse can feel like navigating a maze of specs, price tags, and marketing buzzwords. Whether you’re a competitive FPS player who needs lightning‑fast…</p>
+    <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/" class="read-link">Read review →</a>
+</div><div class="niche-card review-card">
+    <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/gaming-mice.png" alt="The Ultimate Gaming Mouse Buying Guide: Top Picks and Expert Reviews" loading="lazy"></div></a>
+    <span class="review-card__banner" style="background:#cfc0ee">Gaming · Gaming Mice</span>
+    <h2><a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/">The Ultimate Gaming Mouse Buying Guide: Top Picks and Expert Reviews</a></h2>
+    <p class="review-card__snippet">Welcome to the ultimate gaming mouse buying guide, where we&#x27;ll help you navigate the complex world of gaming mice and find the perfect one for your needs. With so many options…</p>
+    <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/" class="read-link">Read review →</a>
+</div></div></section><section class="category-section" id="mechanical-keyboards"><div class="category-section__header"><h2>Mechanical Keyboards</h2><span class="category-section__count">3 reviews</span></div><div class="posts-grid"><div class="niche-card review-card">
+    <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/mechanical-keyboards.png" alt="Best Mechanical Keyboards" loading="lazy"></div></a>
+    <span class="review-card__banner" style="background:#cfc0ee">Gaming · Mechanical Keyboards</span>
+    <h2><a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/">Best Mechanical Keyboards</a></h2>
+    <p class="review-card__snippet">Mechanical keyboards remain the gold standard for typists, gamers, and productivity enthusiasts who crave tactile feedback, durability, and customization. In 2024 the market…</p>
+    <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/" class="read-link">Read review →</a>
+</div><div class="niche-card review-card">
+    <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/mechanical-keyboards.png" alt="Best Mechanical Keyboards of 2024: Wired, Hot-Swap &amp;amp;amp; Wireless Compared" loading="lazy"></div></a>
+    <span class="review-card__banner" style="background:#cfc0ee">Gaming · Mechanical Keyboards</span>
+    <h2><a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/">Best Mechanical Keyboards of 2024: Wired, Hot-Swap &amp;amp;amp; Wireless Compared</a></h2>
+    <p class="review-card__snippet">Mechanical keyboards remain the gold standard for typists, gamers, and productivity enthusiasts who crave tactile feedback, durability, and customization. In 2024 the market…</p>
+    <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/mechanical-keyboards.png" alt="The Ultimate Buying Guide to Mechanical Keyboards: Expert Tips and Recommendations" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#cfc0ee">Gaming · Mechanical Keyboards</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/">The Ultimate Buying Guide to Mechanical Keyboards: Expert Tips and Recommendations</a></h2>
     <p class="review-card__snippet">When it comes to typing, the right keyboard can make all the difference. Mechanical keyboards have gained popularity in recent years due to their durability, responsiveness, and…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/" class="read-link">Read review →</a>
-</div></section>
+</div></div></section>
 
 <section class="subscribe-band"><div class="container subscribe-inner">
     <div class="subscribe-copy">
@@ -285,6 +315,28 @@ const CATEGORY_NAME = "Gaming";
         const open = nav.classList.toggle('open');
         btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
+})();
+
+(function() {
+    const links = [...document.querySelectorAll('.category-index__link')];
+    if (!links.length || !('IntersectionObserver' in window)) return;
+    const targets = links
+        .map(l => document.querySelector(l.getAttribute('href')))
+        .filter(Boolean);
+    if (!targets.length) return;
+    const io = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            links.forEach(l => {
+                const active = l.getAttribute('href') === '#' + e.target.id;
+                l.classList.toggle('is-current', active);
+                if (active) l.setAttribute('aria-current', 'true');
+                else l.removeAttribute('aria-current');
+            });
+            return;
+        }
+    }, { rootMargin: '-10% 0px -70% 0px', threshold: 0 });
+    targets.forEach(t => io.observe(t));
 })();
 
 async function submitCategorySubscribe(e) {
