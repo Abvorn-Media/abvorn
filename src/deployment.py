@@ -263,6 +263,25 @@ CATEGORY_MAP = {
     "Webcams & Accessories": ["webcams"],
 }
 
+# One light, distinguishable banner color per category. Each is light enough
+# that the dark banner text (#1a1200) stays clearly readable (~9:1+ contrast),
+# and each reads distinctly so viewers can identify a category by color alone.
+CATEGORY_COLORS = {
+    "Audio": "#c98a2c",                    # gold/amber — brand anchor, kept
+    "Computing & Monitors": "#a7c3e8",     # steel blue — screens & tech
+    "Fitness & Health": "#b7ddc0",         # leaf green — health & vitality
+    "Gaming": "#cfc0ee",                   # periwinkle — energy & play
+    "Home & Lifestyle": "#f0c8b6",         # soft peach — warmth & comfort
+    "Webcams & Accessories": "#a8d7d2",    # light teal — optics & capture
+}
+
+CATEGORY_COLOR_FALLBACK = "#c98a2c"
+
+
+def category_color(name):
+    """Resolve a category to its banner color, with a brand-gold fallback."""
+    return CATEGORY_COLORS.get(name, CATEGORY_COLOR_FALLBACK)
+
 CATEGORY_NAMES = {
     "4k-monitors": "4K Monitors",
     "fitness-trackers": "Fitness Trackers",
@@ -368,9 +387,10 @@ def review_card(item, category, b):
     """One review card with a category+niche banner, for homepage and category pages."""
     title = html_mod.escape(item["title"])
     href = f'{b}/reviews/{item["slug"]}/'
+    color = category_color(category)
     return f'''<div class="niche-card review-card">
     <a href="{href}"><div class="niche-card__image-wrapper"><img src="{review_img(item["slug"], b)}" alt="{title}" loading="lazy"></div></a>
-    <span class="review-card__banner">{category} · {item["name"]}</span>
+    <span class="review-card__banner" style="background:{color}">{category} · {item["name"]}</span>
     <h2><a href="{href}">{title}</a></h2>
     <a href="{href}" class="read-link">Read review →</a>
 </div>'''
@@ -518,7 +538,7 @@ def build_homepage(state, form_url="", reviews=None, base=None):
         else:
             cards = f'''<div class="niche-card">
     <div class="niche-card__image-wrapper"><img src="{b}/assets/hero-home.svg" alt="Coming soon" loading="lazy"></div>
-    <span class="review-card__banner">{cat_name}</span>
+    <span class="review-card__banner" style="background:{category_color(cat_name)}">{cat_name}</span>
     <h2>Reviews coming soon</h2>
     <p>We're testing products in this category now.</p>
 </div>'''
@@ -1900,11 +1920,12 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
             .nav-dropdown a:hover { background:transparent; }
         }
         .trending-ticker { background:var(--clr-accent); color:#1a1200; padding:9px 0; font-size:0.82rem; overflow:hidden; white-space:nowrap; }
-        .trending-ticker__inner { display:inline-block; animation: ticker-scroll 24s linear infinite; }
+        .trending-ticker__track { display:inline-flex; animation: ticker-scroll 30s linear infinite; }
         .trending-ticker__label { font-weight:700; margin-right:15px; color:#1a1200; }
+        .trending-ticker__inner { display:inline-block; }
         .trending-ticker__item { color:#1a1200; text-decoration:none; padding:0 10px; }
         .trending-ticker__item:hover { color:#000; text-decoration:underline; }
-        @keyframes ticker-scroll { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+        @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         .hero { background:#f6f5f2; padding: var(--space-2xl) 0; }
         .hero-grid { display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items:center; }
         .hero-eyebrow { display:inline-block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#666; margin-bottom: var(--space-md); }
@@ -1999,7 +2020,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         <a href="__SITE_BASE__/privacy.html">Privacy</a>
     </nav>
 </div></header>
-<div class="trending-ticker"><div class="container"><div class="trending-ticker__inner"><span class="trending-ticker__label">Latest updates:</span><span id="trending-items">LATEST_UPDATES_PLACEHOLDER</span></div></div></div>
+<div class="trending-ticker"><div class="container"><div class="trending-ticker__track"><span class="trending-ticker__label">Latest updates:</span><span id="trending-items" class="trending-ticker__inner">LATEST_UPDATES_PLACEHOLDER</span><span id="trending-items-dup" class="trending-ticker__inner" aria-hidden="true">LATEST_UPDATES_PLACEHOLDER</span></div></div></div>
 
 <section class="hero"><div class="container hero-grid">
     <div>

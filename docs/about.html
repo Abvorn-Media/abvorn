@@ -83,11 +83,12 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
     .nav-dropdown a:hover { background:transparent; }
 }
 .trending-ticker { background:var(--clr-accent); color:#1a1200; padding:9px 0; font-size:0.82rem; overflow:hidden; white-space:nowrap; }
-.trending-ticker__inner { display:inline-block; animation: ticker-scroll 24s linear infinite; }
+.trending-ticker__track { display:inline-flex; animation: ticker-scroll 30s linear infinite; }
 .trending-ticker__label { font-weight:700; margin-right:15px; color:#1a1200; }
+.trending-ticker__inner { display:inline-block; }
 .trending-ticker__item { color:#1a1200; text-decoration:none; padding:0 10px; }
 .trending-ticker__item:hover { color:#000; text-decoration:underline; }
-@keyframes ticker-scroll { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+@keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 .hero { background:#f6f5f2; padding: var(--space-2xl) 0; }
 .hero-grid { display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items:center; }
 .hero-eyebrow { display:inline-block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#666; margin-bottom: var(--space-md); }

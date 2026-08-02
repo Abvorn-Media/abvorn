@@ -373,11 +373,12 @@ header{background:var(--clr-black);border-bottom:4px solid var(--clr-primary);pa
 .hero-sub-item .lbl{font-size:0.85rem;opacity:0.6}
 /* ── ticker (dark bg, white text readable) ── */
 .trending-ticker{background:#1a1a2e;color:var(--clr-white);padding:10px 0;font-size:0.85rem;overflow:hidden;white-space:nowrap;border-bottom:1px solid #333}
-.trending-ticker__inner{display:inline-block;animation:ticker-scroll 30s linear infinite}
+.trending-ticker__track{display:inline-flex;animation:ticker-scroll 30s linear infinite}
 .trending-ticker__label{font-weight:700;margin-right:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--clr-orange)}
+.trending-ticker__inner{display:inline-block}
 .trending-ticker__item{color:var(--clr-white);text-decoration:none;padding:0 10px;opacity:0.85}
 .trending-ticker__item:hover{opacity:1;text-decoration:underline}
-@keyframes ticker-scroll{0%{transform:translateX(100vw)}100%{transform:translateX(-100%)}}
+@keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 /* ── category tabs + grid ── */
 .section-title{text-align:center;max-width:1200px;margin:48px auto 0;padding:0 24px}
 .section-title h2{font-family:'Libre Franklin',-apple-system,sans-serif;font-size:2.2rem;color:var(--clr-black)}
@@ -428,7 +429,7 @@ header{background:var(--clr-black);border-bottom:4px solid var(--clr-primary);pa
     <div class="trending-scroll" id="trending-scroll">TRENDING_POSTS_PLACEHOLDER</div>
 </section>
 
-<div class="trending-ticker"><div class="container"><div class="trending-ticker__inner"><span class="trending-ticker__label">Trending Now:</span><span id="trending-items">Loading...</span></div></div></div>
+<div class="trending-ticker"><div class="container"><div class="trending-ticker__track"><span class="trending-ticker__label">Trending Now:</span><span id="trending-items" class="trending-ticker__inner">Loading...</span><span id="trending-items-dup" class="trending-ticker__inner" aria-hidden="true">Loading...</span></div></div></div>
 
 <section class="hero">
     <h1>The <span>Fortress</span> of Knowledge</h1>
@@ -459,7 +460,7 @@ header{background:var(--clr-black);border-bottom:4px solid var(--clr-primary);pa
 // Dropdown: click-to-toggle on mobile, hover on desktop
 document.addEventListener('DOMContentLoaded',function(){var dd=document.getElementById('niche-dropdown');var t=dd.closest('.drop-trigger');t.addEventListener('click',function(e){e.stopPropagation();dd.classList.toggle('show')});document.addEventListener('click',function(e){if(!t.contains(e.target))dd.classList.remove('show')})});
 // Trending ticker
-(async function(){try{var r=await fetch('__SITE_BASE_PATH__/trending.json');var d=await r.json();document.getElementById('trending-items').innerHTML=d.map(function(n){return'<a href="__SITE_BASE_PATH__/'+n.slug+'/" class="trending-ticker__item">'+n.name+'</a>'}).join(' \\u00b7 ');document.getElementById('hero-count').textContent=d.length;var pc=d.reduce(function(s,n){return s+(n.latest?n.latest.length:0)*2+5},0);document.getElementById('hero-products').textContent=Math.max(pc||15,15)}catch(e){document.getElementById('trending-items').innerHTML='Loading guides...'}})();
+(async function(){try{var r=await fetch('__SITE_BASE_PATH__/trending.json');var d=await r.json();var h=d.map(function(n){return'<a href="__SITE_BASE_PATH__/'+n.slug+'/" class="trending-ticker__item">'+n.name+'</a>'}).join(' \\u00b7 ');document.getElementById('trending-items').innerHTML=h;document.getElementById('trending-items-dup').innerHTML=h;document.getElementById('hero-count').textContent=d.length;var pc=d.reduce(function(s,n){return s+(n.latest?n.latest.length:0)*2+5},0);document.getElementById('hero-products').textContent=Math.max(pc||15,15)}catch(e){var m='Loading guides...';document.getElementById('trending-items').innerHTML=m;document.getElementById('trending-items-dup').innerHTML=m}})();
 // Category filter
 document.addEventListener('DOMContentLoaded',function(){var tabs=document.querySelectorAll('.category-tab');var cards=document.querySelectorAll('.niche-card');tabs.forEach(function(t){t.addEventListener('click',function(){tabs.forEach(function(x){x.classList.remove('active')});this.classList.add('active');var cat=this.getAttribute('data-cat');cards.forEach(function(c){c.style.display=cat==='all'||c.getAttribute('data-category')===cat?'flex':'none'})})})});
 // Like / Love / Share

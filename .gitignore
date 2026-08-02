@@ -36,6 +36,23 @@ docs/plans/
 docs/specs/
 docs/superpowers/
 
+# win.sh business loops — internal loop strategy, journals, run state
+.win/
+.win/loops/
+.win/state/
+.win/runs/
+
+# Internal strategy & finance data
+abvorn/brain/roadmap.md
+abvorn/brain/plans/
+data/surplus/
+data/economic_records.json
+data/fable_state.json
+data/verdict_weights.json
+data/openweb_cache/
+docs/console.html
+skills-lock.json
+
 # Internal task docs
 TASK_AUDIT_SYNC.md
 .opencode/commands/abvorn-mission.md
