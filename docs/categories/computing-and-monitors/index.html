@@ -143,6 +143,15 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .category-hero p { font-size: var(--text-lg); color: var(--clr-mid-gray); max-width:50ch; }
         .category-hero__meta { display:inline-block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-accent-text); margin-bottom: var(--space-md); }
 
+        .category-index { background:var(--clr-off-white); border-bottom:1px solid var(--clr-light-gray); padding:10px 0; }
+        .category-index__inner { display:flex; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }
+        .category-index__label { font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-accent-text); flex-shrink:0; }
+        .category-index__links { display:flex; flex-wrap:wrap; align-items:center; gap: var(--space-md); row-gap:8px; }
+        .category-index__link { font-family:var(--font-display); font-weight:600; font-size:0.95rem; color:var(--clr-black); text-decoration:none; display:inline-flex; align-items:center; gap:8px; padding:4px 0; border-bottom:2px solid transparent; transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out); }
+        .category-index__link:hover { color:var(--clr-accent-text); border-color:var(--clr-accent); }
+        .category-index__link.is-current { color:var(--clr-accent-text); border-color:var(--clr-accent); }
+        .category-index__tick { width:7px; height:7px; border-radius:1px; background:var(--cat, var(--clr-accent)); flex-shrink:0; }
+
         .subscribe-band { background:var(--clr-off-white); padding: var(--space-xl) 0; border-top:1px solid var(--clr-light-gray); }
         .subscribe-inner { display:flex; justify-content:space-between; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }
         .subscribe-copy h2 { font-size: var(--text-xl); margin-bottom:4px; }
@@ -204,6 +213,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <h1>Computing &amp; Monitors Reviews</h1>
     <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
 </div></section>
+
+<nav class="category-index" aria-label="Guides in this category"><div class="container category-index__inner"><span class="category-index__label">In this category</span><div class="category-index__links"><a class="category-index__link is-current" aria-current="page" href="https://abvorn-media.github.io/abvorn/categories/computing-and-monitors/"><span class="category-index__tick" style="--cat:#a7c3e8"></span>All reviews</a><a class="category-index__link" href="https://abvorn-media.github.io/abvorn/4k-monitors/"><span class="category-index__tick" style="--cat:#a7c3e8"></span>4K Monitors</a><a class="category-index__link" href="https://abvorn-media.github.io/abvorn/laptops/"><span class="category-index__tick" style="--cat:#a7c3e8"></span>Laptops</a></div></div></nav>
 
 <section class="container posts-grid"><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/4k-monitors.png" alt="Best 4K Monitors" loading="lazy"></div></a>

@@ -441,6 +441,32 @@ def build_footer_categories(b=""):
     return "".join(f'<a href="{b}/{s}/">{_niche_name(s)}</a>' for s in CATEGORY_NAMES)
 
 
+def build_category_index(category_name, b=""):
+    """Contents rail under the hero listing every niche in this category.
+
+    "All reviews" anchors the current page; each niche is a child link. Every
+    link carries a tick in the category's banner color, tying the rail to the
+    site's per-category color language. As niches grow this rail fills out and
+    is the natural seam to graduate into a dropdown.
+    """
+    slugs = CATEGORY_MAP.get(category_name, [])
+    color = category_color(category_name)
+    links = [
+        f'<a class="category-index__link is-current" aria-current="page" href="{b}/categories/{_category_slug(category_name)}/"><span class="category-index__tick" style="--cat:{color}"></span>All reviews</a>'
+    ]
+    for s in slugs:
+        links.append(
+            f'<a class="category-index__link" href="{b}/{s}/"><span class="category-index__tick" style="--cat:{color}"></span>{html_mod.escape(_niche_name(s))}</a>'
+        )
+    return (
+        '<nav class="category-index" aria-label="Guides in this category">'
+        '<div class="container category-index__inner">'
+        f'<span class="category-index__label">In this category</span>'
+        f'<div class="category-index__links">{"".join(links)}</div>'
+        '</div></nav>'
+    )
+
+
 MEGA_MENU_CSS = """
 .nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
 .nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
@@ -837,6 +863,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     if not cards:
         cards = '<p style="grid-column:1/-1;text-align:center;color:var(--clr-mid-gray);padding:40px 0">Reviews coming soon.</p>'
 
+    index_nav = build_category_index(category_name, b)
     count = len(items)
     count_label = f"{count} review{'s' if count != 1 else ''} published"
 
@@ -887,6 +914,15 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         .category-hero h1 {{ font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-sm); }}
         .category-hero p {{ font-size: var(--text-lg); color: var(--clr-mid-gray); max-width:50ch; }}
         .category-hero__meta {{ display:inline-block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-accent-text); margin-bottom: var(--space-md); }}
+
+        .category-index {{ background:var(--clr-off-white); border-bottom:1px solid var(--clr-light-gray); padding:10px 0; }}
+        .category-index__inner {{ display:flex; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }}
+        .category-index__label {{ font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-accent-text); flex-shrink:0; }}
+        .category-index__links {{ display:flex; flex-wrap:wrap; align-items:center; gap: var(--space-md); row-gap:8px; }}
+        .category-index__link {{ font-family:var(--font-display); font-weight:600; font-size:0.95rem; color:var(--clr-black); text-decoration:none; display:inline-flex; align-items:center; gap:8px; padding:4px 0; border-bottom:2px solid transparent; transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out); }}
+        .category-index__link:hover {{ color:var(--clr-accent-text); border-color:var(--clr-accent); }}
+        .category-index__link.is-current {{ color:var(--clr-accent-text); border-color:var(--clr-accent); }}
+        .category-index__tick {{ width:7px; height:7px; border-radius:1px; background:var(--cat, var(--clr-accent)); flex-shrink:0; }}
 
         .subscribe-band {{ background:var(--clr-off-white); padding: var(--space-xl) 0; border-top:1px solid var(--clr-light-gray); }}
         .subscribe-inner {{ display:flex; justify-content:space-between; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }}
@@ -949,6 +985,8 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     <h1>{blog_title}</h1>
     <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
 </div></section>
+
+{index_nav}
 
 <section class="container posts-grid">{cards}</section>
 
