@@ -101,6 +101,11 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
   #av-compare-bar .av-compare-cta { width: 100%; justify-content: center; }
   #av-compare-bar .av-compare-clear { width: 100%; margin: 0; text-align: center; }
 }
+
+/* ── Footer category columns ──────────────────────────────────── */
+.footer-cat-cols { display: flex; gap: var(--space-xl); }
+.footer-cat-col { display: flex; flex-direction: column; }
+.footer-col h4 + a + h4 { margin-top: var(--space-lg); }
 """
 
 VERDICT_CARD_CSS = """
@@ -428,17 +433,36 @@ def review_card(item, category, b):
 
 
 def build_category_dropdown(b=""):
-    """White multi-column mega-menu markup (the inner .nav-dropdown content)."""
+    """White multi-column mega-menu markup (the inner .nav-dropdown content).
+
+    Each category label is itself a link to its category listing page, so the
+    main categories are clickable, not just their niches.
+    """
     groups = ""
     for label, slugs in CATEGORY_MAP.items():
         links = "".join(f'<a href="{b}/{s}/">{_niche_name(s)}</a>' for s in slugs)
-        groups += f'<div class="category-group"><span class="category-label">{label}</span>{links}</div>'
+        cat_href = f'{b}/categories/{_category_slug(label)}/'
+        groups += f'<div class="category-group"><a class="category-label" href="{cat_href}">{html_mod.escape(label)}</a>{links}</div>'
     return groups
 
 
 def build_footer_categories(b=""):
-    """Flat category links for the footer Categories column (order matches CATEGORY_NAMES)."""
-    return "".join(f'<a href="{b}/{s}/">{_niche_name(s)}</a>' for s in CATEGORY_NAMES)
+    """Main-category links for the footer Categories column.
+
+    Lists only the top-level categories (keys of CATEGORY_MAP), sorted
+    alphabetically, capped at 8 links per sub-column so the list fills
+    down the first column before starting a new one as the catalogue grows.
+    """
+    cats = sorted(CATEGORY_MAP.keys(), key=lambda c: c.lower())
+    cols = [cats[i:i + 8] for i in range(0, len(cats), 8)]
+    cols_html = "".join(
+        '<div class="footer-cat-col">' + "".join(
+            f'<a href="{b}/categories/{_category_slug(name)}/">{html_mod.escape(name)}</a>'
+            for name in col
+        ) + '</div>'
+        for col in cols
+    )
+    return f'<div class="footer-cat-cols">{cols_html}</div>'
 
 
 def build_category_index(category_name, b="", niche_slugs=None):

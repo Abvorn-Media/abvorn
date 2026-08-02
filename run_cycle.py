@@ -576,6 +576,11 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 @media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 :focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
+
+/* ── Footer category columns ──────────────────────────────────── */
+.footer-cat-cols { display: flex; gap: var(--space-xl); }
+.footer-cat-col { display: flex; flex-direction: column; }
+.footer-col h4 + a + h4 { margin-top: var(--space-lg); }
 """
 
 VERDICT_CARD_CSS = """
@@ -704,6 +709,8 @@ article .content li{margin:6px 0;color:var(--text)}
 .footer-social a:hover{background:var(--accent,#c98a2c);color:#0a0a0a}
 .footer-social svg{width:16px;height:16px}
 .footer-bottom{border-top:1px solid #222;padding-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:.85rem;color:#777}
+.footer-cat-cols{display:flex;gap:32px}
+.footer-cat-col{display:flex;flex-direction:column}
 @media(max-width:760px){.footer-grid{grid-template-columns:1fr 1fr}}
 .story-section{padding:clamp(40px,6vw,64px) 0;background:var(--bg-alt);border-top:1px solid var(--border)}
 .story-section .container{max-width:680px;margin:0 auto;padding:0 24px}
