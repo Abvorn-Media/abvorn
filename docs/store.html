@@ -1,47 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="/abvorn/assets/favicon-32x32.png"><title>Store | Abvorn</title>
+<meta name="description" content="Store - Abvorn">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;color:#333;line-height:1.6}
-.top-bar{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}
-.top-bar .container{display:flex;justify-content:space-between;max-width:1200px;margin:0 auto;padding:0 20px}
-header{background:#0a0a0a;padding:18px 0;position:sticky;top:0;z-index:100;border-bottom:1px solid #2a2a2a}
+
+:root {
+  --clr-black: #0a0a0a; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
+  --clr-mid-gray: #666; --clr-light-gray: #e8e8e8; --clr-off-white: #f6f5f2; --clr-white: #ffffff;
+  --clr-primary: var(--niche-primary, #1a1a1a); --clr-accent: var(--niche-accent, #c98a2c);
+  --clr-accent-text: var(--niche-accent-text, #996015);
+  --font-display: 'Libre Franklin', -apple-system, sans-serif; --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --scale-ratio: 1.25;
+  --text-xs: calc(1rem / var(--scale-ratio) / var(--scale-ratio)); --text-sm: calc(1rem / var(--scale-ratio));
+  --text-base: 1rem; --text-lg: calc(1rem * var(--scale-ratio)); --text-xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio));
+  --text-2xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
+  --text-3xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
+  --text-4xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
+  --space-xs: 0.25rem; --space-sm: 0.5rem; --space-md: 1rem; --space-lg: 2rem; --space-xl: 4rem; --space-2xl: 8rem;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08); --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12); --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 150ms; --duration-base: 300ms; --duration-slow: 500ms;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: var(--clr-off-black); background: var(--clr-white); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; color: var(--clr-black); }
+h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 500; }
+h2 { font-size: var(--text-2xl); letter-spacing: -0.01em; }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+p { margin-bottom: var(--space-lg); max-width: 65ch; }
+.container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 var(--space-lg); }
+@media (max-width: 768px) { .container { padding: 0 var(--space-md); } h1 { font-size: var(--text-2xl); } h2 { font-size: var(--text-xl); } }
+.card { background: var(--clr-white); border: 1px solid var(--clr-light-gray); border-radius: var(--radius-md); padding: var(--space-lg); transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); }
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.btn { display: inline-flex; align-items: center; gap: var(--space-sm); padding: 0.75em 1.5em; font-family: var(--font-body); font-weight: 600; font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; color: var(--clr-white); background: var(--clr-primary); border: none; border-radius: var(--radius-sm); cursor: pointer; transition: background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-out); }
+.btn:hover { background: var(--clr-accent); transform: scale(1.03); box-shadow: var(--shadow-md); }
+.btn:active { transform: scale(0.97); }
+.input { width: 100%; padding: 0.75em 1em; font-family: var(--font-body); font-size: var(--text-base); color: var(--clr-off-black); background: var(--clr-off-white); border: 2px solid transparent; border-radius: var(--radius-sm); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+.input:focus { outline: none; border-color: var(--clr-accent); box-shadow: 0 0 0 3px rgba(90,125,154,0.15); }
+.header--scrolled { padding: 10px 0 !important; background: rgba(0,0,0,0.95) !important; box-shadow: 0 2px 20px rgba(0,0,0,0.3); backdrop-filter: blur(10px); }
+.signal-tag { position: relative; display: inline-flex; align-items: center; gap: 6px; background: var(--clr-accent); color: var(--clr-black); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.signal-tag--tag { padding: 6px 14px; border-radius: var(--radius-sm); font-size: 0.75rem; }
+.signal-tag--badge { position: absolute; top: 12px; left: 12px; padding: 5px 12px; border-radius: var(--radius-sm); font-size: 0.68rem; box-shadow: var(--shadow-sm); z-index: 2; }
+.rank-chip { display: inline-block; background: var(--clr-off-white); color: var(--clr-mid-gray); border: 1px solid var(--clr-light-gray); padding: 4px 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: var(--radius-sm); position: absolute; top: 12px; left: 12px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+@media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+:focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
+
+/* ── Footer category columns ──────────────────────────────────── */
+.footer-cat-cols { display: flex; gap: var(--space-xl); }
+.footer-cat-col { display: flex; flex-direction: column; }
+.footer-col h4 + a + h4 { margin-top: var(--space-lg); }
 
 
-.main{padding:60px 20px;max-width:800px;margin:0 auto}
+/* ── Site-wide chrome (header + footer), used on every page ───── */
+.top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
+.top-bar .container { display:flex; justify-content:space-between; }
+header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100; box-shadow:0 2px 10px rgba(0,0,0,0.25); }
+.navbar { display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }
+.logo img { max-height:44px; width:auto; }
+.nav-links { display:flex; align-items:center; }
+.nav-links > a, .nav-item > a { color:#fff; text-decoration:none; margin-left:28px; font-weight:600; font-size:0.9rem; }
+.nav-links > a:hover, .nav-item > a:hover { color: var(--clr-accent); }
+.nav-item { position:relative; margin-left:28px; }
+.nav-item > a { margin-left:0; }
+.nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:14px}
+.nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#fff; min-width:240px; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding:8px 0; z-index:30; }
+.nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
+.nav-dropdown a { display:block; color:#1a1a1a; padding:9px 20px; font-weight:500; font-size:0.9rem; text-decoration:none; }
+.nav-dropdown a:hover { background:#f6f5f2; color: var(--clr-accent-text); }
+.nav-toggle { display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }
+.nav-toggle svg { width:24px; height:24px; }
+@media (max-width: 640px) {
+    .nav-toggle { display:block; }
+    .nav-links { display:none; position:absolute; top:100%; left:0; right:0; background:#0a0a0a; flex-direction:column; align-items:flex-start; padding: 8px 24px 20px; gap:4px; box-shadow: var(--shadow-lg); }
+    .nav-links.open { display:flex; }
+    .nav-links > a, .nav-item { margin-left:0; width:100%; }
+    .nav-links > a, .nav-item > a { padding:10px 0; }
+    .nav-dropdown { position:static; box-shadow:none; margin-top:0; padding-left:12px; display:block; background:transparent; }
+    .nav-dropdown a { color:#ccc; padding:7px 0; }
+    .nav-dropdown a:hover { background:transparent; }
+}
+.footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
+.footer-grid { display:grid; grid-template-columns: 1.6fr 2fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
+.footer-col h4 { color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }
+.footer-col p { color:#999; font-size:0.9rem; max-width:32ch; }
+.footer-col a { display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }
+.footer-col a:hover { color:#fff; }
+.footer-social { display:flex; gap:10px; margin-top:16px; }
+.footer-social a { width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+.footer-social a:hover { background: var(--clr-accent); color:#0a0a0a; }
+.footer-social svg { width:16px; height:16px; }
+.footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
+@media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
 
-
-        .top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
-        .top-bar .container { display:flex; justify-content:space-between; max-width:1200px; margin:0 auto; padding:0 20px; }
-        header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100; }
-        .navbar { display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }
-        .logo img { max-height:44px; width:auto; }
-        .nav-links { display:flex; align-items:center; gap:8px; }
-        .nav-links > a, .nav-item > a { color:#fff; text-decoration:none; padding:8px 16px; font-weight:600; font-size:0.9rem; border-radius:var(--radius-sm,8px); }
-        .nav-links > a:hover, .nav-item > a:hover { background:rgba(255,255,255,0.08); color:var(--clr-accent,#c98a2c); }
-        .nav-item { position:relative; }
-        .nav-item > a { padding:8px 16px; display:flex; align-items:center; gap:4px; }
-        .nav-item > a::after { content:'\25be'; font-size:0.6rem; opacity:0.5; }
-        .nav-item::after { content:''; position:absolute; top:100%; left:0; right:0; height:4px; }
-        .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }
-        .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
-        .nav-dropdown a { display:block; color:#1a1a1a; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }
-        .nav-dropdown a:hover { background:#f6f5f2; color:var(--clr-accent-text,#996015); }
-        .nav-toggle { display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }
-        .nav-toggle svg { width:24px; height:24px; }
-        @media (max-width:640px) {
-            .nav-toggle { display:block; }
-            .nav-links { display:none; position:absolute; top:100%; left:0; right:0; background:#0a0a0a; flex-direction:column; padding:8px 20px 20px; border-top:1px solid #2a2a2a; }
-            .nav-links.open { display:flex; }
-            .nav-links > a, .nav-item { margin:0; }
-            .nav-links > a, .nav-item > a { padding:10px 0; }
-            .nav-item > a::after { display:none; }
-            .nav-dropdown { position:static; box-shadow:none; margin-top:0; padding-left:16px; display:block; background:transparent; border:none; }
-            .nav-dropdown a { color:#888; padding:6px 0; font-size:0.8rem; }
-            .nav-dropdown a:hover { background:transparent; color:#fff; }
-        }
 
 .nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
 .nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
@@ -55,22 +113,14 @@ header{background:#0a0a0a;padding:18px 0;position:sticky;top:0;z-index:100;borde
     .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
 }
 
-        .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
-        .footer .container { max-width:1200px; margin:0 auto; padding:0 24px; }
-        .footer-grid { display:grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
-        .footer-col h4 { color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }
-        .footer-col p { color:#999; font-size:0.9rem; max-width:32ch; }
-        .footer-col a { display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }
-        .footer-col a:hover { color:#fff; }
-        .footer-social { display:flex; gap:10px; margin-top:16px; }
-        .footer-social a { width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
-        .footer-social a:hover { background: var(--clr-accent); color:#0a0a0a; }
-        .footer-social svg { width:16px; height:16px; }
-        .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
-        @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
-
+.main { padding: var(--space-2xl) 0; }
+.main .container { max-width:800px; }
+.main h1 { margin-bottom: var(--space-lg); }
+.main h2 { margin: var(--space-lg) 0 var(--space-md); }
+.main p { color: var(--clr-mid-gray); }
 </style></head>
 <body>
+
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
     <a href="/abvorn/" class="logo"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:44px;width:auto"></a>
@@ -78,29 +128,25 @@ header{background:#0a0a0a;padding:18px 0;position:sticky;top:0;z-index:100;borde
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><span class="category-label">Audio</span><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><span class="category-label">Computing & Monitors</span><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a></div><div class="category-group"><span class="category-label">Fitness & Health</span><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><span class="category-label">Gaming</span><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><span class="category-label">Home & Lifestyle</span><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><span class="category-label">Webcams & Accessories</span><a href="/abvorn/webcams/">Webcams</a></div></div></div>
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><a class="category-label" href="/abvorn/categories/audio/">Audio</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/gaming/">Gaming</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a><a href="/abvorn/webcams/">Webcams</a></div></div></div>
         <a href="/abvorn/">Home</a>
         <a href="/abvorn/about.html">About</a>
         <a href="/abvorn/privacy.html">Privacy</a>
     </nav>
 </div></header>
-
-
-<main class="main"><h1>Store</h1><h2>Our Niche Stores</h2><p>Select a niche to explore curated product recommendations.</p></main>
+<script>
+(function(){var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")})})();
+</script>
+<main class="main"><div class="container"><h1>Store</h1><h2>Our Niche Stores</h2><p>Select a niche to explore curated product recommendations.</p></div></main>
 <footer class="footer"><div class="container">
     <div class="footer-grid">
+        <div class="footer-col"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div></div>
+        <div class="footer-col"><h4>Categories</h4><div class="footer-cat-cols"><div class="footer-cat-col"><a href="/abvorn/categories/audio/">Audio</a><a href="/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="/abvorn/categories/gaming/">Gaming</a><a href="/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a></div></div></div>
         <div class="footer-col">
-            <img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px">
-            <p>Independent product reviews and buying guides, based on real testing.</p>
-            <div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div>
+            <h4>Company</h4><a href="/abvorn/about.html">About</a>
+            <h4>Legal</h4><a href="/abvorn/privacy.html">Privacy policy</a>
         </div>
-        <div class="footer-col"><h4>Categories</h4><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/laptops/">Laptops</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div>
-        <div class="footer-col"><h4>Company</h4><a href="/abvorn/about.html">About</a></div>
-        <div class="footer-col"><h4>Legal</h4><a href="/abvorn/privacy.html">Privacy policy</a></div>
     </div>
     <div class="footer-bottom"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; 2026 Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
 </div></footer>
-<script>
-(function(){var b=document.getElementById('nav-toggle');var n=document.getElementById('nav-links');if(!b||!n)return;b.addEventListener('click',function(){var o=n.classList.toggle('open');b.setAttribute('aria-expanded',o?'true':'false')})})();
-</script>
 </body></html>

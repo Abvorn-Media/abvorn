@@ -36,7 +36,7 @@ from src.social_permission import SocialPermissionFramework, create_social_permi
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
-from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, build_category_listing_page, scan_published_reviews, _category_slug, _title_slug
+from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, build_category_listing_page, scan_published_reviews, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS
 from src.click_tracker import get_clicks, register_articles_batch
 
 logger = logging.getLogger("run_cycle")
@@ -421,15 +421,7 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
 </table></div>
 </div></section>
 <div class="container"><div class="affiliate-banner">We earn from qualifying purchases.</div></div>
-<footer class="footer"><div class="container">
-    <div class="footer-grid">
-        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{render_footer_social()}</div></div>
-        <div class="footer-col"><h4>Categories</h4>{build_footer_categories(b)}</div>
-        <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
-        <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
-    </div>
-    <div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {datetime.now().year} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
-</div></footer>
+{build_site_footer(b)}
 </body></html>"""
 
 CTA_BANNER = """
@@ -930,26 +922,7 @@ def _slugify_title(s):
     return s.replace("-", " ").title()
 
 def nav_html(categories, current=""):
-    b = SITE_BASE
-    dd_items = build_category_dropdown(b)
-    dropdown = f'<div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{dd_items}</div></div>'
-    return f'''
-<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
-<header><div class="container navbar">
-    <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:44px;width:auto"></a>
-    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-    </button>
-    <nav class="nav-links" id="nav-links">
-        {dropdown}
-        <a href="{b}/">Home</a>
-        <a href="{b}/about.html">About</a>
-        <a href="{b}/privacy.html">Privacy</a>
-    </nav>
-</div></header>
-<script>
-(function(){{var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){{var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")}})}})();
-</script>'''
+    return build_site_header()
 
 
 # ── Social icon SVGs for footer ───────────────────────────────────
@@ -2257,15 +2230,7 @@ def build_methodology_page(all_slugs, form_url=""):
 </ul>
 </div></section>
 {lead_form_html(form_url)}
-<footer class="footer"><div class="container">
-    <div class="footer-grid">
-        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{render_footer_social()}</div></div>
-        <div class="footer-col"><h4>Categories</h4>{build_footer_categories(b)}</div>
-        <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
-        <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
-    </div>
-    <div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {datetime.now().year} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
-</div></footer>
+{build_site_footer(b)}
 {CAROUSEL_JS}</body></html>"""
 
 
@@ -2623,7 +2588,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
         )
         print(f"  Written: docs/categories/{cat_slug}/index.html")
 
-    # Generate static pages if they don't exist
+    # Generate static pages (always rewrite so header/footer stays in sync)
     b = SITE_BASE
     year = datetime.now().year
     static_pages = [
@@ -2633,31 +2598,29 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     ]
     for page_name, title, content in static_pages:
         page_path = docs / page_name
-        if not page_path.exists():
-            full_page = f'''<!DOCTYPE html>
+        full_page = f'''<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="{b}/assets/favicon-32x32.png"><title>{title} | Abvorn</title>
+<meta name="description" content="{title} - Abvorn">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*{{box-sizing:border-box;margin:0;padding:0}}body{{font-family:'Inter',sans-serif;color:#333;line-height:1.6}}
-.top-bar{{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}}
-.top-bar .container{{display:flex;justify-content:space-between;max-width:1200px;margin:0 auto;padding:0 20px}}
-header{{background:#0a0a0a;padding:18px 0;border-bottom:1px solid #2a2a2a;position:sticky;top:0;z-index:100}}
-.header-inner{{display:flex;justify-content:space-between;align-items:center;max-width:1200px;margin:0 auto;padding:0 20px}}
-.logo-img{{max-height:44px;width:auto}}
-.main{{padding:60px 20px;max-width:800px;margin:0 auto}}
-footer{{background:#0a0a0a;color:#888;padding:40px 0;text-align:center;border-top:1px solid #2a2a2a}}
-footer a{{color:#aaa;text-decoration:none}}
+{DESIGN_SYSTEM_CSS}
+{SITE_CHROME_CSS}
+{MEGA_MENU_CSS}
+.main {{ padding: var(--space-2xl) 0; }}
+.main .container {{ max-width:800px; }}
+.main h1 {{ margin-bottom: var(--space-lg); }}
+.main h2 {{ margin: var(--space-lg) 0 var(--space-md); }}
+.main p {{ color: var(--clr-mid-gray); }}
 </style></head>
 <body>
-<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
-<header><div class="header-inner"><a href="{b}/"><img src="{b}/logo.svg" alt="Abvorn" class="logo-img"></a></div></header>
-<main class="main"><h1>{title}</h1>{content}</main>
-<footer><img src="{b}/logo.svg" alt="Abvorn" style="max-height:24px;width:auto;filter:brightness(0.8);margin-bottom:8px"><p>&copy; {year} Abvorn</p></footer>
+{build_site_header(b)}
+<main class="main"><div class="container"><h1>{title}</h1>{content}</div></main>
+{build_site_footer(b)}
 </body></html>'''
-            page_path.write_text(full_page, encoding="utf-8")
-            print(f"  Written: docs/{page_name}")
+        page_path.write_text(full_page, encoding="utf-8")
+        print(f"  Written: docs/{page_name}")
 
     # Write category pages (post slugs point to reviews/{slug} for article pages)
     for n in state["niches"]:

@@ -108,6 +108,49 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 .footer-col h4 + a + h4 { margin-top: var(--space-lg); }
 """
 
+SITE_CHROME_CSS = """
+/* ── Site-wide chrome (header + footer), used on every page ───── */
+.top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
+.top-bar .container { display:flex; justify-content:space-between; }
+header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100; box-shadow:0 2px 10px rgba(0,0,0,0.25); }
+.navbar { display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }
+.logo img { max-height:44px; width:auto; }
+.nav-links { display:flex; align-items:center; }
+.nav-links > a, .nav-item > a { color:#fff; text-decoration:none; margin-left:28px; font-weight:600; font-size:0.9rem; }
+.nav-links > a:hover, .nav-item > a:hover { color: var(--clr-accent); }
+.nav-item { position:relative; margin-left:28px; }
+.nav-item > a { margin-left:0; }
+.nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:14px}
+.nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#fff; min-width:240px; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding:8px 0; z-index:30; }
+.nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
+.nav-dropdown a { display:block; color:#1a1a1a; padding:9px 20px; font-weight:500; font-size:0.9rem; text-decoration:none; }
+.nav-dropdown a:hover { background:#f6f5f2; color: var(--clr-accent-text); }
+.nav-toggle { display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }
+.nav-toggle svg { width:24px; height:24px; }
+@media (max-width: 640px) {
+    .nav-toggle { display:block; }
+    .nav-links { display:none; position:absolute; top:100%; left:0; right:0; background:#0a0a0a; flex-direction:column; align-items:flex-start; padding: 8px 24px 20px; gap:4px; box-shadow: var(--shadow-lg); }
+    .nav-links.open { display:flex; }
+    .nav-links > a, .nav-item { margin-left:0; width:100%; }
+    .nav-links > a, .nav-item > a { padding:10px 0; }
+    .nav-dropdown { position:static; box-shadow:none; margin-top:0; padding-left:12px; display:block; background:transparent; }
+    .nav-dropdown a { color:#ccc; padding:7px 0; }
+    .nav-dropdown a:hover { background:transparent; }
+}
+.footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
+.footer-grid { display:grid; grid-template-columns: 1.6fr 2fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
+.footer-col h4 { color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }
+.footer-col p { color:#999; font-size:0.9rem; max-width:32ch; }
+.footer-col a { display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }
+.footer-col a:hover { color:#fff; }
+.footer-social { display:flex; gap:10px; margin-top:16px; }
+.footer-social a { width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+.footer-social a:hover { background: var(--clr-accent); color:#0a0a0a; }
+.footer-social svg { width:16px; height:16px; }
+.footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
+@media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+"""
+
 VERDICT_CARD_CSS = """
 .abvorn-verdict{padding:28px 32px;margin:32px 0;border-top:1px solid #e8e8e8;border-bottom:1px solid #e8e8e8;background:transparent;position:relative;overflow:hidden}
 .av-badge{display:inline-flex;align-items:center;gap:6px;background:#1a1a1a;color:#fff;font-size:.7rem;font-weight:700;padding:4px 14px;border-radius:100px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
@@ -1996,8 +2039,13 @@ def faq_schema(questions: list) -> str:
     return f'<script type="application/ld+json">{{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{items}]}}</script>'
 
 
-def nav_html(categories, current=""):
-    b = SITE_BASE
+def build_site_header(b="", all_slugs=None):
+    """Site-wide header: top bar + sticky navbar with clickable category mega-menu.
+
+    Single source of truth so every page (home, category, niche, article, static)
+    renders the exact same header. Uses SITE_BASE when b is empty.
+    """
+    b = b or SITE_BASE
     dd_items = build_category_dropdown(b)
     dropdown = f'<div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{dd_items}</div></div>'
     return f'''
@@ -2017,6 +2065,32 @@ def nav_html(categories, current=""):
 <script>
 (function(){{var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){{var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")}})}})();
 </script>'''
+
+
+def build_site_footer(b=""):
+    """Site-wide footer: brand + social, wide Categories column, Company & Legal.
+
+    Single source of truth so every page renders the exact same footer. Company
+    and Legal share the last column; Categories gets the wide 2fr column.
+    Uses SITE_BASE when b is empty.
+    """
+    b = b or SITE_BASE
+    year_str = str(datetime.now().year)
+    return f'''<footer class="footer"><div class="container">
+    <div class="footer-grid">
+        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{render_footer_social()}</div></div>
+        <div class="footer-col"><h4>Categories</h4>{build_footer_categories(b)}</div>
+        <div class="footer-col">
+            <h4>Company</h4><a href="{b}/about.html">About</a>
+            <h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a>
+        </div>
+    </div>
+    <div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
+</div></footer>'''
+
+
+def nav_html(categories, current=""):
+    return build_site_header()
 
 
 # ── Social icon SVGs for footer ───────────────────────────────────
