@@ -874,7 +874,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     if items:
         latest_cards = "".join(review_card(r, category_name, b) for r in latest_items)
         sections.append(
-            f'<section class="category-section" id="latest">'
+            f'<section class="category-section container" id="latest">'
             f'<div class="category-section__header"><h2>Our latest {title_escaped} Reviews</h2></div>'
             f'<div class="posts-grid">{latest_cards}</div></section>'
         )
@@ -882,7 +882,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
             n = len(by_niche[slug])
             niche_cards = "".join(review_card(r, category_name, b) for r in by_niche[slug])
             sections.append(
-                f'<section class="category-section" id="{slug}">'
+                f'<section class="category-section container" id="{slug}">'
                 f'<div class="category-section__header"><h2>{html_mod.escape(_niche_name(slug))}</h2>'
                 f'<span class="category-section__count">{n} review{"s" if n != 1 else ""}</span></div>'
                 f'<div class="posts-grid">{niche_cards}</div></section>'
@@ -969,7 +969,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         @media (max-width:700px) {{ .subscribe-inner {{ flex-direction:column; align-items:flex-start; }} .subscribe-form .input {{ width:100%; }} }}
 
         .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }}
-        .category-section {{ margin-bottom: var(--space-2xl); scroll-margin-top: 90px; }}
+        .category-section {{ padding-top: var(--space-2xl); scroll-margin-top: 90px; }}
         .category-section__header {{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-light-gray); padding-bottom: var(--space-sm); }}
         .category-section__header h2 {{ font-size: var(--text-2xl); margin:0; }}
         .category-section__count {{ font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-mid-gray); }}
