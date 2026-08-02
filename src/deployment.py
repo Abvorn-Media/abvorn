@@ -418,7 +418,7 @@ def review_card(item, category, b):
     snippet_html = (
         f'<p class="review-card__snippet">{html_mod.escape(snippet)}</p>' if snippet else ""
     )
-    return f'''<div class="niche-card review-card">
+    return f'''<div class="niche-card review-card" style="--cat:{color}">
     <a href="{href}"><div class="niche-card__image-wrapper"><img src="{review_img(item["slug"], b)}" alt="{title}" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:{color}">{category} · {item["name"]}</span>
     <h2><a href="{href}">{title}</a></h2>
@@ -985,7 +985,8 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         .niche-card h2 a {{ color:inherit; text-decoration:none; }}
         .niche-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
         .niche-card .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
-        .niche-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }}
+        .niche-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }}
+        .niche-card .read-link:hover {{ color: var(--cat, var(--clr-accent-text)); }}
         .review-card__banner {{ display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }}
         .review-card__banner + h2 {{ margin: 6px var(--space-md) 8px; }}
 
@@ -2111,8 +2112,8 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .niche-card h2 a { color:inherit; text-decoration:none; }
         .niche-card p { font-size:0.92rem; color: var(--clr-mid-gray); margin-bottom: var(--space-sm); max-width:none; }
         .niche-card .review-card__snippet { font-size:0.92rem; color: var(--clr-mid-gray); line-height:1.5; margin: 0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-        .niche-card .read-link { font-weight:700; font-size:0.88rem; color: var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; margin-top:auto; align-self:flex-end; }
-        .niche-card .read-link:hover { color: var(--clr-accent-text); }
+        .niche-card .read-link { font-weight:700; font-size:0.88rem; color: var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin-top:auto; align-self:flex-end; }
+        .niche-card .read-link:hover { color: var(--cat, var(--clr-accent-text)); }
         .review-card__banner { display:inline-block; margin-top: var(--space-md); padding:3px 10px; border-radius:4px; background: var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
         .review-card__banner + h2 { margin-top: 6px; }
 

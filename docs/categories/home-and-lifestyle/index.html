@@ -181,7 +181,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .niche-card h2 a { color:inherit; text-decoration:none; }
         .niche-card p { font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }
         .niche-card .review-card__snippet { font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-        .niche-card .read-link { font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }
+        .niche-card .read-link { font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }
+        .niche-card .read-link:hover { color: var(--cat, var(--clr-accent-text)); }
         .review-card__banner { display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
         .review-card__banner + h2 { margin: 6px var(--space-md) 8px; }
 
@@ -222,49 +223,49 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 
 <nav class="category-index" aria-label="Guides in this category"><div class="container category-index__inner"><span class="category-index__label">In this category</span><div class="category-index__links"><a class="category-index__link is-current" aria-current="true" href="#latest"><span class="category-index__tick" style="--cat:#f0c8b6"></span>All reviews</a><a class="category-index__link" href="#smart-home"><span class="category-index__tick" style="--cat:#f0c8b6"></span>Smart Home</a><a class="category-index__link" href="#streaming-devices"><span class="category-index__tick" style="--cat:#f0c8b6"></span>Streaming Devices</a></div></div></nav>
 
-<section class="category-section container" id="latest"><div class="category-section__header"><h2>Our latest Home &amp; Lifestyle Reviews</h2></div><div class="posts-grid"><div class="niche-card review-card">
+<section class="category-section container" id="latest"><div class="category-section__header"><h2>Our latest Home &amp; Lifestyle Reviews</h2></div><div class="posts-grid"><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/smart-home.png" alt="Best Smart Home" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Smart Home</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/">Best Smart Home</a></h2>
     <p class="review-card__snippet">Smart homes have transformed how we interact with our living spaces, addressing challenges like energy efficiency, security, and convenience. With rising demand for seamless…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
-</div><div class="niche-card review-card">
+</div><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/streaming-devices.png" alt="Best Streaming Devices" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Streaming Devices</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/">Best Streaming Devices</a></h2>
     <p class="review-card__snippet">If you&#x27;ve ever stared at a wall on a Friday night because your TV doesn&#x27;t support the apps you want, you&#x27;re not alone. A streaming device solves that problem instantly — plugging…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
-</div><div class="niche-card review-card">
+</div><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/smart-home.png" alt="Transform Your Space: The Complete Smart Home Buying Guide" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Smart Home</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/">Transform Your Space: The Complete Smart Home Buying Guide</a></h2>
     <p class="review-card__snippet">Smart homes have transformed how we interact with our living spaces, addressing challenges like energy efficiency, security, and convenience. With rising demand for seamless…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
-</div><div class="niche-card review-card">
+</div><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/streaming-devices.png" alt="Best Streaming Devices: Ultimate Buying Guide for Endless Entertainment" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Streaming Devices</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/">Best Streaming Devices: Ultimate Buying Guide for Endless Entertainment</a></h2>
     <p class="review-card__snippet">The world of streaming devices has exploded in recent years, offering a wide range of options for endless entertainment. With so many devices on the market, it can be overwhelming…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
-</div></div></section><section class="category-section container" id="smart-home"><div class="category-section__header"><h2>Smart Home</h2><span class="category-section__count">2 reviews</span></div><div class="posts-grid"><div class="niche-card review-card">
+</div></div></section><section class="category-section container" id="smart-home"><div class="category-section__header"><h2>Smart Home</h2><span class="category-section__count">2 reviews</span></div><div class="posts-grid"><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/smart-home.png" alt="Best Smart Home" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Smart Home</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/">Best Smart Home</a></h2>
     <p class="review-card__snippet">Smart homes have transformed how we interact with our living spaces, addressing challenges like energy efficiency, security, and convenience. With rising demand for seamless…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
-</div><div class="niche-card review-card">
+</div><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/smart-home.png" alt="Transform Your Space: The Complete Smart Home Buying Guide" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Smart Home</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/">Transform Your Space: The Complete Smart Home Buying Guide</a></h2>
     <p class="review-card__snippet">Smart homes have transformed how we interact with our living spaces, addressing challenges like energy efficiency, security, and convenience. With rising demand for seamless…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
-</div></div></section><section class="category-section container" id="streaming-devices"><div class="category-section__header"><h2>Streaming Devices</h2><span class="category-section__count">2 reviews</span></div><div class="posts-grid"><div class="niche-card review-card">
+</div></div></section><section class="category-section container" id="streaming-devices"><div class="category-section__header"><h2>Streaming Devices</h2><span class="category-section__count">2 reviews</span></div><div class="posts-grid"><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/streaming-devices.png" alt="Best Streaming Devices" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Streaming Devices</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/">Best Streaming Devices</a></h2>
     <p class="review-card__snippet">If you&#x27;ve ever stared at a wall on a Friday night because your TV doesn&#x27;t support the apps you want, you&#x27;re not alone. A streaming device solves that problem instantly — plugging…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
-</div><div class="niche-card review-card">
+</div><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/streaming-devices.png" alt="Best Streaming Devices: Ultimate Buying Guide for Endless Entertainment" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Streaming Devices</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/">Best Streaming Devices: Ultimate Buying Guide for Endless Entertainment</a></h2>
