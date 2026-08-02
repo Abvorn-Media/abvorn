@@ -944,6 +944,12 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     blog_title = f"{title_escaped} Reviews"
     meta_desc = f"Independent {category_name.lower()} reviews and buying guides. We test before we recommend."
 
+    # Per-category hero taglines. Falls back to the generic promise.
+    CATEGORY_HERO = {
+        "audio": "Marketing copy calls everything 'studio-quality.' We check real prices and verified owner feedback to find the headphones and earbuds actually worth your ears.",
+    }
+    hero_tagline = CATEGORY_HERO.get(category_slug.lower(), "Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.")
+
     # Group reviews by niche; sort niche sections alphabetically by display name.
     by_niche: dict = {}
     for r in items:
@@ -1114,7 +1120,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
 <section class="category-hero"><div class="container">
     <span class="category-hero__meta">{title_escaped} · {count_label}</span>
     <h1>{blog_title}</h1>
-    <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
+    <p>{hero_tagline}</p>
 </div></section>
 
 {index_nav}
