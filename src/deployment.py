@@ -865,6 +865,8 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     by_niche: dict = {}
     for r in items:
         by_niche.setdefault(r["slug"], []).append(r)
+    for slug in by_niche:
+        by_niche[slug].sort(key=lambda r: r.get("updated", ""), reverse=True)
     niche_order = sorted(by_niche, key=lambda s: _niche_name(s).lower())
 
     # "Our latest … Reviews" = the newest reviews across the category (max 4).
