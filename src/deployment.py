@@ -330,13 +330,35 @@ def load_verdict_weights() -> dict:
     return {}
 
 
+_INTRO_RE = re.compile(r"<h2>\s*Introduction\s*</h2>\s*<p[^>]*>(.*?)</p>", re.S)
+_BOILERPLATE_RE = re.compile(
+    r"^(we'?ve done the research|scores out of 10|we tested the top products|we'?re reviewing the top products)",
+    re.I,
+)
+
+
+def review_snippet(html):
+    """First real paragraph of a review page, for card snippets ("" if none)."""
+    m = _INTRO_RE.search(html)
+    if not m:
+        return ""
+    text = html_mod.unescape(re.sub(r"<[^>]+>", "", m.group(1)))
+    text = re.sub(r"\s+", " ", text).strip()
+    if len(text) < 40 or _BOILERPLATE_RE.search(text):
+        return ""
+    if len(text) > 180:
+        cut = text.rfind(" ", 0, 180)
+        text = text[:cut].rstrip(" ,.;:") + "…"
+    return text
+
+
 def scan_published_reviews(docs_dir="docs"):
     """Enumerate every published review page under docs/reviews/*.
 
     Each directory is one niche. When a niche has per-article pages (dated
     files) they are returned (and its index.html is skipped so the latest
     review is not double-counted); otherwise index.html is the single card.
-    Returns a list of dicts: {slug, name, title, updated, rel}.
+    Returns a list of dicts: {slug, name, title, updated, rel, snippet}.
     """
     base = Path(docs_dir) / "reviews"
     reviews = []
@@ -350,6 +372,9 @@ def scan_published_reviews(docs_dir="docs"):
         if not pages:
             index = niche_dir / "index.html"
             pages = [index] if index.exists() else []
+        index_snippet = ""
+        if pages and (niche_dir / "index.html").exists():
+            index_snippet = review_snippet((niche_dir / "index.html").read_text(encoding="utf-8"))
         for p in pages:
             html = p.read_text(encoding="utf-8")
             h1 = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.S)
@@ -362,6 +387,7 @@ def scan_published_reviews(docs_dir="docs"):
                 "title": title or _niche_name(slug),
                 "updated": upd.group(1) if upd else "",
                 "rel": rel,
+                "snippet": review_snippet(html) or index_snippet,
             })
     return reviews
 
@@ -384,14 +410,19 @@ def verify_page(html_content: str) -> bool:
 
 
 def review_card(item, category, b):
-    """One review card with a category+niche banner, for homepage and category pages."""
+    """One review card with a category+niche banner, snippet, and bottom-aligned CTA."""
     title = html_mod.escape(item["title"])
     href = f'{b}/reviews/{item["slug"]}/'
     color = category_color(category)
+    snippet = item.get("snippet", "")
+    snippet_html = (
+        f'<p class="review-card__snippet">{html_mod.escape(snippet)}</p>' if snippet else ""
+    )
     return f'''<div class="niche-card review-card">
     <a href="{href}"><div class="niche-card__image-wrapper"><img src="{review_img(item["slug"], b)}" alt="{title}" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:{color}">{category} · {item["name"]}</span>
     <h2><a href="{href}">{title}</a></h2>
+    {snippet_html}
     <a href="{href}" class="read-link">Read review →</a>
 </div>'''
 
@@ -675,15 +706,15 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         @media (max-width:700px) {{ .subscribe-inner {{ flex-direction:column; align-items:flex-start; }} .subscribe-form .input {{ width:100%; }} }}
 
         .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }}
-        .post-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); }}
+        .post-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }}
         .post-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
         .post-card img {{ width:100%; height:200px; object-fit:cover; }}
-        .post-card__body {{ padding:var(--space-md); }}
+        .post-card__body {{ padding:var(--space-md); display:flex; flex-direction:column; flex:1; }}
         .post-card h3 {{ font-size:var(--text-lg); margin:0 0 6px; }}
         .post-card h3 a {{ color:inherit; text-decoration:none; }}
         .post-card .post-meta {{ font-size:0.8rem; color:var(--clr-mid-gray); margin-bottom:8px; }}
         .post-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
-        .post-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }}
+        .post-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; margin-top:auto; }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
         .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
@@ -872,14 +903,15 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         @media (max-width:700px) {{ .subscribe-inner {{ flex-direction:column; align-items:flex-start; }} .subscribe-form .input {{ width:100%; }} }}
 
         .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }}
-        .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); }}
+        .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }}
         .niche-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
         .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; }}
         .niche-card img {{ width:100%; height:100%; object-fit:cover; }}
-        .niche-card h2 {{ font-size:var(--text-lg); margin: var(--space-md) 0 8px; }}
+        .niche-card h2 {{ font-size:var(--text-lg); margin: var(--space-md) var(--space-md) 8px; }}
         .niche-card h2 a {{ color:inherit; text-decoration:none; }}
         .niche-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
-        .niche-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }}
+        .niche-card .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
+        .niche-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); }}
         .review-card__banner {{ display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }}
         .review-card__banner + h2 {{ margin: 6px var(--space-md) 8px; }}
 
@@ -1972,7 +2004,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .category-section__header a { font-size:0.85rem; font-weight:700; color: var(--clr-accent-text); text-decoration:none; white-space:nowrap; }
         .category-section__header a:hover { text-decoration:underline; }
         .niche-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }
-        .niche-card { border-radius: var(--radius-md); overflow:hidden; transition: transform var(--duration-base) var(--ease-out); }
+        .niche-card { border-radius: var(--radius-md); overflow:hidden; transition: transform var(--duration-base) var(--ease-out); display:flex; flex-direction:column; }
         .niche-card:hover { transform: translateY(-3px); }
         .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; border-radius: var(--radius-md); }
         .niche-card img { width:100%; height:100%; object-fit:cover; transition: transform var(--duration-slow) var(--ease-out); }
@@ -1980,7 +2012,8 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .niche-card h2 { font-size: var(--text-lg); margin: var(--space-md) 0 8px; }
         .niche-card h2 a { color:inherit; text-decoration:none; }
         .niche-card p { font-size:0.92rem; color: var(--clr-mid-gray); margin-bottom: var(--space-sm); max-width:none; }
-        .niche-card .read-link { font-weight:700; font-size:0.88rem; color: var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }
+        .niche-card .review-card__snippet { font-size:0.92rem; color: var(--clr-mid-gray); line-height:1.5; margin: 0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .niche-card .read-link { font-weight:700; font-size:0.88rem; color: var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; margin-top:auto; }
         .niche-card .read-link:hover { color: var(--clr-accent-text); }
         .review-card__banner { display:inline-block; margin-top: var(--space-md); padding:3px 10px; border-radius:4px; background: var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
         .review-card__banner + h2 { margin-top: 6px; }

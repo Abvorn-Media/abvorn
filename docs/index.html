@@ -194,7 +194,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .category-section__header a { font-size:0.85rem; font-weight:700; color: var(--clr-accent-text); text-decoration:none; white-space:nowrap; }
         .category-section__header a:hover { text-decoration:underline; }
         .niche-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }
-        .niche-card { border-radius: var(--radius-md); overflow:hidden; transition: transform var(--duration-base) var(--ease-out); }
+        .niche-card { border-radius: var(--radius-md); overflow:hidden; transition: transform var(--duration-base) var(--ease-out); display:flex; flex-direction:column; }
         .niche-card:hover { transform: translateY(-3px); }
         .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; border-radius: var(--radius-md); }
         .niche-card img { width:100%; height:100%; object-fit:cover; transition: transform var(--duration-slow) var(--ease-out); }
@@ -202,7 +202,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .niche-card h2 { font-size: var(--text-lg); margin: var(--space-md) 0 8px; }
         .niche-card h2 a { color:inherit; text-decoration:none; }
         .niche-card p { font-size:0.92rem; color: var(--clr-mid-gray); margin-bottom: var(--space-sm); max-width:none; }
-        .niche-card .read-link { font-weight:700; font-size:0.88rem; color: var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }
+        .niche-card .review-card__snippet { font-size:0.92rem; color: var(--clr-mid-gray); line-height:1.5; margin: 0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .niche-card .read-link { font-weight:700; font-size:0.88rem; color: var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; margin-top:auto; }
         .niche-card .read-link:hover { color: var(--clr-accent-text); }
         .review-card__banner { display:inline-block; margin-top: var(--space-md); padding:3px 10px; border-radius:4px; background: var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
         .review-card__banner + h2 { margin-top: 6px; }
@@ -284,16 +285,19 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/4k-monitors.png" alt="Best 4K Monitors" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a7c3e8">Computing & Monitors · 4K Monitors</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/">Best 4K Monitors</a></h2>
+    <p class="review-card__snippet">Searching for a best 4K monitor that balances crisp visuals, smooth performance, and value can feel overwhelming. Whether you’re a creative professional, a gamer, or simply want…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/fitness-trackers.png" alt="Best Fitness Trackers" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#b7ddc0">Fitness & Health · Fitness Trackers</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/">Best Fitness Trackers</a></h2>
+    <p class="review-card__snippet">Shopping for the best fitness-trackers can feel overwhelming when you&#x27;re staring at hundreds of options ranging from $20 budget bands to $400 premium smartwatches. The real…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/gaming-mice.png" alt="Best Gaming Mice" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#cfc0ee">Gaming · Gaming Mice</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/">Best Gaming Mice</a></h2>
+    <p class="review-card__snippet">Finding the right gaming mouse can feel like navigating a maze of specs, price tags, and marketing buzzwords. Whether you’re a competitive FPS player who needs lightning‑fast…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/" class="read-link">Read review →</a>
 </div></div>
 </section>
@@ -305,16 +309,19 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-earbuds.png" alt="Best Wireless Earbuds" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Earbuds</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/">Best Wireless Earbuds</a></h2>
+    <p class="review-card__snippet">Finding the best wireless earbuds in 2025 means navigating a market flooded with options ranging from $20 budget picks to $250 flagship models. The problem isn&#x27;t a lack of…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones 2024: Our Top Picks for Sound Quality, Battery Life &amp;amp;amp;amp; Noise Cancelling" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Best Wireless Headphones 2024: Our Top Picks for Sound Quality, Battery Life &amp;amp;amp;amp; Noise Cancelling</a></h2>
+    <p class="review-card__snippet">In 2024 the wireless headphone market is bursting with options—from budget‑friendly earbuds to premium over‑ear models that offer studio‑grade sound and industry‑leading noise…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Best Wireless Headphones</a></h2>
+    <p class="review-card__snippet">Finding the best wireless headphones in 2024 feels like hunting for a needle in a haystack. With so many brands, price points, and feature sets, it’s easy to get overwhelmed. This…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
 </div></div>
 </div><div class="category-section">
@@ -323,16 +330,19 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/4k-monitors.png" alt="Best 4K Monitors" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a7c3e8">Computing & Monitors · 4K Monitors</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/">Best 4K Monitors</a></h2>
+    <p class="review-card__snippet">Searching for a best 4K monitor that balances crisp visuals, smooth performance, and value can feel overwhelming. Whether you’re a creative professional, a gamer, or simply want…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/laptops/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/laptops.png" alt="Best Laptops" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a7c3e8">Computing & Monitors · Laptops</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/laptops/">Best Laptops</a></h2>
+    <p class="review-card__snippet">Finding the best laptops in 2026 can feel overwhelming. Whether you&#x27;re a student, a professional, or a gaming enthusiast, your needs vary. This guide cuts through the noise by…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/laptops/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/4k-monitors.png" alt="The Ultimate Buying Guide to 4K Monitors: Find Your Perfect Display" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a7c3e8">Computing & Monitors · 4K Monitors</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/">The Ultimate Buying Guide to 4K Monitors: Find Your Perfect Display</a></h2>
+    <p class="review-card__snippet">When it comes to upgrading your computer setup, a 4K monitor is an excellent investment for anyone looking to enhance their visual experience. With a wide range of options…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/" class="read-link">Read review →</a>
 </div></div>
 </div><div class="category-section">
@@ -341,11 +351,13 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/fitness-trackers.png" alt="Best Fitness Trackers" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#b7ddc0">Fitness & Health · Fitness Trackers</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/">Best Fitness Trackers</a></h2>
+    <p class="review-card__snippet">Shopping for the best fitness-trackers can feel overwhelming when you&#x27;re staring at hundreds of options ranging from $20 budget bands to $400 premium smartwatches. The real…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/fitness-trackers.png" alt="The Ultimate Buying Guide to Fitness Trackers: Find the Best One for Your Needs" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#b7ddc0">Fitness & Health · Fitness Trackers</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/">The Ultimate Buying Guide to Fitness Trackers: Find the Best One for Your Needs</a></h2>
+    <p class="review-card__snippet">With the numerous fitness trackers available in the market, finding the right one can be overwhelming. Fitness trackers have become an essential tool for monitoring our daily…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
 </div></div>
 </div><div class="category-section">
@@ -354,16 +366,19 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/gaming-mice.png" alt="Best Gaming Mice" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#cfc0ee">Gaming · Gaming Mice</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/">Best Gaming Mice</a></h2>
+    <p class="review-card__snippet">Finding the right gaming mouse can feel like navigating a maze of specs, price tags, and marketing buzzwords. Whether you’re a competitive FPS player who needs lightning‑fast…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/mechanical-keyboards.png" alt="Best Mechanical Keyboards" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#cfc0ee">Gaming · Mechanical Keyboards</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/">Best Mechanical Keyboards</a></h2>
+    <p class="review-card__snippet">Mechanical keyboards remain the gold standard for typists, gamers, and productivity enthusiasts who crave tactile feedback, durability, and customization. In 2024 the market…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/mechanical-keyboards.png" alt="Best Mechanical Keyboards of 2024: Wired, Hot-Swap &amp;amp;amp; Wireless Compared" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#cfc0ee">Gaming · Mechanical Keyboards</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/">Best Mechanical Keyboards of 2024: Wired, Hot-Swap &amp;amp;amp; Wireless Compared</a></h2>
+    <p class="review-card__snippet">Mechanical keyboards remain the gold standard for typists, gamers, and productivity enthusiasts who crave tactile feedback, durability, and customization. In 2024 the market…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/" class="read-link">Read review →</a>
 </div></div>
 </div><div class="category-section">
@@ -372,16 +387,19 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/smart-home.png" alt="Best Smart Home" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Smart Home</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/">Best Smart Home</a></h2>
+    <p class="review-card__snippet">Smart homes have transformed how we interact with our living spaces, addressing challenges like energy efficiency, security, and convenience. With rising demand for seamless…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/streaming-devices.png" alt="Best Streaming Devices" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Streaming Devices</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/">Best Streaming Devices</a></h2>
+    <p class="review-card__snippet">If you&#x27;ve ever stared at a wall on a Friday night because your TV doesn&#x27;t support the apps you want, you&#x27;re not alone. A streaming device solves that problem instantly — plugging…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/smart-home.png" alt="Transform Your Space: The Complete Smart Home Buying Guide" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Smart Home</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/">Transform Your Space: The Complete Smart Home Buying Guide</a></h2>
+    <p class="review-card__snippet">Smart homes have transformed how we interact with our living spaces, addressing challenges like energy efficiency, security, and convenience. With rising demand for seamless…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
 </div></div>
 </div><div class="category-section">
@@ -390,16 +408,19 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="Best Webcams 2024: How to Choose the Perfect Webcam for Streaming, Meetings &amp;amp;amp; Video Calls" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Best Webcams 2024: How to Choose the Perfect Webcam for Streaming, Meetings &amp;amp;amp; Video Calls</a></h2>
+    <p class="review-card__snippet">Choosing the right webcam in 2026 means balancing resolution, audio quality, low‑light performance, and price. Whether you’re streaming on Twitch, attending virtual meetings, or…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="Best Webcams" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Best Webcams</a></h2>
+    <p class="review-card__snippet">In today&#x27;s world, high-quality webcams are essential for professional meetings, online learning, and content creation. Whether you&#x27;re a remote worker, student, or streamer, the…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
 </div><div class="niche-card review-card">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="Best Webcams" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Best Webcams</a></h2>
+    <p class="review-card__snippet">Choosing the right webcam in 2026 means balancing resolution, audio quality, low‑light performance, and price. Whether you’re streaming on Twitch, attending virtual meetings, or…</p>
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
 </div></div>
 </div>
