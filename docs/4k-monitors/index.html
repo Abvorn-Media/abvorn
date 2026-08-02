@@ -133,6 +133,15 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .post-card .post-meta { font-size:0.8rem; color:var(--clr-mid-gray); margin-bottom:8px; }
         .post-card p { font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }
         .post-card .read-link { font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; margin-top:auto; align-self:flex-end; }
+        .post-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; }
+        .post-card__footer .read-link { margin:0; align-self:auto; }
+        .review-card__reactions { display:flex; gap:6px; }
+        .review-card__reactions .reaction-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-body); }
+        .review-card__reactions .reaction-btn:hover { border-color:var(--clr-accent); color:var(--clr-accent-text); }
+        .review-card__reactions .reaction-btn.active { border-color:var(--clr-accent); background:var(--clr-accent); color:#1a1200; }
+        .review-card__reactions .reaction-btn.loved { border-color:#c0392b; color:#c0392b; background:#fde8e4; }
+        .review-card__reactions .reaction-icon { font-size:0.9rem; line-height:1; }
+        .review-card__reactions .reaction-count { font-weight:700; min-width:14px; text-align:center; }
 
         .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
         .footer-grid { display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }
@@ -173,7 +182,13 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <div class="post-card__body">
         <h3><a href="/abvorn/reviews/4k-monitors/">Best 4K Monitors</a></h3>
         <p>Expert-tested and reviewed. See why this made our list.</p>
-        <a href="/abvorn/reviews/4k-monitors/" class="read-link">Read more →</a>
+        <div class="post-card__footer">
+            <div class="review-card__reactions">
+                <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="4k-monitors" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+                <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="4k-monitors" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+            </div>
+            <a href="/abvorn/reviews/4k-monitors/" class="read-link">Read more →</a>
+        </div>
     </div>
 </div></section>
 
@@ -233,6 +248,9 @@ async function submitCategorySubscribe(e) {
         msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
     } catch (err) { msg.innerText = 'Connection error. Please try later.'; }
 }
+<script>
+window.toggleReaction=function(type,btn){var key=btn.getAttribute('data-review')||location.pathname;var k='abvorn_r_'+type+'_'+key;var d=JSON.parse(localStorage.getItem(k)||'{"active":false,"count":0}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')};
+</script>
 </script>
 </body>
 </html>

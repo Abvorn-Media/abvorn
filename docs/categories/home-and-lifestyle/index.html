@@ -190,6 +190,15 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .niche-card .read-link:hover { color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }
         .review-card__banner { display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
         .review-card__banner + h2 { margin: 6px var(--space-md) 8px; }
+        .review-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }
+        .review-card__footer .read-link { margin:0; align-self:auto; }
+        .review-card__reactions { display:flex; gap:6px; }
+        .review-card__reactions .reaction-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-body); }
+        .review-card__reactions .reaction-btn:hover { border-color:var(--clr-accent); color:var(--clr-accent-text); }
+        .review-card__reactions .reaction-btn.active { border-color:var(--clr-accent); background:var(--clr-accent); color:#1a1200; }
+        .review-card__reactions .reaction-btn.loved { border-color:#c0392b; color:#c0392b; background:#fde8e4; }
+        .review-card__reactions .reaction-icon { font-size:0.9rem; line-height:1; }
+        .review-card__reactions .reaction-count { font-weight:700; min-width:14px; text-align:center; }
 
         .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
         .footer-grid { display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }
@@ -233,49 +242,97 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Smart Home</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/">Best Smart Home</a></h2>
     <p class="review-card__snippet">Smart homes have transformed how we interact with our living spaces, addressing challenges like energy efficiency, security, and convenience. With rising demand for seamless…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="smart-home" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="smart-home" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/streaming-devices.png" alt="Best Streaming Devices" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Streaming Devices</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/">Best Streaming Devices</a></h2>
     <p class="review-card__snippet">If you&#x27;ve ever stared at a wall on a Friday night because your TV doesn&#x27;t support the apps you want, you&#x27;re not alone. A streaming device solves that problem instantly — plugging…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="streaming-devices" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="streaming-devices" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/smart-home.png" alt="Transform Your Space: The Complete Smart Home Buying Guide" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Smart Home</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/">Transform Your Space: The Complete Smart Home Buying Guide</a></h2>
     <p class="review-card__snippet">Smart homes have transformed how we interact with our living spaces, addressing challenges like energy efficiency, security, and convenience. With rising demand for seamless…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="smart-home" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="smart-home" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/streaming-devices.png" alt="Best Streaming Devices: Ultimate Buying Guide for Endless Entertainment" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Streaming Devices</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/">Best Streaming Devices: Ultimate Buying Guide for Endless Entertainment</a></h2>
     <p class="review-card__snippet">The world of streaming devices has exploded in recent years, offering a wide range of options for endless entertainment. With so many devices on the market, it can be overwhelming…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="streaming-devices" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="streaming-devices" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
+    </div>
 </div></div></section><section class="category-section container" id="smart-home"><div class="category-section__header"><h2>Smart Home</h2><span class="category-section__count">2 reviews</span></div><div class="posts-grid"><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/smart-home.png" alt="Best Smart Home" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Smart Home</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/">Best Smart Home</a></h2>
     <p class="review-card__snippet">Smart homes have transformed how we interact with our living spaces, addressing challenges like energy efficiency, security, and convenience. With rising demand for seamless…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="smart-home" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="smart-home" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/smart-home.png" alt="Transform Your Space: The Complete Smart Home Buying Guide" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Smart Home</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/">Transform Your Space: The Complete Smart Home Buying Guide</a></h2>
     <p class="review-card__snippet">Smart homes have transformed how we interact with our living spaces, addressing challenges like energy efficiency, security, and convenience. With rising demand for seamless…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="smart-home" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="smart-home" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+    </div>
 </div></div></section><section class="category-section container" id="streaming-devices"><div class="category-section__header"><h2>Streaming Devices</h2><span class="category-section__count">2 reviews</span></div><div class="posts-grid"><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/streaming-devices.png" alt="Best Streaming Devices" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Streaming Devices</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/">Best Streaming Devices</a></h2>
     <p class="review-card__snippet">If you&#x27;ve ever stared at a wall on a Friday night because your TV doesn&#x27;t support the apps you want, you&#x27;re not alone. A streaming device solves that problem instantly — plugging…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="streaming-devices" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="streaming-devices" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/streaming-devices.png" alt="Best Streaming Devices: Ultimate Buying Guide for Endless Entertainment" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Streaming Devices</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/">Best Streaming Devices: Ultimate Buying Guide for Endless Entertainment</a></h2>
     <p class="review-card__snippet">The world of streaming devices has exploded in recent years, offering a wide range of options for endless entertainment. With so many devices on the market, it can be overwhelming…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="streaming-devices" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="streaming-devices" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
+    </div>
 </div></div></section>
 
 <section class="subscribe-band"><div class="container subscribe-inner">
@@ -356,6 +413,9 @@ async function submitCategorySubscribe(e) {
         msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
     } catch (err) { msg.innerText = 'Connection error. Please try later.'; }
 }
+<script>
+window.toggleReaction=function(type,btn){var key=btn.getAttribute('data-review')||location.pathname;var k='abvorn_r_'+type+'_'+key;var d=JSON.parse(localStorage.getItem(k)||'{"active":false,"count":0}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')};
+</script>
 </script>
 </body>
 </html>

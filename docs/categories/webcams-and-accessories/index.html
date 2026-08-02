@@ -190,6 +190,15 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .niche-card .read-link:hover { color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }
         .review-card__banner { display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
         .review-card__banner + h2 { margin: 6px var(--space-md) 8px; }
+        .review-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }
+        .review-card__footer .read-link { margin:0; align-self:auto; }
+        .review-card__reactions { display:flex; gap:6px; }
+        .review-card__reactions .reaction-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-body); }
+        .review-card__reactions .reaction-btn:hover { border-color:var(--clr-accent); color:var(--clr-accent-text); }
+        .review-card__reactions .reaction-btn.active { border-color:var(--clr-accent); background:var(--clr-accent); color:#1a1200; }
+        .review-card__reactions .reaction-btn.loved { border-color:#c0392b; color:#c0392b; background:#fde8e4; }
+        .review-card__reactions .reaction-icon { font-size:0.9rem; line-height:1; }
+        .review-card__reactions .reaction-count { font-weight:700; min-width:14px; text-align:center; }
 
         .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
         .footer-grid { display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }
@@ -233,79 +242,157 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Best Webcams 2024: How to Choose the Perfect Webcam for Streaming, Meetings &amp;amp;amp; Video Calls</a></h2>
     <p class="review-card__snippet">Choosing the right webcam in 2026 means balancing resolution, audio quality, low‑light performance, and price. Whether you’re streaming on Twitch, attending virtual meetings, or…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="Best Webcams" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Best Webcams</a></h2>
     <p class="review-card__snippet">In today&#x27;s world, high-quality webcams are essential for professional meetings, online learning, and content creation. Whether you&#x27;re a remote worker, student, or streamer, the…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="Best Webcams" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Best Webcams</a></h2>
     <p class="review-card__snippet">Choosing the right webcam in 2026 means balancing resolution, audio quality, low‑light performance, and price. Whether you’re streaming on Twitch, attending virtual meetings, or…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="Compare Top Webcams: Logitech Brio 1080p, C270 720p, and More for Streaming &amp;amp;amp; Meetings" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Compare Top Webcams: Logitech Brio 1080p, C270 720p, and More for Streaming &amp;amp;amp; Meetings</a></h2>
     <p class="review-card__snippet">Whether you&#x27;re hosting weekly team standups, streaming gameplay, or attending virtual classrooms, the right webcam makes all the difference. With so many options on the…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div></div></section><section class="category-section container" id="webcams"><div class="category-section__header"><h2>Webcams</h2><span class="category-section__count">9 reviews</span></div><div class="posts-grid"><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="Best Webcams 2024: How to Choose the Perfect Webcam for Streaming, Meetings &amp;amp;amp; Video Calls" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Best Webcams 2024: How to Choose the Perfect Webcam for Streaming, Meetings &amp;amp;amp; Video Calls</a></h2>
     <p class="review-card__snippet">Choosing the right webcam in 2026 means balancing resolution, audio quality, low‑light performance, and price. Whether you’re streaming on Twitch, attending virtual meetings, or…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="Best Webcams" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Best Webcams</a></h2>
     <p class="review-card__snippet">In today&#x27;s world, high-quality webcams are essential for professional meetings, online learning, and content creation. Whether you&#x27;re a remote worker, student, or streamer, the…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="Best Webcams" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Best Webcams</a></h2>
     <p class="review-card__snippet">Choosing the right webcam in 2026 means balancing resolution, audio quality, low‑light performance, and price. Whether you’re streaming on Twitch, attending virtual meetings, or…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="Compare Top Webcams: Logitech Brio 1080p, C270 720p, and More for Streaming &amp;amp;amp; Meetings" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Compare Top Webcams: Logitech Brio 1080p, C270 720p, and More for Streaming &amp;amp;amp; Meetings</a></h2>
     <p class="review-card__snippet">Whether you&#x27;re hosting weekly team standups, streaming gameplay, or attending virtual classrooms, the right webcam makes all the difference. With so many options on the…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="The Ultimate 2024 Guide to the Best Webcams for Streaming &amp;amp;amp; Video Calls" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">The Ultimate 2024 Guide to the Best Webcams for Streaming &amp;amp;amp; Video Calls</a></h2>
     <p class="review-card__snippet">Whether you&#x27;re a content creator looking to elevate your live streams, a remote professional juggling daily video calls, or a casual user who just wants to look presentable on…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="The Ultimate 2026 Webcam Buying Guide: Compare Logitech Brio, C270, and More" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">The Ultimate 2026 Webcam Buying Guide: Compare Logitech Brio, C270, and More</a></h2>
     <p class="review-card__snippet">Choosing the right webcam in 2026 means balancing resolution, audio quality, low‑light performance, and price. Whether you’re streaming on Twitch, attending virtual meetings, or…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="The Ultimate Webcam Buying Guide: Compare, Choose, and Purchase the Best 1080p and 720p Cameras" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">The Ultimate Webcam Buying Guide: Compare, Choose, and Purchase the Best 1080p and 720p Cameras</a></h2>
     <p class="review-card__snippet">Choosing the right webcam can feel overwhelming—especially with the flood of 720p and 1080p options on the market. Our webcam buying guide cuts through the noise to help you…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="Top Webcams for Streaming and Meetings: A Comprehensive Buying Guide" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Top Webcams for Streaming and Meetings: A Comprehensive Buying Guide</a></h2>
     <p class="review-card__snippet">Choosing the right webcam in 2026 means balancing resolution, audio quality, low‑light performance, and price. Whether you’re streaming on Twitch, attending virtual meetings, or…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="The Ultimate Buying Guide to Finding the Best Webcam for Your Needs" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">The Ultimate Buying Guide to Finding the Best Webcam for Your Needs</a></h2>
     <p class="review-card__snippet">With the rise of remote work and online communication, having a good webcam is more important than ever. Whether you&#x27;re a business professional, a streamer, or just someone who…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div></div></section>
 
 <section class="subscribe-band"><div class="container subscribe-inner">
@@ -386,6 +473,9 @@ async function submitCategorySubscribe(e) {
         msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
     } catch (err) { msg.innerText = 'Connection error. Please try later.'; }
 }
+<script>
+window.toggleReaction=function(type,btn){var key=btn.getAttribute('data-review')||location.pathname;var k='abvorn_r_'+type+'_'+key;var d=JSON.parse(localStorage.getItem(k)||'{"active":false,"count":0}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')};
+</script>
 </script>
 </body>
 </html>

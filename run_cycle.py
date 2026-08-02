@@ -36,7 +36,7 @@ from src.social_permission import SocialPermissionFramework, create_social_permi
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
-from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, build_category_listing_page, scan_published_reviews, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS
+from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, build_category_listing_page, scan_published_reviews, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS
 from src.click_tracker import get_clicks, register_articles_batch
 
 logger = logging.getLogger("run_cycle")
@@ -1277,7 +1277,13 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     <div class="post-card__body">
         <h3><a href="{link}">{html_mod.escape(title)}</a></h3>
         <p>Expert-tested and reviewed. See why this made our list.</p>
-        <a href="{link}" class="read-link">Read more →</a>
+        <div class="post-card__footer">
+            <div class="review-card__reactions">
+                <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="{niche_slug}" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+                <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="{niche_slug}" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+            </div>
+            <a href="{link}" class="read-link">Read more →</a>
+        </div>
     </div>
 </div>'''
 
@@ -1369,6 +1375,15 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .post-card .post-meta {{ font-size:0.8rem; color:var(--clr-mid-gray); margin-bottom:8px; }}
         .post-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
         .post-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; margin-top:auto; align-self:flex-end; }}
+        .post-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; }}
+        .post-card__footer .read-link {{ margin:0; align-self:auto; }}
+        .review-card__reactions {{ display:flex; gap:6px; }}
+        .review-card__reactions .reaction-btn {{ display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-body); }}
+        .review-card__reactions .reaction-btn:hover {{ border-color:var(--clr-accent); color:var(--clr-accent-text); }}
+        .review-card__reactions .reaction-btn.active {{ border-color:var(--clr-accent); background:var(--clr-accent); color:#1a1200; }}
+        .review-card__reactions .reaction-btn.loved {{ border-color:#c0392b; color:#c0392b; background:#fde8e4; }}
+        .review-card__reactions .reaction-icon {{ font-size:0.9rem; line-height:1; }}
+        .review-card__reactions .reaction-count {{ font-weight:700; min-width:14px; text-align:center; }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
         .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
@@ -1462,6 +1477,7 @@ async function submitCategorySubscribe(e) {{
         msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
     }} catch (err) {{ msg.innerText = 'Connection error. Please try later.'; }}
 }}
+{REACTIONS_JS}
 </script>
 </body>
 </html>'''

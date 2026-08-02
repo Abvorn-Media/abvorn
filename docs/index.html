@@ -212,6 +212,15 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .niche-card .read-link:hover { color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }
         .review-card__banner { display:inline-block; margin-top: var(--space-md); padding:3px 10px; border-radius:4px; background: var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
         .review-card__banner + h2 { margin-top: 6px; }
+        .review-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }
+        .review-card__footer .read-link { margin:0; align-self:auto; }
+        .review-card__reactions { display:flex; gap:6px; }
+        .review-card__reactions .reaction-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-body); }
+        .review-card__reactions .reaction-btn:hover { border-color:var(--clr-accent); color:var(--clr-accent-text); }
+        .review-card__reactions .reaction-btn.active { border-color:var(--clr-accent); background:var(--clr-accent); color:#1a1200; }
+        .review-card__reactions .reaction-btn.loved { border-color:#c0392b; color:#c0392b; background:#fde8e4; }
+        .review-card__reactions .reaction-icon { font-size:0.9rem; line-height:1; }
+        .review-card__reactions .reaction-count { font-weight:700; min-width:14px; text-align:center; }
 
         .category-group { display: none; }
         .category-group.visible { display: block; }
@@ -291,19 +300,37 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <span class="review-card__banner" style="background:#a7c3e8">Computing & Monitors · 4K Monitors</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/">Best 4K Monitors</a></h2>
     <p class="review-card__snippet">Searching for a best 4K monitor that balances crisp visuals, smooth performance, and value can feel overwhelming. Whether you’re a creative professional, a gamer, or simply want…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="4k-monitors" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="4k-monitors" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#b7ddc0">
     <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/fitness-trackers.png" alt="Best Fitness Trackers" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#b7ddc0">Fitness & Health · Fitness Trackers</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/">Best Fitness Trackers</a></h2>
     <p class="review-card__snippet">Shopping for the best fitness-trackers can feel overwhelming when you&#x27;re staring at hundreds of options ranging from $20 budget bands to $400 premium smartwatches. The real…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="fitness-trackers" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="fitness-trackers" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#cfc0ee">
     <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/gaming-mice.png" alt="Best Gaming Mice" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#cfc0ee">Gaming · Gaming Mice</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/">Best Gaming Mice</a></h2>
     <p class="review-card__snippet">Finding the right gaming mouse can feel like navigating a maze of specs, price tags, and marketing buzzwords. Whether you’re a competitive FPS player who needs lightning‑fast…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="gaming-mice" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="gaming-mice" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/" class="read-link">Read review →</a>
+    </div>
 </div></div>
 </section>
 
@@ -315,19 +342,37 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Earbuds</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/">Best Wireless Earbuds</a></h2>
     <p class="review-card__snippet">Finding the best wireless earbuds in 2025 means navigating a market flooded with options ranging from $20 budget picks to $250 flagship models. The problem isn&#x27;t a lack of…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-earbuds" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-earbuds" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones 2024: Our Top Picks for Sound Quality, Battery Life &amp;amp;amp;amp; Noise Cancelling" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Best Wireless Headphones 2024: Our Top Picks for Sound Quality, Battery Life &amp;amp;amp;amp; Noise Cancelling</a></h2>
     <p class="review-card__snippet">In 2024 the wireless headphone market is bursting with options—from budget‑friendly earbuds to premium over‑ear models that offer studio‑grade sound and industry‑leading noise…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Best Wireless Headphones</a></h2>
     <p class="review-card__snippet">Finding the best wireless headphones in 2024 feels like hunting for a needle in a haystack. With so many brands, price points, and feature sets, it’s easy to get overwhelmed. This…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div></div>
 </div><div class="category-section">
     <div class="category-section__header"><h2>Computing & Monitors</h2><a href="https://abvorn-media.github.io/abvorn/categories/computing-and-monitors/">View all in Computing & Monitors →</a></div>
@@ -336,19 +381,37 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <span class="review-card__banner" style="background:#a7c3e8">Computing & Monitors · 4K Monitors</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/">Best 4K Monitors</a></h2>
     <p class="review-card__snippet">Searching for a best 4K monitor that balances crisp visuals, smooth performance, and value can feel overwhelming. Whether you’re a creative professional, a gamer, or simply want…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="4k-monitors" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="4k-monitors" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a7c3e8">
     <a href="https://abvorn-media.github.io/abvorn/reviews/laptops/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/laptops.png" alt="Best Laptops" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a7c3e8">Computing & Monitors · Laptops</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/laptops/">Best Laptops</a></h2>
     <p class="review-card__snippet">Finding the best laptops in 2026 can feel overwhelming. Whether you&#x27;re a student, a professional, or a gaming enthusiast, your needs vary. This guide cuts through the noise by…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/laptops/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="laptops" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="laptops" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/laptops/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a7c3e8">
     <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/4k-monitors.png" alt="The Ultimate Buying Guide to 4K Monitors: Find Your Perfect Display" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a7c3e8">Computing & Monitors · 4K Monitors</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/">The Ultimate Buying Guide to 4K Monitors: Find Your Perfect Display</a></h2>
     <p class="review-card__snippet">When it comes to upgrading your computer setup, a 4K monitor is an excellent investment for anyone looking to enhance their visual experience. With a wide range of options…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="4k-monitors" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="4k-monitors" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/" class="read-link">Read review →</a>
+    </div>
 </div></div>
 </div><div class="category-section">
     <div class="category-section__header"><h2>Fitness & Health</h2><a href="https://abvorn-media.github.io/abvorn/categories/fitness-and-health/">View all in Fitness & Health →</a></div>
@@ -357,13 +420,25 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <span class="review-card__banner" style="background:#b7ddc0">Fitness & Health · Fitness Trackers</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/">Best Fitness Trackers</a></h2>
     <p class="review-card__snippet">Shopping for the best fitness-trackers can feel overwhelming when you&#x27;re staring at hundreds of options ranging from $20 budget bands to $400 premium smartwatches. The real…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="fitness-trackers" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="fitness-trackers" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#b7ddc0">
     <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/fitness-trackers.png" alt="The Ultimate Buying Guide to Fitness Trackers: Find the Best One for Your Needs" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#b7ddc0">Fitness & Health · Fitness Trackers</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/">The Ultimate Buying Guide to Fitness Trackers: Find the Best One for Your Needs</a></h2>
     <p class="review-card__snippet">With the numerous fitness trackers available in the market, finding the right one can be overwhelming. Fitness trackers have become an essential tool for monitoring our daily…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="fitness-trackers" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="fitness-trackers" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
+    </div>
 </div></div>
 </div><div class="category-section">
     <div class="category-section__header"><h2>Gaming</h2><a href="https://abvorn-media.github.io/abvorn/categories/gaming/">View all in Gaming →</a></div>
@@ -372,19 +447,37 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <span class="review-card__banner" style="background:#cfc0ee">Gaming · Gaming Mice</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/">Best Gaming Mice</a></h2>
     <p class="review-card__snippet">Finding the right gaming mouse can feel like navigating a maze of specs, price tags, and marketing buzzwords. Whether you’re a competitive FPS player who needs lightning‑fast…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="gaming-mice" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="gaming-mice" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/gaming-mice/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#cfc0ee">
     <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/mechanical-keyboards.png" alt="Best Mechanical Keyboards" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#cfc0ee">Gaming · Mechanical Keyboards</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/">Best Mechanical Keyboards</a></h2>
     <p class="review-card__snippet">Mechanical keyboards remain the gold standard for typists, gamers, and productivity enthusiasts who crave tactile feedback, durability, and customization. In 2024 the market…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="mechanical-keyboards" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="mechanical-keyboards" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#cfc0ee">
     <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/mechanical-keyboards.png" alt="Best Mechanical Keyboards of 2024: Wired, Hot-Swap &amp;amp;amp; Wireless Compared" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#cfc0ee">Gaming · Mechanical Keyboards</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/">Best Mechanical Keyboards of 2024: Wired, Hot-Swap &amp;amp;amp; Wireless Compared</a></h2>
     <p class="review-card__snippet">Mechanical keyboards remain the gold standard for typists, gamers, and productivity enthusiasts who crave tactile feedback, durability, and customization. In 2024 the market…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="mechanical-keyboards" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="mechanical-keyboards" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/mechanical-keyboards/" class="read-link">Read review →</a>
+    </div>
 </div></div>
 </div><div class="category-section">
     <div class="category-section__header"><h2>Home & Lifestyle</h2><a href="https://abvorn-media.github.io/abvorn/categories/home-and-lifestyle/">View all in Home & Lifestyle →</a></div>
@@ -393,19 +486,37 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Smart Home</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/">Best Smart Home</a></h2>
     <p class="review-card__snippet">Smart homes have transformed how we interact with our living spaces, addressing challenges like energy efficiency, security, and convenience. With rising demand for seamless…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="smart-home" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="smart-home" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/streaming-devices.png" alt="Best Streaming Devices" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Streaming Devices</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/">Best Streaming Devices</a></h2>
     <p class="review-card__snippet">If you&#x27;ve ever stared at a wall on a Friday night because your TV doesn&#x27;t support the apps you want, you&#x27;re not alone. A streaming device solves that problem instantly — plugging…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="streaming-devices" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="streaming-devices" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/streaming-devices/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#f0c8b6">
     <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/smart-home.png" alt="Transform Your Space: The Complete Smart Home Buying Guide" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#f0c8b6">Home & Lifestyle · Smart Home</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/">Transform Your Space: The Complete Smart Home Buying Guide</a></h2>
     <p class="review-card__snippet">Smart homes have transformed how we interact with our living spaces, addressing challenges like energy efficiency, security, and convenience. With rising demand for seamless…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="smart-home" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="smart-home" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" class="read-link">Read review →</a>
+    </div>
 </div></div>
 </div><div class="category-section">
     <div class="category-section__header"><h2>Webcams & Accessories</h2><a href="https://abvorn-media.github.io/abvorn/categories/webcams-and-accessories/">View all in Webcams & Accessories →</a></div>
@@ -414,19 +525,37 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Best Webcams 2024: How to Choose the Perfect Webcam for Streaming, Meetings &amp;amp;amp; Video Calls</a></h2>
     <p class="review-card__snippet">Choosing the right webcam in 2026 means balancing resolution, audio quality, low‑light performance, and price. Whether you’re streaming on Twitch, attending virtual meetings, or…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="Best Webcams" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Best Webcams</a></h2>
     <p class="review-card__snippet">In today&#x27;s world, high-quality webcams are essential for professional meetings, online learning, and content creation. Whether you&#x27;re a remote worker, student, or streamer, the…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#a8d7d2">
     <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.png" alt="Best Webcams" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#a8d7d2">Webcams & Accessories · Webcams</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/webcams/">Best Webcams</a></h2>
     <p class="review-card__snippet">Choosing the right webcam in 2026 means balancing resolution, audio quality, low‑light performance, and price. Whether you’re streaming on Twitch, attending virtual meetings, or…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="webcams" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="webcams" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/webcams/" class="read-link">Read review →</a>
+    </div>
 </div></div>
 </div>
 </section>
@@ -542,6 +671,9 @@ async function submitHomepageSubscribe(e) {
     dots.forEach((d, idx) => d.addEventListener('click', () => show(idx)));
     setInterval(() => show((current + 1) % slides.length), 5000);
 })();
+</script>
+<script>
+window.toggleReaction=function(type,btn){var key=btn.getAttribute('data-review')||location.pathname;var k='abvorn_r_'+type+'_'+key;var d=JSON.parse(localStorage.getItem(k)||'{"active":false,"count":0}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')};
 </script>
 </body>
 </html>

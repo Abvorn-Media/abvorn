@@ -471,7 +471,13 @@ def review_card(item, category, b):
     <span class="review-card__banner" style="background:{color}">{category} · {item["name"]}</span>
     <h2><a href="{href}">{title}</a></h2>
     {snippet_html}
-    <a href="{href}" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="{item["slug"]}" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="{item["slug"]}" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="{href}" class="read-link">Read review →</a>
+    </div>
 </div>'''
 
 
@@ -701,6 +707,7 @@ def build_homepage(state, form_url="", reviews=None, base=None):
     html = html.replace("MEGA_MENU_CSS_PLACEHOLDER", MEGA_MENU_CSS)
     html = html.replace("__APPS_SCRIPT_URL__", form_url)
     html = html.replace("YEAR_PLACEHOLDER", str(datetime.now().year))
+    html = html.replace("REACTIONS_JS_PLACEHOLDER", REACTIONS_JS)
     return html
 
 
@@ -718,7 +725,13 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     <div class="post-card__body">
         <h3><a href="{link}">{html_mod.escape(title)}</a></h3>
         <p>Expert-tested and reviewed. See why this made our list.</p>
-        <a href="{link}" class="read-link">Read more →</a>
+        <div class="post-card__footer">
+            <div class="review-card__reactions">
+                <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="{niche_slug}" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+                <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="{niche_slug}" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+            </div>
+            <a href="{link}" class="read-link">Read more →</a>
+        </div>
     </div>
 </div>'''
 
@@ -810,6 +823,8 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .post-card .post-meta {{ font-size:0.8rem; color:var(--clr-mid-gray); margin-bottom:8px; }}
         .post-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
         .post-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; margin-top:auto; align-self:flex-end; }}
+        .post-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; }}
+        .post-card__footer .read-link {{ margin:0; align-self:auto; }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
         .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
@@ -903,6 +918,7 @@ async function submitCategorySubscribe(e) {{
         msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
     }} catch (err) {{ msg.innerText = 'Connection error. Please try later.'; }}
 }}
+{REACTIONS_JS}
 </script>
 </body>
 </html>'''
@@ -1056,6 +1072,15 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         .niche-card .read-link:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
         .review-card__banner {{ display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }}
         .review-card__banner + h2 {{ margin: 6px var(--space-md) 8px; }}
+        .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }}
+        .review-card__footer .read-link {{ margin:0; align-self:auto; }}
+        .review-card__reactions {{ display:flex; gap:6px; }}
+        .review-card__reactions .reaction-btn {{ display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-body); }}
+        .review-card__reactions .reaction-btn:hover {{ border-color:var(--clr-accent); color:var(--clr-accent-text); }}
+        .review-card__reactions .reaction-btn.active {{ border-color:var(--clr-accent); background:var(--clr-accent); color:#1a1200; }}
+        .review-card__reactions .reaction-btn.loved {{ border-color:#c0392b; color:#c0392b; background:#fde8e4; }}
+        .review-card__reactions .reaction-icon {{ font-size:0.9rem; line-height:1; }}
+        .review-card__reactions .reaction-count {{ font-weight:700; min-width:14px; text-align:center; }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
         .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
@@ -1174,6 +1199,7 @@ async function submitCategorySubscribe(e) {{
         msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
     }} catch (err) {{ msg.innerText = 'Connection error. Please try later.'; }}
 }}
+{REACTIONS_JS}
 </script>
 </body>
 </html>'''
@@ -1194,7 +1220,11 @@ function htmlEncode(s){var d=document.createElement('div');d.appendChild(documen
 window.handleCredentialResponse=function(r){var p=JSON.parse(atob(r.credential.split('.')[1]));cu={name:p.name,email:p.email,avatar:p.picture,sub:p.sub};var ui=document.getElementById('user-info');var si=document.getElementById('sign-in-prompt');var ct=document.getElementById('comment-text');var pb=document.getElementById('post-comment-btn');ui.style.display='flex';document.getElementById('user-avatar').src=p.picture;document.getElementById('user-name').textContent=p.name;si.style.display='none';ct.disabled=false;ct.style.opacity='1';pb.disabled=false;pb.style.opacity='1'}
 window.signOut=function(){cu=null;document.getElementById('user-info').style.display='none';document.getElementById('sign-in-prompt').style.display='block';document.getElementById('comment-text').disabled=true;document.getElementById('comment-text').style.opacity='.5';document.getElementById('post-comment-btn').disabled=true;document.getElementById('post-comment-btn').style.opacity='.5'}
 window.postComment=function(){var t=document.getElementById('comment-text');if(!cu||!t||!t.value.trim())return;var n=cu.name||'Anonymous';c.unshift({name:n,email:cu.email||'',avatar:cu.avatar||'',text:t.value.trim(),date:new Date().toISOString()});localStorage.setItem(k,JSON.stringify(c));t.value='';r()};r()})();
-window.toggleReaction=function(type,btn){var k='abvorn_r_'+type+'_'+location.pathname;var d=JSON.parse(localStorage.getItem(k)||'{"active":false,"count":0}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')};
+window.toggleReaction=function(type,btn){var key=btn.getAttribute('data-review')||location.pathname;var k='abvorn_r_'+type+'_'+key;var d=JSON.parse(localStorage.getItem(k)||'{"active":false,"count":0}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')};
+</script>"""
+
+REACTIONS_JS = """<script>
+window.toggleReaction=function(type,btn){var key=btn.getAttribute('data-review')||location.pathname;var k='abvorn_r_'+type+'_'+key;var d=JSON.parse(localStorage.getItem(k)||'{"active":false,"count":0}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')};
 </script>"""
 
 RPS_JS = """<script>
@@ -2214,6 +2244,15 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .niche-card .read-link:hover { color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }
         .review-card__banner { display:inline-block; margin-top: var(--space-md); padding:3px 10px; border-radius:4px; background: var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
         .review-card__banner + h2 { margin-top: 6px; }
+        .review-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }
+        .review-card__footer .read-link { margin:0; align-self:auto; }
+        .review-card__reactions { display:flex; gap:6px; }
+        .review-card__reactions .reaction-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-body); }
+        .review-card__reactions .reaction-btn:hover { border-color:var(--clr-accent); color:var(--clr-accent-text); }
+        .review-card__reactions .reaction-btn.active { border-color:var(--clr-accent); background:var(--clr-accent); color:#1a1200; }
+        .review-card__reactions .reaction-btn.loved { border-color:#c0392b; color:#c0392b; background:#fde8e4; }
+        .review-card__reactions .reaction-icon { font-size:0.9rem; line-height:1; }
+        .review-card__reactions .reaction-count { font-weight:700; min-width:14px; text-align:center; }
 
         .category-group { display: none; }
         .category-group.visible { display: block; }
@@ -2407,6 +2446,7 @@ async function submitHomepageSubscribe(e) {
     setInterval(() => show((current + 1) % slides.length), 5000);
 })();
 </script>
+REACTIONS_JS_PLACEHOLDER
 </body>
 </html>'''
 

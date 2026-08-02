@@ -190,6 +190,15 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .niche-card .read-link:hover { color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }
         .review-card__banner { display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
         .review-card__banner + h2 { margin: 6px var(--space-md) 8px; }
+        .review-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }
+        .review-card__footer .read-link { margin:0; align-self:auto; }
+        .review-card__reactions { display:flex; gap:6px; }
+        .review-card__reactions .reaction-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-body); }
+        .review-card__reactions .reaction-btn:hover { border-color:var(--clr-accent); color:var(--clr-accent-text); }
+        .review-card__reactions .reaction-btn.active { border-color:var(--clr-accent); background:var(--clr-accent); color:#1a1200; }
+        .review-card__reactions .reaction-btn.loved { border-color:#c0392b; color:#c0392b; background:#fde8e4; }
+        .review-card__reactions .reaction-icon { font-size:0.9rem; line-height:1; }
+        .review-card__reactions .reaction-count { font-weight:700; min-width:14px; text-align:center; }
 
         .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
         .footer-grid { display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }
@@ -233,103 +242,205 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Earbuds</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/">Best Wireless Earbuds</a></h2>
     <p class="review-card__snippet">Finding the best wireless earbuds in 2025 means navigating a market flooded with options ranging from $20 budget picks to $250 flagship models. The problem isn&#x27;t a lack of…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-earbuds" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-earbuds" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones 2024: Our Top Picks for Sound Quality, Battery Life &amp;amp;amp;amp; Noise Cancelling" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Best Wireless Headphones 2024: Our Top Picks for Sound Quality, Battery Life &amp;amp;amp;amp; Noise Cancelling</a></h2>
     <p class="review-card__snippet">In 2024 the wireless headphone market is bursting with options—from budget‑friendly earbuds to premium over‑ear models that offer studio‑grade sound and industry‑leading noise…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Best Wireless Headphones</a></h2>
     <p class="review-card__snippet">Finding the best wireless headphones in 2024 feels like hunting for a needle in a haystack. With so many brands, price points, and feature sets, it’s easy to get overwhelmed. This…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Best Wireless Headphones</a></h2>
     <p class="review-card__snippet">Finding the best wireless‑headphones can feel overwhelming with countless options on the market. Whether you need active noise cancellation for a focused work‑from‑home…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div></div></section><section class="category-section container" id="wireless-earbuds"><div class="category-section__header"><h2>Wireless Earbuds</h2><span class="category-section__count">2 reviews</span></div><div class="posts-grid"><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-earbuds.png" alt="Best Wireless Earbuds" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Earbuds</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/">Best Wireless Earbuds</a></h2>
     <p class="review-card__snippet">Finding the best wireless earbuds in 2025 means navigating a market flooded with options ranging from $20 budget picks to $250 flagship models. The problem isn&#x27;t a lack of…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-earbuds" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-earbuds" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-earbuds.png" alt="The Ultimate Wireless Earbuds Buying Guide: Top Picks and Expert Advice" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Earbuds</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/">The Ultimate Wireless Earbuds Buying Guide: Top Picks and Expert Advice</a></h2>
     <p class="review-card__snippet">Welcome to the ultimate wireless earbuds buying guide, where we&#x27;ll help you navigate the vast market of wireless earbuds and find the perfect pair for your needs. With so many…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-earbuds" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-earbuds" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-earbuds/" class="read-link">Read review →</a>
+    </div>
 </div></div></section><section class="category-section container" id="wireless-headphones"><div class="category-section__header"><h2>Wireless Headphones</h2><span class="category-section__count">11 reviews</span></div><div class="posts-grid"><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones 2024: Our Top Picks for Sound Quality, Battery Life &amp;amp;amp;amp; Noise Cancelling" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Best Wireless Headphones 2024: Our Top Picks for Sound Quality, Battery Life &amp;amp;amp;amp; Noise Cancelling</a></h2>
     <p class="review-card__snippet">In 2024 the wireless headphone market is bursting with options—from budget‑friendly earbuds to premium over‑ear models that offer studio‑grade sound and industry‑leading noise…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Best Wireless Headphones</a></h2>
     <p class="review-card__snippet">Finding the best wireless headphones in 2024 feels like hunting for a needle in a haystack. With so many brands, price points, and feature sets, it’s easy to get overwhelmed. This…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Best Wireless Headphones</a></h2>
     <p class="review-card__snippet">Finding the best wireless‑headphones can feel overwhelming with countless options on the market. Whether you need active noise cancellation for a focused work‑from‑home…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones in 2024: From Budget-Friendly to ANC Powerhouses" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Best Wireless Headphones in 2024: From Budget-Friendly to ANC Powerhouses</a></h2>
     <p class="review-card__snippet">Finding the best wireless headphones in 2024 feels like hunting for a needle in a haystack. With so many brands, price points, and feature sets, it’s easy to get overwhelmed. This…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones of 2024: Top Picks for Noise Cancelling, Battery Life &amp; Budget" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Best Wireless Headphones of 2024: Top Picks for Noise Cancelling, Battery Life &amp; Budget</a></h2>
     <p class="review-card__snippet">Finding the best wireless headphones in 2024 feels like hunting for a needle in a haystack. With so many brands, price points, and feature sets, it’s easy to get overwhelmed. This…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="the-ultimate-buying-guide-to-wireless-headphones-find-your-perfect-fit-2026-07-29.html" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">the-ultimate-buying-guide-to-wireless-headphones-find-your-perfect-fit-2026-07-29.html</a></h2>
     <p class="review-card__snippet">Wireless headphones have become an essential accessory for many of us, offering the freedom to listen to music, podcasts, or audiobooks without being tethered to our devices. With…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="The Ultimate Wireless Headphones Buying Guide: Compare, Review, and Choose the Best" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">The Ultimate Wireless Headphones Buying Guide: Compare, Review, and Choose the Best</a></h2>
     <p class="review-card__snippet">In a world where music, podcasts, and work calls are going wireless, choosing the right pair of headphones can feel overwhelming. With so many models on the market, each boasting…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="The Ultimate Wireless Headphones Buying Guide: Compare, Review, and Choose the Best 2026 Models" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">The Ultimate Wireless Headphones Buying Guide: Compare, Review, and Choose the Best 2026 Models</a></h2>
     <p class="review-card__snippet">Choosing the right wireless headphones in 2026 requires balancing features like noise cancellation, battery life, sound quality, and comfort. With so many options available, this…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Wireless Headphones Buying Guide: Find the Perfect Pair for Your Needs" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Wireless Headphones Buying Guide: Find the Perfect Pair for Your Needs</a></h2>
     <p class="review-card__snippet">Choosing the right wireless headphones can transform the way you listen to music, take calls, or block out distractions. With a crowded market of over‑ear, on‑ear, and earbud…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones: Expert Guide &amp; Reviews" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">Best Wireless Headphones: Expert Guide &amp; Reviews</a></h2>
     <p class="review-card__snippet">Wireless headphones have become an essential accessory for daily life. Whether you&#x27;re commuting, working from home, or just trying to focus in a noisy environment, a good pair of…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.png" alt="The Ultimate Buying Guide to Wireless Headphones: Top Picks and Expert Advice" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
     <h2><a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/">The Ultimate Buying Guide to Wireless Headphones: Top Picks and Expert Advice</a></h2>
     <p class="review-card__snippet">Welcome to the ultimate buying guide to wireless headphones. With so many options available in the market, choosing the right pair can be overwhelming. In this guide, we will walk…</p>
-    <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    <div class="review-card__footer">
+        <div class="review-card__reactions">
+            <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="wireless-headphones" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+            <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="wireless-headphones" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        </div>
+        <a href="https://abvorn-media.github.io/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
+    </div>
 </div></div></section>
 
 <section class="subscribe-band"><div class="container subscribe-inner">
@@ -410,6 +521,9 @@ async function submitCategorySubscribe(e) {
         msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
     } catch (err) { msg.innerText = 'Connection error. Please try later.'; }
 }
+<script>
+window.toggleReaction=function(type,btn){var key=btn.getAttribute('data-review')||location.pathname;var k='abvorn_r_'+type+'_'+key;var d=JSON.parse(localStorage.getItem(k)||'{"active":false,"count":0}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')};
+</script>
 </script>
 </body>
 </html>
