@@ -8,10 +8,12 @@ from typing import Optional
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import uvicorn
+
+from abvorn.core.console_dashboard import get_system_status, generate_dashboard_html
 
 from abvorn.core.secrets import load_secrets
 from abvorn.core.models import ModelRouter
@@ -124,6 +126,19 @@ async def win_health():
         }
     except Exception as e:
         return {"status": "unavailable", "error": str(e)}
+
+
+@app.get("/api/dashboard/metrics")
+async def dashboard_metrics():
+    """Return JSON metrics for the command center dashboard."""
+    return get_system_status()
+
+
+@app.get("/dashboard")
+async def dashboard_page():
+    """Serve the Abvorn Console HTML dashboard."""
+    html = generate_dashboard_html()
+    return HTMLResponse(content=html, media_type="text/html")
 
 
 def _call_ai_subprocess(prompt: str) -> str:

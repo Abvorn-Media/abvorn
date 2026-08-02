@@ -1,0 +1,464 @@
+"""console_dashboard.py — Abvorn Console dashboard generator.
+
+Reads all real data sources and renders a self-contained HTML page
+(and a JSON snapshot) for the command center.
+"""
+
+import json
+import logging
+import sqlite3
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
+
+PROJECT_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+def _read_json(path: Path) -> Any:
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning(f"Could not read {path}: {e}")
+        return None
+
+
+def _read_cycle_state() -> Dict[str, Any]:
+    data = _read_json(PROJECT_DIR / "cycle_state.json") or {}
+    niches = data.get("niches", []) or []
+    total_posts = sum(int(n.get("posts", 0) or 0) for n in niches)
+    return {
+        "total_niches": len(niches),
+        "total_articles": total_posts,
+        "articles_per_week": total_posts / 4.0 if total_posts else 0.0,
+        "queue_size": len(data.get("queue", []) or []),
+        "last_processed": data.get("last_processed", "None"),
+        "affiliate_clicks": int(data.get("affiliate_clicks", 0) or 0),
+        "niches": niches,
+    }
+
+
+def _read_economic_surplus() -> Dict[str, Any]:
+    """Economic records live in data/surplus/economic_records.json."""
+    path = PROJECT_DIR / "data" / "surplus" / "economic_records.json"
+    records = _read_json(path) or []
+    if not isinstance(records, list):
+        records = []
+    total_revenue = sum(float(r.get("revenue", 0) or 0) for r in records)
+    total_cost = sum(float(r.get("costs", 0) or 0) for r in records)
+    total_profit = sum(float(r.get("profit", 0) or 0) for r in records)
+    roi = (total_profit / total_cost) if total_cost > 0 else (total_profit if total_profit > 0 else 0.0)
+    return {
+        "total_revenue": total_revenue,
+        "total_cost": total_cost,
+        "total_profit": total_profit,
+        "roi": roi,
+        "records": len(records),
+    }
+
+
+def _read_clicks() -> Dict[str, Any]:
+    path = PROJECT_DIR / "data" / "clicks.db"
+    try:
+        if not path.exists():
+            return {"total_clicks": 0, "by_article": {}}
+        conn = sqlite3.connect(str(path))
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM clicks")
+        total = cur.fetchone()[0] or 0
+        cur.execute("SELECT article_id, COUNT(*) FROM clicks GROUP BY article_id ORDER BY 2 DESC")
+        by_article = {row[0]: row[1] for row in cur.fetchall()}
+        conn.close()
+        return {"total_clicks": total, "by_article": by_article}
+    except Exception as e:
+        logger.warning(f"Could not read clicks.db: {e}")
+        return {"total_clicks": 0, "by_article": {}}
+
+
+def _read_core_state() -> Dict[str, Any]:
+    data = _read_json(PROJECT_DIR / "data" / "relentless_state.json") or {}
+    history = data.get("history", []) or []
+    return {
+        "drive_score": float(data.get("drive_score", 0.0) or 0.0),
+        "ambition_level": float(data.get("ambition_level", 0.5) or 0.5),
+        "last_action": data.get("action", data.get("last_action", "None")),
+        "status": data.get("status", "unknown"),
+        "days_flat": int(data.get("days_flat", 0) or 0),
+        "recent_actions": history[-5:],
+    }
+
+
+def _read_verdict_weights() -> Dict[str, Any]:
+    data = _read_json(PROJECT_DIR / "data" / "verdict_weights.json")
+    if not isinstance(data, dict):
+        return {}
+    return data
+
+
+def _read_win_metrics() -> Dict[str, Any]:
+    try:
+        from abvorn.core.win_sh_bridge import get_win_sh_bridge
+
+        bridge = get_win_sh_bridge()
+        if not bridge.is_ready():
+            return {"active_loops": 0, "total_runs": 0, "total_outcomes": 0, "total_completed": 0, "loops": {}}
+        metrics = bridge.get_all_metrics()
+        loops = {k: v for k, v in metrics.items() if isinstance(v, dict) and "runs" in v}
+        return {
+            "active_loops": len(loops),
+            "total_runs": int(metrics.get("total_runs", 0) or 0),
+            "total_outcomes": int(metrics.get("total_outcomes", 0) or 0),
+            "total_completed": int(metrics.get("total_completed", 0) or 0),
+            "loops": loops,
+        }
+    except Exception as e:
+        logger.warning(f"win.sh metrics not available: {e}")
+        return {"active_loops": 0, "total_runs": 0, "total_outcomes": 0, "total_completed": 0, "loops": {}}
+
+
+def _read_fable_state() -> Dict[str, Any]:
+    data = _read_json(PROJECT_DIR / "data" / "fable_state.json") or {}
+    return {
+        "total_plans": len(data.get("plans", []) or []),
+        "total_verifications": len(data.get("verifications", []) or []),
+        "total_learnings": len(data.get("learnings", []) or []),
+        "last_cycle": data.get("last_cycle", "Never"),
+        "agent": data.get("agent", "opencode"),
+    }
+
+
+def get_system_status() -> Dict[str, Any]:
+    """Gather all metrics from real data sources."""
+    cycle = _read_cycle_state()
+    econ = _read_economic_surplus()
+    clicks = _read_clicks()
+    core = _read_core_state()
+    win = _read_win_metrics()
+    fable = _read_fable_state()
+
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "drive_score": core["drive_score"],
+        "ambition_level": core["ambition_level"],
+        "last_action": core["last_action"],
+        "status": core["status"],
+        "days_flat": core["days_flat"],
+        "total_niches": cycle["total_niches"],
+        "total_articles": cycle["total_articles"],
+        "articles_per_week": cycle["articles_per_week"],
+        "queue_size": cycle["queue_size"],
+        "affiliate_clicks": cycle["affiliate_clicks"],
+        "total_revenue": econ["total_revenue"],
+        "total_cost": econ["total_cost"],
+        "total_profit": econ["total_profit"],
+        "roi": econ["roi"],
+        "total_clicks": clicks["total_clicks"],
+        "verdict_weights": _read_verdict_weights(),
+        "recent_actions": core["recent_actions"],
+        "win": win,
+        "fable": fable,
+    }
+
+
+def generate_dashboard_html() -> str:
+    """Generate the full HTML dashboard."""
+    status = get_system_status()
+
+    recent_actions_html = ""
+    for action in status.get("recent_actions", []):
+        ts = str(action.get("timestamp", ""))[:19]
+        name = action.get("action", "unknown")
+        result = str(action.get("result", action.get("gap", "")))[:80]
+        recent_actions_html += f"""
+        <div class="action-item">
+            <span class="action-time">{ts}</span>
+            <span class="action-name">{name}</span>
+            <span class="action-result">{result}</span>
+        </div>
+        """
+
+    weights_html = ""
+    for category, weight in status.get("verdict_weights", {}).items():
+        try:
+            percent = float(weight) * 100
+        except (TypeError, ValueError):
+            continue
+        weights_html += f"""
+        <div class="weight-item">
+            <span class="weight-label">{category}</span>
+            <div class="weight-bar">
+                <div class="weight-fill" style="width: {percent:.0f}%;"></div>
+            </div>
+            <span class="weight-value">{percent:.0f}%</span>
+        </div>
+        """
+
+    win = status.get("win", {})
+    win_html = f"""
+    <div class="win-grid">
+        <div class="win-item"><span class="win-label">Active Loops</span><span class="win-value">{win.get("active_loops", 0)}</span></div>
+        <div class="win-item"><span class="win-label">Total Runs</span><span class="win-value">{win.get("total_runs", 0)}</span></div>
+        <div class="win-item"><span class="win-label">Outcomes</span><span class="win-value">{win.get("total_outcomes", 0)}</span></div>
+        <div class="win-item"><span class="win-label">Completed</span><span class="win-value">{win.get("total_completed", 0)}</span></div>
+    </div>
+    """
+
+    fable = status.get("fable", {})
+    fable_html = f"""
+    <div class="fable-grid">
+        <div class="fable-item"><span class="fable-label">Plans</span><span class="fable-value">{fable.get("total_plans", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Verifications</span><span class="fable-value">{fable.get("total_verifications", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Learnings</span><span class="fable-value">{fable.get("total_learnings", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Last Cycle</span><span class="fable-value">{str(fable.get("last_cycle", "Never"))[:19]}</span></div>
+    </div>
+    """
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abvorn Console</title>
+    <style>
+        :root {{
+            --bg: #0a0a0a;
+            --card: #1a1a1a;
+            --border: #2a2a2a;
+            --accent: #c98a2c;
+            --text: #e0e0e0;
+            --text-dim: #888;
+            --radius: 8px;
+            --shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }}
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            min-height: 100vh;
+        }}
+        .container {{ max-width: 1200px; margin: 0 auto; }}
+        header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+        }}
+        .logo {{
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }}
+        .logo span {{ color: var(--text); }}
+        .timestamp {{
+            font-size: 14px;
+            color: var(--text-dim);
+        }}
+        .grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }}
+        .card {{
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }}
+        .card-title {{
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+        }}
+        .card-value {{
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text);
+        }}
+        .card-value.gold {{ color: var(--accent); }}
+        .card-value.green {{ color: #4caf50; }}
+        .card-value.red {{ color: #e74c3c; }}
+        .card-sub {{
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }}
+        .section-title {{
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text);
+        }}
+
+        .weight-item {{
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }}
+        .weight-label {{
+            width: 80px;
+            font-size: 14px;
+            color: var(--text-dim);
+        }}
+        .weight-bar {{
+            flex: 1;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }}
+        .weight-fill {{
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }}
+        .weight-value {{
+            width: 50px;
+            text-align: right;
+            font-size: 14px;
+            color: var(--text);
+        }}
+
+        .action-item {{
+            display: flex;
+            gap: 16px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }}
+        .action-item:last-child {{ border-bottom: none; }}
+        .action-time {{
+            color: var(--text-dim);
+            width: 100px;
+            flex-shrink: 0;
+        }}
+        .action-name {{
+            font-weight: 600;
+            min-width: 120px;
+        }}
+        .action-result {{
+            color: var(--text-dim);
+        }}
+
+        .win-grid, .fable-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 12px;
+        }}
+        .win-item, .fable-item {{
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border);
+        }}
+        .win-label, .fable-label {{
+            color: var(--text-dim);
+        }}
+        .win-value, .fable-value {{
+            font-weight: 600;
+        }}
+        .two-col {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }}
+        @media (max-width: 768px) {{
+            .two-col {{ grid-template-columns: 1fr; }}
+            .win-grid, .fable-grid {{ grid-template-columns: 1fr; }}
+        }}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="logo">Abvorn <span>Console</span></div>
+        <div class="timestamp">Last updated: {status.get('timestamp', datetime.now().isoformat())[:19]}</div>
+    </header>
+
+    <!-- Stats Grid -->
+    <div class="grid">
+        <div class="card">
+            <div class="card-title">Drive Score</div>
+            <div class="card-value gold">{status.get('drive_score', 0):.3f}</div>
+            <div class="card-sub">Ambition: {status.get('ambition_level', 0.5):.2f} / 1.0</div>
+        </div>
+        <div class="card">
+            <div class="card-title">Economic Surplus</div>
+            <div class="card-value green">${status.get('total_profit', 0):.2f}</div>
+            <div class="card-sub">Revenue: ${status.get('total_revenue', 0):.2f} · ROI: {status.get('roi', 0):.2f}x</div>
+        </div>
+        <div class="card">
+            <div class="card-title">Content</div>
+            <div class="card-value">{status.get('total_niches', 0)}</div>
+            <div class="card-sub">{status.get('total_articles', 0)} articles · {status.get('articles_per_week', 0):.1f}/week</div>
+        </div>
+        <div class="card">
+            <div class="card-title">Engagement</div>
+            <div class="card-value">{status.get('total_clicks', 0)}</div>
+            <div class="card-sub">Total clicks · {status.get('affiliate_clicks', 0)} affiliate</div>
+        </div>
+        <div class="card">
+            <div class="card-title">Status</div>
+            <div class="card-value">
+                {status.get('queue_size', 0)} queued
+                <span style="font-size:16px;font-weight:400;color:var(--text-dim);margin-left:8px;">
+                    {status.get('days_flat', 0)} days flat
+                </span>
+            </div>
+            <div class="card-sub">Last action: {status.get('last_action', 'None')}</div>
+        </div>
+        <div class="card">
+            <div class="card-title">win.sh</div>
+            {win_html}
+        </div>
+        <div class="card">
+            <div class="card-title">Fable Method</div>
+            {fable_html}
+        </div>
+    </div>
+
+    <!-- Two Columns: Verdict Weights + Recent Actions -->
+    <div class="two-col">
+        <div class="card">
+            <div class="card-title">Verdict Weights</div>
+            {weights_html or '<div style="color:var(--text-dim);">No weights loaded yet</div>'}
+        </div>
+        <div class="card">
+            <div class="card-title">Recent Actions</div>
+            {recent_actions_html or '<div style="color:var(--text-dim);">No actions recorded</div>'}
+        </div>
+    </div>
+</div>
+<script>
+    setTimeout(() => location.reload(), 60000);
+</script>
+</body>
+</html>
+    """
+    return html
+
+
+def generate_and_write_dashboard() -> str:
+    """Generate the dashboard and write it to docs/console.html."""
+    html = generate_dashboard_html()
+    output_path = PROJECT_DIR / "docs" / "console.html"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(html, encoding="utf-8")
+    logger.info(f"Dashboard written to {output_path}")
+    return str(output_path)
+
+
+if __name__ == "__main__":
+    print(generate_and_write_dashboard())

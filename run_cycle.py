@@ -1000,11 +1000,12 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
             .nav-dropdown a:hover { background:transparent; }
         }
         .trending-ticker { background:var(--clr-accent); color:#1a1200; padding:9px 0; font-size:0.82rem; overflow:hidden; white-space:nowrap; }
-        .trending-ticker__inner { display:inline-block; animation: ticker-scroll 24s linear infinite; }
+        .trending-ticker__track { display:inline-flex; align-items:center; will-change:transform; animation: ticker-scroll 30s linear infinite; }
+        .trending-ticker__inner { display:inline-flex; align-items:center; flex-shrink:0; }
         .trending-ticker__label { font-weight:700; margin-right:15px; color:#1a1200; }
         .trending-ticker__item { color:#1a1200; text-decoration:none; padding:0 10px; }
         .trending-ticker__item:hover { color:#000; text-decoration:underline; }
-        @keyframes ticker-scroll { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+        @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         .hero { background:#f6f5f2; padding: var(--space-2xl) 0; }
         .hero-grid { display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items:center; }
         .hero-eyebrow { display:inline-block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#666; margin-bottom: var(--space-md); }
@@ -1097,7 +1098,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         <a href="__SITE_BASE__/privacy.html">Privacy</a>
     </nav>
 </div></header>
-<div class="trending-ticker"><div class="container"><div class="trending-ticker__inner"><span class="trending-ticker__label">Latest updates:</span><span id="trending-items">LATEST_UPDATES_PLACEHOLDER</span></div></div></div>
+<div class="trending-ticker"><div class="container"><div class="trending-ticker__track"><div class="trending-ticker__inner"><span class="trending-ticker__label">Latest updates:</span><span id="trending-items">LATEST_UPDATES_PLACEHOLDER</span></div><div class="trending-ticker__inner" aria-hidden="true"><span class="trending-ticker__label">Latest updates:</span><span>LATEST_UPDATES_PLACEHOLDER</span></div></div></div></div>
 
 <section class="hero"><div class="container hero-grid">
     <div>
@@ -3345,6 +3346,37 @@ def main(forced_niche=None, force=False, batch_mode=False):
         )
     except Exception as e:
         logger.warning(f"Relentless Core skipped: {e}")
+
+    # Fable Method — Think/Act/Prove/Grow closing cycle
+    try:
+        from abvorn.core.fable_integration import get_fable
+
+        fable = get_fable(agent="opencode")
+        fable_result = fable.run_cycle(
+            "Close the content cycle with a proven, verified learning",
+            {
+                "drive_score": result.get("drive_score", 0.0) if 'result' in dir() else 0.0,
+                "state": state,
+                "niche": niche_slug,
+            },
+        )
+        logger.info(
+            "Fable cycle: status=%s, plan_classification=%s, verified=%s",
+            fable_result.get("status", "unknown"),
+            fable_result.get("plan", {}).get("classification", "unknown"),
+            fable_result.get("verification", {}).get("verified", False),
+        )
+    except Exception as e:
+        logger.warning(f"Fable cycle skipped: {e}")
+
+    # Console Dashboard — auto-generate after content deployment
+    try:
+        from abvorn.core.console_dashboard import generate_and_write_dashboard
+
+        path = generate_and_write_dashboard()
+        logger.info(f"Console dashboard regenerated: {path}")
+    except Exception as e:
+        logger.warning(f"Console dashboard skipped: {e}")
 
     # Newsletter automation (non-blocking)
     try:

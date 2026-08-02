@@ -42,6 +42,15 @@ class RelentlessCore:
         except Exception as e:
             logger.warning(f"win.sh bridge unavailable: {e}")
 
+        # Optional Fable Method integration (never fatal if unavailable)
+        self.fable = None
+        try:
+            from abvorn.core.fable_integration import get_fable
+
+            self.fable = get_fable(agent="opencode")
+        except Exception as e:
+            logger.warning(f"Fable integration unavailable: {e}")
+
     def _read_clicks(self) -> Dict[str, int]:
         """Read total clicks per article from clicks.db."""
         try:
@@ -216,17 +225,65 @@ class RelentlessCore:
         else:
             return f"Unknown action: {action}"
 
+    def _verify_outcome(self, action_result: Dict[str, Any]) -> Dict[str, Any]:
+        """Prove: verify the executed action by observation."""
+        if self.fable is None:
+            return {"verified": False, "evidence": [], "caveats": ["fable_unavailable"]}
+        try:
+            return self.fable.prove(action_result)
+        except Exception as e:
+            logger.warning(f"Fable prove failed: {e}")
+            return {"verified": False, "evidence": [], "caveats": [str(e)]}
+
+    def _learn_from_outcome(self, verification: Dict[str, Any]) -> Dict[str, Any]:
+        """Grow: distill a learning from the verification."""
+        if self.fable is None:
+            return {"insight": "", "improvement": ""}
+        try:
+            return self.fable.grow(verification)
+        except Exception as e:
+            logger.warning(f"Fable grow failed: {e}")
+            return {"insight": "", "improvement": ""}
+
     def cycle(self) -> Dict[str, Any]:
-        """Run one drive cycle."""
+        """Run one drive cycle (Think → Act → Prove → Grow when Fable is available)."""
         # 1. Calculate current drive score
         drive_score = self._calculate_drive_score()
         self.drive_score = drive_score
+
+        # 1b. Think: Fable classifies the task before acting
+        fable_plan = None
+        if self.fable is not None:
+            try:
+                fable_plan = self.fable.think(
+                    "Drive one Abvorn content cycle",
+                    {
+                        "drive_score": drive_score,
+                        "ambition_level": self.ambition_level,
+                        "win_metrics": self._read_win_metrics(),
+                        "state": self._read_cycle_state(),
+                    },
+                )
+                logger.info(f"Fable think: classification={fable_plan.get('classification')}")
+            except Exception as e:
+                logger.warning(f"Fable think failed: {e}")
 
         # 2. Decide action
         action = self._decide_action(drive_score)
 
         # 3. Execute action
         result = self._execute_action(action)
+
+        # 3b. Act/Prove/Grow: wrap the executed action in the Fable loop
+        verification = {"verified": False, "evidence": [], "caveats": []}
+        learning = {"insight": "", "improvement": ""}
+        if self.fable is not None:
+            try:
+                action_result = self.fable.act(fable_plan or {"task": action, "plan_steps": ["run_cycle_content"]})
+                verification = self._verify_outcome(action_result)
+                learning = self._learn_from_outcome(verification)
+            except Exception as e:
+                logger.warning(f"Fable act/prove/grow failed: {e}")
 
         # 4. Adjust ambition based on result
         if "Expanded" in result or "triggered" in result:
@@ -255,5 +312,8 @@ class RelentlessCore:
             "result": result,
             "ambition_level": self.ambition_level,
             "win_metrics": self._read_win_metrics(),
+            "fable_plan": fable_plan,
+            "fable_verification": verification,
+            "fable_learning": learning,
         }
 
