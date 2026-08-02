@@ -36,7 +36,7 @@ from src.social_permission import SocialPermissionFramework, create_social_permi
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
-from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, build_category_listing_page, scan_published_reviews, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS
+from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, build_category_listing_page, scan_published_reviews, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS
 from src.click_tracker import get_clicks, register_articles_batch
 
 logger = logging.getLogger("run_cycle")
@@ -1278,9 +1278,9 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         <h3><a href="{link}">{html_mod.escape(title)}</a></h3>
         <p>Expert-tested and reviewed. See why this made our list.</p>
         <div class="post-card__footer">
-            <div class="review-card__reactions">
-                <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="{niche_slug}" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
-                <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="{niche_slug}" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+            <div class="review-card__reactions" data-review="{niche_slug}">
+                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
             </div>
             <a href="{link}" class="read-link">Read more →</a>
         </div>
@@ -1378,10 +1378,8 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .post-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; }}
         .post-card__footer .read-link {{ margin:0; align-self:auto; }}
         .review-card__reactions {{ display:flex; gap:6px; }}
-        .review-card__reactions .reaction-btn {{ display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-body); }}
-        .review-card__reactions .reaction-btn:hover {{ border-color:var(--clr-accent); color:var(--clr-accent-text); }}
-        .review-card__reactions .reaction-btn.active {{ border-color:var(--clr-accent); background:var(--clr-accent); color:#1a1200; }}
-        .review-card__reactions .reaction-btn.loved {{ border-color:#c0392b; color:#c0392b; background:#fde8e4; }}
+        .review-card__reactions .reaction-btn {{ display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; font-family:var(--font-body); }}
+        .review-card__reactions .reaction-btn.is-counter {{ cursor:default; }}
         .review-card__reactions .reaction-icon {{ font-size:0.9rem; line-height:1; }}
         .review-card__reactions .reaction-count {{ font-weight:700; min-width:14px; text-align:center; }}
 
@@ -1477,7 +1475,7 @@ async function submitCategorySubscribe(e) {{
         msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
     }} catch (err) {{ msg.innerText = 'Connection error. Please try later.'; }}
 }}
-{REACTIONS_JS}
+{REACTIONS_JS_BODY}
 </script>
 </body>
 </html>'''
@@ -1498,7 +1496,6 @@ function htmlEncode(s){var d=document.createElement('div');d.appendChild(documen
 window.handleCredentialResponse=function(r){var p=JSON.parse(atob(r.credential.split('.')[1]));cu={name:p.name,email:p.email,avatar:p.picture,sub:p.sub};var ui=document.getElementById('user-info');var si=document.getElementById('sign-in-prompt');var ct=document.getElementById('comment-text');var pb=document.getElementById('post-comment-btn');ui.style.display='flex';document.getElementById('user-avatar').src=p.picture;document.getElementById('user-name').textContent=p.name;si.style.display='none';ct.disabled=false;ct.style.opacity='1';pb.disabled=false;pb.style.opacity='1'}
 window.signOut=function(){cu=null;document.getElementById('user-info').style.display='none';document.getElementById('sign-in-prompt').style.display='block';document.getElementById('comment-text').disabled=true;document.getElementById('comment-text').style.opacity='.5';document.getElementById('post-comment-btn').disabled=true;document.getElementById('post-comment-btn').style.opacity='.5'}
 window.postComment=function(){var t=document.getElementById('comment-text');if(!cu||!t||!t.value.trim())return;var n=cu.name||'Anonymous';c.unshift({name:n,email:cu.email||'',avatar:cu.avatar||'',text:t.value.trim(),date:new Date().toISOString()});localStorage.setItem(k,JSON.stringify(c));t.value='';r()};r()})();
-window.toggleReaction=function(type,btn){var k='abvorn_r_'+type+'_'+location.pathname;var d=JSON.parse(localStorage.getItem(k)||'{"active":false,"count":0}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')};
 </script>"""
 
 RPS_JS = """<script>
@@ -1784,9 +1781,10 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         </div>
         {intro}
         {article_html}
-        <div class="reactions-bar">
-        <button class="reaction-btn" onclick="toggleReaction('like',this)" aria-label="Like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
-        <button class="reaction-btn" onclick="toggleReaction('love',this)" aria-label="Love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        <div class="reactions-bar" data-review="{niche_slug}">
+        <span class="reactions-label">Did this review help?</span>
+        <button type="button" class="reaction-btn" data-type="like" aria-label="Like this review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+        <button type="button" class="reaction-btn" data-type="love" aria-label="Love this review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
         </div>
         {share}
         {related_html}
@@ -1927,6 +1925,17 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .sidebar-box .btn {{ background:var(--clr-accent); color:#1a1200; width:100%; font-weight:800; font-size:1rem; padding:0.85em 1.7em; box-shadow:0 6px 22px rgba(201,138,44,0.4); border:none; border-radius:var(--radius-sm); cursor:pointer; transition:background 0.2s,transform 0.2s,box-shadow 0.2s; }}
         .sidebar-box .btn:hover {{ background:#e0a23f; transform:scale(1.045); box-shadow:0 8px 28px rgba(201,138,44,0.55); }}
 
+        .sidebar-box .btn:hover {{ background:#e0a23f; transform:scale(1.045); box-shadow:0 8px 28px rgba(201,138,44,0.55); }}
+
+        .reactions-bar {{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:var(--space-xl) 0; padding-top:var(--space-lg); border-top:1px solid var(--clr-light-gray); }}
+        .reactions-bar .reactions-label {{ font-size:0.8rem; font-weight:700; color:var(--clr-mid-gray); margin-right:4px; }}
+        .reactions-bar .reaction-btn {{ display:inline-flex; align-items:center; gap:6px; padding:7px 16px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.85rem; font-weight:600; font-family:var(--font-body); cursor:pointer; transition:all var(--duration-fast) var(--ease-out); }}
+        .reactions-bar .reaction-btn:hover {{ border-color:var(--clr-accent); color:var(--clr-accent-text); }}
+        .reactions-bar .reaction-btn.active {{ border-color:var(--clr-accent); background:var(--clr-accent); color:#1a1200; }}
+        .reactions-bar .reaction-btn.loved {{ border-color:#c0392b; color:#c0392b; background:#fde8e4; }}
+        .reactions-bar .reaction-icon {{ font-size:1rem; line-height:1; }}
+        .reactions-bar .reaction-count {{ font-weight:700; min-width:16px; text-align:center; }}
+
         .further-reading {{ margin-top:var(--space-xl); border-top:1px solid var(--clr-light-gray); padding-top:var(--space-lg); }}
         .further-reading h3 {{ font-size:var(--text-lg); margin-bottom:var(--space-md); }}
         .further-reading ul {{ list-style:none; padding:0; }}
@@ -2039,6 +2048,7 @@ async function submitLead(e) {{
 }}
 </script>
 {RPS_JS}
+{ARTICLE_REACTIONS_JS}
 <script id="abvorn-verdict-data" type="application/json">{verdict_json}</script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {{

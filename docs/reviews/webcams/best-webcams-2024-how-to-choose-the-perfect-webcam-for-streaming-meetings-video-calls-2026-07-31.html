@@ -218,7 +218,14 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .av-compare-btn { display:inline-flex; align-items:center; gap:6px; background:transparent; color:var(--clr-accent); border:1px solid var(--clr-accent); padding:4px 12px; border-radius:100px; font-size:0.78rem; font-weight:700; cursor:pointer; text-decoration:none; margin-left:8px; transition:all .15s; font-family:var(--font-body); }
         .av-compare-btn:hover { background:var(--clr-accent); color:#fff; }
         @media (max-width:860px) { .content-wrapper { grid-template-columns:1fr; } .product-card { grid-template-columns:1fr; } }
-    </style>
+    .reactions-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:32px 0; padding-top:24px; border-top:1px solid var(--border); }
+.reactions-bar .reactions-label { font-size:.8rem; font-weight:700; color:var(--text-secondary); margin-right:4px; }
+.reactions-bar .reaction-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 16px; border:1px solid var(--border); border-radius:999px; background:#fff; color:var(--text-secondary); font-size:.85rem; font-weight:600; cursor:pointer; transition:all .15s; }
+.reactions-bar .reaction-btn:hover { border-color:#c98a2c; color:#996015; }
+.reactions-bar .reaction-btn.active { border-color:#c98a2c; background:#c98a2c; color:#1a1200; }
+.reactions-bar .reaction-btn.loved { border-color:#c0392b; color:#c0392b; background:#fde8e4; }
+.reactions-bar .reaction-count { font-weight:700; min-width:16px; text-align:center; }
+</style>
     
 <style>
 #cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
@@ -332,9 +339,10 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 <h2>FAQ</h2><p><strong>Q: Do I really need a 1080p webcam?</strong><br />A: For professional settings and streaming, yes. For general video calls, 720p may suffice.</p><p><strong>Q: Are external webcams better than built-in ones?</strong><br />A: Generally, yes—they offer superior image quality, better microphones, and more customization options.</p><p><strong>Q: What’s the importance of a privacy shutter?</strong><br />A: It physically blocks the camera when not in use, preventing unauthorized surveillance.</p><p><strong>Q: Can I use any webcam with my laptop?</strong><br />A: Most modern webcams work with Windows, macOS, and Chrome OS via standard USB connections.</p><p><strong>Q: Should I invest in a 4K webcam?</strong><br />A: Only if you’re doing high-quality streaming or recording. Otherwise, 1080p is more than enough.</p>
 
 <h2>Conclusion</h2><p>Finding the <strong>best webcams</strong> in 2024 doesn’t have to be complicated. From budget picks like the <strong>1080P HD Webcam</strong> to premium choices like the <strong>Logitech C920x</strong>, there’s something for every need and budget. Prioritize resolution, mic quality, and lighting features based on your usage, and don’t forget about privacy protections like shutters. With our recommendations, you’ll be ready to present yourself clearly and confidently—whether in meetings, streams, or video calls.</p>
-        <div class="reactions-bar">
-        <button class="reaction-btn" onclick="toggleReaction('like',this)" aria-label="Like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
-        <button class="reaction-btn" onclick="toggleReaction('love',this)" aria-label="Love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        <div class="reactions-bar" data-review="webcams">
+        <span class="reactions-label">Did this review help?</span>
+        <button type="button" class="reaction-btn" data-type="like" aria-label="Like this review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+        <button type="button" class="reaction-btn" data-type="love" aria-label="Love this review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
         </div>
         <div class="share-buttons" style="display:flex;gap:8px;margin:32px 0;padding-top:24px;border-top:1px solid var(--border);align-items:center;flex-wrap:wrap">
 <span style="font-size:.85rem;font-weight:600;color:var(--text-secondary);margin-right:8px">Share:</span>
@@ -692,4 +700,20 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 </script>
 <script src="/abvorn/js/price-charts.js"></script>
-</body></html>
+
+<script>
+(function(){
+  var bar = document.querySelector('.reactions-bar[data-review]');
+  if (!bar) return;
+  if (typeof APPS_SCRIPT_URL === 'undefined' || !APPS_SCRIPT_URL) return;
+  var slug = bar.getAttribute('data-review');
+  var btns = [].slice.call(bar.querySelectorAll('.reaction-btn'));
+  var VID_KEY='abvorn_visitor_id'; if(!localStorage.getItem(VID_KEY)) localStorage.setItem(VID_KEY,'v'+Math.random().toString(36).slice(2));
+  var vid = localStorage.getItem(VID_KEY);
+  var RKEY='abvorn_reactions_'+slug; var mine={}; try{mine=JSON.parse(localStorage.getItem(RKEY)||'{}')}catch(e){}
+  function paint(){btns.forEach(function(b){var t=b.getAttribute('data-type');b.classList.toggle('active',t==='like'&&!!mine.like);b.classList.toggle('loved',t==='love'&&!!mine.love)})}
+  function refresh(){fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reactions',slugs:[slug]})}).then(function(r){return r.json()}).then(function(d){if(!d||!d.success)return;(d.reactions||[]).forEach(function(row){if(row.slug!==slug)return;var l=bar.querySelector('.reaction-btn[data-type="like"] .reaction-count');var o=bar.querySelector('.reaction-btn[data-type="love"] .reaction-count');if(l)l.textContent=(row.like||0);if(o)o.textContent=(row.love||0)})}).catch(function(){})}
+  btns.forEach(function(b){b.addEventListener('click',function(){var t=b.getAttribute('data-type');var on=!(mine[t]||false);b.disabled=true;fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reaction',slug:slug,type:t,visitor:vid})}).then(function(r){return r.json()}).then(function(d){b.disabled=false;if(!d||!d.success)return;mine[t]=on;localStorage.setItem(RKEY,JSON.stringify(mine));paint();refresh()}).catch(function(){b.disabled=false})})});
+  paint(); setTimeout(refresh,300);
+})();
+</script></body></html>

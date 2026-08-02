@@ -363,7 +363,14 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .product-card-body h3 { font-size:0.95rem; line-height:1.35; }
         .buy-btn { transition:background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast); }
         .buy-btn:hover { transform:translateY(-1px); box-shadow:var(--shadow-md); }
-    </style>
+    .reactions-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:32px 0; padding-top:24px; border-top:1px solid var(--border); }
+.reactions-bar .reactions-label { font-size:.8rem; font-weight:700; color:var(--text-secondary); margin-right:4px; }
+.reactions-bar .reaction-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 16px; border:1px solid var(--border); border-radius:999px; background:#fff; color:var(--text-secondary); font-size:.85rem; font-weight:600; cursor:pointer; transition:all .15s; }
+.reactions-bar .reaction-btn:hover { border-color:#c98a2c; color:#996015; }
+.reactions-bar .reaction-btn.active { border-color:#c98a2c; background:#c98a2c; color:#1a1200; }
+.reactions-bar .reaction-btn.loved { border-color:#c0392b; color:#c0392b; background:#fde8e4; }
+.reactions-bar .reaction-count { font-weight:700; min-width:16px; text-align:center; }
+</style>
     
 <style>
 #cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
@@ -530,9 +537,10 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 <ul>
 <li>Lowest price point on the list at $28.99</li>
 </ul>
-        <div class="reactions-bar">
-        <button class="reaction-btn" onclick="toggleReaction('like',this)" aria-label="Like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
-        <button class="reaction-btn" onclick="toggleReaction('love',this)" aria-label="Love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+        <div class="reactions-bar" data-review="fitness-trackers">
+        <span class="reactions-label">Did this review help?</span>
+        <button type="button" class="reaction-btn" data-type="like" aria-label="Like this review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
+        <button type="button" class="reaction-btn" data-type="love" aria-label="Love this review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
         </div>
         <div class="share-buttons" style="display:flex;gap:8px;margin:32px 0;padding-top:24px;border-top:1px solid var(--border);align-items:center;flex-wrap:wrap">
 <span style="font-size:.85rem;font-weight:600;color:var(--text-secondary);margin-right:8px">Share:</span>
@@ -906,4 +914,20 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 </script>
 <script src="/abvorn/js/price-charts.js"></script>
-</body></html>
+
+<script>
+(function(){
+  var bar = document.querySelector('.reactions-bar[data-review]');
+  if (!bar) return;
+  if (typeof APPS_SCRIPT_URL === 'undefined' || !APPS_SCRIPT_URL) return;
+  var slug = bar.getAttribute('data-review');
+  var btns = [].slice.call(bar.querySelectorAll('.reaction-btn'));
+  var VID_KEY='abvorn_visitor_id'; if(!localStorage.getItem(VID_KEY)) localStorage.setItem(VID_KEY,'v'+Math.random().toString(36).slice(2));
+  var vid = localStorage.getItem(VID_KEY);
+  var RKEY='abvorn_reactions_'+slug; var mine={}; try{mine=JSON.parse(localStorage.getItem(RKEY)||'{}')}catch(e){}
+  function paint(){btns.forEach(function(b){var t=b.getAttribute('data-type');b.classList.toggle('active',t==='like'&&!!mine.like);b.classList.toggle('loved',t==='love'&&!!mine.love)})}
+  function refresh(){fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reactions',slugs:[slug]})}).then(function(r){return r.json()}).then(function(d){if(!d||!d.success)return;(d.reactions||[]).forEach(function(row){if(row.slug!==slug)return;var l=bar.querySelector('.reaction-btn[data-type="like"] .reaction-count');var o=bar.querySelector('.reaction-btn[data-type="love"] .reaction-count');if(l)l.textContent=(row.like||0);if(o)o.textContent=(row.love||0)})}).catch(function(){})}
+  btns.forEach(function(b){b.addEventListener('click',function(){var t=b.getAttribute('data-type');var on=!(mine[t]||false);b.disabled=true;fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reaction',slug:slug,type:t,visitor:vid})}).then(function(r){return r.json()}).then(function(d){b.disabled=false;if(!d||!d.success)return;mine[t]=on;localStorage.setItem(RKEY,JSON.stringify(mine));paint();refresh()}).catch(function(){b.disabled=false})})});
+  paint(); setTimeout(refresh,300);
+})();
+</script></body></html>

@@ -136,10 +136,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .post-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; }
         .post-card__footer .read-link { margin:0; align-self:auto; }
         .review-card__reactions { display:flex; gap:6px; }
-        .review-card__reactions .reaction-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-body); }
-        .review-card__reactions .reaction-btn:hover { border-color:var(--clr-accent); color:var(--clr-accent-text); }
-        .review-card__reactions .reaction-btn.active { border-color:var(--clr-accent); background:var(--clr-accent); color:#1a1200; }
-        .review-card__reactions .reaction-btn.loved { border-color:#c0392b; color:#c0392b; background:#fde8e4; }
+        .review-card__reactions .reaction-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; font-family:var(--font-body); }
+        .review-card__reactions .reaction-btn.is-counter { cursor:default; }
         .review-card__reactions .reaction-icon { font-size:0.9rem; line-height:1; }
         .review-card__reactions .reaction-count { font-weight:700; min-width:14px; text-align:center; }
 
@@ -183,9 +181,9 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         <h3><a href="/abvorn/reviews/laptops/">Best Laptops</a></h3>
         <p>Expert-tested and reviewed. See why this made our list.</p>
         <div class="post-card__footer">
-            <div class="review-card__reactions">
-                <button class="reaction-btn" onclick="toggleReaction('like',this)" data-review="laptops" aria-label="Like review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
-                <button class="reaction-btn" onclick="toggleReaction('love',this)" data-review="laptops" aria-label="Love review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
+            <div class="review-card__reactions" data-review="laptops">
+                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
             </div>
             <a href="/abvorn/reviews/laptops/" class="read-link">Read more →</a>
         </div>
@@ -248,9 +246,32 @@ async function submitCategorySubscribe(e) {
         msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
     } catch (err) { msg.innerText = 'Connection error. Please try later.'; }
 }
-<script>
-window.toggleReaction=function(type,btn){var key=btn.getAttribute('data-review')||location.pathname;var k='abvorn_r_'+type+'_'+key;var d=JSON.parse(localStorage.getItem(k)||'{"active":false,"count":0}');d.active=!d.active;d.count+=d.active?1:-1;localStorage.setItem(k,JSON.stringify(d));var s=btn.querySelector('.reaction-count');if(s)s.textContent=d.count;btn.classList.toggle('active',d.active&&type==='like');btn.classList.toggle('loved',d.active&&type==='love')};
-</script>
+(function(){
+// Read-only aggregate like/love counters on review cards.
+// Visitors react on the individual review page; cards only display the totals.
+var URLS = (typeof APPS_SCRIPT_URL !== 'undefined') ? APPS_SCRIPT_URL : '';
+var boxes = document.querySelectorAll('.review-card__reactions[data-review]');
+if (!boxes.length || !URLS) return;
+var slugs = [];
+boxes.forEach(function(b){ var s = b.getAttribute('data-review'); if (s && slugs.indexOf(s) === -1) slugs.push(s); });
+if (!slugs.length) return;
+fetch(URLS, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'reactions', slugs:slugs})})
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (!data || !data.success || !data.reactions) return;
+    var byReview = {};
+    (data.reactions||[]).forEach(function(r){ byReview[r.slug] = r; });
+    for (var i=0;i<boxes.length;i++){
+      var slug = boxes[i].getAttribute('data-review');
+      var row = byReview[slug]; if (!row) continue;
+      var like = boxes[i].querySelector('.reaction-btn[data-type="like"] .reaction-count');
+      var love = boxes[i].querySelector('.reaction-btn[data-type="love"] .reaction-count');
+      if (like) like.textContent = (row.like||0);
+      if (love) love.textContent = (row.love||0);
+    }
+  })
+  .catch(function(){});
+})();
 </script>
 </body>
 </html>
