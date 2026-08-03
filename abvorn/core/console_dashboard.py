@@ -130,6 +130,48 @@ def _read_fable_state() -> Dict[str, Any]:
     }
 
 
+def _read_memory_state() -> Dict[str, Any]:
+    data = _read_json(PROJECT_DIR / "data" / "neural_memory_state.json") or {}
+    return {
+        "entities": int(data.get("entities", 0) or 0),
+        "relationships": int(data.get("relationships", 0) or 0),
+        "insights": len(data.get("insights", []) or []),
+        "queries": len(data.get("queries", []) or []),
+        "correlations": len(data.get("correlations", []) or []),
+        "last_ingestion": data.get("last_ingestion", "Never"),
+    }
+
+
+def _read_spawn_state() -> Dict[str, Any]:
+    data = _read_json(PROJECT_DIR / "data" / "spawn_state.json") or {}
+    return {
+        "role": "leader" if data.get("leader") and data.get("last_heartbeat") else "awaiting_leader",
+        "leader": data.get("leader", "None"),
+        "followers": len(data.get("followers", []) or []),
+        "last_heartbeat": data.get("last_heartbeat", "Never"),
+    }
+
+
+def _read_lineage() -> Dict[str, Any]:
+    data = _read_json(PROJECT_DIR / "data" / "genesis" / "lineage.json") or {}
+    return {
+        "current_version": int(data.get("current_version", 1) or 1),
+        "generations": len(data.get("generations", []) or []),
+        "last_transfer": data.get("last_transfer", "Never"),
+        "last_death": data.get("last_death", "Never"),
+    }
+
+
+def _read_unified_db_summary() -> Dict[str, Any]:
+    try:
+        from abvorn.core.unified_database import get_unified_db
+
+        return get_unified_db().get_summary()
+    except Exception as e:
+        logger.warning(f"Unified DB unavailable: {e}")
+        return {"total_subscribers": 0, "active_alerts": 0, "total_profit": 0, "total_campaigns": 0}
+
+
 def get_system_status() -> Dict[str, Any]:
     """Gather all metrics from real data sources."""
     cycle = _read_cycle_state()
@@ -138,6 +180,10 @@ def get_system_status() -> Dict[str, Any]:
     core = _read_core_state()
     win = _read_win_metrics()
     fable = _read_fable_state()
+    memory = _read_memory_state()
+    spawn = _read_spawn_state()
+    lineage = _read_lineage()
+    unified = _read_unified_db_summary()
 
     return {
         "timestamp": datetime.now().isoformat(),
@@ -160,6 +206,10 @@ def get_system_status() -> Dict[str, Any]:
         "recent_actions": core["recent_actions"],
         "win": win,
         "fable": fable,
+        "memory": memory,
+        "spawn": spawn,
+        "lineage": lineage,
+        "unified": unified,
     }
 
 
@@ -213,6 +263,46 @@ def generate_dashboard_html() -> str:
         <div class="fable-item"><span class="fable-label">Verifications</span><span class="fable-value">{fable.get("total_verifications", 0)}</span></div>
         <div class="fable-item"><span class="fable-label">Learnings</span><span class="fable-value">{fable.get("total_learnings", 0)}</span></div>
         <div class="fable-item"><span class="fable-label">Last Cycle</span><span class="fable-value">{str(fable.get("last_cycle", "Never"))[:19]}</span></div>
+    </div>
+    """
+
+    memory = status.get("memory", {})
+    memory_html = f"""
+    <div class="fable-grid">
+        <div class="fable-item"><span class="fable-label">Entities</span><span class="fable-value">{memory.get("entities", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Relationships</span><span class="fable-value">{memory.get("relationships", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Insights</span><span class="fable-value">{memory.get("insights", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Ingested</span><span class="fable-value">{str(memory.get("last_ingestion", "Never"))[:19]}</span></div>
+    </div>
+    """
+
+    spawn = status.get("spawn", {})
+    spawn_html = f"""
+    <div class="fable-grid">
+        <div class="fable-item"><span class="fable-label">Role</span><span class="fable-value">{spawn.get("role", "awaiting_leader")}</span></div>
+        <div class="fable-item"><span class="fable-label">Followers</span><span class="fable-value">{spawn.get("followers", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Heartbeat</span><span class="fable-value">{str(spawn.get("last_heartbeat", "Never"))[:19]}</span></div>
+        <div class="fable-item"><span class="fable-label">Leader</span><span class="fable-value" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;">{spawn.get("leader", "None")}</span></div>
+    </div>
+    """
+
+    lineage = status.get("lineage", {})
+    lineage_html = f"""
+    <div class="fable-grid">
+        <div class="fable-item"><span class="fable-label">Version</span><span class="fable-value">V{lineage.get("current_version", 1)}</span></div>
+        <div class="fable-item"><span class="fable-label">Generations</span><span class="fable-value">{lineage.get("generations", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Last Transfer</span><span class="fable-value">{str(lineage.get("last_transfer", "Never"))[:19]}</span></div>
+        <div class="fable-item"><span class="fable-label">Last Death</span><span class="fable-value">{str(lineage.get("last_death", "Never"))[:19]}</span></div>
+    </div>
+    """
+
+    unified = status.get("unified", {})
+    unified_html = f"""
+    <div class="fable-grid">
+        <div class="fable-item"><span class="fable-label">Subscribers</span><span class="fable-value">{unified.get("total_subscribers", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Active Alerts</span><span class="fable-value">{unified.get("active_alerts", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Campaigns</span><span class="fable-value">{unified.get("total_campaigns", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">DB Profit</span><span class="fable-value">${unified.get("total_profit", 0):.2f}</span></div>
     </div>
     """
 
@@ -426,6 +516,22 @@ def generate_dashboard_html() -> str:
         <div class="card">
             <div class="card-title">Fable Method</div>
             {fable_html}
+        </div>
+        <div class="card">
+            <div class="card-title">Neural Memory</div>
+            {memory_html}
+        </div>
+        <div class="card">
+            <div class="card-title">Core Spawning</div>
+            {spawn_html}
+        </div>
+        <div class="card">
+            <div class="card-title">Genesis Lineage</div>
+            {lineage_html}
+        </div>
+        <div class="card">
+            <div class="card-title">Unified Database</div>
+            {unified_html}
         </div>
     </div>
 

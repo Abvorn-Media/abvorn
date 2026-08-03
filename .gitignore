@@ -50,6 +50,11 @@ data/economic_records.json
 data/fable_state.json
 data/verdict_weights.json
 data/openweb_cache/
+data/spawn_state.json
+data/neural_memory_state.json
+data/genesis/
+data/tasks/
+data/abvorn_unified.db
 docs/console.html
 skills-lock.json
 

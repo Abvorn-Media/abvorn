@@ -51,6 +51,43 @@ class RelentlessCore:
         except Exception as e:
             logger.warning(f"Fable integration unavailable: {e}")
 
+        # ── Evolution Stack integrations (never fatal if unavailable) ──
+        self.memory = None
+        self.memory_state = {}
+        try:
+            from abvorn.core.neural_memory import get_neural_memory
+
+            self.memory = get_neural_memory()
+            self.memory_state = self.memory.get_state()
+        except Exception as e:
+            logger.warning(f"Neural memory unavailable: {e}")
+
+        self.spawn = None
+        self.role = "solo"
+        try:
+            from abvorn.core.spawn_controller import SpawnController
+
+            self.spawn = SpawnController()
+            self.role = self.spawn.register()
+            self.spawn.run_heartbeat_loop()
+        except Exception as e:
+            logger.warning(f"Spawn controller unavailable: {e}")
+
+        self.version = 1
+        self.genesis = None
+        self.evolution_counter = 0
+        try:
+            import os as _os
+
+            env_version = _os.environ.get("ABVORN_GENESIS_VERSION")
+            if env_version:
+                self.version = int(env_version)
+            from abvorn.core.genesis_protocol import GenesisProtocol
+
+            self.genesis = GenesisProtocol(self.version)
+        except Exception as e:
+            logger.warning(f"Genesis protocol unavailable: {e}")
+
     def _read_clicks(self) -> Dict[str, int]:
         """Read total clicks per article from clicks.db."""
         try:
@@ -145,6 +182,16 @@ class RelentlessCore:
         # win.sh metrics can push a loop into rotation when signals warrant it
         win_metrics = self._read_win_metrics()
         win_runs = win_metrics.get("total_runs", 0) if win_metrics else 0
+
+        # Neural memory can enrich the decision with past insights
+        memory_context = []
+        if self.memory is not None:
+            try:
+                memory_context = self.memory.query(
+                    f"What actions improve drive score when it's at {drive_score:.2f}?"
+                )
+            except Exception as e:
+                logger.warning(f"Memory query failed: {e}")
 
         # If drive score is low, take aggressive actions
         if drive_score < 0.3:
@@ -245,8 +292,96 @@ class RelentlessCore:
             logger.warning(f"Fable grow failed: {e}")
             return {"insight": "", "improvement": ""}
 
+    def _remember(self, action: str, result: str, verified: bool):
+        """Log an outcome to persistent memory (outcomes.jsonl + neural memory)."""
+        outcome = {
+            "action": action,
+            "result": result,
+            "verified": verified,
+            "timestamp": datetime.now().isoformat(),
+        }
+        outcomes_file = self.data_dir / "outcomes.jsonl"
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        with open(outcomes_file, "a", encoding="utf-8") as f:
+            f.write(json.dumps(outcome) + "\n")
+        if self.memory is not None:
+            try:
+                self.memory.ingest("./data", mode="normal")
+                insights = self.memory.discover_insights()
+                if insights:
+                    logger.info(f"Memory discovered {len(insights)} new insights")
+            except Exception as e:
+                logger.warning(f"Memory update failed: {e}")
+
+    def _leader_cycle(self) -> Dict[str, Any]:
+        action = self._decide_action(self.drive_score)
+        followers = self.spawn.get_followers() if self.spawn else []
+        if followers:
+            assigned_follower = followers[0]
+            task = {
+                "id": f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                "action": action,
+                "assigned_by": self.spawn.instance_id,
+                "timestamp": datetime.now().isoformat(),
+            }
+            self.spawn.assign_task(task)
+            logger.info(f"Assigned task '{action}' to {assigned_follower}")
+            return {"action": action, "status": "assigned", "assigned_to": assigned_follower}
+        result = self._execute_action(action)
+        self._remember(action, result, True)
+        return {"action": action, "status": "executed", "result": result}
+
+    def _follower_cycle(self) -> Dict[str, Any]:
+        if self.spawn is None:
+            return self._leader_cycle()
+        task_data = self.spawn.get_my_task()
+        if task_data:
+            action = task_data["task"].get("action")
+            if action:
+                result = self._execute_action(action)
+                self.spawn.complete_task(task_data["id"])
+                logger.info(f"Completed task: {action}")
+                return {"action": action, "status": "executed", "result": result}
+        return {"status": "idle", "message": "No tasks assigned"}
+
+    def _follower_action(self):
+        """Follower pulls one assigned task and executes it (or signals idle)."""
+        if self.spawn is None:
+            return (None, None, None, None)
+        task_data = self.spawn.get_my_task()
+        if not task_data:
+            return (None, None, None, None)
+        action = task_data["task"].get("action")
+        if not action:
+            self.spawn.complete_task(task_data["id"])
+            return (None, None, None, None)
+        result = self._execute_action(action)
+        self.spawn.complete_task(task_data["id"])
+        self._remember(action, result, True)
+        logger.info(f"Completed follower task: {action}")
+        return (action, result, {"verified": True}, {"insight": action})
+
+    def _evolve(self) -> Dict[str, Any]:
+        if self.genesis is None:
+            return {"status": "evolve_skipped", "message": "genesis unavailable"}
+        logger.info(f"EVOLUTION INITIATED: V{self.version} -> V{self.version + 1}")
+        child_path = self.genesis.spawn_child()
+        self.version += 1
+        return {
+            "status": "evolved",
+            "from_version": self.version - 1,
+            "to_version": self.version,
+            "child_path": child_path,
+            "timestamp": datetime.now().isoformat(),
+        }
+
     def cycle(self) -> Dict[str, Any]:
         """Run one drive cycle (Think → Act → Prove → Grow when Fable is available)."""
+        # 0. Evolution trigger: after enough cycles, evolve to a child core
+        self.evolution_counter += 1
+        if self.evolution_counter >= 10 and self.genesis is not None:
+            evolution = self._evolve()
+            return {**evolution, "drive_score": self.drive_score}
         # 1. Calculate current drive score
         drive_score = self._calculate_drive_score()
         self.drive_score = drive_score
@@ -268,15 +403,24 @@ class RelentlessCore:
             except Exception as e:
                 logger.warning(f"Fable think failed: {e}")
 
-        # 2. Decide action
-        action = self._decide_action(drive_score)
-
-        # 3. Execute action
-        result = self._execute_action(action)
+        # 2. Decide action (leader-dictated; followers pick from task queue)
+        if self.spawn is not None and self.role == "follower":
+            action, result, verification, learning = self._follower_action()
+            if action is None:
+                return {
+                    "status": "idle",
+                    "drive_score": drive_score,
+                    "message": "No tasks assigned",
+                    "win_metrics": self._read_win_metrics(),
+                }
+        else:
+            action = self._decide_action(drive_score)
+            result = self._execute_action(action)
+            self._remember(action, result, True)
+            verification = {"verified": False, "evidence": [], "caveats": []}
+            learning = {"insight": "", "improvement": ""}
 
         # 3b. Act/Prove/Grow: wrap the executed action in the Fable loop
-        verification = {"verified": False, "evidence": [], "caveats": []}
-        learning = {"insight": "", "improvement": ""}
         if self.fable is not None:
             try:
                 action_result = self.fable.act(fable_plan or {"task": action, "plan_steps": ["run_cycle_content"]})
@@ -311,6 +455,8 @@ class RelentlessCore:
             "action": action,
             "result": result,
             "ambition_level": self.ambition_level,
+            "role": self.role,
+            "version": self.version,
             "win_metrics": self._read_win_metrics(),
             "fable_plan": fable_plan,
             "fable_verification": verification,

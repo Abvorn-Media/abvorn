@@ -141,6 +141,106 @@ async def dashboard_page():
     return HTMLResponse(content=html, media_type="text/html")
 
 
+# ── Evolution Stack API endpoints ──────────────────────────────────
+@app.get("/api/subscribers")
+async def get_subscribers():
+    """Return all subscribers from the unified database."""
+    import sqlite3
+    from abvorn.core.unified_database import get_unified_db
+
+    db = get_unified_db()
+    conn = sqlite3.connect(db.db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM subscribers")
+    rows = cursor.fetchall()
+    columns = [desc[0] for desc in cursor.description]
+    conn.close()
+    return {"subscribers": [dict(zip(columns, row)) for row in rows]}
+
+
+@app.get("/api/dashboard/stats")
+async def get_dashboard_stats():
+    """Summary stats from the unified database."""
+    from abvorn.core.unified_database import get_unified_db
+
+    return get_unified_db().get_summary()
+
+
+@app.get("/api/dashboard/charts")
+async def get_dashboard_charts():
+    """Generate dashboard charts from the unified database."""
+    from abvorn.core.data_visualizer import DataVisualizer
+
+    viz = DataVisualizer()
+    charts = viz.generate_all_charts()
+    return {"charts": charts}
+
+
+@app.get("/api/price-alerts")
+async def get_price_alerts():
+    """Return all price alerts from the unified database."""
+    import sqlite3
+    from abvorn.core.unified_database import get_unified_db
+
+    db = get_unified_db()
+    conn = sqlite3.connect(db.db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM price_alerts")
+    rows = cursor.fetchall()
+    columns = [desc[0] for desc in cursor.description]
+    conn.close()
+    return {"alerts": [dict(zip(columns, row)) for row in rows]}
+
+
+@app.post("/api/sync-listmonk")
+async def sync_listmonk():
+    """Sync subscribers from Listmonk into the unified database."""
+    from abvorn.core.unified_database import get_unified_db
+    from abvorn.core.listmonk_client import get_listmonk
+
+    db = get_unified_db()
+    listmonk = get_listmonk()
+    db.sync_subscribers_from_listmonk(listmonk)
+    return {"status": "synced"}
+
+
+@app.post("/api/send-price-alerts")
+async def send_price_alerts():
+    """Send any triggered price alerts."""
+    from abvorn.core.email_scheduler import EmailScheduler
+
+    scheduler = EmailScheduler()
+    scheduler.send_price_alert_emails()
+    return {"status": "sent"}
+
+
+@app.get("/api/memory")
+async def get_memory_state():
+    """Return the neural memory state."""
+    from abvorn.core.neural_memory import get_neural_memory
+
+    memory = get_neural_memory()
+    return memory.get_state()
+
+
+@app.get("/api/spawn")
+async def get_spawn_state():
+    """Return the spawn controller state."""
+    from abvorn.core.spawn_controller import SpawnController
+
+    spawn = SpawnController()
+    return spawn.get_state()
+
+
+@app.get("/api/lineage")
+async def get_lineage():
+    """Return the Genesis Protocol lineage."""
+    from abvorn.core.genesis_protocol import GenesisProtocol
+
+    genesis = GenesisProtocol()
+    return genesis.get_lineage()
+
+
 def _call_ai_subprocess(prompt: str) -> str:
     """Call AI in a subprocess with hard timeout. Kills if hung."""
     import subprocess as sp, sys

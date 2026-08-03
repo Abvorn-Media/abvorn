@@ -3380,6 +3380,46 @@ def main(forced_niche=None, force=False, batch_mode=False):
     except Exception as e:
         logger.warning(f"Newsletter send skipped: {e}")
 
+    # ── Evolution Stack: Data Intelligence Layer syncs ─────────────────
+    # 1. Sync subscribers from Listmonk
+    try:
+        from abvorn.core.unified_database import get_unified_db
+        from abvorn.core.listmonk_client import get_listmonk
+
+        db = get_unified_db()
+        listmonk = get_listmonk()
+        db.sync_subscribers_from_listmonk(listmonk)
+    except Exception as e:
+        logger.warning(f"Listmonk sync skipped: {e}")
+
+    # 2. Send triggered price alerts
+    try:
+        from abvorn.core.email_scheduler import EmailScheduler
+
+        scheduler = EmailScheduler()
+        scheduler.send_price_alert_emails()
+    except Exception as e:
+        logger.warning(f"Price alert send skipped: {e}")
+
+    # 3. Generate charts
+    try:
+        from abvorn.core.data_visualizer import DataVisualizer
+
+        viz = DataVisualizer()
+        viz.generate_all_charts()
+    except Exception as e:
+        logger.warning(f"Chart generation skipped: {e}")
+
+    # 4. Update Neural Memory
+    try:
+        from abvorn.core.neural_memory import get_neural_memory
+
+        memory = get_neural_memory()
+        memory.ingest_all()
+        logger.info("Neural memory updated with latest cycle data")
+    except Exception as e:
+        logger.warning(f"Memory update skipped: {e}")
+
 
 from pathlib import Path
 
@@ -3439,5 +3479,10 @@ if __name__ == "__main__":
     parser.add_argument("--niche", type=str, help="Niche slug to process (auto-pick if omitted)")
     parser.add_argument("--force", action="store_true", help="Force regenerate even if has posts")
     parser.add_argument("--batch", action="store_true", help="Process all remaining niches in parallel via DAG")
+    parser.add_argument("--genesis-version", type=int, default=None,
+                        help="Start as a child core at the given evolution version")
     args = parser.parse_args()
+    if args.genesis_version:
+        os.environ["ABVORN_GENESIS_VERSION"] = str(args.genesis_version)
+        print(f"Starting child core at evolution V{args.genesis_version}")
     main(forced_niche=args.niche, force=args.force, batch_mode=args.batch)
