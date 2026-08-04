@@ -54,6 +54,7 @@ data/spawn_state.json
 data/neural_memory_state.json
 data/genesis/
 data/tasks/
+data/debates/
 data/abvorn_unified.db
 docs/console.html
 skills-lock.json

@@ -112,6 +112,15 @@ class RelentlessCore:
         except Exception as e:
             logger.warning(f"Platform skill engine unavailable: {e}")
 
+        # Optional Colosseum adversarial refinement (never fatal if unavailable)
+        self.colosseum = None
+        try:
+            from abvorn.core.colosseum import get_colosseum
+
+            self.colosseum = get_colosseum()
+        except Exception as e:
+            logger.warning(f"Colosseum unavailable: {e}")
+
     def _read_clicks(self) -> Dict[str, int]:
         """Read total clicks per article from clicks.db."""
         try:
@@ -305,14 +314,20 @@ class RelentlessCore:
         return {"product_name": "Sony WH-1000XM6", "verdict": {"overall": 8.7, "label": "Excellent", "breakdown": {"Sound": 9.2, "Comfort": 8.8, "Battery": 7.5}}}
 
     def _publish_content(self) -> str:
-        """Viral Content Engine: build a carousel and adapt it for all platforms."""
+        """Viral Content Engine: build a carousel, refine it, adapt for all platforms."""
         if self.platform_skill is None:
             return "publish_content requested but platform skill engine is unavailable"
         try:
             carousel = self._generate_carousel(self._get_latest_product())
             results = {}
             for platform in self.platform_skill.platforms:
-                adapted = self.platform_skill.generate_platform_content(carousel, platform)
+                refined = carousel
+                if self.colosseum is not None:
+                    try:
+                        refined = self.colosseum.conduct_debate(carousel, platform)
+                    except Exception as e:
+                        logger.warning(f"Colosseum refinement failed for {platform}: {e}")
+                adapted = self.platform_skill.generate_platform_content(refined, platform)
                 results[platform] = self._publish_to_platform(adapted, platform)
             summary = ", ".join(f"{p}={r.get('status')}" for p, r in results.items())
             logger.info(f"[publish_content] {summary}")
