@@ -116,7 +116,6 @@ VERDICT_HTML = """<div class="abvorn-verdict">
 <div class="av-summary">{summary}</div>
 <div class="av-cta">
   <a class="buy-btn" href="{affiliate_url}" target="_blank" rel="sponsored">Check Price on Amazon →</a>
-  <a class="av-detail-link" href="{detail_url}">Read full analysis →</a>
 </div>
 </div>"""
 

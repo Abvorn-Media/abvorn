@@ -38,6 +38,9 @@ from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
 from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, scan_published_reviews, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS
 from src.click_tracker import get_clicks, register_articles_batch
+from src.article_design import (ARTICLE_DESIGN_CSS, upgrade_product_image, product_shot_html,
+                                info_dot, sanitize_article_html, inject_product_photos,
+                                build_faq, hero_pick_html, render_article_body, price_floor_for)
 
 logger = logging.getLogger("run_cycle")
 logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
@@ -275,13 +278,13 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
     # Product image: Amazon image > Pexels > gradient placeholder
     img = ""
     if product_image:
-        img = f'<img src="{product_image}" alt="{html_mod.escape(name)}" loading="lazy" style="width:100px;height:100px;object-fit:contain;background:var(--clr-white);border-radius:var(--radius-sm)">'
+        img = f'<img src="{product_image}" alt="{html_mod.escape(name)}" loading="lazy" style="width:100%;max-height:360px;object-fit:contain;background:var(--clr-white);border-radius:var(--radius-sm)">'
     elif pexels_key:
         img_url = fetch_product_image(name, pexels_key)
         if img_url:
             img = f'<img src="{img_url}" alt="{html_mod.escape(name)}" loading="lazy">'
     if not img:
-        img = '<div style="width:160px;height:160px;background:linear-gradient(135deg,var(--bg-alt),var(--border));border-radius:var(--radius-sm);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.8rem">Product</div>'
+        img = '<div style="width:100%;max-height:360px;background:linear-gradient(135deg,var(--bg-alt),var(--border));border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.8rem;padding:40px 0">Product</div>'
     features_html = "".join(f"<li>{f}</li>" for f in features[:4])
     # Price history: local DB first, CamelCamelCamel as fallback
     history = []
@@ -594,8 +597,6 @@ VERDICT_CARD_CSS = """
 .av-bar-score{flex:0 0 36px;font-size:.85rem;font-weight:700;color:#1a1a1a;text-align:right}
 .av-summary{font-size:.95rem;color:#888;line-height:1.5;margin-bottom:20px}
 .av-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.av-detail-link{font-size:.9rem;color:#666;text-decoration:none;font-weight:600}
-.av-detail-link:hover{color:#1a1a1a;text-decoration:none}
 @media(max-width:640px){.av-score-row{flex-direction:column;align-items:flex-start;gap:8px}.av-bar-label{flex:0 0 100px;font-size:.75rem}.abvorn-verdict{padding:20px 16px}}
 """
 
@@ -772,8 +773,6 @@ article .content li{margin:6px 0;color:var(--text)}
 .av-bar-score{flex:0 0 36px;font-size:.85rem;font-weight:700;color:var(--text);text-align:right}
 .av-summary{font-size:.95rem;color:var(--text-secondary);line-height:1.5;margin-bottom:20px}
 .av-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.av-detail-link{font-size:.9rem;color:var(--text-muted);text-decoration:none;font-weight:600}
-.av-detail-link:hover{color:var(--primary);text-decoration:none}
 .av-score-cell{text-align:center;min-width:80px}
 .av-compact-score{display:block;font-size:1.3rem;font-weight:700;font-family:var(--font-display);color:var(--text);line-height:1}
 .av-compact-label{display:block;font-size:.65rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
@@ -1634,6 +1633,12 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     t = amazon_tag or os.environ.get("AMAZON_TAG", "viraltestco-20")
     article_url = f"{_SITE_URL}/reviews/{niche_slug}/"
     share = SHARE_HTML_T.replace("TITLE_T", html_mod.escape(post_title)).replace("URL_T", article_url)
+    # Sanitize AI-generated content up front: strip duplicated chart fragments,
+    # embedded document wrappers, mojibake, and duplicated Introduction headings.
+    intro = sanitize_article_html(intro)
+    article_html = sanitize_article_html(article_html)
+    # Guarantee per-product photography even when the AI writer omits images.
+    article_html = inject_product_photos(article_html, products or [])
     product_cards = ""
     if products:
         product_cards = '<section class="section"><div class="container"><div class="section-title">Products Mentioned</div><div class="product-section">'
@@ -1651,6 +1656,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     matrix_html = f'<div class="decision-matrix"><table><thead><tr><th>Use Case</th><th>Product</th><th>Why</th></tr></thead><tbody>{matrix_rows}</tbody></table></div>' if matrix_rows else ""
     verdict_html = ""
     hero_img_html = ""
+    _verdict_summary = None
     verdict_chart_data = {"overall": 0, "label": "", "breakdown": {}, "productName": product_name}
     if products and len(products) > 0:
         p0 = products[0]
@@ -1663,6 +1669,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             verdict = engine.score_product(niche_slug, p0)
             detail_url = f"{b}/reviews/{niche_slug}/"
             verdict_html = render_verdict_card(verdict, p0.get('name', product_name), p0_aff, detail_url)
+            _verdict_summary = verdict.get("summary")
         except Exception:
             verdict_html = f"""<div class="verdict-box"><div class="verdict-title">{html_mod.escape(clean_product_name(p0.get('name', product_name)))}</div><div class="verdict-price">{p0.get('price', 'Check price')}</div><div class="verdict-for"><strong>Best for:</strong> {html_mod.escape(p0.get('description', 'Anyone looking for the best in this category.'))}</div><div class="verdict-not-for"><strong>Don't buy this if:</strong> You need a different use case covered by our other picks below.</div><a class="buy-btn" href="{p0_aff}" target="_blank" rel="sponsored">Check Price on Amazon</a></div>"""
             verdict = None
@@ -1705,11 +1712,17 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
                 breakdown[label] = score
             overall = sum(breakdown.values()) / len(breakdown) if breakdown else 7.0
             verdict_chart_data = {"overall": round(overall, 1), "label": "", "breakdown": breakdown, "productName": clean_product_name(p0.get("name", product_name))}
-        # Build hero image from hero_img or first product
-        if hero_img:
+        # Hero visual: the "Our Choice" pick on a studio backdrop. Fall back to
+        # the passed hero_img (legacy) then the raw product thumbnail.
+        hero_pick = ""
+        if products:
+            hero_pick = hero_pick_html(p0, verdict_chart_data.get("overall", ""), verdict_chart_data.get("label", ""), p0_aff, b, niche_slug)
+        if hero_pick:
+            hero_img_html = hero_pick
+        elif hero_img:
             hero_img_html = hero_img
         elif p0.get("image"):
-            hero_img_html = f'<img src="{html_mod.escape(p0["image"])}" alt="{html_mod.escape(clean_product_name(p0.get("name", product_name)))}" loading="eager">'
+            hero_img_html = f'<img class="hero-plain" src="{html_mod.escape(upgrade_product_image(p0["image"]))}" alt="{html_mod.escape(clean_product_name(p0.get("name", product_name)))}" loading="eager">'
     verdict_json = json.dumps(verdict_chart_data, ensure_ascii=False).replace('<', '\\u003c')
     bread = breadcrumb_schema([
         ("Abvorn", "/"),
@@ -1741,6 +1754,19 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             for r in related_niches
         )
         related_html = f'<section class="section"><div class="container"><div class="section-title">Related Categories</div><div class="grid-3">{cards}</div></div></section>'
+    # Guaranteed FAQ section + FAQPage JSON-LD (generated from rubric + products).
+    faq_html = ""
+    faq_jsonld = ""
+    try:
+        faq_html, faq_questions = build_faq(
+            niche_slug, niche_name, products or [], product_name,
+            price_floor_for(niche_slug),
+            verdict_summary=_verdict_summary,
+            top_score=verdict_chart_data.get("overall"),
+        )
+        faq_jsonld = faq_schema(faq_questions) if faq_questions else ""
+    except Exception:
+        pass
     # Build nav dropdown
     nav_dd = build_category_dropdown(b)
     # Footer
@@ -1751,29 +1777,61 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         article_html = rewrite_affiliate_urls(article_html, article_id)
         product_cards = rewrite_affiliate_urls(product_cards, article_id)
 
-    # Assemble full article body content
-    article_body_content = f'''{FTC_DISCLOSURE}
-        {cta}
-        {matrix_html}
-        {verdict_html}
-        <div class="chart-section">
-            <h3 class="section-title">Performance Breakdown</h3>
-            <div class="chart-wrapper">
-                <canvas id="verdictChart"></canvas>
-            </div>
-            <p class="chart-note">Scores out of 10. Based on the Abvorn Verdict Engine.</p>
-        </div>
-        {intro}
-        {article_html}
-        <div class="reactions-bar" data-review="{niche_slug}">
-        <span class="reactions-label">Did this review help?</span>
-        <button type="button" class="reaction-btn" data-type="like" aria-label="Like this review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>
-        <button type="button" class="reaction-btn" data-type="love" aria-label="Love this review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>
-        </div>
-        {share}
-        {related_html}
-        {product_cards}
-        <div class="further-reading"><h3>Further Reading</h3><ul>__FURTHER_READING__</ul></div>'''
+    # Strategic flow: hook first, then the verdict, then the evidence, then FAQ.
+    verdict_explainer = info_dot(
+        "The Abvorn Verdict Engine scores every product out of 10 across the "
+        "criteria that matter most for this category — the weighted rubric is "
+        "shown in the chart below. Scores are data-driven, not sponsored."
+    )
+    chart_explainer = info_dot(
+        "Each spoke is one weighted criterion for this category. The closer the "
+        "line reaches 10, the better that product scored — so you can see at a "
+        "glance where it wins and where it falls short."
+    )
+    matrix_explainer = info_dot(
+        "Every pick below is scored with the same rubric on the same data — the "
+        "table lets you compare use cases before you read the full breakdown."
+    )
+    verdict_html = verdict_html.replace(
+        '<div class="av-badge">Abvorn Verdict</div>',
+        f'<div class="av-badge">Abvorn Verdict</div>{verdict_explainer}',
+        1,
+    ) if '<div class="av-badge">' in verdict_html else verdict_html
+    chart_html = (
+        '<div class="chart-section">'
+        f'<h3 class="section-title">Performance Breakdown {chart_explainer}</h3>'
+        '<div class="chart-wrapper"><canvas id="verdictChart"></canvas></div>'
+        '<p class="chart-note">Scores out of 10. Based on the Abvorn Verdict Engine.</p>'
+        '</div>'
+    )
+    if matrix_html:
+        matrix_html = (
+            '<div class="decision-matrix-wrap">'
+            f'<h3 class="section-title">At a glance {matrix_explainer}</h3>'
+            f'{matrix_html}</div>'
+        )
+
+    article_body_content = render_article_body(
+        disclosure=FTC_DISCLOSURE,
+        intro=intro,
+        verdict_html=verdict_html,
+        chart_html=chart_html,
+        article_html=article_html,
+        matrix_html=matrix_html,
+        faq_html=faq_html,
+        reactions=(
+            f'<div class="reactions-bar" data-review="{niche_slug}">'
+            '<span class="reactions-label">Did this review help?</span>'
+            '<button type="button" class="reaction-btn" data-type="like" aria-label="Like this review"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></button>'
+            '<button type="button" class="reaction-btn" data-type="love" aria-label="Love this review"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></button>'
+            '</div>'
+        ),
+        share=share,
+        related_html=related_html,
+        product_cards=product_cards,
+        further_reading='<div class="further-reading"><h3>Further Reading</h3><ul>__FURTHER_READING__</ul></div>',
+        cta=cta,
+    )
 
     further_reading_links = ""
     if related_niches:
@@ -1806,11 +1864,13 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {bread}
+    {faq_jsonld}
     <script id="abvorn-rps-data" type="application/json">{rps_json}</script>
     <style>
         :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; }}
         {DESIGN_SYSTEM_CSS}
         {VERDICT_CARD_CSS}
+        {ARTICLE_DESIGN_CSS}
         
         .top-bar {{ background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }}
         .top-bar .container {{ display:flex; justify-content:space-between; align-items:center; }}
@@ -1852,11 +1912,11 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .article-hero .meta .published-date, .article-hero .meta .updated-date {{ display:inline-block; font-size:0.75rem; color:var(--clr-mid-gray); background:var(--clr-off-white); padding:2px 10px; border-radius:var(--radius-sm); margin-left:6px; }}
         .article-hero .meta .updated-date {{ background:var(--clr-accent); color:#1a1200; font-weight:600; }}
         .article-hero .excerpt {{ font-size:var(--text-lg); color:#ccc; max-width:50ch; margin-top:var(--space-md); }}
-        .hero-image-wrapper {{ position:relative; border-radius:var(--radius-md); overflow:hidden; background:#1a1a1a; display:flex; align-items:center; justify-content:center; min-height:260px; padding:var(--space-md); }}
-        .hero-image-wrapper img {{ width:100%; height:auto; max-height:320px; object-fit:contain; }}
-        @media (max-width:860px) {{ .article-hero .hero-grid {{ grid-template-columns:1fr; }} .hero-image-wrapper {{ order:-1; min-height:180px; }} }}
+        .hero-image-wrapper {{ position:relative; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; min-height:260px; padding:var(--space-md); }}
+        .hero-image-wrapper img.hero-plain {{ width:100%; height:auto; max-height:320px; object-fit:contain; border-radius:var(--radius-md); }}
+        @media (max-width:860px) {{ .article-hero .hero-grid {{ grid-template-columns:1fr; }} .hero-image-wrapper {{ order:-1; min-height:auto; padding:0; }} }}
         /* ===== VERDICT RADAR CHART ===== */
-        .chart-section {{ margin:var(--space-xl) 0; padding:var(--space-lg); background:var(--clr-off-white); border-radius:var(--radius-md); border:1px solid var(--clr-light-gray); }}
+        .chart-section {{ margin:var(--space-xl) 0; padding:var(--space-lg); background:var(--clr-white); border-radius:var(--radius-md); border:1px solid var(--clr-light-gray); }}
         .chart-wrapper {{ width:100%; max-width:500px; height:400px; margin:0 auto; }}
         .chart-note {{ text-align:center; font-size:0.8rem; color:var(--clr-mid-gray); margin-top:var(--space-sm); margin-bottom:0; }}
         @media (max-width:600px) {{ .chart-wrapper {{ height:300px; }} }}
@@ -1880,10 +1940,10 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 
         .product-section {{ margin:var(--space-xl) 0; }}
         .section-title {{ font-weight:800; text-transform:uppercase; letter-spacing:0.08em; font-size:0.75rem; margin-bottom:var(--space-md); border-bottom:3px solid var(--clr-primary); padding-bottom:8px; display:inline-block; }}
-        .product-section {{ display:grid; grid-template-columns:1fr 1fr; gap:var(--space-lg); }}
-        .product-card {{ display:grid; grid-template-columns:100px 1fr; gap:var(--space-md); background:var(--clr-off-white); border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); padding:var(--space-md); transition: transform var(--duration-base), box-shadow var(--duration-base); }}
+        .product-section {{ display:grid; grid-template-columns:1fr; gap:var(--space-xl); }}
+        .product-card {{ display:grid; grid-template-columns:1fr; gap:var(--space-md); background:var(--clr-white); border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); padding:var(--space-lg); transition: transform var(--duration-base), box-shadow var(--duration-base); }}
         .product-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
-        .product-card img {{ width:100px; height:100px; object-fit:contain; border-radius:var(--radius-sm); background:var(--clr-white); }}
+        .product-card img {{ width:100%; height:auto; max-height:360px; object-fit:contain; border-radius:var(--radius-sm); background:var(--clr-white); }}
         .product-card-body h3 {{ font-size:var(--text-base); margin-bottom:2px; }}
         .product-card-body .price {{ font-size:var(--text-sm); color:var(--clr-accent); font-weight:700; margin-bottom:4px; }}
         .product-card-body p {{ font-size:0.85rem; color:var(--clr-mid-gray); margin-bottom:6px; }}
@@ -1926,6 +1986,27 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .further-reading li {{ margin-bottom:8px; }}
         .further-reading a {{ color:var(--clr-primary); text-decoration:none; font-weight:600; }}
         .further-reading a:hover {{ color:var(--clr-accent-text); }}
+
+        .decision-matrix-wrap {{ margin:var(--space-xl) 0; }}
+        .decision-matrix {{ margin:var(--space-lg) 0; overflow-x:auto; background:var(--clr-white); border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); padding:var(--space-lg); }}
+        .decision-matrix table {{ width:100%; border-collapse:collapse; font-size:var(--text-sm); }}
+        .decision-matrix th {{ background:var(--clr-white); text-align:left; padding:12px 16px; font-weight:700; color:var(--clr-black); font-family:var(--font-display); border-bottom:2px solid var(--clr-light-gray); }}
+        .decision-matrix td {{ padding:12px 16px; border-bottom:1px solid var(--clr-light-gray); color:var(--clr-mid-gray); vertical-align:top; }}
+        .decision-matrix tr:last-child td {{ border-bottom:none; }}
+        .decision-matrix td:first-child {{ font-weight:700; color:var(--clr-black); white-space:nowrap; }}
+        .decision-matrix td:last-child {{ color:var(--clr-off-black); }}
+
+        .grid-3 {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:var(--space-lg); }}
+        .cat-card {{ padding:var(--space-lg); border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); transition:all .25s cubic-bezier(.4,0,.2,1); box-shadow:var(--shadow-sm); text-decoration:none; display:block; background:var(--clr-off-white); position:relative; overflow:hidden; }}
+        .cat-card::after {{ content:''; position:absolute; bottom:0; left:20%; right:20%; height:3px; background:var(--clr-accent); border-radius:3px 3px 0 0; transform:scaleX(0); transition:transform .25s cubic-bezier(.4,0,.2,1); }}
+        .cat-card:hover {{ box-shadow:var(--shadow-md); transform:translateY(-4px); text-decoration:none; }}
+        .cat-card:hover::after {{ transform:scaleX(1); }}
+        .cat-card .cat-name {{ font-weight:700; font-size:1.1rem; color:var(--clr-black); margin-bottom:4px; font-family:var(--font-display); }}
+        .cat-card .cat-count {{ font-size:.85rem; color:var(--clr-mid-gray); }}
+
+        .product-shot {{ max-width:100%; }}
+        .article-body .product-shot--body img {{ max-width:100%; margin:0; height:100%; object-fit:contain; }}
+        .product-shot img {{ margin:0 !important; }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
         .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}

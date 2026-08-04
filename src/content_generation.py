@@ -15,6 +15,7 @@ from src.ai_sql import QueryPlan
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.agent_reach_adapter import get_agent_reach_adapter
+from src.article_design import sanitize_article_html, upgrade_product_image
 
 _cost_per_1k = {
     "openai": 0.002,
@@ -176,6 +177,7 @@ Return ONLY the HTML paragraphs, wrapped in <p> tags."""
     _track_call(niche, intro_result.provider_used, intro_result.tokens_used, (time.time() - t0) * 1000)
     if not intro_html:
         intro_html = "<p>We tested the top products to find the ones worth your money.</p>"
+    intro_html = sanitize_article_html(intro_html, strip_leading_intro=False)
 
     article_prompt = f"""Write the full article body for '{post_title}' about {niche}.
 Products: {products_text}
@@ -198,6 +200,14 @@ Return ONLY the HTML."""
     _track_call(niche, article_result.provider_used, article_result.tokens_used, (time.time() - t0) * 1000)
     if not article_html:
         article_html = "<p>We're reviewing the top products in this category.</p>"
+    article_html = sanitize_article_html(article_html)
+
+    # Upgrade any embedded product thumbnails to hi-res studio-ready images.
+    products = [dict(p) for p in products]
+    for p in products:
+        if p.get("image"):
+            p["image"] = upgrade_product_image(p["image"])
+    products_text = json.dumps(products, indent=2)
 
     return {
         "post_title": post_title,
