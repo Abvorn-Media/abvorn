@@ -1005,7 +1005,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .niche-card { border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }
         .niche-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
         .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; }
-        .niche-card img { width:100%; height:100%; object-fit:cover; }
+        .niche-card img { width:100%; height:100%; object-fit:contain; }
         .niche-card h2 { font-size:var(--text-lg); margin: var(--space-md) var(--space-md) 8px; }
         .niche-card h2 a { color:inherit; text-decoration:none; }
         .niche-card p { font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }
@@ -1349,7 +1349,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }}
         .niche-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
         .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; }}
-        .niche-card img {{ width:100%; height:100%; object-fit:cover; }}
+        .niche-card img {{ width:100%; height:100%; object-fit:contain; }}
         .niche-card h2 {{ font-size:var(--text-lg); margin: var(--space-md) var(--space-md) 8px; }}
         .niche-card h2 a {{ color:inherit; text-decoration:none; }}
         .niche-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
