@@ -262,28 +262,6 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
         @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
     </style>
-
-
-
-<style>
-#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
-#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
-#cookie-banner p{margin:0;color:#ffffff;font-size:13px}
-#cookie-banner a{color:#c98a2c;text-decoration:underline}
-#cookie-banner .btn{background:#c98a2c;color:#0a0a0a;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}
-#cookie-banner .btn:hover{background:#d4a03a}
-#cookie-banner .btn-secondary{background:transparent;color:#ffffff;border:1px solid #555;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
-#cookie-banner .btn-secondary:hover{border-color:#888}
-</style>
-<script>window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()</script>
-<div id="cookie-banner" role="dialog" aria-label="Cookie consent">
-<p>We use cookies to analyze traffic and improve your experience. <a href="/abvorn/privacy/">Privacy Policy</a></p>
-<button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
-<button class="btn" onclick="acceptAnalytics()">Accept</button>
-</div>
-<script>
-(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){return}var b=document.getElementById("cookie-banner");if(b){b.classList.add("show")}window.acceptAnalytics=function(){document.cookie="analytics_consent=granted; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show");if(typeof loadAnalytics==="function"){loadAnalytics()}};window.declineAnalytics=function(){document.cookie="analytics_consent=denied; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show")}})();
-</script>
 </head>
 <body>
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
@@ -299,7 +277,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         <a href="/abvorn/privacy.html">Privacy</a>
     </nav>
 </div></header>
-<div class="trending-ticker"><div class="container"><div class="trending-ticker__track"><div class="trending-ticker__inner"><span class="trending-ticker__label">Latest updates:</span><span id="trending-items"><a href="/abvorn/4k-monitors/" class="trending-ticker__item">4K Monitors</a> · <a href="/abvorn/fitness-trackers/" class="trending-ticker__item">Fitness Trackers</a> · <a href="/abvorn/gaming-mice/" class="trending-ticker__item">Gaming Mice</a> · <a href="/abvorn/laptops/" class="trending-ticker__item">Laptops</a> · <a href="/abvorn/mechanical-keyboards/" class="trending-ticker__item">Mechanical Keyboards</a> · <a href="/abvorn/smart-home/" class="trending-ticker__item">Smart Home</a> · <a href="/abvorn/streaming-devices/" class="trending-ticker__item">Streaming Devices</a> · <a href="/abvorn/webcams/" class="trending-ticker__item">Webcams</a> · <a href="/abvorn/wireless-earbuds/" class="trending-ticker__item">Wireless Earbuds</a> · <a href="/abvorn/wireless-headphones/" class="trending-ticker__item">Wireless Headphones</a></span></div><div class="trending-ticker__inner" aria-hidden="true"><span class="trending-ticker__label">Latest updates:</span><span><a href="/abvorn/4k-monitors/" class="trending-ticker__item">4K Monitors</a> · <a href="/abvorn/fitness-trackers/" class="trending-ticker__item">Fitness Trackers</a> · <a href="/abvorn/gaming-mice/" class="trending-ticker__item">Gaming Mice</a> · <a href="/abvorn/laptops/" class="trending-ticker__item">Laptops</a> · <a href="/abvorn/mechanical-keyboards/" class="trending-ticker__item">Mechanical Keyboards</a> · <a href="/abvorn/smart-home/" class="trending-ticker__item">Smart Home</a> · <a href="/abvorn/streaming-devices/" class="trending-ticker__item">Streaming Devices</a> · <a href="/abvorn/webcams/" class="trending-ticker__item">Webcams</a> · <a href="/abvorn/wireless-earbuds/" class="trending-ticker__item">Wireless Earbuds</a> · <a href="/abvorn/wireless-headphones/" class="trending-ticker__item">Wireless Headphones</a></span></div></div></div></div>
+<div class="trending-ticker"><div class="container"><div class="trending-ticker__track"><div class="trending-ticker__inner"><span class="trending-ticker__label">Latest updates:</span><span id="trending-items">No reviews yet</span></div><div class="trending-ticker__inner" aria-hidden="true"><span class="trending-ticker__label">Latest updates:</span><span>No reviews yet</span></div></div></div></div>
 
 <section class="hero"><div class="container hero-grid">
     <div>
@@ -315,9 +293,9 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 </div></section>
 
 <section class="stats-band"><div class="container stats-grid">
-    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="89">0</div><div class="stat-label">Guides published</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="0">0</div><div class="stat-label">Guides published</div></div>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="stat-number" data-target="10">0</div><div class="stat-label">Categories covered</div></div>
-    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="267">0</div><div class="stat-label">Products compared</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="0">0</div><div class="stat-label">Products compared</div></div>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3.5-7.1"/><path d="M21 3v6h-6"/></svg></div><div class="stat-number">Weekly</div><div class="stat-label">Review cycle</div></div>
 </div></section>
 
@@ -350,9 +328,9 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         <a href="/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
     </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
-    <a href="/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones 2024: A Comparison Guide to Find Your Perfect Pair" loading="lazy"></figure></div></a>
+    <a href="/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones 2024: Top Over-Ear Picks Compared" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
-    <h2><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones 2024: A Comparison Guide to Find Your Perfect Pair</a></h2>
+    <h2><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones 2024: Top Over-Ear Picks Compared</a></h2>
     
     <div class="review-card__footer">
         <div class="review-card__reactions" data-review="wireless-headphones">
@@ -362,9 +340,9 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         <a href="/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
     </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
-    <a href="/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones in 2024: Top Picks for Noise Cancelling &amp; Battery Life" loading="lazy"></figure></div></a>
+    <a href="/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones 2024: A Comparison Guide to Find Your Perfect Pair" loading="lazy"></figure></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
-    <h2><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones in 2024: Top Picks for Noise Cancelling &amp; Battery Life</a></h2>
+    <h2><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones 2024: A Comparison Guide to Find Your Perfect Pair</a></h2>
     
     <div class="review-card__footer">
         <div class="review-card__reactions" data-review="wireless-headphones">
@@ -392,9 +370,9 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         <a href="/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
     </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
-    <a href="/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones 2024: A Comparison Guide to Find Your Perfect Pair" loading="lazy"></figure></div></a>
+    <a href="/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/wireless-headphones.png" alt="Best Wireless Headphones 2024: Top Over-Ear Picks Compared" loading="lazy"></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
-    <h2><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones 2024: A Comparison Guide to Find Your Perfect Pair</a></h2>
+    <h2><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones 2024: Top Over-Ear Picks Compared</a></h2>
     
     <div class="review-card__footer">
         <div class="review-card__reactions" data-review="wireless-headphones">
@@ -404,9 +382,9 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         <a href="/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
     </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
-    <a href="/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones in 2024: Top Picks for Noise Cancelling &amp; Battery Life" loading="lazy"></figure></div></a>
+    <a href="/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones 2024: A Comparison Guide to Find Your Perfect Pair" loading="lazy"></figure></div></a>
     <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
-    <h2><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones in 2024: Top Picks for Noise Cancelling &amp; Battery Life</a></h2>
+    <h2><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones 2024: A Comparison Guide to Find Your Perfect Pair</a></h2>
     
     <div class="review-card__footer">
         <div class="review-card__reactions" data-review="wireless-headphones">
