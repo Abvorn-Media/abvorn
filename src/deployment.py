@@ -2237,7 +2237,7 @@ CONSENT_JS = '''
 (function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){return}var b=document.getElementById("cookie-banner");if(b){b.classList.add("show")}window.acceptAnalytics=function(){document.cookie="analytics_consent=granted; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show");loadAnalytics()};window.declineAnalytics=function(){document.cookie="analytics_consent=denied; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show")}})()
 '''
 ANALYTICS_HTML = ''
-_ga_id = os.environ.get("GA_MEASUREMENT_ID", "")
+_ga_id = os.environ.get("GA_MEASUREMENT_ID", "G-J0GTXLC86C")
 if _ga_id:
     ANALYTICS_HTML = f'''<script>window.loadAnalytics=function(){{var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id={_ga_id}";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments)}};gtag("js",new Date());gtag("config","{_ga_id}")}};(function(){{var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){{loadAnalytics()}}}})()</script>
 <div id="cookie-banner" role="dialog" aria-label="Cookie consent">
