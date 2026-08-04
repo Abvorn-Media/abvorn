@@ -386,6 +386,9 @@ def load_verdict_weights() -> dict:
 _INTRO_RE = re.compile(r"<h2>\s*Introduction\s*</h2>\s*<p[^>]*>(.*?)</p>", re.S)
 # The "Our Choice" hero pick product photo rendered into the article hero.
 _HERO_PICK_IMG_RE = re.compile(r'<div class="hero-pick".*?<img class="product-shot__img" src="([^"]+)"', re.S)
+# Abvorn Verdict overall score embedded on published review pages (either plain
+# JSON or the HTML-entity-escaped variant), e.g. '"overall": 7.0'.
+_VERDICT_OVERALL_RE = re.compile(r'overall.{0,40}?([0-9]+(?:\.[0-9]+)?)')
 _BOILERPLATE_RE = re.compile(
     r"^(we'?ve done the research|scores out of 10|we tested the top products|we'?re reviewing the top products)",
     re.I,
@@ -446,6 +449,8 @@ def scan_published_reviews(docs_dir="docs"):
                 m = _HERO_PICK_IMG_RE.search(html)
                 if m:
                     hero_img = html_mod.unescape(m.group(1))
+            m_score = _VERDICT_OVERALL_RE.search(html)
+            score = float(m_score.group(1)) if m_score else None
             reviews.append({
                 "slug": slug,
                 "name": _niche_name(slug),
@@ -454,6 +459,7 @@ def scan_published_reviews(docs_dir="docs"):
                 "rel": rel,
                 "snippet": review_snippet(html) or index_snippet,
                 "image": hero_img or "",
+                "score": score,
             })
     return reviews
 
@@ -475,8 +481,8 @@ def verify_page(html_content: str) -> bool:
     return True
 
 
-def review_card(item, category, b):
-    """One review card with a category+niche banner, snippet, and bottom-aligned CTA.
+def review_card(item, category, b, featured=False):
+    """One review card with a category+niche banner, verdict score, snippet, and bottom-aligned CTA.
 
     Uses the review's "Our Choice" studio product photo when available so the
     universal photography treatment carries through to cards; falls back to the
@@ -493,17 +499,42 @@ def review_card(item, category, b):
         card_img = product_shot_html(item["image"], item["title"], size="card")
     else:
         card_img = f'<img src="{review_img(item["slug"], b)}" alt="{title}" loading="lazy">'
-    return f'''<div class="niche-card review-card" style="--cat:{color}">
-    <a href="{href}"><div class="niche-card__image-wrapper">{card_img}</div></a>
-    <span class="review-card__banner" style="background:{color}">{category} · {item["name"]}</span>
-    <h2><a href="{href}">{title}</a></h2>
-    {snippet_html}
-    <div class="review-card__footer">
-        <div class="review-card__reactions" data-review="{item["slug"]}">
-            <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
-            <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
+
+    # Verdict score badge — the single strongest trust signal on the card.
+    score = item.get("score")
+    if score:
+        score_html = f'<span class="review-card__score" aria-label="Abvorn Verdict {score:.1f} out of 10"><span class="review-card__score-num">{score:.1f}</span><span class="review-card__score-out">/10</span></span>'
+    else:
+        score_html = ''
+
+    # Freshness line (only when the page records an update date).
+    updated_html = ""
+    if item.get("updated"):
+        try:
+            d = datetime.strptime(item["updated"], "%Y-%m-%d")
+            label = f'Updated {d.strftime("%b %Y")}'
+        except ValueError:
+            label = f'Updated {html_mod.escape(item["updated"])}'
+        updated_html = f'<span class="review-card__updated">{label}</span>'
+
+    cls = " niche-card--featured" if featured else ""
+    return f'''<div class="niche-card review-card{cls}" style="--cat:{color}">
+    <div class="review-card__media">
+        <a href="{href}" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper">{card_img}</div></a>
+        <span class="review-card__banner" style="background:{color}">{html_mod.escape(category)} · {html_mod.escape(item["name"])}</span>
+        {score_html}
+    </div>
+    <div class="review-card__body">
+        <h2><a href="{href}">{title}</a></h2>
+        {snippet_html}
+        <div class="review-card__footer">
+            <div class="review-card__reactions" data-review="{item["slug"]}">
+                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
+            </div>
+            <a href="{href}" class="read-link">Read review →</a>
         </div>
-        <a href="{href}" class="read-link">Read review →</a>
+        {updated_html}
     </div>
 </div>'''
 
@@ -680,29 +711,30 @@ def build_homepage(state, form_url="", reviews=None, base=None):
         hero_dots += f'<button class="hero-slider__dot{active}" aria-label="Show {name}" aria-current="{"true" if i == 0 else "false"}"></button>'
 
     # Build latest review cards — the 3 most recently updated reviews, with
-    # the same Category · Niche banner as the category sections.
+    # the same Category · Niche banner as the category sections. The newest
+    # review is promoted to a full-width featured spotlight card.
+    latest_list = sorted(review_list, key=lambda x: x["updated"], reverse=True)[:3]
     latest_cards = ""
-    for r in sorted(review_list, key=lambda x: x["updated"], reverse=True)[:3]:
+    for i, r in enumerate(latest_list):
         cat_name = next((c for c, slugs in CATEGORY_MAP.items() if r["slug"] in slugs), "")
-        latest_cards += review_card(r, cat_name, b)
+        latest_cards += review_card(r, cat_name, b, featured=(i == 0))
 
     # Build category sections — one per category, alphabetical, latest 3 reviews each.
     cat_sections = ""
-    for cat_name, slugs in CATEGORY_MAP.items():
+    for sec_idx, (cat_name, slugs) in enumerate(CATEGORY_MAP.items(), start=1):
         cat_items = [r for r in review_list if r["slug"] in slugs]
         cat_items.sort(key=lambda r: r["updated"], reverse=True)
         top = cat_items[:3]
         if top:
             cards = "".join(review_card(r, cat_name, b) for r in top)
         else:
-            cards = f'''<div class="niche-card">
-    <div class="niche-card__image-wrapper"><img src="{b}/assets/hero-home.svg" alt="Coming soon" loading="lazy"></div>
-    <span class="review-card__banner" style="background:{category_color(cat_name)}">{cat_name}</span>
-    <h2>Reviews coming soon</h2>
-    <p>We're testing products in this category now.</p>
+            cards = f'''<div class="niche-card" style="--cat:{category_color(cat_name)}">
+    <div class="niche-card__media"><div class="niche-card__image-wrapper"><img src="{b}/assets/hero-home.svg" alt="Coming soon" loading="lazy"></div><span class="review-card__banner" style="background:{category_color(cat_name)}">{html_mod.escape(cat_name)}</span></div>
+    <div class="review-card__body"><h2>Reviews coming soon</h2><p class="review-card__snippet">We're testing products in this category now.</p></div>
 </div>'''
-        cat_sections += f'''<div class="category-section">
-    <div class="category-section__header"><h2>{cat_name}</h2><a href="{b}/categories/{_category_slug(cat_name)}/">View all in {cat_name} →</a></div>
+        cat_color = category_color(cat_name)
+        cat_sections += f'''<div class="category-section" style="--cat:{cat_color}">
+    <div class="category-section__header"><h2><span class="sec-num">{sec_idx:02d}</span>{cat_name}</h2><a href="{b}/categories/{_category_slug(cat_name)}/">View all in {cat_name} →</a></div>
     <div class="niche-grid">{cards}</div>
 </div>'''
     if not cat_sections:
@@ -750,16 +782,20 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         link = f"{b}/reviews/{niche_slug}/"
         img_src = carousel_img(niche_slug, b)
         post_cards += f'''<div class="niche-card review-card" style="--cat:{category_color(category)}">
-    <a href="{link}"><div class="niche-card__image-wrapper"><img src="{img_src}" alt="{html_mod.escape(title)}" loading="lazy"></div></a>
-    <span class="review-card__banner" style="background:{category_color(category)}">{category} · {html_mod.escape(niche_name)}</span>
-    <h2><a href="{link}">{html_mod.escape(title)}</a></h2>
-    <p class="review-card__snippet">Expert-tested and reviewed. See why this made our list.</p>
-    <div class="review-card__footer">
-        <div class="review-card__reactions" data-review="{niche_slug}">
-            <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
-            <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
+    <div class="review-card__media">
+        <a href="{link}" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><img src="{img_src}" alt="{html_mod.escape(title)}" loading="lazy"></div></a>
+        <span class="review-card__banner" style="background:{category_color(category)}">{category} · {html_mod.escape(niche_name)}</span>
+    </div>
+    <div class="review-card__body">
+        <h2><a href="{link}">{html_mod.escape(title)}</a></h2>
+        <p class="review-card__snippet">Expert-tested and reviewed. See why this made our list.</p>
+        <div class="review-card__footer">
+            <div class="review-card__reactions" data-review="{niche_slug}">
+                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
+            </div>
+            <a href="{link}" class="read-link">Read more →</a>
         </div>
-        <a href="{link}" class="read-link">Read more →</a>
     </div>
 </div>'''
 
@@ -843,25 +879,27 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         @media (max-width:700px) {{ .subscribe-inner {{ flex-direction:column; align-items:flex-start; }} .subscribe-form .input {{ width:100%; }} }}
 
         .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }}
-        .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }}
-        .niche-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
-        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; }}
-        .niche-card img {{ width:100%; height:100%; object-fit:contain; }}
-        .niche-card h2 {{ font-size:var(--text-lg); margin: var(--space-md) var(--space-md) 8px; }}
-        .niche-card h2 a {{ color:inherit; text-decoration:none; }}
-        .niche-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
-        .niche-card .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
-        .niche-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }}
-        .niche-card .read-link:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
-        .review-card__banner {{ display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }}
-        .review-card__banner + h2 {{ margin: 6px var(--space-md) 8px; }}
-        .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }}
-        .review-card__footer .read-link {{ margin:0; align-self:auto; }}
+        .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); overflow:hidden; transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); background:var(--clr-white); display:flex; flex-direction:column; }}
+        .niche-card:hover {{ transform:translateY(-6px); box-shadow:var(--shadow-lg); }}
+        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; background:var(--clr-off-white); }}
+        .niche-card img {{ width:100%; height:100%; object-fit:contain; transition: transform var(--duration-slow) var(--ease-out); }}
+        .niche-card:hover img {{ transform: scale(1.04); }}
+        .review-card__media {{ position:relative; }}
+        .review-card__banner {{ position:absolute; top:14px; left:14px; z-index:2; display:inline-block; padding:4px 12px; border-radius:100px; color:#1a1200; font-size:0.64rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; box-shadow: var(--shadow-sm); }}
+        .review-card__body {{ display:flex; flex-direction:column; flex:1; padding: var(--space-md); }}
+        .review-card__body h2 {{ font-size: var(--text-lg); margin:0 0 8px; line-height:1.25; }}
+        .review-card__body h2 a {{ color:inherit; text-decoration:none; }}
+        .review-card__body h2 a:hover {{ color: var(--clr-accent-text); }}
+        .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
+        .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top: var(--space-sm); }}
+        .review-card__footer .read-link {{ font-weight:700; font-size:0.82rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; }}
+        .review-card__footer .read-link:hover {{ color: var(--clr-accent-text); }}
         .review-card__reactions {{ display:flex; gap:6px; }}
         .review-card__reactions .reaction-btn {{ display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; font-family:var(--font-body); }}
         .review-card__reactions .reaction-btn.is-counter {{ cursor:default; }}
         .review-card__reactions .reaction-icon {{ font-size:0.9rem; line-height:1; }}
         .review-card__reactions .reaction-count {{ font-weight:700; min-width:14px; text-align:center; }}
+        .review-card__updated {{ display:block; font-size:0.72rem; color:#999; margin-top: var(--space-sm); }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
         .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
@@ -1099,30 +1137,42 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
 
         .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }}
         .category-section {{ padding-top: var(--space-2xl); scroll-margin-top: 90px; }}
-        .category-section__header {{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-light-gray); padding-bottom: var(--space-sm); }}
-        .category-section__header h2 {{ font-size: var(--text-2xl); margin:0; }}
+        .category-section__header {{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom: var(--space-sm); flex-wrap:wrap; gap: var(--space-sm); }}
+        .category-section__header h2 {{ font-size: var(--text-2xl); margin:0; flex:1 1 auto; min-width:0; }}
         .category-section__count {{ font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-mid-gray); }}
         html {{ scroll-behavior:smooth; }}
         @media (prefers-reduced-motion: reduce) {{ html {{ scroll-behavior:auto; }} }}
-        .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }}
-        .niche-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
-        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; }}
-        .niche-card img {{ width:100%; height:100%; object-fit:contain; }}
-        .niche-card h2 {{ font-size:var(--text-lg); margin: var(--space-md) var(--space-md) 8px; }}
-        .niche-card h2 a {{ color:inherit; text-decoration:none; }}
-        .niche-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
-        .niche-card .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
-        .niche-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }}
-        .niche-card .read-link:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
-        .review-card__banner {{ display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }}
-        .review-card__banner + h2 {{ margin: 6px var(--space-md) 8px; }}
-        .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }}
-        .review-card__footer .read-link {{ margin:0; align-self:auto; }}
+        .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); overflow:hidden; transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); background:var(--clr-white); display:flex; flex-direction:column; }}
+        .niche-card:hover {{ transform:translateY(-6px); box-shadow:var(--shadow-lg); }}
+        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; background:var(--clr-off-white); }}
+        .niche-card img {{ width:100%; height:100%; object-fit:contain; transition: transform var(--duration-slow) var(--ease-out); }}
+        .niche-card:hover img {{ transform: scale(1.04); }}
+        .review-card__media {{ position:relative; }}
+        .review-card__banner {{ position:absolute; top:14px; left:14px; z-index:2; display:inline-block; padding:4px 12px; border-radius:100px; color:#1a1200; font-size:0.64rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; box-shadow: var(--shadow-sm); }}
+        .review-card__score {{ position:absolute; right:14px; bottom:14px; z-index:2; display:inline-flex; align-items:baseline; gap:3px; background:rgba(10,10,10,0.92); color:#fff; border-radius:100px; padding:6px 14px; border:1px solid rgba(201,138,44,0.6); backdrop-filter: blur(4px); }}
+        .review-card__score-num {{ font-family: var(--font-display); font-size:1.15rem; font-weight:800; color: var(--clr-accent); letter-spacing:-0.02em; line-height:1; }}
+        .review-card__score-out {{ font-size:0.7rem; color:#aaa; font-weight:600; }}
+        .review-card__body {{ display:flex; flex-direction:column; flex:1; padding: var(--space-md); }}
+        .review-card__body h2 {{ font-size: var(--text-lg); margin:0 0 8px; line-height:1.25; }}
+        .review-card__body h2 a {{ color:inherit; text-decoration:none; }}
+        .review-card__body h2 a:hover {{ color: var(--clr-accent-text); }}
+        .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
+        .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top: var(--space-sm); }}
+        .review-card__footer .read-link {{ font-weight:700; font-size:0.82rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; }}
+        .review-card__footer .read-link:hover {{ color: var(--clr-accent-text); }}
         .review-card__reactions {{ display:flex; gap:6px; }}
         .review-card__reactions .reaction-btn {{ display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; font-family:var(--font-body); }}
         .review-card__reactions .reaction-btn.is-counter {{ cursor:default; }}
         .review-card__reactions .reaction-icon {{ font-size:0.9rem; line-height:1; }}
         .review-card__reactions .reaction-count {{ font-weight:700; min-width:14px; text-align:center; }}
+        .review-card__updated {{ display:block; font-size:0.72rem; color:#999; margin-top: var(--space-sm); }}
+        .niche-card--featured {{ grid-column: 1 / -1; display:grid; grid-template-columns: 1.1fr 1fr; align-items:center; }}
+        .niche-card--featured .niche-card__image-wrapper {{ aspect-ratio: 16/10; height:100%; }}
+        .niche-card--featured .review-card__body {{ padding: var(--space-xl); }}
+        .niche-card--featured h2 {{ font-size: var(--text-2xl); }}
+        .niche-card--featured .review-card__score-num {{ font-size:1.5rem; }}
+        .niche-card--featured .review-card__snippet {{ -webkit-line-clamp:3; }}
+        @media (max-width: 760px) {{ .niche-card--featured {{ grid-template-columns: 1fr; }} .niche-card--featured .review-card__body {{ padding: var(--space-md); }} }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
         .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
@@ -2408,23 +2458,38 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .trending-ticker__item { color:#1a1200; text-decoration:none; padding:0 10px; }
         .trending-ticker__item:hover { color:#000; text-decoration:underline; }
         @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .hero { background:#f6f5f2; padding: var(--space-2xl) 0; }
-        .hero-grid { display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items:center; }
-        .hero-eyebrow { display:inline-block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#666; margin-bottom: var(--space-md); }
-        .hero h1 { font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-md); color:#0a0a0a; }
+        .hero { background:#f6f5f2; padding: var(--space-2xl) 0; position:relative; overflow:hidden; }
+        .hero::before { content:''; position:absolute; top:-20%; right:-8%; width:560px; height:560px; border-radius:50%; background:radial-gradient(circle, rgba(201,138,44,0.14), transparent 65%); pointer-events:none; }
+        .hero-grid { display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items:center; position:relative; }
+        .hero-eyebrow { display:inline-flex; align-items:center; gap:8px; font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color: var(--clr-accent-text); background:rgba(201,138,44,0.12); border:1px solid rgba(201,138,44,0.32); padding:6px 14px; border-radius:100px; margin-bottom: var(--space-md); }
+        .hero h1 { font-size: clamp(2.1rem, 4.4vw, var(--text-4xl)); margin-bottom: var(--space-md); color:#0a0a0a; letter-spacing:-0.03em; font-weight:700; }
         .hero p { font-size: var(--text-lg); color:#555; max-width:46ch; margin-bottom: var(--space-lg); }
         .hero .btn { background:#1a1a1a; color:#fff; }
         .hero .btn:hover { background: var(--clr-accent); color:#1a1200; }
-        .hero-slider { position:relative; border-radius: var(--radius-md); overflow:hidden; box-shadow: var(--shadow-lg); aspect-ratio: 4/3; background:#111; }
+        .hero-trust { display:flex; flex-wrap:wrap; gap:8px 22px; margin-top: var(--space-md); }
+        .hero-trust span { display:inline-flex; align-items:center; gap:7px; font-size:0.78rem; font-weight:600; color:#666; }
+        .hero-trust svg { width:15px; height:15px; color: var(--clr-accent); flex:none; }
+        .hero-slider { position:relative; border-radius: var(--radius-lg); overflow:hidden; box-shadow: var(--shadow-xl); aspect-ratio: 4/3; background:#111; }
         .hero-slide { position:absolute; inset:0; opacity:0; transition:opacity 0.9s var(--ease-out); }
         .hero-slide.active { opacity:1; }
         .hero-slide img { width:100%; height:100%; object-fit:cover; display:block; }
-        .hero-slide figcaption { position:absolute; left:0; right:0; bottom:0; background:linear-gradient(transparent, rgba(0,0,0,0.8)); color:#fff; padding: 44px var(--space-lg) var(--space-md); font-weight:600; font-size:0.95rem; }
-        .hero-slider__dots { position:absolute; bottom:6px; left:50%; transform:translateX(-50%); display:flex; z-index:5; }
+        .hero-slide figcaption { position:absolute; left:0; right:0; bottom:0; background:linear-gradient(transparent, rgba(0,0,0,0.85)); color:#fff; padding: 52px var(--space-lg) var(--space-md); font-weight:600; font-size:0.95rem; }
+        .hero-slider__dots { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); display:flex; z-index:5; }
         .hero-slider__dot { width:44px; height:44px; border:none; background:transparent; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
         .hero-slider__dot::before { content:''; width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.45); transition: background var(--duration-fast) var(--ease-out); }
-        .hero-slider__dot.active::before { background:#fff; }
+        .hero-slider__dot.active::before { background: var(--clr-accent); }
         @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; } }
+
+        .how-we-test { background:#0a0a0a; color:#fff; padding: var(--space-2xl) 0; }
+        .how-we-test__inner { max-width:1200px; margin:0 auto; padding:0 var(--space-lg); }
+        .how-we-test__intro { margin-bottom: var(--space-xl); }
+        .how-we-test__intro h2 { color:#fff; font-size: var(--text-3xl); margin-bottom:8px; }
+        .how-we-test__intro p { color:#999; max-width:52ch; margin:0; }
+        .hwt-steps { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap: var(--space-lg); }
+        .hwt-step { border-left:2px solid rgba(201,138,44,0.5); padding:0 0 0 var(--space-lg); }
+        .hwt-step__num { font-family: var(--font-display); font-size: var(--text-xl); font-weight:800; color: var(--clr-accent); letter-spacing:-0.02em; }
+        .hwt-step h3 { color:#fff; font-size: var(--text-lg); margin:6px 0; }
+        .hwt-step p { color:#999; font-size:0.9rem; margin:0; line-height:1.55; }
 
         .stats-band { background:#0a0a0a; color:#fff; padding: var(--space-lg) 0; }
         .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap: var(--space-lg); text-align:center; }
@@ -2448,31 +2513,47 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
 
         .guides-section { padding: var(--space-2xl) 0; }
         .latest-reviews-section { padding-top: var(--space-2xl); }
+        .section-eyebrow { display:block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color: var(--clr-accent-text); margin-bottom:6px; }
         .category-section { margin-bottom: var(--space-2xl); }
-        .category-section__header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-light-gray); padding-bottom: var(--space-sm); }
-        .category-section__header h2 { font-size: var(--text-2xl); margin:0; }
-        .category-section__header a { font-size:0.85rem; font-weight:700; color: var(--clr-black); text-decoration:none; white-space:nowrap; }
-        .category-section__header a:hover { text-decoration:underline; }
+        .category-section__header { display:flex; justify-content:space-between; align-items:flex-end; gap: var(--space-md); margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom: var(--space-sm); flex-wrap:wrap; }
+        .category-section__header h2 { font-size: var(--text-2xl); margin:0; display:flex; align-items:baseline; gap:12px; flex:1 1 auto; min-width:0; }
+        .category-section__header h2 .sec-num { font-size:0.8rem; font-weight:800; color: var(--cat, var(--clr-accent-text)); letter-spacing:0.04em; }
+        .category-section__header a { font-size:0.82rem; font-weight:700; color: var(--clr-black); text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; flex-shrink:0; }
+        .category-section__header a:hover { color: var(--clr-accent-text); }
+        .category-section__header a::after { content:'→'; transition: transform var(--duration-fast) var(--ease-out); }
+        .category-section__header a:hover::after { transform: translateX(4px); }
         .niche-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }
-        .niche-card { border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }
-        .niche-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
-        .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; }
-        .niche-card img { width:100%; height:100%; object-fit:contain; }
-        .niche-card h2 { font-size:var(--text-lg); margin: var(--space-md) var(--space-md) 8px; }
-        .niche-card h2 a { color:inherit; text-decoration:none; }
-        .niche-card p { font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }
-        .niche-card .review-card__snippet { font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-        .niche-card .read-link { font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }
-        .niche-card .read-link:hover { color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }
-        .review-card__banner { display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background: var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
-        .review-card__banner + h2 { margin: 6px var(--space-md) 8px; }
-        .review-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }
-        .review-card__footer .read-link { margin:0; align-self:auto; }
+        .niche-card { border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); overflow:hidden; transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); background:var(--clr-white); display:flex; flex-direction:column; }
+        .niche-card:hover { transform:translateY(-6px); box-shadow:var(--shadow-lg); }
+        .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; background:var(--clr-off-white); }
+        .niche-card img { width:100%; height:100%; object-fit:contain; transition: transform var(--duration-slow) var(--ease-out); }
+        .niche-card:hover img { transform: scale(1.04); }
+        .review-card__media { position:relative; }
+        .review-card__banner { position:absolute; top:14px; left:14px; z-index:2; display:inline-block; padding:4px 12px; border-radius:100px; color:#1a1200; font-size:0.64rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; box-shadow: var(--shadow-sm); }
+        .review-card__score { position:absolute; right:14px; bottom:14px; z-index:2; display:inline-flex; align-items:baseline; gap:3px; background:rgba(10,10,10,0.92); color:#fff; border-radius:100px; padding:6px 14px; border:1px solid rgba(201,138,44,0.6); backdrop-filter: blur(4px); }
+        .review-card__score-num { font-family: var(--font-display); font-size:1.15rem; font-weight:800; color: var(--clr-accent); letter-spacing:-0.02em; line-height:1; }
+        .review-card__score-out { font-size:0.7rem; color:#aaa; font-weight:600; }
+        .review-card__body { display:flex; flex-direction:column; flex:1; padding: var(--space-md); }
+        .review-card__body h2 { font-size: var(--text-lg); margin:0 0 8px; line-height:1.25; }
+        .review-card__body h2 a { color:inherit; text-decoration:none; }
+        .review-card__body h2 a:hover { color: var(--clr-accent-text); }
+        .review-card__snippet { font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .review-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top: var(--space-sm); }
+        .review-card__footer .read-link { font-weight:700; font-size:0.82rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; }
+        .review-card__footer .read-link:hover { color: var(--clr-accent-text); }
         .review-card__reactions { display:flex; gap:6px; }
         .review-card__reactions .reaction-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; font-family:var(--font-body); }
         .review-card__reactions .reaction-btn.is-counter { cursor:default; }
         .review-card__reactions .reaction-icon { font-size:0.9rem; line-height:1; }
         .review-card__reactions .reaction-count { font-weight:700; min-width:14px; text-align:center; }
+        .review-card__updated { display:block; font-size:0.72rem; color:#999; margin-top: var(--space-sm); }
+        .niche-card--featured { grid-column: 1 / -1; display:grid; grid-template-columns: 1.1fr 1fr; align-items:center; }
+        .niche-card--featured .niche-card__image-wrapper { aspect-ratio: 16/10; height:100%; }
+        .niche-card--featured .review-card__body { padding: var(--space-xl); }
+        .niche-card--featured h2 { font-size: var(--text-2xl); }
+        .niche-card--featured .review-card__score-num { font-size:1.5rem; }
+        .niche-card--featured .review-card__snippet { -webkit-line-clamp:3; }
+        @media (max-width: 760px) { .niche-card--featured { grid-template-columns: 1fr; } .niche-card--featured .review-card__body { padding: var(--space-md); } }
 
         .category-group { display: none; }
         .category-group.visible { display: block; }
@@ -2513,14 +2594,32 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
 
 <section class="hero"><div class="container hero-grid">
     <div>
-        <span class="hero-eyebrow">How we work</span>
+        <span class="hero-eyebrow"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>How we work</span>
         <h1>Clear, honest guidance on what's actually worth your money.</h1>
         <p>Every guide starts with the same question: what would actually be worth buying? We compare real prices, specifications, and verified customer feedback, then break down the trade-offs in plain language &mdash; so you can go from confused to confident in minutes, not hours.</p>
         <a href="#niches" class="btn">See our latest guides</a>
+        <div class="hero-trust">
+            <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Independently tested</span>
+            <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>No sponsored placements</span>
+            <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Scored on 5 criteria</span>
+        </div>
     </div>
     <div class="hero-slider" id="hero-slider">
         HERO_SLIDES_PLACEHOLDER
         <div class="hero-slider__dots">HERO_DOTS_PLACEHOLDER</div>
+    </div>
+</div></section>
+
+<section class="how-we-test"><div class="how-we-test__inner">
+    <div class="how-we-test__intro">
+        <span class="section-eyebrow">Our method</span>
+        <h2>Reviews based on real testing, not spec sheets.</h2>
+        <p>Every score you see on this site follows the same repeatable process. No paid placements, no editorial bias &mdash; just a consistent method.</p>
+    </div>
+    <div class="hwt-steps">
+        <div class="hwt-step"><div class="hwt-step__num">01</div><h3>Research</h3><p>We shortlist candidates on price, specs, and verified owner feedback across retailers.</p></div>
+        <div class="hwt-step"><div class="hwt-step__num">02</div><h3>Score</h3><p>Every product is scored on the same 5 weighted criteria before any ranking is drawn.</p></div>
+        <div class="hwt-step"><div class="hwt-step__num">03</div><h3>Recommend</h3><p>We recommend the one we'd actually buy &mdash; and say plainly when a product falls short.</p></div>
     </div>
 </div></section>
 
@@ -2530,6 +2629,16 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="STAT_PRODUCTS_COUNT">0</div><div class="stat-label">Products compared</div></div>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3.5-7.1"/><path d="M21 3v6h-6"/></svg></div><div class="stat-number">Weekly</div><div class="stat-label">Review cycle</div></div>
 </div></section>
+
+<section class="latest-reviews-section container">
+    <span class="section-eyebrow">Fresh this week</span>
+    <div class="category-section__header"><h2>Latest reviews</h2></div>
+    <div class="niche-grid">LATEST_REVIEWS_PLACEHOLDER</div>
+</section>
+
+<section class="guides-section container" id="niches">
+    CATEGORY_SECTIONS_PLACEHOLDER
+</section>
 
 <section class="subscribe-band"><div class="container subscribe-inner">
     <div class="subscribe-copy">
@@ -2544,15 +2653,6 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         <p class="subscribe-msg" id="homepage-subscribe-msg" aria-live="polite"></p>
     </form>
 </div></section>
-
-<section class="latest-reviews-section container">
-    <div class="category-section__header"><h2>Latest reviews</h2></div>
-    <div class="niche-grid">LATEST_REVIEWS_PLACEHOLDER</div>
-</section>
-
-<section class="guides-section container" id="niches">
-    CATEGORY_SECTIONS_PLACEHOLDER
-</section>
 
 <footer class="footer"><div class="container">
     <div class="footer-grid">
