@@ -30,6 +30,24 @@ router = ModelRouter(secrets, timeout=25)
 
 app = FastAPI(title="Abvorn Mobile Server", version="1.0.0")
 
+# Optional auth: set ABVORN_API_TOKEN (env or secrets) to protect /api/*.
+# Public (unauthenticated) API routes — must be safe to expose.
+PUBLIC_API_PATHS = {"/api/health", "/api/newsletter/subscribe"}
+
+_API_TOKEN = os.environ.get("ABVORN_API_TOKEN", "") or secrets.get("ABVORN_API_TOKEN", "")
+
+
+@app.middleware("http")
+async def require_auth(request: Request, call_next):
+    if request.url.path.startswith("/api/") and _API_TOKEN:
+        path = request.url.path.split("?")[0]
+        if path not in PUBLIC_API_PATHS:
+            auth = request.headers.get("Authorization", "")
+            expected = f"Bearer {_API_TOKEN}"
+            if auth != expected:
+                return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    return await call_next(request)
+
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
@@ -168,12 +186,28 @@ async def get_dashboard_stats():
 
 @app.get("/api/dashboard/charts")
 async def get_dashboard_charts():
-    """Generate dashboard charts from the unified database."""
+    """Generate dashboard charts and return them as base64 data URIs."""
+    import base64
     from abvorn.core.data_visualizer import DataVisualizer
 
     viz = DataVisualizer()
     charts = viz.generate_all_charts()
-    return {"charts": charts}
+    encoded = {}
+    for name, path in charts.items():
+        if not path:
+            encoded[name] = None
+            continue
+        try:
+            p = Path(path)
+            if p.exists():
+                b64 = base64.b64encode(p.read_bytes()).decode("ascii")
+                encoded[name] = f"data:image/png;base64,{b64}"
+            else:
+                encoded[name] = None
+        except Exception as e:
+            logger.warning(f"Could not encode chart {name}: {e}")
+            encoded[name] = None
+    return {"charts": encoded}
 
 
 @app.get("/api/price-alerts")
@@ -239,6 +273,23 @@ async def get_lineage():
 
     genesis = GenesisProtocol()
     return genesis.get_lineage()
+
+
+@app.get("/api/brain")
+async def get_brain_state():
+    """Return the Brain library status + category report."""
+    from abvorn.core.brain import get_brain
+
+    try:
+        brain = get_brain()
+        return {
+            "status": "ready" if brain.is_ready else "building",
+            "categories": brain.get_category_report(),
+            "entities": brain.memory.get_state().get("entities", 0),
+            "is_ready": brain.is_ready,
+        }
+    except Exception as e:
+        return {"status": "unavailable", "categories": {}, "error": str(e)}
 
 
 def _call_ai_subprocess(prompt: str) -> str:
@@ -456,4 +507,9 @@ if __name__ == "__main__":
     print(f"  Local:   http://localhost:8080")
     print(f"  Network: http://{local_ip}:8080")
     print(f"  Open on your phone browser to access the PWA.\n")
+    if _API_TOKEN:
+        print(f"  Auth:    Bearer {_API_TOKEN} (set ABVORN_API_TOKEN in env or secrets)")
+    else:
+        print("  Auth:    DISABLED — set ABVORN_API_TOKEN in secrets.json to protect /api/*")
+    print()
     uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")

@@ -714,24 +714,25 @@ def build_homepage(state, form_url="", reviews=None, base=None):
 
 def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=""):
     b = SITE_BASE
-    # Build post cards
+    # Build post cards — same .niche-card standard as the homepage and
+    # category listing pages.
+    category = next((c for c, slugs in CATEGORY_MAP.items() if niche_slug in slugs), "")
     post_cards = ""
     for p in posts:
         title = p.get("title", niche_name)
         link = f"{b}/reviews/{niche_slug}/"
         img_src = carousel_img(niche_slug, b)
-        post_cards += f'''<div class="post-card">
-    <a href="{link}"><img src="{img_src}" alt="{html_mod.escape(title)}"></a>
-    <div class="post-card__body">
-        <h3><a href="{link}">{html_mod.escape(title)}</a></h3>
-        <p>Expert-tested and reviewed. See why this made our list.</p>
-        <div class="post-card__footer">
-            <div class="review-card__reactions" data-review="{niche_slug}">
-                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
-                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
-            </div>
-            <a href="{link}" class="read-link">Read more →</a>
+        post_cards += f'''<div class="niche-card review-card" style="--cat:{category_color(category)}">
+    <a href="{link}"><div class="niche-card__image-wrapper"><img src="{img_src}" alt="{html_mod.escape(title)}" loading="lazy"></div></a>
+    <span class="review-card__banner" style="background:{category_color(category)}">{category} · {html_mod.escape(niche_name)}</span>
+    <h2><a href="{link}">{html_mod.escape(title)}</a></h2>
+    <p class="review-card__snippet">Expert-tested and reviewed. See why this made our list.</p>
+    <div class="review-card__footer">
+        <div class="review-card__reactions" data-review="{niche_slug}">
+            <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+            <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
         </div>
+        <a href="{link}" class="read-link">Read more →</a>
     </div>
 </div>'''
 
@@ -814,17 +815,25 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         @media (max-width:700px) {{ .subscribe-inner {{ flex-direction:column; align-items:flex-start; }} .subscribe-form .input {{ width:100%; }} }}
 
         .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }}
-        .post-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }}
-        .post-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
-        .post-card img {{ width:100%; height:200px; object-fit:cover; }}
-        .post-card__body {{ padding:var(--space-md); display:flex; flex-direction:column; flex:1; }}
-        .post-card h3 {{ font-size:var(--text-lg); margin:0 0 6px; }}
-        .post-card h3 a {{ color:inherit; text-decoration:none; }}
-        .post-card .post-meta {{ font-size:0.8rem; color:var(--clr-mid-gray); margin-bottom:8px; }}
-        .post-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
-        .post-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; margin-top:auto; align-self:flex-end; }}
-        .post-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; }}
-        .post-card__footer .read-link {{ margin:0; align-self:auto; }}
+        .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }}
+        .niche-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
+        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; }}
+        .niche-card img {{ width:100%; height:100%; object-fit:cover; }}
+        .niche-card h2 {{ font-size:var(--text-lg); margin: var(--space-md) var(--space-md) 8px; }}
+        .niche-card h2 a {{ color:inherit; text-decoration:none; }}
+        .niche-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
+        .niche-card .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
+        .niche-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }}
+        .niche-card .read-link:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
+        .review-card__banner {{ display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }}
+        .review-card__banner + h2 {{ margin: 6px var(--space-md) 8px; }}
+        .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }}
+        .review-card__footer .read-link {{ margin:0; align-self:auto; }}
+        .review-card__reactions {{ display:flex; gap:6px; }}
+        .review-card__reactions .reaction-btn {{ display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; font-family:var(--font-body); }}
+        .review-card__reactions .reaction-btn.is-counter {{ cursor:default; }}
+        .review-card__reactions .reaction-icon {{ font-size:0.9rem; line-height:1; }}
+        .review-card__reactions .reaction-count {{ font-weight:700; min-width:14px; text-align:center; }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
         .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
@@ -1714,7 +1723,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .section-title {{ font-weight:800; text-transform:uppercase; letter-spacing:0.08em; font-size:0.75rem; margin-bottom:var(--space-md); border-bottom:3px solid var(--clr-primary); padding-bottom:8px; display:inline-block; }}
         .product-section {{ display:grid; grid-template-columns:1fr 1fr; gap:var(--space-lg); }}
         .product-card {{ display:grid; grid-template-columns:100px 1fr; gap:var(--space-md); background:var(--clr-off-white); border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); padding:var(--space-md); transition: transform var(--duration-base), box-shadow var(--duration-base); }}
-        .product-card:hover {{ transform:translateY(-2px); box-shadow:var(--shadow-md); }}
+        .product-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
         .product-card img {{ width:100px; height:100px; object-fit:contain; border-radius:var(--radius-sm); background:var(--clr-white); }}
         .product-card-body h3 {{ font-size:var(--text-base); margin-bottom:2px; }}
         .product-card-body .price {{ font-size:var(--text-sm); color:var(--clr-accent); font-weight:700; margin-bottom:4px; }}
@@ -2281,9 +2290,9 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
             .nav-dropdown a:hover { background:transparent; }
         }
         .trending-ticker { background:var(--clr-accent); color:#1a1200; padding:9px 0; font-size:0.82rem; overflow:hidden; white-space:nowrap; }
-        .trending-ticker__track { display:inline-flex; animation: ticker-scroll 30s linear infinite; }
+        .trending-ticker__track { display:inline-flex; align-items:center; will-change:transform; animation: ticker-scroll 30s linear infinite; }
         .trending-ticker__label { font-weight:700; margin-right:15px; color:#1a1200; }
-        .trending-ticker__inner { display:inline-block; }
+        .trending-ticker__inner { display:inline-flex; align-items:center; flex-shrink:0; }
         .trending-ticker__item { color:#1a1200; text-decoration:none; padding:0 10px; }
         .trending-ticker__item:hover { color:#000; text-decoration:underline; }
         @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
@@ -2333,19 +2342,18 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .category-section__header a { font-size:0.85rem; font-weight:700; color: var(--clr-black); text-decoration:none; white-space:nowrap; }
         .category-section__header a:hover { text-decoration:underline; }
         .niche-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }
-        .niche-card { border-radius: var(--radius-md); overflow:hidden; transition: transform var(--duration-base) var(--ease-out); display:flex; flex-direction:column; }
-        .niche-card:hover { transform: translateY(-3px); }
-        .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; border-radius: var(--radius-md); }
-        .niche-card img { width:100%; height:100%; object-fit:cover; transition: transform var(--duration-slow) var(--ease-out); }
-        .niche-card:hover img { transform: scale(1.04); }
-        .niche-card h2 { font-size: var(--text-lg); margin: var(--space-md) 0 8px; }
+        .niche-card { border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }
+        .niche-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
+        .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; }
+        .niche-card img { width:100%; height:100%; object-fit:cover; }
+        .niche-card h2 { font-size:var(--text-lg); margin: var(--space-md) var(--space-md) 8px; }
         .niche-card h2 a { color:inherit; text-decoration:none; }
-        .niche-card p { font-size:0.92rem; color: var(--clr-mid-gray); margin-bottom: var(--space-sm); max-width:none; }
-        .niche-card .review-card__snippet { font-size:0.92rem; color: var(--clr-mid-gray); line-height:1.5; margin: 0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-        .niche-card .read-link { font-weight:700; font-size:0.88rem; color: var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin-top:auto; align-self:flex-end; }
+        .niche-card p { font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }
+        .niche-card .review-card__snippet { font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .niche-card .read-link { font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }
         .niche-card .read-link:hover { color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }
-        .review-card__banner { display:inline-block; margin-top: var(--space-md); padding:3px 10px; border-radius:4px; background: var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
-        .review-card__banner + h2 { margin-top: 6px; }
+        .review-card__banner { display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background: var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
+        .review-card__banner + h2 { margin: 6px var(--space-md) 8px; }
         .review-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }
         .review-card__footer .read-link { margin:0; align-self:auto; }
         .review-card__reactions { display:flex; gap:6px; }
@@ -2389,7 +2397,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         <a href="__SITE_BASE__/privacy.html">Privacy</a>
     </nav>
 </div></header>
-<div class="trending-ticker"><div class="container"><div class="trending-ticker__track"><span class="trending-ticker__label">Latest updates:</span><span id="trending-items" class="trending-ticker__inner">LATEST_UPDATES_PLACEHOLDER</span><span id="trending-items-dup" class="trending-ticker__inner" aria-hidden="true">LATEST_UPDATES_PLACEHOLDER</span></div></div></div>
+<div class="trending-ticker"><div class="container"><div class="trending-ticker__track"><div class="trending-ticker__inner"><span class="trending-ticker__label">Latest updates:</span><span id="trending-items">LATEST_UPDATES_PLACEHOLDER</span></div><div class="trending-ticker__inner" aria-hidden="true"><span class="trending-ticker__label">Latest updates:</span><span>LATEST_UPDATES_PLACEHOLDER</span></div></div></div></div>
 
 <section class="hero"><div class="container hero-grid">
     <div>

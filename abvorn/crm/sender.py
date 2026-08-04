@@ -13,8 +13,8 @@ logger = logging.getLogger("abvorn.crm.sender")
 class EmailSender:
     """Sends beautiful, persona-targeted emails via Gmail SMTP."""
 
-    def __init__(self, email: str = "", password: str = ""):
-        if not email or not password:
+    def __init__(self, email: str = None, password: str = None):
+        if email is None or password is None:
             secrets = load_secrets()
             self.email = email or secrets.get("GMAIL_USER", "")
             self.password = password or secrets.get("GMAIL_APP_PASSWORD", "")

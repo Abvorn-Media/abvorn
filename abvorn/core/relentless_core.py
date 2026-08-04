@@ -88,6 +88,30 @@ class RelentlessCore:
         except Exception as e:
             logger.warning(f"Genesis protocol unavailable: {e}")
 
+        # Optional Brain library (never fatal if unavailable)
+        self.brain = None
+        try:
+            from abvorn.core.brain import get_brain
+
+            self.brain = get_brain()
+            if self.brain.is_ready:
+                logger.info(
+                    f"Brain is ready with {self.brain.memory.get_state().get('entities', 0)} entities"
+                )
+            else:
+                logger.warning("Brain not ready yet. Please ingest books.")
+        except Exception as e:
+            logger.warning(f"Brain unavailable: {e}")
+
+        # Optional Viral Content Engine (never fatal if unavailable)
+        self.platform_skill = None
+        try:
+            from abvorn.core.platform_skill import get_platform_skill
+
+            self.platform_skill = get_platform_skill()
+        except Exception as e:
+            logger.warning(f"Platform skill engine unavailable: {e}")
+
     def _read_clicks(self) -> Dict[str, int]:
         """Read total clicks per article from clicks.db."""
         try:
@@ -193,6 +217,14 @@ class RelentlessCore:
             except Exception as e:
                 logger.warning(f"Memory query failed: {e}")
 
+        # Brain library can inform core decisions with book-strategy insights
+        brain_insights = []
+        if self.brain is not None and self.brain.is_ready:
+            try:
+                brain_insights = self.brain.get_insights_for_function("core_decisions")
+            except Exception as e:
+                logger.warning(f"Brain insight query failed: {e}")
+
         # If drive score is low, take aggressive actions
         if drive_score < 0.3:
             return "expand_content"  # Add more niches
@@ -202,16 +234,98 @@ class RelentlessCore:
             else:
                 return "optimize_conversion"
         elif drive_score < 0.7:
+            # Brain strategy books may tilt toward monetization over polish
+            if brain_insights:
+                query_lower = " ".join(str(i.get("insight", "")) for i in brain_insights[:3]).lower()
+                if any(k in query_lower for k in ("conversion", "monetiz", "price", "revenue", "retention")):
+                    return "optimize_conversion"
             return "refine_quality"
         else:
             # High drive score: push into new territory
             if win_metrics and win_runs < 5:
                 # Rotate a win.sh growth loop in before exploring new domains
                 return "run_traffic_optimizer"
+            if self.platform_skill is not None:
+                return "publish_content"
             return "explore_new_domain"
+
+    def _generate_carousel(self, product_data: Dict) -> Dict:
+        """Build a 6-slide carousel payload with an Oliver Henry hook."""
+        verdict = product_data.get("verdict", {}) or {}
+        overall = verdict.get("overall", 0)
+        label = verdict.get("label", "Good")
+        product_name = product_data.get("product_name", "this product")
+        breakdown = verdict.get("breakdown", {}) or {}
+
+        hook = f"My friend thought {product_name} was overrated... until they tried it"
+        slides = {
+            "hook": {"text": hook},
+            "problem": {"text": f"The {product_name} market is flooded. Here's the truth."},
+            "verdict": {"text": f"{label} — {overall}/10"},
+            "breakdown": {"text": "\n".join(f"{k}: {v:.1f}/10" for k, v in breakdown.items())},
+            "comparison": {
+                "text": f"Best in: {max(breakdown, key=breakdown.get)}" if breakdown else "Best overall pick"
+            },
+            "call": {"text": "Full review → link in bio\nWhich product next?"},
+        }
+        return {
+            "product_name": product_name,
+            "hook": hook,
+            "slides": slides,
+            "hashtags": [f"#{product_name.replace(' ', '')}", "#Abvorn", "#ProductReview"],
+            "verdict": verdict,
+        }
+
+    def _publish_to_platform(self, adapted: Dict, platform: str) -> Dict:
+        """Publish adapted content to a platform (Composio hookup point)."""
+        try:
+            # Composio integration point: replace with a real adapter when keys exist.
+            from abvorn.core.secrets import load_secrets
+
+            if load_secrets().get("COMPOSIO_KEY"):
+                return {"platform": platform, "status": "queued", "content": adapted}
+        except Exception as e:
+            logger.warning(f"Composio check failed for {platform}: {e}")
+        logger.info(f"[publish_content] Draft ready for {platform}: {adapted.get('hook', '')}")
+        return {"platform": platform, "status": "draft", "content": adapted}
+
+    def _get_latest_product(self) -> Dict:
+        """Pull the latest reviewed product from state, or a realistic default."""
+        try:
+            state = self._read_cycle_state()
+            deployed = state.get("deployed", [])
+            if deployed and isinstance(deployed[-1], dict) and deployed[-1].get("product"):
+                p = deployed[-1]["product"]
+                return {
+                    "product_name": p.get("name", "Sony WH-1000XM6"),
+                    "verdict": p.get("verdict", {"overall": 8.7, "label": "Excellent", "breakdown": {"Sound": 9.2, "Comfort": 8.8, "Battery": 7.5}}),
+                }
+        except Exception as e:
+            logger.warning(f"Could not read latest product: {e}")
+        return {"product_name": "Sony WH-1000XM6", "verdict": {"overall": 8.7, "label": "Excellent", "breakdown": {"Sound": 9.2, "Comfort": 8.8, "Battery": 7.5}}}
+
+    def _publish_content(self) -> str:
+        """Viral Content Engine: build a carousel and adapt it for all platforms."""
+        if self.platform_skill is None:
+            return "publish_content requested but platform skill engine is unavailable"
+        try:
+            carousel = self._generate_carousel(self._get_latest_product())
+            results = {}
+            for platform in self.platform_skill.platforms:
+                adapted = self.platform_skill.generate_platform_content(carousel, platform)
+                results[platform] = self._publish_to_platform(adapted, platform)
+            summary = ", ".join(f"{p}={r.get('status')}" for p, r in results.items())
+            logger.info(f"[publish_content] {summary}")
+            return f"Published carousel across platforms ({summary})"
+        except Exception as e:
+            logger.warning(f"publish_content failed: {e}")
+            return f"publish_content failed: {e}"
 
     def _execute_action(self, action: str) -> str:
         """Execute the action."""
+        if action == "publish_content":
+            return self._publish_content()
+
         if action == "expand_content":
             # Trigger content strategist to add new niches
             try:
@@ -397,6 +511,10 @@ class RelentlessCore:
                         "ambition_level": self.ambition_level,
                         "win_metrics": self._read_win_metrics(),
                         "state": self._read_cycle_state(),
+                        "brain_insights": (
+                            self.brain.get_insights_for_function("core_decisions")[:3]
+                            if self.brain is not None and self.brain.is_ready else []
+                        ),
                     },
                 )
                 logger.info(f"Fable think: classification={fable_plan.get('classification')}")

@@ -172,6 +172,25 @@ def _read_unified_db_summary() -> Dict[str, Any]:
         return {"total_subscribers": 0, "active_alerts": 0, "total_profit": 0, "total_campaigns": 0}
 
 
+def _read_brain_state() -> Dict[str, Any]:
+    try:
+        from abvorn.core.brain import get_brain
+
+        brain = get_brain()
+        report = brain.get_category_report()
+        memory_state = brain.memory.get_state()
+        return {
+            "status": "ready" if brain.is_ready else "building",
+            "entities": int(memory_state.get("entities", 0) or 0),
+            "relationships": int(memory_state.get("relationships", 0) or 0),
+            "categories": len(report),
+            "books": sum(report.values()),
+        }
+    except Exception as e:
+        logger.warning(f"Brain state unavailable: {e}")
+        return {"status": "unavailable", "entities": 0, "relationships": 0, "categories": 0, "books": 0}
+
+
 def get_system_status() -> Dict[str, Any]:
     """Gather all metrics from real data sources."""
     cycle = _read_cycle_state()
@@ -184,6 +203,7 @@ def get_system_status() -> Dict[str, Any]:
     spawn = _read_spawn_state()
     lineage = _read_lineage()
     unified = _read_unified_db_summary()
+    brain = _read_brain_state()
 
     return {
         "timestamp": datetime.now().isoformat(),
@@ -210,6 +230,7 @@ def get_system_status() -> Dict[str, Any]:
         "spawn": spawn,
         "lineage": lineage,
         "unified": unified,
+        "brain": brain,
     }
 
 
@@ -303,6 +324,16 @@ def generate_dashboard_html() -> str:
         <div class="fable-item"><span class="fable-label">Active Alerts</span><span class="fable-value">{unified.get("active_alerts", 0)}</span></div>
         <div class="fable-item"><span class="fable-label">Campaigns</span><span class="fable-value">{unified.get("total_campaigns", 0)}</span></div>
         <div class="fable-item"><span class="fable-label">DB Profit</span><span class="fable-value">${unified.get("total_profit", 0):.2f}</span></div>
+    </div>
+    """
+
+    brain = status.get("brain", {})
+    brain_html = f"""
+    <div class="fable-grid">
+        <div class="fable-item"><span class="fable-label">Books</span><span class="fable-value">{brain.get("books", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Categories</span><span class="fable-value">{brain.get("categories", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Entities</span><span class="fable-value">{brain.get("entities", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Status</span><span class="fable-value">{brain.get("status", "unavailable")}</span></div>
     </div>
     """
 
@@ -532,6 +563,10 @@ def generate_dashboard_html() -> str:
         <div class="card">
             <div class="card-title">Unified Database</div>
             {unified_html}
+        </div>
+        <div class="card">
+            <div class="card-title">Brain Library</div>
+            {brain_html}
         </div>
     </div>
 

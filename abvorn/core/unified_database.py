@@ -5,6 +5,7 @@ Single source of truth for subscribers, price alerts, campaigns, economics,
 engagement and system metrics.
 """
 
+import os
 import sqlite3
 import json
 import logging
@@ -16,13 +17,18 @@ logger = logging.getLogger(__name__)
 
 
 class UnifiedDatabase:
-    def __init__(self, db_path: str = "data/abvorn_unified.db"):
-        self.db_path = db_path
-        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+    def __init__(self, db_path: str = None):
+        self.db_path = db_path or os.environ.get("ABVORN_DB_PATH", "data/abvorn_unified.db")
+        Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
 
     def _connect(self) -> sqlite3.Connection:
-        return sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=5000")
+        conn.execute("PRAGMA foreign_keys=ON")
+        return conn
 
     def _init_db(self):
         conn = self._connect()
@@ -142,6 +148,19 @@ class UnifiedDatabase:
                 timestamp TEXT
             )
         """)
+
+        conn.commit()
+
+        # Indexes on frequently queried columns
+        c.execute("CREATE INDEX IF NOT EXISTS idx_subscribers_email ON subscribers(email)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_subscribers_status ON subscribers(status)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_subscribers_subscribed_at ON subscribers(subscribed_at)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_price_alerts_status ON price_alerts(status)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_price_alerts_email ON price_alerts(email)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_engagement_events_sub ON engagement_events(subscriber_id)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_engagement_events_ts ON engagement_events(timestamp)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_economic_records_ts ON economic_records(timestamp)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_metrics_ts ON system_metrics(timestamp)")
 
         conn.commit()
         conn.close()

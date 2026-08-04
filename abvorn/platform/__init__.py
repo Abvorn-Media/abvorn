@@ -10,4 +10,9 @@ from .registry import PlatformRegistry, PlatformConfig
 
 registry = PlatformRegistry()
 
+# Import adapters so platforms self-register. Consumers (schedule, sender,
+# deploy) rely on the registry being populated on import — never import the
+# package without this.
+from . import adapters  # noqa: E402,F401
+
 __all__ = ["registry", "PlatformConfig"]

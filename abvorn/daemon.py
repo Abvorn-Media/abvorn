@@ -227,15 +227,15 @@ class AbvornDaemon:
 
     async def start(self):
         """Start all agents and the brain."""
+        self._ensure_phase3()
         self.running = True
         logger.info("Abvorn daemon starting...")
 
         brain = None
         try:
-            result = refresh_brain()
-            if result.get("status") == "ok":
-                brain = get_brain_retriever()
-                logger.info(f"Brain loaded: {result.get('indexed', 0)} documents")
+            brain = get_brain_retriever()
+            if brain:
+                logger.info("Brain loaded")
         except Exception as e:
             logger.warning(f"Brain init failed (non-fatal): {e}")
 

@@ -36,7 +36,7 @@ from src.social_permission import SocialPermissionFramework, create_social_permi
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
-from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, build_category_listing_page, scan_published_reviews, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS
+from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, scan_published_reviews, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS
 from src.click_tracker import get_clicks, register_articles_batch
 
 logger = logging.getLogger("run_cycle")
@@ -651,23 +651,6 @@ h3{font-size:clamp(1.1rem,2vw,1.25rem);font-weight:600;margin-bottom:8px;letter-
 .hero .featured-pick .fp-badge{background:var(--primary);color:#fff;font-size:.7rem;font-weight:600;padding:2px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.04em}
 .hero .featured-pick .fp-title{font-weight:600;color:var(--text);font-size:1rem}
 .hero .featured-pick .fp-arrow{color:var(--primary);font-size:1.2rem}
-.pick-card{display:flex;gap:clamp(16px,3vw,32px);padding:28px 32px;border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:24px;align-items:flex-start;box-shadow:var(--shadow-sm);transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;background:var(--bg)}
-.pick-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);border-color:color-mix(in srgb,var(--primary) 20%,var(--border))}
-.pick-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary);border-radius:0 4px 4px 0}
-.pick-card.budget::before{background:var(--green)}
-.pick-card.upgrade::before{background:var(--purple)}
-.pick-card .rank{flex-shrink:0;width:44px;height:44px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;box-shadow:0 2px 8px rgba(212,99,62,.3);position:relative;z-index:1}
-.pick-card .rank.budget{background:var(--green);box-shadow:0 2px 8px rgba(58,138,92,.3)}
-.pick-card .rank.upgrade{background:var(--purple);box-shadow:0 2px 8px rgba(139,111,186,.3)}
-.pick-card .info{flex:1}
-.pick-card .info h3{font-size:1.2rem;font-weight:600;margin-bottom:4px;font-family:var(--font-display)}
-.pick-card .info .price{color:var(--green);font-weight:600;font-size:.95rem;margin-bottom:8px}
-.pick-card .info p{font-size:.95rem;color:var(--text-secondary);margin-bottom:12px;line-height:1.5}
-.pick-card .info .badge{display:inline-block;background:var(--primary-light);color:var(--primary);font-size:.75rem;font-weight:600;padding:2px 10px;border-radius:100px;margin-right:8px;text-transform:uppercase;letter-spacing:.04em}
-.pick-card .info .badge.budget{background:var(--green-light);color:#2d6b47}
-.pick-card .info .badge.upgrade{background:var(--purple-light);color:#634e8a}
-.pick-card .tested-badge{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin-left:8px}
-.pick-card .tested-badge::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent)}
 .grid-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
 .cat-card{padding:24px;border:1px solid var(--border);border-radius:var(--radius-md);transition:all .25s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow-sm);text-decoration:none;display:block;background:var(--bg);position:relative;overflow:hidden}
 .cat-card::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:3px;background:var(--primary);border-radius:3px 3px 0 0;transform:scaleX(0);transition:transform .25s cubic-bezier(.4,0,.2,1)}
@@ -675,10 +658,6 @@ h3{font-size:clamp(1.1rem,2vw,1.25rem);font-weight:600;margin-bottom:8px;letter-
 .cat-card:hover::after{transform:scaleX(1)}
 .cat-card .cat-name{font-weight:700;font-size:1.1rem;color:var(--text);margin-bottom:4px;font-family:var(--font-display)}
 .cat-card .cat-count{font-size:.85rem;color:var(--text-muted)}
-.post-card{padding:20px;border:1px solid var(--border);border-radius:var(--radius-md);transition:all .2s;box-shadow:var(--shadow-sm);background:var(--bg)}
-.post-card:hover{box-shadow:var(--shadow-md);border-color:color-mix(in srgb,var(--primary) 15%,var(--border))}
-.post-card .post-title{font-weight:600;margin-bottom:4px;color:var(--text)}
-.post-card .post-meta{font-size:.85rem;color:var(--text-muted)}
 .section{padding:clamp(40px,6vw,64px) 0}
 .section-title{font-size:.85rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.1em;margin-bottom:24px;padding-bottom:12px;border-bottom:2px solid var(--border);position:relative}
 .section-title::after{content:'';position:absolute;bottom:-2px;left:0;width:48px;height:2px;background:var(--primary)}
@@ -727,14 +706,6 @@ article .content li{margin:6px 0;color:var(--text)}
 .decision-matrix tr:last-child td{border-bottom:none}
 .decision-matrix td:first-child{font-weight:500;color:var(--text)}
 .decision-matrix td:last-child{color:var(--text)}
-.product-card{display:flex;gap:24px;padding:24px;border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:20px;align-items:flex-start;box-shadow:var(--shadow-sm);transition:box-shadow .2s;background:var(--bg)}
-.product-card:hover{box-shadow:var(--shadow-md)}
-.product-card img{width:160px;height:160px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0}
-.product-card-body{flex:1}
-.product-card-body h3{font-size:1.15rem;font-weight:600;margin-bottom:4px;font-family:var(--font-display)}
-.product-card-body .price{color:var(--green);font-weight:600;font-size:.95rem;margin-bottom:8px}
-.product-card-body p{font-size:.95rem;color:var(--text-secondary);margin-bottom:8px}
-.product-card-body ul{padding-left:20px;margin:8px 0;font-size:.9rem;color:var(--text-secondary)}
 .product-card-body li{margin:4px 0}
 .buy-btn{display:inline-block;padding:10px 24px;background:var(--primary);color:#fff;border-radius:8px;font-weight:600;font-size:.95rem;margin-top:8px;text-decoration:none;box-shadow:0 1px 3px rgba(212,99,62,.25);transition:all .2s;border:none;cursor:pointer}
 .buy-btn:hover{background:var(--primary-dark);text-decoration:none;box-shadow:0 2px 8px rgba(212,99,62,.35);transform:translateY(-1px);color:#fff}
@@ -1032,16 +1003,25 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .category-section__header a { font-size:0.85rem; font-weight:700; color: var(--clr-black); text-decoration:none; white-space:nowrap; }
         .category-section__header a:hover { text-decoration:underline; }
         .niche-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }
-        .niche-card { border-radius: var(--radius-md); overflow:hidden; transition: transform var(--duration-base) var(--ease-out); }
-        .niche-card:hover { transform: translateY(-3px); }
-        .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; border-radius: var(--radius-md); }
-        .niche-card img { width:100%; height:100%; object-fit:cover; transition: transform var(--duration-slow) var(--ease-out); }
-        .niche-card:hover img { transform: scale(1.04); }
-        .niche-card h2 { font-size: var(--text-lg); margin: var(--space-md) 0 8px; }
+        .niche-card { border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }
+        .niche-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
+        .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; }
+        .niche-card img { width:100%; height:100%; object-fit:cover; }
+        .niche-card h2 { font-size:var(--text-lg); margin: var(--space-md) var(--space-md) 8px; }
         .niche-card h2 a { color:inherit; text-decoration:none; }
-        .niche-card p { font-size:0.92rem; color: var(--clr-mid-gray); margin-bottom: var(--space-sm); max-width:none; }
-        .niche-card .read-link { font-weight:700; font-size:0.88rem; color: var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }
-        .niche-card .read-link:hover { color: var(--clr-accent-text); }
+        .niche-card p { font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }
+        .niche-card .review-card__snippet { font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .niche-card .read-link { font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }
+        .niche-card .read-link:hover { color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }
+        .review-card__banner { display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background: var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
+        .review-card__banner + h2 { margin: 6px var(--space-md) 8px; }
+        .review-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }
+        .review-card__footer .read-link { margin:0; align-self:auto; }
+        .review-card__reactions { display:flex; gap:6px; }
+        .review-card__reactions .reaction-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; font-family:var(--font-body); }
+        .review-card__reactions .reaction-btn.is-counter { cursor:default; }
+        .review-card__reactions .reaction-icon { font-size:0.9rem; line-height:1; }
+        .review-card__reactions .reaction-count { font-weight:700; min-width:14px; text-align:center; }
 
         .category-group { display: none; }
         .category-group.visible { display: block; }
@@ -1266,24 +1246,25 @@ CAROUSEL_JS = """<script>(function(){var c=document.querySelector('.carousel');i
 
 def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=""):
     b = SITE_BASE
-    # Build post cards
+    # Build post cards — same .niche-card standard as the homepage and
+    # category listing pages.
+    category = next((c for c, slugs in CATEGORY_MAP.items() if niche_slug in slugs), "")
     post_cards = ""
     for p in posts:
         title = p.get("title", niche_name)
         link = f"{b}/reviews/{niche_slug}/"
         img_src = carousel_img(niche_slug, b)
-        post_cards += f'''<div class="post-card">
-    <a href="{link}"><img src="{img_src}" alt="{html_mod.escape(title)}"></a>
-    <div class="post-card__body">
-        <h3><a href="{link}">{html_mod.escape(title)}</a></h3>
-        <p>Expert-tested and reviewed. See why this made our list.</p>
-        <div class="post-card__footer">
-            <div class="review-card__reactions" data-review="{niche_slug}">
-                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
-                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
-            </div>
-            <a href="{link}" class="read-link">Read more →</a>
+        post_cards += f'''<div class="niche-card review-card" style="--cat:{category_color(category)}">
+    <a href="{link}"><div class="niche-card__image-wrapper"><img src="{img_src}" alt="{html_mod.escape(title)}" loading="lazy"></div></a>
+    <span class="review-card__banner" style="background:{category_color(category)}">{category} · {html_mod.escape(niche_name)}</span>
+    <h2><a href="{link}">{html_mod.escape(title)}</a></h2>
+    <p class="review-card__snippet">Expert-tested and reviewed. See why this made our list.</p>
+    <div class="review-card__footer">
+        <div class="review-card__reactions" data-review="{niche_slug}">
+            <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+            <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
         </div>
+        <a href="{link}" class="read-link">Read more →</a>
     </div>
 </div>'''
 
@@ -1366,17 +1347,20 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         @media (max-width:700px) {{ .subscribe-inner {{ flex-direction:column; align-items:flex-start; }} .subscribe-form .input {{ width:100%; }} }}
 
         .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }}
-        .post-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }}
-        .post-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
-        .post-card img {{ width:100%; height:200px; object-fit:cover; }}
-        .post-card__body {{ padding:var(--space-md); display:flex; flex-direction:column; flex:1; }}
-        .post-card h3 {{ font-size:var(--text-lg); margin:0 0 6px; }}
-        .post-card h3 a {{ color:inherit; text-decoration:none; }}
-        .post-card .post-meta {{ font-size:0.8rem; color:var(--clr-mid-gray); margin-bottom:8px; }}
-        .post-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
-        .post-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; margin-top:auto; align-self:flex-end; }}
-        .post-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; }}
-        .post-card__footer .read-link {{ margin:0; align-self:auto; }}
+        .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }}
+        .niche-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
+        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; }}
+        .niche-card img {{ width:100%; height:100%; object-fit:cover; }}
+        .niche-card h2 {{ font-size:var(--text-lg); margin: var(--space-md) var(--space-md) 8px; }}
+        .niche-card h2 a {{ color:inherit; text-decoration:none; }}
+        .niche-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
+        .niche-card .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
+        .niche-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }}
+        .niche-card .read-link:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
+        .review-card__banner {{ display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }}
+        .review-card__banner + h2 {{ margin: 6px var(--space-md) 8px; }}
+        .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }}
+        .review-card__footer .read-link {{ margin:0; align-self:auto; }}
         .review-card__reactions {{ display:flex; gap:6px; }}
         .review-card__reactions .reaction-btn {{ display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; font-family:var(--font-body); }}
         .review-card__reactions .reaction-btn.is-counter {{ cursor:default; }}
@@ -1898,7 +1882,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .section-title {{ font-weight:800; text-transform:uppercase; letter-spacing:0.08em; font-size:0.75rem; margin-bottom:var(--space-md); border-bottom:3px solid var(--clr-primary); padding-bottom:8px; display:inline-block; }}
         .product-section {{ display:grid; grid-template-columns:1fr 1fr; gap:var(--space-lg); }}
         .product-card {{ display:grid; grid-template-columns:100px 1fr; gap:var(--space-md); background:var(--clr-off-white); border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); padding:var(--space-md); transition: transform var(--duration-base), box-shadow var(--duration-base); }}
-        .product-card:hover {{ transform:translateY(-2px); box-shadow:var(--shadow-md); }}
+        .product-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
         .product-card img {{ width:100px; height:100px; object-fit:contain; border-radius:var(--radius-sm); background:var(--clr-white); }}
         .product-card-body h3 {{ font-size:var(--text-base); margin-bottom:2px; }}
         .product-card-body .price {{ font-size:var(--text-sm); color:var(--clr-accent); font-weight:700; margin-bottom:4px; }}

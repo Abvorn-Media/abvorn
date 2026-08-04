@@ -111,6 +111,12 @@ class KnowledgeIndex:
             c.execute("SELECT COUNT(*) FROM documents")
             return c.fetchone()[0]
 
+    def get_indexed_paths(self) -> set:
+        """Return the set of file paths already indexed (for incremental refresh)."""
+        with self._cursor() as c:
+            c.execute("SELECT path FROM documents WHERE path IS NOT NULL AND path != ''")
+            return {row[0] for row in c.fetchall()}
+
     def get_chunk_count(self) -> int:
         with self._cursor() as c:
             c.execute("SELECT COUNT(*) FROM chunks")

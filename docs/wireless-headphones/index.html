@@ -124,17 +124,20 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         @media (max-width:700px) { .subscribe-inner { flex-direction:column; align-items:flex-start; } .subscribe-form .input { width:100%; } }
 
         .posts-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }
-        .post-card { border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }
-        .post-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
-        .post-card img { width:100%; height:200px; object-fit:cover; }
-        .post-card__body { padding:var(--space-md); display:flex; flex-direction:column; flex:1; }
-        .post-card h3 { font-size:var(--text-lg); margin:0 0 6px; }
-        .post-card h3 a { color:inherit; text-decoration:none; }
-        .post-card .post-meta { font-size:0.8rem; color:var(--clr-mid-gray); margin-bottom:8px; }
-        .post-card p { font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }
-        .post-card .read-link { font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; margin-top:auto; align-self:flex-end; }
-        .post-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; }
-        .post-card__footer .read-link { margin:0; align-self:auto; }
+        .niche-card { border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }
+        .niche-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-md); }
+        .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; }
+        .niche-card img { width:100%; height:100%; object-fit:cover; }
+        .niche-card h2 { font-size:var(--text-lg); margin: var(--space-md) var(--space-md) 8px; }
+        .niche-card h2 a { color:inherit; text-decoration:none; }
+        .niche-card p { font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }
+        .niche-card .review-card__snippet { font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .niche-card .read-link { font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }
+        .niche-card .read-link:hover { color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }
+        .review-card__banner { display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
+        .review-card__banner + h2 { margin: 6px var(--space-md) 8px; }
+        .review-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }
+        .review-card__footer .read-link { margin:0; align-self:auto; }
         .review-card__reactions { display:flex; gap:6px; }
         .review-card__reactions .reaction-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; font-family:var(--font-body); }
         .review-card__reactions .reaction-btn.is-counter { cursor:default; }
@@ -175,18 +178,17 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
 </div></section>
 
-<section class="container posts-grid"><div class="post-card">
-    <a href="/abvorn/reviews/wireless-headphones/"><img src="/abvorn/assets/wireless-headphones.svg" alt="Best Wireless Headphones 2024: A Comparison Guide to Find Your Perfect Pair"></a>
-    <div class="post-card__body">
-        <h3><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones 2024: A Comparison Guide to Find Your Perfect Pair</a></h3>
-        <p>Expert-tested and reviewed. See why this made our list.</p>
-        <div class="post-card__footer">
-            <div class="review-card__reactions" data-review="wireless-headphones">
-                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
-                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
-            </div>
-            <a href="/abvorn/reviews/wireless-headphones/" class="read-link">Read more →</a>
+<section class="container posts-grid"><div class="niche-card review-card" style="--cat:#c98a2c">
+    <a href="/abvorn/reviews/wireless-headphones/"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/wireless-headphones.svg" alt="Best Wireless Headphones" loading="lazy"></div></a>
+    <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
+    <h2><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones</a></h2>
+    <p class="review-card__snippet">Expert-tested and reviewed. See why this made our list.</p>
+    <div class="review-card__footer">
+        <div class="review-card__reactions" data-review="wireless-headphones">
+            <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+            <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
         </div>
+        <a href="/abvorn/reviews/wireless-headphones/" class="read-link">Read more →</a>
     </div>
 </div></section>
 

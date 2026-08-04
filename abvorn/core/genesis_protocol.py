@@ -170,7 +170,7 @@ python run_cycle.py --genesis-version {self.version + 1}
 
         return str(target_dir)
 
-    def terminate_parent(self):
+    def terminate_parent(self, exit_process: bool = False):
         death_cert = self.genesis_dir / f"death_certificate_v{self.version}.json"
         death_cert.write_text(json.dumps({
             "version": self.version,
@@ -185,17 +185,25 @@ python run_cycle.py --genesis-version {self.version + 1}
 
         logger.info("PARENT CORE V%s TERMINATED", self.version)
 
-    def spawn_child(self) -> str:
+        if exit_process:
+            # Child has been launched; end the parent process for real so the
+            # two cores never run concurrently against the same state.
+            os._exit(0)
+
+    def spawn_child(self, exit_parent: bool = True) -> str:
         logger.info("EVOLUTION TRIGGERED: V%s -> V%s", self.version, self.version + 1)
         child_path = self.transfer_genome()
-        self.terminate_parent()
         startup = Path(child_path) / "start.sh"
+        launched = False
         if startup.exists():
             try:
                 subprocess.Popen(["bash", str(startup)], cwd=Path(child_path).parent)
+                launched = True
                 logger.info("Child Core launched: %s", child_path)
             except Exception as e:
                 logger.warning("Could not launch child start.sh: %s", e)
+        if launched:
+            self.terminate_parent(exit_process=exit_parent)
         return str(child_path)
 
     def get_lineage(self) -> dict:

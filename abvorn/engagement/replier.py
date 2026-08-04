@@ -65,6 +65,12 @@ class ReplyPoster:
 
     def post(self, mention: dict, reply_text: str) -> dict:
         """Post a reply to the mention's tweet."""
+        # MASTER SWITCH: no live replies until explicitly enabled.
+        from ..core.social_gate import require_social_publishing
+        if not require_social_publishing():
+            logger.info("Reply staged (not posted) — publish gate OFF")
+            return {"status": "staged", "mention_id": mention.get("id", ""),
+                    "author": mention.get("author", ""), "text": reply_text[:280]}
         if not self._composio:
             return {"status": "skipped", "reason": "no_composio"}
         tweet_id = mention.get("tweet_id", "")

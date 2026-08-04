@@ -26,5 +26,5 @@ class Scheduler:
 
     def queue_deploy(self, niche: str):
         """Queue a deploy for a specific niche (triggered by Telegram command)."""
-        self.state.add_opportunity(niche, "telegram_manual", priority=99)
+        self.state.add_opportunity(niche, score=1.0)
         logger.info(f"[Scheduler] Queued manual deploy for '{niche}' via Telegram")

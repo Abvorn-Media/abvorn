@@ -1,0 +1,154 @@
+{
+  "Affiliate_Marketing": {
+    "keywords": ["affiliate", "commission", "monetization", "cpm", "affiliate links"],
+    "function": "conversion_engine"
+  },
+  "AI_Engineering_&_ML_Systems": {
+    "keywords": ["machine learning", "AI", "neural", "deep learning", "mlops", "model"],
+    "function": "verdict_engine"
+  },
+  "Artificial_Intelligence_&_Machine_Learning": {
+    "keywords": ["machine learning", "AI", "neural", "deep learning", "mlops", "model"],
+    "function": "verdict_engine"
+  },
+  "Autonomous_Self-Improvement": {
+    "keywords": ["self-learning", "agentic", "autonomous", "evolution", "self-improving"],
+    "function": "core_evolution"
+  },
+  "Branding_&_Storytelling": {
+    "keywords": ["brand", "storytelling", "narrative", "positioning", "voice"],
+    "function": "content_quality"
+  },
+  "Business_Mindset": {
+    "keywords": ["mindset", "growth", "resilience", "wealth", "discipline"],
+    "function": "core_decisions"
+  },
+  "Cognitive_Science_&_How_the_Brain_Works": {
+    "keywords": ["cognitive", "brain", "memory", "attention", "bias"],
+    "function": "rps_engine"
+  },
+  "Consumer_Psychology_and_Buyer_Behavior": {
+    "keywords": ["buyer", "consumer", "decision", "psychology", "regret"],
+    "function": "rps_engine"
+  },
+  "Conversion_Rate_Optimisation": {
+    "keywords": ["conversion", "cta", "landing", "a/b", "funnel"],
+    "function": "conversion_engine"
+  },
+  "Copywriting": {
+    "keywords": ["copywriting", "persuasion", "headline", "sales", "copy"],
+    "function": "content_quality"
+  },
+  "Creative_Thinking_&_Innovation": {
+    "keywords": ["creativity", "innovate", "brainstorm", "ideation"],
+    "function": "content_quality"
+  },
+  "Critical_Thinking_&_Logic": {
+    "keywords": ["critical", "logic", "reasoning", "fallacy", "argument"],
+    "function": "verdict_engine"
+  },
+  "Data_Analytics": {
+    "keywords": ["data", "analytics", "metrics", "dashboard", "reporting"],
+    "function": "metrics_core"
+  },
+  "Design_Thinking_&_UX": {
+    "keywords": ["design", "ux", "user experience", "interface", "usability"],
+    "function": "content_quality"
+  },
+  "E-commerce_&_Product": {
+    "keywords": ["ecommerce", "product", "catalog", "retail", "checkout"],
+    "function": "conversion_engine"
+  },
+  "Email_Marketing": {
+    "keywords": ["email", "newsletter", "automation", "drip", "open rate"],
+    "function": "email_engine"
+  },
+  "Finance_&_Investing": {
+    "keywords": ["finance", "investing", "capital", "valuation", "roi"],
+    "function": "economic_core"
+  },
+  "Foundational_Computer_Science": {
+    "keywords": ["computer science", "algorithms", "data structures", "programming"],
+    "function": "core_architecture"
+  },
+  "Geopolitics_&_Global_Strategy": {
+    "keywords": ["geopolitics", "global", "market", "regulation", "trade"],
+    "function": "core_decisions"
+  },
+  "Instagram": {
+    "keywords": ["instagram", "social", "reels", "hashtag", "engagement"],
+    "function": "growth_loop"
+  },
+  "Leadership_&_Management": {
+    "keywords": ["leadership", "management", "team", "hiring", "delegation"],
+    "function": "core_decisions"
+  },
+  "LinkedIn": {
+    "keywords": ["linkedin", "profile", "network", "professional", "post"],
+    "function": "growth_loop"
+  },
+  "Mathematics_&_Statistics_for_Data_Science": {
+    "keywords": ["statistics", "probability", "regression", "hypothesis", "math"],
+    "function": "metrics_core"
+  },
+  "Money_Movement_and_Wealth": {
+    "keywords": ["money", "wealth", "flow", "capital", "cash"],
+    "function": "economic_core"
+  },
+  "Operational_Excellence": {
+    "keywords": ["operations", "efficiency", "process", "workflow", "automation2"],
+    "function": "core_architecture"
+  },
+  "Programming_&_Technology": {
+    "keywords": ["programming", "code", "software", "technology", "developer"],
+    "function": "core_architecture"
+  },
+  "Prompt_Engineering": {
+    "keywords": ["prompt", "llm", "language model", "instruction", "few-shot"],
+    "function": "verdict_engine"
+  },
+  "Python_&_CSS": {
+    "keywords": ["python", "css", "scripting", "style", "web"],
+    "function": "core_architecture"
+  },
+  "Sales_&_Marketing": {
+    "keywords": ["sales", "marketing", "pipeline", "lead", "funnel2"],
+    "function": "conversion_engine"
+  },
+  "SEO": {
+    "keywords": ["seo", "search", "ranking", "traffic", "keyword"],
+    "function": "growth_loop"
+  },
+  "Social_Media": {
+    "keywords": ["social media", "content", "engagement", "audience"],
+    "function": "growth_loop"
+  },
+  "Social_Web_&_Attention": {
+    "keywords": ["attention", "virality", "sharing", "social graph", "engagement2"],
+    "function": "growth_loop"
+  },
+  "Software_Engineering_&_Python": {
+    "keywords": ["software", "engineering", "python", "testing", "refactor"],
+    "function": "core_architecture"
+  },
+  "Strategy_&_Decision-Making": {
+    "keywords": ["strategy", "decision", "frameworks", "trade-offs", "choice"],
+    "function": "core_decisions"
+  },
+  "System_Design_&_Software_Architecture": {
+    "keywords": ["distributed", "architecture", "scalability", "design patterns", "system"],
+    "function": "core_architecture"
+  },
+  "TikTok": {
+    "keywords": ["tiktok", "short video", "viral", "for you", "engagement3"],
+    "function": "growth_loop"
+  },
+  "Web_Design": {
+    "keywords": ["web design", "frontend", "layout", "responsive", "ui"],
+    "function": "content_quality"
+  },
+  "X": {
+    "keywords": ["twitter", "x", "threads", "posts", "presence"],
+    "function": "growth_loop"
+  }
+}

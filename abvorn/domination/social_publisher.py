@@ -107,6 +107,12 @@ class SocialPublisher:
         if not mapping:
             return {"status": "error", "platform": platform, "reason": "unknown_platform"}
 
+        # MASTER SWITCH: nothing posts to live social until explicitly enabled.
+        from ..core.social_gate import require_social_publishing
+
+        if not require_social_publishing():
+            return self._export(script, platform, niche)
+
         if mapping.get("export_only") or not self.composio:
             return self._export(script, platform, niche)
 

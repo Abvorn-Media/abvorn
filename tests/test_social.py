@@ -17,11 +17,11 @@ def test_social_deployer_init():
 
 
 def test_post_x_without_key():
-    """Should skip posting when no Composio key."""
+    """Should NOT post — publish gate is off by default, so drafts are staged."""
     deployer = SocialDeployer()
     content = {"post_title": "Test", "intro": "", "article_html": "", "tags": []}
     result = deployer.post(content, "x")
-    assert result["status"] == "skipped"
+    assert result["status"] == "staged"
 
 
 def test_post_unknown_platform():

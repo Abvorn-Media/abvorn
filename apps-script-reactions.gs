@@ -17,7 +17,16 @@
  *   on 'reactions': {success, reactions:[{slug, like, love}, ...]}
  */
 var REACTIONS_SHEET_NAME = 'reactions';
+// The target spreadsheet. Because the script is STANDALONE it opens this
+// sheet by ID (SpreadsheetApp.openById), so it works even when the sheet is
+// in a different Google account than the script — as long as this sheet is
+// shared (Editor) with the account that owns the Apps Script.
+var REACTIONS_SPREADSHEET_ID = '1lw7u8rX9eVbXTF8Dyw1gzwZxWKjLrTgUAxM-lroI024';
 var REACTIONS_LOCK = LockService.getScriptLock();
+
+function reactionsSheet_() {
+  return SpreadsheetApp.openById(REACTIONS_SPREADSHEET_ID);
+}
 
 function doGet(e) {
   return doPostFor_(e);
@@ -91,7 +100,7 @@ function handleData_(out, slugs) {
 }
 
 function readReactions_() {
-  var ss = SpreadsheetApp.getActive();
+  var ss = reactionsSheet_();
   var sh = ss.getSheetByName(REACTIONS_SHEET_NAME);
   if (!sh) return {};
   var data = sh.getDataRange().getValues();
@@ -107,7 +116,7 @@ function readReactions_() {
 }
 
 function writeReactions_(votes) {
-  var ss = SpreadsheetApp.getActive();
+  var ss = reactionsSheet_();
   var sh = ss.getSheetByName(REACTIONS_SHEET_NAME);
   if (!sh) { sh = ss.insertSheet(REACTIONS_SHEET_NAME); sh.appendRow(['slug', 'type', 'visitor']); }
   sh.clearContents();

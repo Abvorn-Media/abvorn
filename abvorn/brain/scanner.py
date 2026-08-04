@@ -6,16 +6,25 @@ from datetime import datetime
 
 logger = logging.getLogger("abvorn.brain.scanner")
 
-BRAIN_PATH = Path(os.environ.get("ABVORN_BRAIN_PATH", ""))
+BRAIN_PATH = Path(os.environ.get("ABVORN_BRAIN_PATH", "")) if os.environ.get("ABVORN_BRAIN_PATH") else None
 DEFAULT_PATHS = [
     BRAIN_PATH,
     Path("/content/drive/MyDrive/Notebook LM Brain"),
     Path.home() / ".abvorn" / "brain",
+    Path(r"C:\Users\Jean Mare\Downloads\Notebook LM Brain-20260803T004108Z-1-001\Notebook LM Brain"),
 ]
 
 def _find_brain() -> Path:
-    for p in DEFAULT_PATHS:
-        if p.exists():
+    """Return the first candidate path that contains at least one PDF (prefers real libraries over empty stubs)."""
+    candidates = [p for p in DEFAULT_PATHS if p is not None and p.exists()]
+    for p in candidates:
+        try:
+            if p.is_dir() and any(p.rglob("*.pdf")):
+                return p
+        except OSError:
+            continue
+    for p in candidates:
+        if p.is_dir():
             return p
     local = Path.home() / ".abvorn" / "brain"
     local.mkdir(parents=True, exist_ok=True)
@@ -30,7 +39,7 @@ def scan_brain() -> dict:
     categories = {}
     for entry in brain.iterdir():
         if entry.is_dir():
-            pdfs = list(entry.glob("*.pdf")) + list(entry.glob("*.PDF"))
+            pdfs = list(entry.glob("*.pdf"))
             if pdfs:
                 cat_name = entry.name.replace("_", " ").title()
                 categories[cat_name] = []
@@ -48,18 +57,24 @@ def scan_brain() -> dict:
     logger.info(f"Brain scan: {len(categories)} categories, {total} documents")
     return categories
 
-def extract_text(pdf_path: str) -> str:
-    """Extract text from a PDF file using pdfplumber."""
-    import pdfplumber
+TEXT_LIMIT = 50000
+
+def extract_text(pdf_path: str, limit: int = TEXT_LIMIT) -> str:
+    """Extract text from a PDF using pypdf, stopping once the limit is reached."""
+    from pypdf import PdfReader
     text_parts = []
+    size = 0
     try:
-        with pdfplumber.open(pdf_path) as pdf:
-            for page in pdf.pages:
-                t = page.extract_text()
-                if t:
-                    text_parts.append(t)
+        reader = PdfReader(pdf_path)
+        for page in reader.pages:
+            t = page.extract_text()
+            if t:
+                text_parts.append(t)
+                size += len(t) + 1
+                if size >= limit:
+                    break
     except Exception as e:
         logger.warning(f"PDF extract failed for {pdf_path}: {e}")
         return ""
     full = "\n".join(text_parts)
-    return full[:50000]
+    return full[:limit]

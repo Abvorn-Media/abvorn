@@ -451,6 +451,12 @@ class HumanizerEngine:
     def humanize_email(self, text: str, context: Dict[str, Any] = None) -> str:
         return self.humanize(text, ContentType.EMAIL_NEWSLETTER, context)
 
+    def humanize_email_subject(self, text: str, context: Dict[str, Any] = None) -> str:
+        return self.humanize(text, ContentType.EMAIL_NEWSLETTER, context)
+
+    def humanize_email_body(self, text: str, context: Dict[str, Any] = None) -> str:
+        return self.humanize(text, ContentType.EMAIL_NEWSLETTER, context)
+
     def humanize_review_summary(self, text: str, context: Dict[str, Any] = None) -> str:
         return self.humanize(text, ContentType.REVIEW_SUMMARY, context)
 

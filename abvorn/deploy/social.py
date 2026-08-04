@@ -56,8 +56,16 @@ class SocialDeployer:
         if not registry.has(platform):
             return {"status": "error", "reason": f"unknown_platform:{platform}"}
 
+        # MASTER SWITCH: nothing posts to live social until explicitly enabled.
+        from ..core.social_gate import require_social_publishing
+
         config = registry.get(platform)
         adapted = config.adapter_fn(content)
+
+        if not require_social_publishing():
+            self._posted.append(platform)
+            logger.info(f"{platform}: publish gate OFF — draft staged (not posted)")
+            return {"status": "staged", "platform": platform, "data": adapted}
 
         if config.is_export_only:
             logger.info(f"{platform}: export-only — adapted content ready")
