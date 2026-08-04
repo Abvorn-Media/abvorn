@@ -281,6 +281,54 @@ class KimiProvider(ProviderAdapter):
         return self._client is not None
 
 
+class NvidiaProvider(ProviderAdapter):
+    """NVIDIA NIM — OpenAI-compatible endpoint at integrate.api.nvidia.com."""
+
+    def __init__(self, api_key: str = "", model: str = "deepseek-ai/deepseek-v4-flash"):
+        super().__init__("nvidia", priority=2)
+        self.model = model
+        self.api_key = api_key or os.environ.get("NVIDIA_KEY", "")
+        self._client = None
+        if self.api_key:
+            try:
+                from openai import OpenAI
+                self._client = OpenAI(api_key=self.api_key, base_url="https://integrate.api.nvidia.com/v1")
+                self.available = True
+            except Exception as e:
+                logger.warning(f"NVIDIA client init failed: {e}")
+                self.available = False
+
+    def execute(self, query: QueryPlan) -> QueryResult:
+        if not self._client:
+            return QueryResult(content="", provider_used=self.name, confidence=0.0, tokens_used=0, cost_estimate=0.0)
+        try:
+            response = self._client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": query.system_prompt},
+                    {"role": "user", "content": query.user_prompt},
+                ],
+                temperature=query.params.get("temperature", 0.7),
+                max_tokens=query.params.get("max_tokens", 2000),
+            )
+            content = response.choices[0].message.content or ""
+            usage = response.usage
+            return QueryResult(
+                content=content,
+                provider_used=self.name,
+                confidence=0.9 if content else 0.0,
+                tokens_used=usage.total_tokens if usage else 0,
+                cost_estimate=0.0,
+            )
+        except Exception as e:
+            logger.warning(f"NVIDIA query failed: {e}")
+            self.last_error = str(e)
+            return QueryResult(content="", provider_used=self.name, confidence=0.0, tokens_used=0, cost_estimate=0.0)
+
+    def health_check(self) -> bool:
+        return self._client is not None
+
+
 class KiloGatewayProvider(ProviderAdapter):
     """Free tier provider via Kilo Gateway — no API key needed."""
 
@@ -461,10 +509,11 @@ class AISQL:
             "kimi": KimiProvider(),
             "deepseek": DeepSeekProvider(),
             "huggingface": HuggingFaceProvider(),
+            "nvidia": NvidiaProvider(),
             "local": LocalProvider(),
         }
         self.primary_provider = "kilogateway"
-        self.fallback_chain = ["kilogateway", "huggingface", "kimi", "deepseek", "anthropic", "gemini", "local"]
+        self.fallback_chain = ["kilogateway", "nvidia", "huggingface", "kimi", "deepseek", "anthropic", "gemini", "local"]
         self.provider_scores: Dict[str, float] = {}
         self.provider_usage: Dict[str, int] = {}
         self.prompt_variants: Dict[str, Dict[str, Any]] = {}
@@ -554,6 +603,7 @@ def create_ai_sql() -> AISQL:
         secrets = {}
     deepseek_key = os.environ.get("DEEPSEEK_KEY", "") or secrets.get("DEEPSEEK_KEY", "")
     kimi_key = os.environ.get("KIMI_KEY", "") or secrets.get("KIMI_KEY", "")
+    nvidia_key = os.environ.get("NVIDIA_KEY", "") or secrets.get("NVIDIA_KEY", "")
     anthropic_key = os.environ.get("ANTHROPIC_KEY", "") or os.environ.get("ANTHROPIC_API_KEY", "") or secrets.get("ANTHROPIC_KEY", "") or secrets.get("ANTHROPIC_API_KEY", "")
     gemini_key = os.environ.get("GEMINI_KEY", "") or os.environ.get("GOOGLE_API_KEY", "") or secrets.get("GEMINI_KEY", "") or secrets.get("GOOGLE_API_KEY", "")
     hf_key = os.environ.get("HUGGINGFACE_KEY", "") or os.environ.get("HF_TOKEN", "") or secrets.get("HUGGINGFACE_KEY", "") or secrets.get("HF_TOKEN", "")
@@ -562,6 +612,8 @@ def create_ai_sql() -> AISQL:
         ai.providers["deepseek"] = DeepSeekProvider(api_key=deepseek_key)
     if kimi_key and "kimi" in ai.providers:
         ai.providers["kimi"] = KimiProvider(api_key=kimi_key)
+    if nvidia_key and "nvidia" in ai.providers:
+        ai.providers["nvidia"] = NvidiaProvider(api_key=nvidia_key)
     if anthropic_key and "anthropic" in ai.providers:
         ai.providers["anthropic"] = AnthropicProvider(api_key=anthropic_key)
     if gemini_key and "gemini" in ai.providers:

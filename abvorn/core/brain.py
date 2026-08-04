@@ -10,6 +10,9 @@ from abvorn.core.neural_memory import get_neural_memory
 
 logger = logging.getLogger(__name__)
 
+_ECONOMIC_KEYWORDS = ("economy", "economic", "market", "trend", "gdp", "inflation",
+                      "supply chain", "demand", "pricing", "price", "consumer spending")
+
 
 def _local_index_ready() -> bool:
     """True when the repo's SQLite brain index already has documents."""
@@ -37,6 +40,12 @@ class Brain:
         self.memory = get_neural_memory()
         self.category_map = self._load_category_map()
         self.is_ready = self.memory.get_state().get("entities", 0) > 0 or _local_index_ready()
+        self.strategist = None
+        try:
+            from abvorn.core.kimi_strategist import get_kimi_strategist
+            self.strategist = get_kimi_strategist()
+        except Exception as e:
+            logger.warning(f"KimiStrategist unavailable: {e}")
 
     def _load_category_map(self) -> dict:
         """Load the category-to-function mapping."""
@@ -85,6 +94,23 @@ class Brain:
                 })
         except Exception as e:
             logger.warning(f"Vector search failed: {e}")
+
+        # 3. KIMI ECONOMIC INTELLIGENCE: if results are weak and the question is
+        #    economic, ask the Moonshot strategist (free initial credits).
+        if len(results) < 3 and self.strategist is not None and getattr(self.strategist, "enabled", False):
+            if any(word in question.lower() for word in _ECONOMIC_KEYWORDS):
+                try:
+                    econ_data = self.strategist.query_economic_insight(question)
+                    if "error" not in econ_data:
+                        analysis = econ_data.get("analysis") or econ_data.get("summary") or json.dumps(econ_data)[:500]
+                        results.append({
+                            "source": "Kimi Professional Data",
+                            "insight": str(analysis)[:500],
+                            "type": "economic_intelligence",
+                            "relevance": 0.95,
+                        })
+                except Exception as e:
+                    logger.warning(f"Kimi economic insight failed: {e}")
 
         return results
 

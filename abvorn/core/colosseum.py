@@ -90,6 +90,13 @@ class Colosseum:
         except Exception as e:
             logger.warning(f"Platform skill engine unavailable: {e}")
 
+        self.strategist = None
+        try:
+            from abvorn.core.kimi_strategist import get_kimi_strategist
+            self.strategist = get_kimi_strategist()
+        except Exception as e:
+            logger.warning(f"Kimi strategist unavailable: {e}")
+
         # ai_sql is a module-level global configured by run_cycle.py
         self._ai_sql = None
 
@@ -218,10 +225,22 @@ class Colosseum:
             i.get("insight", "") for i in insights[:3] if i.get("insight")
         ) or "\n".join(_TIMELESS_FALLBACK_INSIGHTS)
 
+        # Economic context from the Moonshot strategist (optional, non-fatal)
+        economic_context = ""
+        if self.strategist is not None and getattr(self.strategist, "enabled", False):
+            try:
+                econ_data = self.strategist.query_economic_insight(
+                    f"Current economic and market context for {draft.get('product_name', 'this product')} buying decisions"
+                )
+                if "error" not in econ_data:
+                    economic_context = "\nEconomic context: " + json.dumps(econ_data)[:400]
+            except Exception as e:
+                logger.warning(f"Kimi economic context failed in colosseum: {e}")
+
         default = {"approved": True, "violations": [], "suggested_fix": ""}
         response = self._ask(
             "You are a strict Puritan Critic enforcing honest-review principles. Return JSON only.",
-            f"Principles:\n{insight_text}\n\nDraft hook: {draft.get('hook', '')}\n"
+            f"Principles:\n{insight_text}\n{economic_context}\n\nDraft hook: {draft.get('hook', '')}\n"
             f"Return JSON with keys: approved (bool), violations (list), suggested_fix (string).",
         )
         if not response:
