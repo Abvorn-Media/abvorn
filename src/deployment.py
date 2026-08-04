@@ -428,18 +428,24 @@ def scan_published_reviews(docs_dir="docs"):
             index = niche_dir / "index.html"
             pages = [index] if index.exists() else []
         index_snippet = ""
-        if pages and (niche_dir / "index.html").exists():
-            index_snippet = review_snippet((niche_dir / "index.html").read_text(encoding="utf-8"))
+        index_hero = ""
+        if (niche_dir / "index.html").exists():
+            index_html = (niche_dir / "index.html").read_text(encoding="utf-8")
+            index_snippet = review_snippet(index_html)
+            m = _HERO_PICK_IMG_RE.search(index_html)
+            if m:
+                index_hero = html_mod.unescape(m.group(1))
         for p in pages:
             html = p.read_text(encoding="utf-8")
             h1 = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.S)
             title = html_mod.unescape(re.sub(r"<[^>]+>", "", h1.group(1))).strip() if h1 else ""
             upd = re.search(r"Updated:\s*(\d{4}-\d{2}-\d{2})", html)
             rel = f"/reviews/{slug}/" if p.name == "index.html" else f"/reviews/{slug}/{p.name}"
-            hero_img = ""
-            m = _HERO_PICK_IMG_RE.search(html)
-            if m:
-                hero_img = html_mod.unescape(m.group(1))
+            hero_img = index_hero
+            if p.name != "index.html":
+                m = _HERO_PICK_IMG_RE.search(html)
+                if m:
+                    hero_img = html_mod.unescape(m.group(1))
             reviews.append({
                 "slug": slug,
                 "name": _niche_name(slug),
