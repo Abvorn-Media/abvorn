@@ -159,7 +159,7 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
 """
 
 VERDICT_CARD_CSS = """
-.abvorn-verdict{padding:28px 32px;margin:32px 0;border-top:1px solid #e8e8e8;border-bottom:1px solid #e8e8e8;background:transparent;position:relative;overflow:hidden}
+.abvorn-verdict{padding:28px 32px;margin:32px 0;border-top:1px solid #e8e8e8;border-bottom:1px solid #e8e8e8;background:transparent;position:relative}
 .av-badge{display:inline-flex;align-items:center;gap:6px;background:#1a1a1a;color:#fff;font-size:.7rem;font-weight:700;padding:4px 14px;border-radius:100px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
 .av-badge::before{content:'\\01F525';font-size:.8rem}
 .av-score-row{display:flex;align-items:center;gap:20px;margin-bottom:20px}
