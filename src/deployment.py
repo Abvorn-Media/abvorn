@@ -552,10 +552,136 @@ def scan_published_reviews(docs_dir="docs"):
     return reviews
 
 
+# Mojibake signatures: byte sequences that result from decoding UTF-8 text as
+# the Windows ANSI codepage (cp1252) and re-encoding as UTF-8. Every double-
+# encoded em dash / curly quote / box-drawing char starts with one of these
+# prefixes. Matching against the raw UTF-8 bytes catches both the strict cp1252
+# path (e.g. \u00c3\u00a2\u00e2\u0082\u00ac = "â€") and the latin-1 fallback
+# path used for cp1252-undefined bytes (\u00c3\u00a2\u00c2\u0090 etc.).
+MOJIBAKE_SIGNATURES = (
+    b"\xc3\xa2",  # â  (every 3-byte UTF-8 char decoded via latin-1/cp1252)
+    b"\xc3\x83\xc2",  # Ã  (2-byte chars decoded as latin-1 then re-encoded)
+    b"\xc3\x82",  # Â  (C2-prefixed chars like nbsp via latin-1 fallback)
+    b"\xef\xbf\xbd",  # U+FFFD replacement char
+)
+
+# Context: true mojibake also requires the bytes following the prefix to be
+# part of the double-encoded run. To avoid false positives on genuine text
+# (rare in English but possible in foreign-language snippets), only flag when
+# the prefix is followed by a cp1252/latin-1 range byte.
+_MOJIBAKE_PREFIX_RX = re.compile(
+    b"(?:\xc3\xa2[\xe2\xc2\x80-\x9f\xa0-\xbf\x82\xac]"
+    b"|\xc3\x83\xc2[\x80-\xbf]"
+    b"|\xc3\x82[\x80-\xbf]"
+    b"|\xef\xbf\xbd)"
+)
+
+
+def find_mojibake(text: str) -> list:
+    """Return a list of mojibake byte signatures found in the given text.
+
+    Text is encoded back to UTF-8 and scanned for double-encoded character
+    signatures. An empty list means the content is clean.
+    """
+    encoded = text.encode("utf-8")
+    found = []
+    for m in _MOJIBAKE_PREFIX_RX.finditer(encoded):
+        sig = m.group(0)
+        ctx = encoded[max(0, m.start() - 12): m.end() + 8]
+        found.append({"offset": m.start(), "sig": sig.hex(" "), "context": ctx.hex(" ")})
+    return found
+
+
+# Byte-level repair for the two codec-fallback variants that cannot round-trip
+# through a single cp1252 pass (the corruption tool fell back to latin-1 for
+# cp1252-undefined bytes 0x90/0x9D). Keyed by exact mojibake bytes observed in
+# the wild; value is the correct UTF-8 encoding of the intended character.
+MOJIBAKE_FIX_TABLE = {
+    # \u00e2\u2022\u0090 -> U+2550 (box drawings double horizontal) CSS separator
+    b"\xc3\xa2\xe2\x80\xa2\xc2\x90": "\u2550".encode("utf-8"),
+    # \u00e2\u20ac\u009d -> U+201D (right double quotation mark)
+    b"\xc3\xa2\xe2\x82\xac\xc2\x9d": "\u201d".encode("utf-8"),
+}
+
+
+def _reverse_cp1252_run(run: str) -> str:
+    """Reverse one cp1252->utf8 double-encoded non-ASCII run.
+
+    Original UTF-8 bytes B were decoded as cp1252 (chars C) then re-encoded as
+    UTF-8. Reverse: C.encode('cp1252') -> B, B.decode('utf-8'). Returns the
+    fixed string, or the original run when reversal is impossible.
+    """
+    try:
+        return run.encode("cp1252").decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return run
+
+
+def repair_mojibake(text: str) -> str:
+    """Return the text with double-encoded UTF-8 corruption repaired.
+
+    First applies the byte-level fix table (codec-fallback variants), then
+    reverses every remaining cp1252 double-encoding on non-ASCII runs.
+    """
+    data = text.encode("utf-8")
+    changed = False
+    for bad, good in MOJIBAKE_FIX_TABLE.items():
+        if bad in data:
+            data = data.replace(bad, good)
+            changed = True
+    chars = data.decode("utf-8")
+    out = []
+    i, n = 0, len(chars)
+    while i < n:
+        if ord(chars[i]) < 0x80:
+            out.append(chars[i])
+            i += 1
+            continue
+        j = i
+        while j < n and ord(chars[j]) >= 0x80:
+            j += 1
+        run = chars[i:j]
+        fixed = _reverse_cp1252_run(run)
+        out.append(fixed)
+        if fixed != run:
+            changed = True
+        i = j
+    if not changed:
+        return text
+    return "".join(out)
+
+
+def check_encoding(text: str, label: str = "page") -> bool:
+    """Guard: raise ValueError if generated content contains mojibake.
+
+    Runs before a page is written to disk so corrupted output is blocked at
+    publish time instead of silently shipping to the site.
+    """
+    hits = find_mojibake(text)
+    if hits:
+        preview = ", ".join(h["sig"] for h in hits[:6])
+        raise ValueError(
+            f"Mojibake detected in {label}: {len(hits)} occurrence(s) "
+            f"(signatures: {preview}). Fix the encoding before publishing."
+        )
+    return True
+
+
+def write_checked(path: Path, text: str, label: str) -> None:
+    """Write a page after validating its encoding.
+
+    Blocks mojibake from reaching the published docs/ tree: raises ValueError
+    if the content carries double-encoded UTF-8 signatures.
+    """
+    check_encoding(text, label=label)
+    path.write_text(text, encoding="utf-8")
+
+
 def verify_page(html_content: str) -> bool:
     """Quick regression guard for generated article pages.
 
-    Raises ValueError if a required asset is missing from the rendered HTML.
+    Raises ValueError if a required asset is missing from the rendered HTML or
+    if the page contains mojibake (double-encoded UTF-8).
     """
     missing = []
     if 'id="abvorn-rps-data"' not in html_content:
@@ -566,6 +692,7 @@ def verify_page(html_content: str) -> bool:
         missing.append("av-bar-row")
     if missing:
         raise ValueError(f"Missing required page assets: {', '.join(missing)}")
+    check_encoding(html_content, label="article page")
     return True
 
 
@@ -2274,7 +2401,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     all_posts = [{"title": r["title"], "slug": r["rel"].lstrip("/")} for r in reviews]
 
     # Write root index (premium homepage)
-    (docs / "index.html").write_text(build_homepage(state, form_url, reviews=reviews, base=SITE_BASE), encoding="utf-8")
+    write_checked(docs / "index.html", build_homepage(state, form_url, reviews=reviews, base=SITE_BASE), "homepage")
     print(f"  Written: docs/index.html")
 
     # Write category listing pages (one per category, e.g. /categories/audio/)
@@ -2284,9 +2411,10 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
         cat_items.sort(key=lambda r: r["updated"], reverse=True)
         cat_dir = docs / "categories" / cat_slug
         cat_dir.mkdir(parents=True, exist_ok=True)
-        (cat_dir / "index.html").write_text(
+        write_checked(
+            cat_dir / "index.html",
             build_category_listing_page(cat_name, cat_slug, cat_items, all_slugs, base=SITE_BASE, affiliate_tag=amazon_tag),
-            encoding="utf-8",
+            f"category page {cat_slug}",
         )
         print(f"  Written: docs/categories/{cat_slug}/index.html")
 
@@ -2334,7 +2462,7 @@ footer a{{color:#aaa;text-decoration:none}}
                       [{"title": a.get("post_title", ""), "slug": f"reviews/{n['slug']}"} for a in articles.get(n["slug"], [])]
         cat_dir = docs / n["slug"]
         cat_dir.mkdir(exist_ok=True)
-        (cat_dir / "index.html").write_text(build_category_page(n["slug"], n["name"], niche_posts, all_slugs, amazon_tag), encoding="utf-8")
+        write_checked(cat_dir / "index.html", build_category_page(n["slug"], n["name"], niche_posts, all_slugs, amazon_tag), f"niche page {n['slug']}")
 
     # Write comparison pages
     comp_dir = docs / "comparisons"
@@ -2345,9 +2473,10 @@ footer a{{color:#aaa;text-decoration:none}}
             prods.extend(a.get("products", []))
         if prods:
             title = f"Best {n['name']} Compared"
-            (comp_dir / f"{n['slug']}.html").write_text(
+            write_checked(
+                comp_dir / f"{n['slug']}.html",
                 build_comparison_page(n["slug"], n["name"], title, prods, all_slugs, amazon_tag),
-                encoding="utf-8"
+                f"comparison page {n['slug']}",
             )
             print(f"  Written: comparisons/{n['slug']}.html")
 
@@ -2373,10 +2502,10 @@ footer a{{color:#aaa;text-decoration:none}}
             date_str = datetime.now().strftime("%Y-%m-%d")
             suffix = "" if i == 0 else f"-{i}"
             fname = f"{_title_slug(a['post_title'])}-{date_str}{suffix}.html"
-            (post_dir / fname).write_text(article_html, encoding="utf-8")
+            write_checked(post_dir / fname, article_html, f"article {slug}/{fname}")
             print(f"  Written: docs/reviews/{slug}/{fname} (article)")
             if i == len(post_list) - 1:
-                (post_dir / "index.html").write_text(article_html, encoding="utf-8")
+                write_checked(post_dir / "index.html", article_html, f"article index {slug}")
                 print(f"  Written: docs/reviews/{slug}/index.html (latest)")
             # Update the post slug in all_posts for root index links
             for p in all_posts:
@@ -2386,7 +2515,7 @@ footer a{{color:#aaa;text-decoration:none}}
     # Write methodology page
     method_dir = docs / "how-we-test"
     method_dir.mkdir(exist_ok=True)
-    (method_dir / "index.html").write_text(build_methodology_page(all_slugs, form_url), encoding="utf-8")
+    write_checked(method_dir / "index.html", build_methodology_page(all_slugs, form_url), "methodology page")
     print(f"  Written: docs/how-we-test/index.html")
 
     # Write RSS feed and sitemap
