@@ -266,7 +266,19 @@ class RelentlessCore:
         product_name = product_data.get("product_name", "this product")
         breakdown = verdict.get("breakdown", {}) or {}
 
+        # Prefer the Title Engine's top scroll-stopping variant for the hook;
+        # fall back to the classic Oliver Henry line when unavailable.
         hook = f"My friend thought {product_name} was overrated... until they tried it"
+        try:
+            from abvorn.core.title_engine import get_title_engine
+            best = get_title_engine().select_best(
+                {"product_name": product_name, "verdict": verdict, "price": product_data.get("price")},
+                platform="tiktok",
+            )
+            if best.get("title"):
+                hook = best["title"]
+        except Exception as e:
+            logger.debug(f"Title engine unavailable in carousel builder: {e}")
         slides = {
             "hook": {"text": hook},
             "problem": {"text": f"The {product_name} market is flooded. Here's the truth."},

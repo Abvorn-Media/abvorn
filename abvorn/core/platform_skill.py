@@ -75,6 +75,22 @@ class PlatformSkillEngine:
             return f.read_text(encoding="utf-8")
         return ""
 
+    def generate_platform_title(self, carousel: Dict[str, Any], platform: str) -> str:
+        """Generate a scroll-stopping Oliver Henry title for the platform.
+
+        Uses the Title Engine's variants (ranked by impact + learned history)
+        and falls back to the existing hook when the engine is unavailable.
+        """
+        try:
+            from abvorn.core.title_engine import get_title_engine
+            best = get_title_engine().select_best(carousel, platform)
+            if best.get("title"):
+                return best["title"]
+        except Exception as e:
+            logger.warning(f"Title engine unavailable: {e}")
+        hook = str(carousel.get("hook") or "")
+        return hook if hook else str(carousel.get("product_name") or "The review")
+
     def generate_platform_content(self, carousel: Dict[str, Any], platform: str) -> Dict[str, Any]:
         config = PLATFORM_RULES.get(platform, {})
         hook = carousel.get("hook", "")
@@ -86,6 +102,7 @@ class PlatformSkillEngine:
         return {
             "platform": platform,
             "tone": config.get("tone"),
+            "title": self.generate_platform_title(carousel, platform),
             "hook": self._adapt_hook(hook, config),
             "caption": self._adapt_caption(product, score, hook, config),
             "hashtags": self._adapt_hashtags(carousel.get("hashtags", []), config),

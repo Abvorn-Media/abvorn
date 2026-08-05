@@ -187,6 +187,19 @@ class Colosseum:
         default = dict(carousel)  # keep existing payload if generation fails
         default.setdefault("slides", carousel.get("slides") or {})
 
+        # Oliver Henry title variants (deterministic, never fatal) — the LLM
+        # drafts the final hook from these scroll-stopping candidates.
+        title_context = ""
+        try:
+            from abvorn.core.title_engine import get_title_engine
+            variants = get_title_engine().generate_titles(carousel, platform, count=5)
+            if variants:
+                title_context = "\nTitle candidates (Oliver Henry formula):\n" + "\n".join(
+                    f"- {v['title']}" for v in variants
+                )
+        except Exception as e:
+            logger.debug(f"Title engine unavailable in creator: {e}")
+
         response = self._ask(
             "You write viral product-review hooks. Return JSON only.",
             f"Product: {product}\nVerdict: {label} {overall}/10\n"
@@ -194,6 +207,7 @@ class Colosseum:
             f"Angle: {strategy.get('angle')}\n"
             f"Emotional driver: {strategy.get('emotional_driver')}\n"
             f"Platform: {platform}\n"
+            f"{title_context}\n"
             f"Return JSON with keys: hook (a curiosity-driven first line), "
             f"slides (object of 6 keys: hook, problem, verdict, breakdown, comparison, call).",
         )
