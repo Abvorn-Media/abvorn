@@ -386,6 +386,9 @@ def load_verdict_weights() -> dict:
 _INTRO_RE = re.compile(r"<h2>\s*Introduction\s*</h2>\s*<p[^>]*>(.*?)</p>", re.S)
 # The "Our Choice" hero pick product photo rendered into the article hero.
 _HERO_PICK_IMG_RE = re.compile(r'<div class="hero-pick".*?<img class="product-shot__img" src="([^"]+)"', re.S)
+# Fallback: the niche page's hero product photo (hero-image-wrapper > img),
+# which carries the reviewed product itself rather than a category illustration.
+_NICHE_HERO_IMG_RE = re.compile(r'<div class="hero-image-wrapper">\s*<img src="([^"]+)"', re.S)
 # Abvorn Verdict overall score embedded on published review pages (either plain
 # JSON or the HTML-entity-escaped variant), e.g. '"overall": 7.0'.
 _VERDICT_OVERALL_RE = re.compile(r'overall.{0,40}?([0-9]+(?:\.[0-9]+)?)')
@@ -471,6 +474,8 @@ def scan_published_reviews(docs_dir="docs"):
             index_html = (niche_dir / "index.html").read_text(encoding="utf-8")
             index_snippet = review_snippet(index_html)
             m = _HERO_PICK_IMG_RE.search(index_html)
+            if not m:
+                m = _NICHE_HERO_IMG_RE.search(index_html)
             if m:
                 index_hero = html_mod.unescape(m.group(1))
             index_breakdown, index_overall, index_label, index_product = _parse_verdict_data(index_html)
@@ -483,6 +488,8 @@ def scan_published_reviews(docs_dir="docs"):
             hero_img = index_hero
             if p.name != "index.html":
                 m = _HERO_PICK_IMG_RE.search(html)
+                if not m:
+                    m = _NICHE_HERO_IMG_RE.search(html)
                 if m:
                     hero_img = html_mod.unescape(m.group(1))
             m_score = _VERDICT_OVERALL_RE.search(html)
@@ -786,7 +793,7 @@ def build_homepage(state, form_url="", reviews=None, base=None):
     nav_dd = build_category_dropdown(b)
 
     # Build hero slides — each slide is a live verdict scorecard proving the
-    # "Scored on 5 criteria" promise, with the product photo as backdrop.
+    # "Scored on 5 criteria" promise, with the reviewed product photo as backdrop.
     hero_slides = ""
     hero_dots = ""
     hero_candidates = []
@@ -801,6 +808,9 @@ def build_homepage(state, form_url="", reviews=None, base=None):
     for i, (img, name, slug) in enumerate(hero_candidates):
         active = " active" if i == 0 else ""
         review = review_by_slug.get(slug, {})
+        # Prefer the real reviewed product photo when one is published; fall
+        # back to the generated niche illustration otherwise.
+        backdrop = review.get("image") or img
         verdict = _hero_slide_verdict(
             review.get("breakdown") or {},
             review.get("score"),
@@ -813,7 +823,7 @@ def build_homepage(state, form_url="", reviews=None, base=None):
             overlay = f'<div class="hero-slide__scrim" aria-hidden="true"></div>{caption}'
         else:
             overlay = f"<figcaption>{caption}</figcaption>"
-        hero_slides += f'<div class="hero-slide{active}"><img src="{img}" alt="{name}">{overlay}</div>'
+        hero_slides += f'<div class="hero-slide{active}"><img src="{backdrop}" alt="{name}">{overlay}</div>'
         hero_dots += f'<button class="hero-slider__dot{active}" aria-label="Show {name}" aria-current="{"true" if i == 0 else "false"}"></button>'
 
     # Build latest review cards — the 3 most recently updated reviews, with
