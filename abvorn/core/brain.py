@@ -47,6 +47,23 @@ class Brain:
         except Exception as e:
             logger.warning(f"KimiStrategist unavailable: {e}")
 
+        # Pulse Engine: temporal influence graph over Colosseum debates.
+        # Optional and never fatal — starts empty until debates accumulate.
+        self.pulse = None
+        try:
+            from abvorn.core.pulse_engine import get_pulse_engine
+            self.pulse = get_pulse_engine()
+            self.pulse.build_from_debates()
+            st = self.pulse.get_state()
+            logger.info(
+                "Pulse Engine ready: %d nodes, %d edges (%d debates)",
+                st.get("nodes", 0),
+                st.get("edges", 0),
+                st.get("debates_processed", 0),
+            )
+        except Exception as e:
+            logger.warning(f"Pulse Engine unavailable: {e}")
+
     def _load_category_map(self) -> dict:
         """Load the category-to-function mapping."""
         map_file = Path("data/brain_category_map.json")
@@ -111,6 +128,32 @@ class Brain:
                         })
                 except Exception as e:
                     logger.warning(f"Kimi economic insight failed: {e}")
+
+        # 4. PULSE ENGINE AUGMENTATION: influence-weighted relevance and
+        #    bridge concepts (optional; empty graph -> no-op).
+        if results and self.pulse is not None:
+            try:
+                influential = self.pulse.get_influential_concepts(top_n=10)
+                if influential:
+                    for r in results:
+                        if "influence_score" in r:
+                            continue
+                        insight = (r.get("insight", "") or "").lower()
+                        for concept in influential:
+                            if concept["concept"].lower() in insight:
+                                r["influence_score"] = concept["influence_score"]
+                                break
+                if any(word in question.lower() for word in ("bridge", "connect", "link", "between")):
+                    bridges = self.pulse.get_bridge_concepts()
+                    for b in bridges[:3]:
+                        results.append({
+                            "source": "Pulse Engine (Bridge Concept)",
+                            "insight": f"Bridge concept: {b['concept']} connects communities with score {b['bridge_score']:.3f}",
+                            "type": "bridge",
+                            "relevance": 0.85,
+                        })
+            except Exception as e:
+                logger.warning(f"Pulse enrichment failed: {e}")
 
         return results
 

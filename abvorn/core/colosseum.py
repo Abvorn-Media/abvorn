@@ -225,6 +225,20 @@ class Colosseum:
             i.get("insight", "") for i in insights[:3] if i.get("insight")
         ) or "\n".join(_TIMELESS_FALLBACK_INSIGHTS)
 
+        # Bridge concepts from the Pulse Engine (optional, non-fatal). Gives
+        # the critic cross-domain signal so it can catch stale assumptions.
+        bridge_context = ""
+        if self.brain is not None and getattr(self.brain, "pulse", None) is not None:
+            try:
+                bridges = self.brain.pulse.get_bridge_concepts()
+                if bridges:
+                    bridge_context = "\nBridge Concepts (connecting different domains):\n" + "\n".join(
+                        f"- {b['concept']} (bridge score: {b['bridge_score']:.3f})"
+                        for b in bridges[:3]
+                    )
+            except Exception as e:
+                logger.warning(f"Bridge injection failed: {e}")
+
         # Economic context from the Moonshot strategist (optional, non-fatal)
         economic_context = ""
         if self.strategist is not None and getattr(self.strategist, "enabled", False):
@@ -240,7 +254,7 @@ class Colosseum:
         default = {"approved": True, "violations": [], "suggested_fix": ""}
         response = self._ask(
             "You are a strict Puritan Critic enforcing honest-review principles. Return JSON only.",
-            f"Principles:\n{insight_text}\n{economic_context}\n\nDraft hook: {draft.get('hook', '')}\n"
+            f"Principles:\n{insight_text}\n{economic_context}\n{bridge_context}\n\nDraft hook: {draft.get('hook', '')}\n"
             f"Return JSON with keys: approved (bool), violations (list), suggested_fix (string).",
         )
         if not response:

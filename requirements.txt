@@ -17,3 +17,7 @@ jinja2
 composio-core
 pdfplumber
 feedparser
+
+networkx>=3.1
+python-louvain
+

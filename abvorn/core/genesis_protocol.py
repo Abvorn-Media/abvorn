@@ -106,6 +106,21 @@ class GenesisProtocol:
             except Exception as e:
                 logger.warning("Could not snapshot DB: %s", e)
 
+        # Pulse Engine state: snapshot the temporal influence graph so
+        # evolution carries forward what is central/rising, not just weights.
+        try:
+            from abvorn.core.pulse_engine import get_pulse_engine
+            pulse = get_pulse_engine()
+            genome["pulse_state"] = {
+                "nodes": pulse.graph.number_of_nodes() if pulse.graph is not None else 0,
+                "edges": pulse.graph.number_of_edges() if pulse.graph is not None else 0,
+                "last_build": pulse.last_build.isoformat() if pulse.last_build else None,
+                "debates_processed": pulse.debates_processed,
+                "influential_concepts": pulse.get_influential_concepts(top_n=10),
+            }
+        except Exception as e:
+            logger.warning("Could not snapshot Pulse Engine state: %s", e)
+
         return genome
 
     def transfer_genome(self, target_path: str = None) -> str:
