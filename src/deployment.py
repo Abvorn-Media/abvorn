@@ -736,10 +736,10 @@ def review_card(item, category, b, featured=False):
     return f'''<div class="niche-card review-card{cls}" style="--cat:{color}">
     <div class="review-card__media">
         <a href="{href}" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper">{card_img}</div></a>
-        <span class="review-card__banner" style="background:{color}">{html_mod.escape(category)} · {html_mod.escape(item["name"])}</span>
         {score_html}
     </div>
     <div class="review-card__body">
+        <span class="review-card__banner" style="background:{color}">{html_mod.escape(category)} · {html_mod.escape(item["name"])}</span>
         {updated_html}
         <h2><a href="{href}">{title}</a></h2>
         {snippet_html}
@@ -1008,8 +1008,8 @@ def build_homepage(state, form_url="", reviews=None, base=None):
             cards = "".join(review_card(r, cat_name, b) for r in top)
         else:
             cards = f'''<div class="niche-card" style="--cat:{category_color(cat_name)}">
-    <div class="niche-card__media"><div class="niche-card__image-wrapper"><img src="{b}/assets/hero-home.svg" alt="Coming soon" loading="lazy"></div><span class="review-card__banner" style="background:{category_color(cat_name)}">{html_mod.escape(cat_name)}</span></div>
-    <div class="review-card__body"><h2>Reviews coming soon</h2><p class="review-card__snippet">We're testing products in this category now.</p></div>
+    <div class="niche-card__media"><div class="niche-card__image-wrapper"><img src="{b}/assets/hero-home.svg" alt="Coming soon" loading="lazy"></div></div>
+    <div class="review-card__body"><span class="review-card__banner" style="background:{category_color(cat_name)}">{html_mod.escape(cat_name)}</span><h2>Reviews coming soon</h2><p class="review-card__snippet">We're testing products in this category now.</p></div>
 </div>'''
         cat_color = category_color(cat_name)
         cat_sections += f'''<div class="category-section" style="--cat:{cat_color}">
@@ -1085,8 +1085,9 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     else:
         post_cards = ('<div class="niche-card review-card"><div class="review-card__media"><div class="niche-card__image-wrapper">'
                       f'<img src="{b}/assets/hero-home.svg" alt="Coming soon" loading="lazy"></div>'
-                      f'<span class="review-card__banner" style="background:{cat_color}">{cat_esc}</span></div>'
-                      '<div class="review-card__body"><h2>Reviews coming soon</h2>'
+                      '</div><div class="review-card__body">'
+                      f'<span class="review-card__banner" style="background:{cat_color}">{cat_esc}</span>'
+                      '<h2>Reviews coming soon</h2>'
                       '<p class="review-card__snippet">We\'re testing products in this category now.</p></div></div>')
         grid_count = '<span class="category-section__count">Reviews coming soon</span>'
 
@@ -1210,7 +1211,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .niche-card img {{ width:100%; height:100%; object-fit:contain; transition: transform var(--duration-slow) var(--ease-out); }}
         .niche-card:hover img {{ transform: scale(1.04); }}
         .review-card__media {{ position:relative; }}
-        .review-card__banner {{ position:absolute; top:14px; left:14px; z-index:2; display:inline-block; padding:4px 12px; border-radius:100px; color:#1a1200; font-size:0.64rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; box-shadow: var(--shadow-sm); }}
+        .review-card__banner {{ display:inline-block; padding:4px 12px; border-radius:6px; color:#1a1200; font-size:0.64rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:6px; }}
         .review-card__body {{ display:flex; flex-direction:column; flex:1; padding: var(--space-md); }}
         .review-card__body h2 {{ font-size: var(--text-lg); margin:0 0 8px; line-height:1.25; }}
         .review-card__body h2 a {{ color:inherit; text-decoration:none; }}
@@ -1520,7 +1521,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         .niche-card img {{ width:100%; height:100%; object-fit:contain; transition: transform var(--duration-slow) var(--ease-out); }}
         .niche-card:hover img {{ transform: scale(1.04); }}
         .review-card__media {{ position:relative; }}
-        .review-card__banner {{ position:absolute; top:14px; left:14px; z-index:2; display:inline-block; padding:4px 12px; border-radius:100px; color:#1a1200; font-size:0.64rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; box-shadow: var(--shadow-sm); }}
+        .review-card__banner {{ display:inline-block; padding:4px 12px; border-radius:6px; color:#1a1200; font-size:0.64rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:6px; }}
         .review-card__score {{ position:absolute; right:14px; bottom:14px; z-index:2; display:inline-flex; align-items:baseline; gap:3px; background:rgba(10,10,10,0.92); color:#fff; border-radius:100px; padding:6px 14px; border:1px solid rgba(201,138,44,0.6); backdrop-filter: blur(4px); }}
         .review-card__score-num {{ font-family: var(--font-display); font-size:1.15rem; font-weight:800; color: var(--clr-accent); letter-spacing:-0.02em; line-height:1; }}
         .review-card__score-out {{ font-size:0.7rem; color:#aaa; font-weight:600; }}
@@ -2932,7 +2933,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .niche-card img { width:100%; height:100%; object-fit:contain; transition: transform var(--duration-slow) var(--ease-out); }
         .niche-card:hover img { transform: scale(1.04); }
         .review-card__media { position:relative; }
-        .review-card__banner { position:absolute; top:14px; left:14px; z-index:2; display:inline-block; padding:4px 12px; border-radius:100px; color:#1a1200; font-size:0.64rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; box-shadow: var(--shadow-sm); }
+        .review-card__banner { display:inline-block; padding:4px 12px; border-radius:6px; color:#1a1200; font-size:0.64rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:6px; }
         .review-card__score { position:absolute; right:14px; bottom:14px; z-index:2; display:inline-flex; align-items:baseline; gap:3px; background:rgba(10,10,10,0.92); color:#fff; border-radius:100px; padding:6px 14px; border:1px solid rgba(201,138,44,0.6); backdrop-filter: blur(4px); }
         .review-card__score-num { font-family: var(--font-display); font-size:1.15rem; font-weight:800; color: var(--clr-accent); letter-spacing:-0.02em; line-height:1; }
         .review-card__score-out { font-size:0.7rem; color:#aaa; font-weight:600; }
