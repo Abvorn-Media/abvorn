@@ -2466,6 +2466,8 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .hero p { font-size: var(--text-lg); color:#555; max-width:46ch; margin-bottom: var(--space-lg); }
         .hero .btn { background:#1a1a1a; color:#fff; }
         .hero .btn:hover { background: var(--clr-accent); color:#1a1200; }
+        .hero-cta { width:100%; display:flex; justify-content:center; margin-bottom: var(--space-lg); }
+        .hero-cta .btn { margin: 0; }
         .hero-trust { display:flex; flex-wrap:wrap; justify-content:center; gap:8px 22px; margin-top: var(--space-lg); }
         .hero-trust span { display:inline-flex; align-items:center; gap:7px; font-size:0.78rem; font-weight:600; color:#666; }
         .hero-trust svg { width:15px; height:15px; color: var(--clr-accent); flex:none; }
@@ -2597,7 +2599,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         <span class="hero-eyebrow"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>How we work</span>
         <h1>Clear, honest guidance on what's actually worth your money.</h1>
         <p>Every guide starts with the same question: what would actually be worth buying? We compare real prices, specifications, and verified customer feedback, then break down the trade-offs in plain language &mdash; so you can go from confused to confident in minutes, not hours.</p>
-        <a href="#niches" class="btn">See our latest guides</a>
+        <div class="hero-cta"><a href="#latest-reviews" class="btn">See our latest guides</a></div>
         <div class="hero-trust">
             <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Independently researched</span>
             <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>No sponsored placements</span>
@@ -2630,7 +2632,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3.5-7.1"/><path d="M21 3v6h-6"/></svg></div><div class="stat-number">Weekly</div><div class="stat-label">Review cycle</div></div>
 </div></section>
 
-<section class="latest-reviews-section container">
+<section class="latest-reviews-section container" id="latest-reviews">
     <span class="section-eyebrow">Fresh this week</span>
     <div class="category-section__header"><h2>Latest reviews</h2></div>
     <div class="niche-grid">LATEST_REVIEWS_PLACEHOLDER</div>
