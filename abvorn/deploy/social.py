@@ -6,6 +6,14 @@ from ..platform import registry
 logger = logging.getLogger("abvorn.deploy.social")
 
 try:
+    from src.deployment import check_encoding, repair_mojibake
+    HAS_ENCODING_GUARD = True
+except ImportError:
+    HAS_ENCODING_GUARD = False
+    check_encoding = None
+    repair_mojibake = None
+
+try:
     from composio import ComposioToolSet, Action
     HAS_COMPOSIO = True
 except ImportError:
@@ -51,6 +59,48 @@ class SocialDeployer:
         self._posted = []
         self._results = []
 
+    @staticmethod
+    def _sanitize_encoding(adapted, platform: str):
+        """Repair mojibake in adapted content and raise if any survives.
+
+        Adapted content is a string, a list (e.g. X/IG), or a dict (e.g.
+        LinkedIn). The guard repairs known double-encoding and then blocks the
+        post entirely if any mojibake signature remains — corrupted text must
+        never reach a live platform.
+        """
+        if not HAS_ENCODING_GUARD:
+            return adapted
+
+        def _fix(value):
+            if isinstance(value, str):
+                return repair_mojibake(value)
+            return value
+
+        def _check(value, where=""):
+            if isinstance(value, str):
+                check_encoding(value, label=f"social post ({platform}{where})")
+            elif isinstance(value, list):
+                for i, item in enumerate(value):
+                    _check(item, f"[{i}]")
+            elif isinstance(value, dict):
+                for k, item in value.items():
+                    _check(item, f".{k}")
+
+        # Repair first, then block if any mojibake signature survives.
+        if isinstance(adapted, str):
+            adapted = _fix(adapted)
+            _check(adapted)
+            return adapted
+        if isinstance(adapted, list):
+            adapted = [_fix(item) if isinstance(item, str) else item for item in adapted]
+            _check(adapted)
+            return adapted
+        if isinstance(adapted, dict):
+            adapted = {k: (_fix(v) if isinstance(v, str) else v) for k, v in adapted.items()}
+            _check(adapted)
+            return adapted
+        return adapted
+
     def post(self, content: dict, platform: str) -> dict:
         """Post adapted content to a single platform."""
         if not registry.has(platform):
@@ -61,6 +111,11 @@ class SocialDeployer:
 
         config = registry.get(platform)
         adapted = config.adapter_fn(content)
+
+        # Encoding guard: block mojibake from reaching live social platforms.
+        # Social posts don't round-trip through files like the docs/ pipeline,
+        # but corrupted source text would still pass straight through to the API.
+        adapted = self._sanitize_encoding(adapted, platform)
 
         if not require_social_publishing():
             self._posted.append(platform)

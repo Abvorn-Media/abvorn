@@ -63,3 +63,41 @@ def test_youtube_stub():
     result = youtube_adapter(content)
     assert "script" in result
     assert "description" in result
+
+
+def test_sanitize_encoding_repairs_mojibake_in_string():
+    deployer = SocialDeployer()
+    corrupted = "price \u00e2\u20ac\u009d worth"  # "price ” worth" double-encoded
+    cleaned = deployer._sanitize_encoding(corrupted, "x")
+    assert "\u201d" in cleaned
+    assert "\u00e2" not in cleaned
+
+
+def test_sanitize_encoding_repairs_list_and_dict():
+    deployer = SocialDeployer()
+    corrupted_str = "John\u2019s \u00e2\u20ac\u009d pick"
+    list_in = [corrupted_str, "fine"]
+    dict_in = {"text": corrupted_str, "title": "ok"}
+    out_list = deployer._sanitize_encoding(list_in, "x")
+    out_dict = deployer._sanitize_encoding(dict_in, "linkedin")
+    assert "\u201d" in out_list[0]
+    assert out_list[1] == "fine"
+    assert "\u201d" in out_dict["text"]
+    assert out_dict["title"] == "ok"
+
+
+def test_post_stages_clean_content_through_guard():
+    deployer = SocialDeployer()
+    content = {"post_title": "Best mice — 2026", "intro": "<p>Real em dash — fine.</p>", "article_html": "<p>Body</p>", "tags": ["mice"]}
+    result = deployer.post(content, "x")
+    assert result["status"] == "staged"
+    assert "—" in str(result["data"])
+
+
+def test_post_raises_on_unrepairable_mojibake():
+    """Content that still carries mojibake after repair must be blocked."""
+    deployer = SocialDeployer()
+    # U+FFFD replacement char cannot be repaired — must be blocked.
+    content = {"post_title": "Test", "intro": "<p>Broken \ufffd text</p>", "article_html": "<p>Body</p>", "tags": []}
+    with pytest.raises(ValueError, match="Mojibake"):
+        deployer.post(content, "x")
