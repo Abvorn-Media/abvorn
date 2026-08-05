@@ -384,6 +384,10 @@ def load_verdict_weights() -> dict:
 
 
 _INTRO_RE = re.compile(r"<h2>\s*Introduction\s*</h2>\s*<p[^>]*>(.*?)</p>", re.S)
+# The one-line excerpt rendered in the article hero (carries the real thesis).
+_EXCERPT_RE = re.compile(r'<p[^>]*class="[^"]*excerpt[^"]*"[^>]*>(.*?)</p>', re.S)
+# Any non-empty paragraph, to catch pages that skip an explicit introduction.
+_ANY_P_RE = re.compile(r"<p[^>]*>(.*?)</p>", re.S)
 # The "Our Choice" hero pick product photo rendered into the article hero.
 _HERO_PICK_IMG_RE = re.compile(r'<div class="hero-pick".*?<img class="product-shot__img" src="([^"]+)"', re.S)
 # Fallback: the niche page's hero product photo (hero-image-wrapper > img),
@@ -427,19 +431,51 @@ def _parse_verdict_data(html):
         return {}, None, "", ""
 
 
-def review_snippet(html):
-    """First real paragraph of a review page, for card snippets ("" if none)."""
-    m = _INTRO_RE.search(html)
-    if not m:
-        return ""
-    text = html_mod.unescape(re.sub(r"<[^>]+>", "", m.group(1)))
+def _clean_snippet(raw):
+    """Unescape, flatten whitespace, reject boilerplate/too-short text."""
+    text = html_mod.unescape(re.sub(r"<[^>]+>", "", raw))
     text = re.sub(r"\s+", " ", text).strip()
+    # Excerpts sometimes lead with the long product name + em dash
+    # (e.g. "Dell 27 Monitor S2725QS — Discover the best 4K…"); keep the part
+    # after the dash so the card reads as a snippet, not a title repeat.
+    # Some dated articles render the dash mojibake'd as "â€"" (UTF-8 bytes read
+    # as latin-1), so match both.
+    for dash in (" — ", " â€” ", " â€"" "):
+        if dash in text:
+            after = text.split(dash, 1)[1].strip()
+            if len(after) >= 25:
+                text = after
+            break
     if len(text) < 40 or _BOILERPLATE_RE.search(text):
         return ""
     if len(text) > 180:
         cut = text.rfind(" ", 0, 180)
         text = text[:cut].rstrip(" ,.;:") + "…"
     return text
+
+
+def review_snippet(html):
+    """First real paragraph of a review page, for card snippets ("" if none).
+
+    Tries, in order: the Introduction block, the article's excerpt line, then
+    the first substantial paragraph. Pages without an explicit Introduction
+    (e.g. wireless-headphones, 4k-monitors) still get a snippet this way.
+    """
+    m = _INTRO_RE.search(html)
+    if m:
+        text = _clean_snippet(m.group(1))
+        if text:
+            return text
+    m = _EXCERPT_RE.search(html)
+    if m:
+        text = _clean_snippet(m.group(1))
+        if text:
+            return text
+    for m in _ANY_P_RE.finditer(html):
+        text = _clean_snippet(m.group(1))
+        if text:
+            return text
+    return ""
 
 
 def scan_published_reviews(docs_dir="docs"):
