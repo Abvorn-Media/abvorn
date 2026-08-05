@@ -2610,17 +2610,17 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .trending-ticker__item { color:#1a1200; text-decoration:none; padding:0 10px; }
         .trending-ticker__item:hover { color:#000; text-decoration:underline; }
         @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .hero { background:#f6f5f2; padding: var(--space-2xl) 0; position:relative; overflow:hidden; }
+        .hero { background:#f6f5f2; padding: clamp(2rem, 4vh, 4rem) 0; position:relative; overflow:hidden; display:flex; align-items:center; }
         .hero::before { content:''; position:absolute; top:-20%; right:-8%; width:560px; height:560px; border-radius:50%; background:radial-gradient(circle, rgba(201,138,44,0.14), transparent 65%); pointer-events:none; }
-        .hero-grid { display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items:center; position:relative; }
+        .hero-grid { display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items:center; position:relative; width:100%; }
         .hero-eyebrow { display:inline-flex; align-items:center; gap:8px; font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color: var(--clr-accent-text); background:rgba(201,138,44,0.12); border:1px solid rgba(201,138,44,0.32); padding:6px 14px; border-radius:100px; margin-bottom: var(--space-md); }
-        .hero h1 { font-size: clamp(2.1rem, 4.4vw, var(--text-4xl)); margin-bottom: var(--space-md); color:#0a0a0a; letter-spacing:-0.03em; font-weight:700; }
-        .hero p { font-size: var(--text-lg); color:#555; max-width:46ch; margin-bottom: var(--space-lg); }
+        .hero h1 { font-size: clamp(1.9rem, 3.8vw, var(--text-4xl)); margin-bottom: var(--space-md); color:#0a0a0a; letter-spacing:-0.03em; font-weight:700; }
+        .hero p { font-size: clamp(1rem, 1.3vw, var(--text-lg)); color:#555; max-width:52ch; margin-bottom: var(--space-lg); line-height:1.55; }
         .hero .btn { background:#1a1a1a; color:#fff; }
         .hero .btn:hover { background: var(--clr-accent); color:#1a1200; }
         .hero-cta { width:100%; display:flex; justify-content:center; margin-bottom: var(--space-lg); }
         .hero-cta .btn { margin: 0; }
-        .hero-trust { display:flex; flex-wrap:wrap; justify-content:center; gap:8px 22px; margin-top: var(--space-lg); }
+        .hero-trust { display:flex; flex-wrap:wrap; justify-content:center; gap:8px 22px; margin-top: var(--space-md); }
         .hero-trust span { display:inline-flex; align-items:center; gap:7px; font-size:0.78rem; font-weight:600; color:#666; }
         .hero-trust svg { width:15px; height:15px; color: var(--clr-accent); flex:none; }
         .hero-slider { position:relative; border-radius: var(--radius-lg); overflow:hidden; box-shadow: var(--shadow-xl); aspect-ratio: 4/3; background:#fff; }
@@ -2653,7 +2653,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .hero-slider__dot::before { content:''; width:8px; height:8px; border-radius:50%; background:rgba(10,10,10,0.38); transition: background var(--duration-fast) var(--ease-out); }
         .hero-slider__dot.active::before { background: var(--clr-accent); }
         .hero-slider__dot:focus-visible { outline:2px solid var(--clr-accent); outline-offset:2px; border-radius:100px; }
-        @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; } .hero-slider { order:-1; width:100%; margin:0 auto var(--space-lg); } }
 
         .how-we-test { background:#0a0a0a; color:#fff; padding: var(--space-2xl) 0; }
         .how-we-test__inner { max-width:1200px; margin:0 auto; padding:0 var(--space-lg); }
@@ -2771,7 +2771,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <div>
         <span class="hero-eyebrow"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>How we work</span>
         <h1>Clear, honest guidance on what's actually worth your money.</h1>
-        <p>Every guide starts with the same question: what would actually be worth buying? We compare real prices, specifications, and verified customer feedback, then break down the trade-offs in plain language &mdash; so you can go from confused to confident in minutes, not hours.</p>
+        <p>We compare real prices, specifications, and verified customer feedback, then break down the trade-offs in plain language &mdash; so you can go from confused to confident in minutes.</p>
         <div class="hero-cta"><a href="#latest-reviews" class="btn">See our latest guides</a></div>
         <div class="hero-trust">
             <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Independently researched</span>
