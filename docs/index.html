@@ -408,6 +408,20 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 </div></div>
 </section>
 
+<section class="subscribe-band"><div class="container subscribe-inner">
+    <div class="subscribe-copy">
+        <h2>Get notified about new guides</h2>
+        <p>One email whenever we publish a new review. No spam, unsubscribe anytime.</p>
+    </div>
+    <form class="subscribe-form" id="homepage-subscribe-form" onsubmit="submitHomepageSubscribe(event)">
+        <input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off">
+        <label for="homepage-subscribe-email" class="sr-only">Email address</label>
+        <input type="email" class="input" id="homepage-subscribe-email" placeholder="you@example.com" required>
+        <button type="submit" class="btn"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Notify me</button>
+        <p class="subscribe-msg" id="homepage-subscribe-msg" aria-live="polite"></p>
+    </form>
+</div></section>
+
 <section class="guides-section container" id="niches">
     <div class="category-section" style="--cat:#c98a2c">
     <div class="category-section__header"><h2><span class="sec-num">01</span>Audio</h2><a href="https://abvorn-media.github.io/abvorn/categories/audio/">View all in Audio →</a></div>
@@ -735,20 +749,6 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 </div></div>
 </div>
 </section>
-
-<section class="subscribe-band"><div class="container subscribe-inner">
-    <div class="subscribe-copy">
-        <h2>Get notified about new guides</h2>
-        <p>One email whenever we publish a new review. No spam, unsubscribe anytime.</p>
-    </div>
-    <form class="subscribe-form" id="homepage-subscribe-form" onsubmit="submitHomepageSubscribe(event)">
-        <input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off">
-        <label for="homepage-subscribe-email" class="sr-only">Email address</label>
-        <input type="email" class="input" id="homepage-subscribe-email" placeholder="you@example.com" required>
-        <button type="submit" class="btn"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Notify me</button>
-        <p class="subscribe-msg" id="homepage-subscribe-msg" aria-live="polite"></p>
-    </form>
-</div></section>
 
 <footer class="footer"><div class="container">
     <div class="footer-grid">

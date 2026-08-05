@@ -2636,10 +2636,6 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <div class="niche-grid">LATEST_REVIEWS_PLACEHOLDER</div>
 </section>
 
-<section class="guides-section container" id="niches">
-    CATEGORY_SECTIONS_PLACEHOLDER
-</section>
-
 <section class="subscribe-band"><div class="container subscribe-inner">
     <div class="subscribe-copy">
         <h2>Get notified about new guides</h2>
@@ -2653,6 +2649,10 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         <p class="subscribe-msg" id="homepage-subscribe-msg" aria-live="polite"></p>
     </form>
 </div></section>
+
+<section class="guides-section container" id="niches">
+    CATEGORY_SECTIONS_PLACEHOLDER
+</section>
 
 <footer class="footer"><div class="container">
     <div class="footer-grid">
