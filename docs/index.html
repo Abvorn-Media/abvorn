@@ -221,7 +221,9 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .subscribe-copy h2 { font-size: var(--text-xl); margin-bottom:6px; color:#0a0a0a; }
         .subscribe-copy p { margin:0; color:#555; max-width:42ch; }
         .subscribe-form { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-        .subscribe-form .input { width:260px; }
+        .subscribe-form .input { width:260px; background:#fff; border:2px solid var(--clr-light-gray); color:#1a1a1a; }
+        .subscribe-form .input::placeholder { color:#8a8a8a; }
+        .subscribe-form .input:focus { border-color:var(--clr-accent); }
         .subscribe-form .hp-field { position:absolute; left:-9999px; }
         .subscribe-form .btn { background: var(--clr-accent); color:#1a1200; font-size:1rem; font-weight:800; padding:0.85em 1.7em; gap:8px; box-shadow: 0 6px 22px rgba(201,138,44,0.4); }
         .subscribe-form .btn:hover { background:#e0a23f; transform: scale(1.045); box-shadow: 0 8px 28px rgba(201,138,44,0.55); }
@@ -329,7 +331,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 <section class="how-we-test"><div class="how-we-test__inner">
     <div class="how-we-test__intro">
         <span class="section-eyebrow">Our method</span>
-        <h2>Reviews based on real testing, not spec sheets.</h2>
+        <h2>Reviews based on real prices and real feedback — not spec sheets.</h2>
         <p>Every score you see on this site follows the same repeatable process. No paid placements, no editorial bias &mdash; just a consistent method.</p>
     </div>
     <div class="hwt-steps">
