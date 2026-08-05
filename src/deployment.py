@@ -1207,7 +1207,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap: var(--space-lg); }}
         .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); overflow:hidden; transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); background:var(--clr-white); display:flex; flex-direction:column; }}
         .niche-card:hover {{ transform:translateY(-6px); box-shadow:var(--shadow-lg); }}
-        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; background:var(--clr-off-white); padding:12px; }}
+        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; background:var(--clr-off-white); padding:20px; }}
         .niche-card img {{ width:100%; height:100%; object-fit:contain; transition: transform var(--duration-slow) var(--ease-out); }}
         .niche-card:hover img {{ transform: scale(1.04); }}
         .review-card__media {{ position:relative; }}
@@ -1517,7 +1517,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         @media (prefers-reduced-motion: reduce) {{ html {{ scroll-behavior:auto; }} }}
         .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); overflow:hidden; transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); background:var(--clr-white); display:flex; flex-direction:column; }}
         .niche-card:hover {{ transform:translateY(-6px); box-shadow:var(--shadow-lg); }}
-        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; background:var(--clr-off-white); padding:12px; }}
+        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; background:var(--clr-off-white); padding:20px; }}
         .niche-card img {{ width:100%; height:100%; object-fit:contain; transition: transform var(--duration-slow) var(--ease-out); }}
         .niche-card:hover img {{ transform: scale(1.04); }}
         .review-card__media {{ position:relative; }}
@@ -2929,7 +2929,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .niche-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }
         .niche-card { border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); overflow:hidden; transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); background:var(--clr-white); display:flex; flex-direction:column; }
         .niche-card:hover { transform:translateY(-6px); box-shadow:var(--shadow-lg); }
-        .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; background:var(--clr-off-white); padding:12px; }
+        .niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; background:var(--clr-off-white); padding:20px; }
         .niche-card img { width:100%; height:100%; object-fit:contain; transition: transform var(--duration-slow) var(--ease-out); }
         .niche-card:hover img { transform: scale(1.04); }
         .review-card__media { position:relative; }
