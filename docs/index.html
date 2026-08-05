@@ -194,10 +194,31 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .hero-slide.active { opacity:1; }
         .hero-slide img { width:100%; height:100%; object-fit:cover; display:block; }
         .hero-slide figcaption { position:absolute; left:0; right:0; bottom:0; background:linear-gradient(transparent, rgba(0,0,0,0.85)); color:#fff; padding: 52px var(--space-lg) var(--space-md); font-weight:600; font-size:0.95rem; }
-        .hero-slider__dots { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); display:flex; z-index:5; }
+        .hero-slide__scrim { position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,10,10,0.35), transparent 38%, rgba(10,10,10,0.62)); pointer-events:none; }
+        .hero-slide .hero-verdict { position:absolute; left: var(--space-md); right: var(--space-md); bottom: var(--space-md); background:#fff; color:#0a0a0a; border-radius: var(--radius-md); box-shadow: 0 10px 30px rgba(0,0,0,0.35); padding: var(--space-sm) var(--space-md) var(--space-sm); }
+        .hero-verdict__head { display:flex; justify-content:space-between; align-items:center; gap: var(--space-md); margin-bottom:6px; }
+        .hero-verdict__eyebrow { display:block; font-size:0.55rem; font-weight:800; text-transform:uppercase; letter-spacing:0.14em; color: var(--clr-accent-text); margin-bottom:2px; }
+        .hero-verdict__product { display:block; font-family: var(--font-display); font-size:0.88rem; font-weight:700; letter-spacing:-0.01em; line-height:1.2; color:#0a0a0a; }
+        .hero-verdict__overall { text-align:right; flex:none; }
+        .hero-verdict__num { font-family: var(--font-display); font-size:1.9rem; font-weight:800; letter-spacing:-0.03em; line-height:1; display:block; color:#0a0a0a; }
+        .hero-verdict__num small { font-size:0.75rem; font-weight:600; color:#888; letter-spacing:0; margin-left:2px; }
+        .hero-verdict__label { font-size:0.55rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:#fff; background:#0a0a0a; padding:2px 8px; border-radius:100px; display:inline-block; margin-top:3px; }
+        .hero-verdict__bars { display:flex; flex-direction:column; gap:5px; border-top:1.5px solid #0a0a0a; padding-top: var(--space-sm); }
+        .hero-verdict__bar { display:grid; grid-template-columns: 1fr 3fr 30px; align-items:center; gap:10px; font-size:0.66rem; }
+        .hero-verdict__bar-label { font-weight:600; color:#555; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .hero-verdict__bar-track { height:6px; background:#e7e3da; border-radius:3px; overflow:hidden; }
+        .hero-verdict__bar-fill { display:block; height:100%; width:0; background:#0a0a0a; border-radius:3px; transition: width 0.75s var(--ease-out) 0.15s; }
+        .hero-slide.active .hero-verdict__bar-fill { width: var(--score); }
+        .hero-verdict__bar.is-top .hero-verdict__bar-fill { background: var(--clr-accent); }
+        .hero-verdict__bar.is-top .hero-verdict__bar-label { color:#0a0a0a; font-weight:700; }
+        .hero-verdict__bar.is-weak .hero-verdict__bar-label { color:#a0988a; }
+        .hero-verdict__bar.is-weak .hero-verdict__bar-fill { background:#cfc9bd; }
+        .hero-verdict__bar-score { text-align:right; font-weight:700; font-variant-numeric: tabular-nums; color:#0a0a0a; }
+        .hero-slider__dots { position:absolute; top: var(--space-sm); right: var(--space-sm); left:auto; bottom:auto; transform:none; display:flex; z-index:6; }
         .hero-slider__dot { width:44px; height:44px; border:none; background:transparent; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
         .hero-slider__dot::before { content:''; width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.45); transition: background var(--duration-fast) var(--ease-out); }
         .hero-slider__dot.active::before { background: var(--clr-accent); }
+        .hero-slider__dot:focus-visible { outline:2px solid var(--clr-accent); outline-offset:2px; border-radius:100px; }
         @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; } }
 
         .how-we-test { background:#0a0a0a; color:#fff; padding: var(--space-2xl) 0; }
@@ -325,7 +346,52 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         </div>
     </div>
     <div class="hero-slider" id="hero-slider">
-        <div class="hero-slide active"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.svg" alt="Wireless Headphones"><figcaption>Wireless Headphones reviews — expert tested</figcaption></div><div class="hero-slide"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-earbuds.svg" alt="Wireless Earbuds"><figcaption>Wireless Earbuds reviews — expert tested</figcaption></div><div class="hero-slide"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.svg" alt="Webcams"><figcaption>Webcams reviews — expert tested</figcaption></div><div class="hero-slide"><img src="https://abvorn-media.github.io/abvorn/assets/streaming-devices.svg" alt="Streaming Devices"><figcaption>Streaming Devices reviews — expert tested</figcaption></div><div class="hero-slide"><img src="https://abvorn-media.github.io/abvorn/assets/smart-home.svg" alt="Smart Home"><figcaption>Smart Home reviews — expert tested</figcaption></div>
+        <div class="hero-slide active"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-headphones.svg" alt="Wireless Headphones"><div class="hero-slide__scrim" aria-hidden="true"></div><div class="hero-verdict">
+        <div class="hero-verdict__head">
+            <div class="hero-verdict__title">
+                <span class="hero-verdict__eyebrow">Wireless Headphones · Abvorn Verdict</span>
+                <span class="hero-verdict__product">Hybrid Active Noise Cancelling Bluetoot…</span>
+            </div>
+            <div class="hero-verdict__overall"><span class="hero-verdict__num">7.0<small>/10</small></span><span class="hero-verdict__label">Good</span></div>
+        </div>
+        <div class="hero-verdict__bars"><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Sound Quality</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:75%"></span></span><span class="hero-verdict__bar-score">7.5</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Comfort &amp; Fit</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:70%"></span></span><span class="hero-verdict__bar-score">7.0</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Battery Life</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:75%"></span></span><span class="hero-verdict__bar-score">7.5</span></div><div class="hero-verdict__bar is-weak"><span class="hero-verdict__bar-label">Features &amp; Tech</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:50%"></span></span><span class="hero-verdict__bar-score">5.0</span></div><div class="hero-verdict__bar is-top"><span class="hero-verdict__bar-label">Value for Money</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:80%"></span></span><span class="hero-verdict__bar-score">8.0</span></div></div>
+    </div></div><div class="hero-slide"><img src="https://abvorn-media.github.io/abvorn/assets/wireless-earbuds.svg" alt="Wireless Earbuds"><div class="hero-slide__scrim" aria-hidden="true"></div><div class="hero-verdict">
+        <div class="hero-verdict__head">
+            <div class="hero-verdict__title">
+                <span class="hero-verdict__eyebrow">Wireless Earbuds · Abvorn Verdict</span>
+                <span class="hero-verdict__product">Wireless Earbuds</span>
+            </div>
+            <div class="hero-verdict__overall"><span class="hero-verdict__num">6.9<small>/10</small></span><span class="hero-verdict__label">Average</span></div>
+        </div>
+        <div class="hero-verdict__bars"><div class="hero-verdict__bar is-top"><span class="hero-verdict__bar-label">Sound Quality</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:75%"></span></span><span class="hero-verdict__bar-score">7.5</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Fit &amp; Seal</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:70%"></span></span><span class="hero-verdict__bar-score">7.0</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Battery Life</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:75%"></span></span><span class="hero-verdict__bar-score">7.5</span></div><div class="hero-verdict__bar is-weak"><span class="hero-verdict__bar-label">Features &amp; Tech</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:50%"></span></span><span class="hero-verdict__bar-score">5.0</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Value for Money</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:75%"></span></span><span class="hero-verdict__bar-score">7.5</span></div></div>
+    </div></div><div class="hero-slide"><img src="https://abvorn-media.github.io/abvorn/assets/webcams.svg" alt="Webcams"><div class="hero-slide__scrim" aria-hidden="true"></div><div class="hero-verdict">
+        <div class="hero-verdict__head">
+            <div class="hero-verdict__title">
+                <span class="hero-verdict__eyebrow">Webcams · Abvorn Verdict</span>
+                <span class="hero-verdict__product">Logitech Brio 101 Full HD 1080p Webcam…</span>
+            </div>
+            <div class="hero-verdict__overall"><span class="hero-verdict__num">7.0<small>/10</small></span><span class="hero-verdict__label">Average</span></div>
+        </div>
+        <div class="hero-verdict__bars"><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Video Quality</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:75%"></span></span><span class="hero-verdict__bar-score">7.5</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Audio Quality</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:70%"></span></span><span class="hero-verdict__bar-score">7.0</span></div><div class="hero-verdict__bar is-weak"><span class="hero-verdict__bar-label">Features &amp; Software</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:50%"></span></span><span class="hero-verdict__bar-score">5.0</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Build Quality</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:70%"></span></span><span class="hero-verdict__bar-score">7.0</span></div><div class="hero-verdict__bar is-top"><span class="hero-verdict__bar-label">Value for Money</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:80%"></span></span><span class="hero-verdict__bar-score">8.0</span></div></div>
+    </div></div><div class="hero-slide"><img src="https://abvorn-media.github.io/abvorn/assets/streaming-devices.svg" alt="Streaming Devices"><div class="hero-slide__scrim" aria-hidden="true"></div><div class="hero-verdict">
+        <div class="hero-verdict__head">
+            <div class="hero-verdict__title">
+                <span class="hero-verdict__eyebrow">Streaming Devices · Abvorn Verdict</span>
+                <span class="hero-verdict__product">Roku Streaming Stick HD with Voice Remo…</span>
+            </div>
+            <div class="hero-verdict__overall"><span class="hero-verdict__num">6.8<small>/10</small></span><span class="hero-verdict__label">Average</span></div>
+        </div>
+        <div class="hero-verdict__bars"><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Performance &amp; Speed</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:70%"></span></span><span class="hero-verdict__bar-score">7.0</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Interface &amp; Ease of Use</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:70%"></span></span><span class="hero-verdict__bar-score">7.0</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Content Availability</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:70%"></span></span><span class="hero-verdict__bar-score">7.0</span></div><div class="hero-verdict__bar is-weak"><span class="hero-verdict__bar-label">Features &amp; Voice</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:50%"></span></span><span class="hero-verdict__bar-score">5.0</span></div><div class="hero-verdict__bar is-top"><span class="hero-verdict__bar-label">Value for Money</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:80%"></span></span><span class="hero-verdict__bar-score">8.0</span></div></div>
+    </div></div><div class="hero-slide"><img src="https://abvorn-media.github.io/abvorn/assets/smart-home.svg" alt="Smart Home"><div class="hero-slide__scrim" aria-hidden="true"></div><div class="hero-verdict">
+        <div class="hero-verdict__head">
+            <div class="hero-verdict__title">
+                <span class="hero-verdict__eyebrow">Smart Home · Abvorn Verdict</span>
+                <span class="hero-verdict__product">Amazon Echo Show 15 (newest model)</span>
+            </div>
+            <div class="hero-verdict__overall"><span class="hero-verdict__num">6.4<small>/10</small></span><span class="hero-verdict__label">Average</span></div>
+        </div>
+        <div class="hero-verdict__bars"><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Reliability</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:70%"></span></span><span class="hero-verdict__bar-score">7.0</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Ease of Use</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:70%"></span></span><span class="hero-verdict__bar-score">7.0</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Features</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:50%"></span></span><span class="hero-verdict__bar-score">5.0</span></div><div class="hero-verdict__bar is-top"><span class="hero-verdict__bar-label">Compatibility</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:76%"></span></span><span class="hero-verdict__bar-score">7.6</span></div><div class="hero-verdict__bar is-weak"><span class="hero-verdict__bar-label">Value for Money</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:50%"></span></span><span class="hero-verdict__bar-score">5.0</span></div></div>
+    </div></div>
         <div class="hero-slider__dots"><button class="hero-slider__dot active" aria-label="Show Wireless Headphones" aria-current="true"></button><button class="hero-slider__dot" aria-label="Show Wireless Earbuds" aria-current="false"></button><button class="hero-slider__dot" aria-label="Show Webcams" aria-current="false"></button><button class="hero-slider__dot" aria-label="Show Streaming Devices" aria-current="false"></button><button class="hero-slider__dot" aria-label="Show Smart Home" aria-current="false"></button></div>
     </div>
 </div></section>
@@ -524,7 +590,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <div class="review-card__media">
         <a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61pF09VcRPL._AC_SL1500_.jpg" alt="The Ultimate Buying Guide to 4K Monitors: Find Your Perfect Display" loading="lazy"></figure></div></a>
         <span class="review-card__banner" style="background:#a7c3e8">Computing &amp; Monitors · 4K Monitors</span>
-        
+        <span class="review-card__score" aria-label="Abvorn Verdict 6.4 out of 10"><span class="review-card__score-num">6.4</span><span class="review-card__score-out">/10</span></span>
     </div>
     <div class="review-card__body">
         <h2><a href="https://abvorn-media.github.io/abvorn/reviews/4k-monitors/">The Ultimate Buying Guide to 4K Monitors: Find Your Perfect Display</a></h2>
@@ -677,7 +743,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <div class="review-card__media">
         <a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><img src="https://abvorn-media.github.io/abvorn/assets/smart-home.png" alt="Transform Your Space: The Complete Smart Home Buying Guide" loading="lazy"></div></a>
         <span class="review-card__banner" style="background:#f0c8b6">Home &amp; Lifestyle · Smart Home</span>
-        
+        <span class="review-card__score" aria-label="Abvorn Verdict 6.4 out of 10"><span class="review-card__score-num">6.4</span><span class="review-card__score-out">/10</span></span>
     </div>
     <div class="review-card__body">
         <h2><a href="https://abvorn-media.github.io/abvorn/reviews/smart-home/">Transform Your Space: The Complete Smart Home Buying Guide</a></h2>

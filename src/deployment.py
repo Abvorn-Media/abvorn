@@ -389,10 +389,39 @@ _HERO_PICK_IMG_RE = re.compile(r'<div class="hero-pick".*?<img class="product-sh
 # Abvorn Verdict overall score embedded on published review pages (either plain
 # JSON or the HTML-entity-escaped variant), e.g. '"overall": 7.0'.
 _VERDICT_OVERALL_RE = re.compile(r'overall.{0,40}?([0-9]+(?:\.[0-9]+)?)')
+# The full Abvorn Verdict JSON block embedded on published review pages
+# ({overall, label, breakdown: {criterion: score}, productName}).
+_VERDICT_DATA_RE = re.compile(r'id="abvorn-verdict-data"[^>]*>(.*?)</script>', re.S)
 _BOILERPLATE_RE = re.compile(
     r"^(we'?ve done the research|scores out of 10|we tested the top products|we'?re reviewing the top products)",
     re.I,
 )
+
+
+def _parse_verdict_data(html):
+    """Parse the Abvorn Verdict JSON block from a review page.
+
+    Returns (breakdown dict, overall float|None, label str|"", productName str|"").
+    Tolerant of HTML-entity-escaped JSON. Never raises.
+    """
+    try:
+        m = _VERDICT_DATA_RE.search(html)
+        if not m:
+            return {}, None, "", ""
+        data = json.loads(html_mod.unescape(m.group(1)))
+        if not isinstance(data, dict):
+            return {}, None, "", ""
+        breakdown = data.get("breakdown") or {}
+        if not isinstance(breakdown, dict):
+            breakdown = {}
+        return (
+            breakdown,
+            data.get("overall"),
+            data.get("label", "") or "",
+            data.get("productName", "") or "",
+        )
+    except Exception:
+        return {}, None, "", ""
 
 
 def review_snippet(html):
@@ -432,12 +461,19 @@ def scan_published_reviews(docs_dir="docs"):
             pages = [index] if index.exists() else []
         index_snippet = ""
         index_hero = ""
+        # Canonical niche verdict lives in index.html; use it as the fallback
+        # for dated article pages so the hero verdict card always has data.
+        index_breakdown = {}
+        index_label = ""
+        index_product = ""
+        index_overall = None
         if (niche_dir / "index.html").exists():
             index_html = (niche_dir / "index.html").read_text(encoding="utf-8")
             index_snippet = review_snippet(index_html)
             m = _HERO_PICK_IMG_RE.search(index_html)
             if m:
                 index_hero = html_mod.unescape(m.group(1))
+            index_breakdown, index_overall, index_label, index_product = _parse_verdict_data(index_html)
         for p in pages:
             html = p.read_text(encoding="utf-8")
             h1 = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.S)
@@ -451,6 +487,12 @@ def scan_published_reviews(docs_dir="docs"):
                     hero_img = html_mod.unescape(m.group(1))
             m_score = _VERDICT_OVERALL_RE.search(html)
             score = float(m_score.group(1)) if m_score else None
+            breakdown, bd_overall, bd_label, bd_product = _parse_verdict_data(html)
+            # Dated article pages carry the niche's canonical verdict from
+            # index.html as fallback, so hero cards always have criteria.
+            if not breakdown:
+                breakdown, bd_overall, bd_label, bd_product = index_breakdown, index_overall, index_label, index_product
+                score = score if score else index_overall
             reviews.append({
                 "slug": slug,
                 "name": _niche_name(slug),
@@ -460,6 +502,9 @@ def scan_published_reviews(docs_dir="docs"):
                 "snippet": review_snippet(html) or index_snippet,
                 "image": hero_img or "",
                 "score": score,
+                "breakdown": breakdown,
+                "label": bd_label,
+                "product_name": bd_product,
             })
     return reviews
 
@@ -680,6 +725,52 @@ def deploy_single_page(page_path: str, content: str) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Deploy failed for {page_path}: {e}")
         return {"status": "failed", "path": page_path, "error": str(e)}
+def _truncate(text, n=40):
+    """Truncate a long product title to n chars with an ellipsis."""
+    text = (text or "").strip()
+    if len(text) <= n:
+        return text
+    return text[: n - 1].rstrip() + "…"
+
+
+def _hero_slide_verdict(breakdown, overall, label, product, name):
+    """Build the 5-criterion verdict scorecard inside a hero slide.
+
+    The card is the site's proof of the "Scored on 5 criteria" claim: the
+    real breakdown with the top criterion in amber and the weakest muted.
+    Returns "" when no breakdown data exists (caller falls back to a caption).
+    """
+    if not breakdown:
+        return ""
+    criteria = list(breakdown.items())[:5]
+    srt = sorted(criteria, key=lambda kv: kv[1], reverse=True)
+    top = srt[0][0]
+    weak = srt[-1][0] if len(srt) > 1 else None
+    bars = ""
+    for crit, score in criteria:
+        pct = int(round(score * 10))
+        cls = " is-top" if crit == top else (" is-weak" if crit == weak else "")
+        bars += (
+            f'<div class="hero-verdict__bar{cls}">'
+            f'<span class="hero-verdict__bar-label">{html_mod.escape(crit)}</span>'
+            f'<span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:{pct}%"></span></span>'
+            f'<span class="hero-verdict__bar-score">{score:.1f}</span></div>'
+        )
+    overall_html = f"{overall:.1f}<small>/10</small>" if overall else "—"
+    label_html = f'<span class="hero-verdict__label">{html_mod.escape(label or "Scored")}</span>'
+    title = _truncate(product or name, 40)
+    return f'''<div class="hero-verdict">
+        <div class="hero-verdict__head">
+            <div class="hero-verdict__title">
+                <span class="hero-verdict__eyebrow">{html_mod.escape(name)} · Abvorn Verdict</span>
+                <span class="hero-verdict__product">{html_mod.escape(title)}</span>
+            </div>
+            <div class="hero-verdict__overall"><span class="hero-verdict__num">{overall_html}</span>{label_html}</div>
+        </div>
+        <div class="hero-verdict__bars">{bars}</div>
+    </div>'''
+
+
 def build_homepage(state, form_url="", reviews=None, base=None):
     """Build the premium homepage with hero slider, stats, and category sections."""
     niches = sorted(state["niches"], key=lambda n: n["name"].lower())
@@ -694,7 +785,8 @@ def build_homepage(state, form_url="", reviews=None, base=None):
     # Build nav dropdown (white mega-menu)
     nav_dd = build_category_dropdown(b)
 
-    # Build hero slides
+    # Build hero slides — each slide is a live verdict scorecard proving the
+    # "Scored on 5 criteria" promise, with the product photo as backdrop.
     hero_slides = ""
     hero_dots = ""
     hero_candidates = []
@@ -705,9 +797,23 @@ def build_homepage(state, form_url="", reviews=None, base=None):
         hero_candidates.append((img, n["name"], n["slug"]))
     if not hero_candidates:
         hero_candidates.append((f"{b}/assets/hero-home.svg", "Reviews", "coming-soon"))
+    review_by_slug = {r["slug"]: r for r in review_list}
     for i, (img, name, slug) in enumerate(hero_candidates):
         active = " active" if i == 0 else ""
-        hero_slides += f'<div class="hero-slide{active}"><img src="{img}" alt="{name}"><figcaption>{name} reviews — expert tested</figcaption></div>'
+        review = review_by_slug.get(slug, {})
+        verdict = _hero_slide_verdict(
+            review.get("breakdown") or {},
+            review.get("score"),
+            review.get("label"),
+            review.get("product_name"),
+            name,
+        )
+        caption = verdict or f"{name} reviews — expert tested"
+        if verdict:
+            overlay = f'<div class="hero-slide__scrim" aria-hidden="true"></div>{caption}'
+        else:
+            overlay = f"<figcaption>{caption}</figcaption>"
+        hero_slides += f'<div class="hero-slide{active}"><img src="{img}" alt="{name}">{overlay}</div>'
         hero_dots += f'<button class="hero-slider__dot{active}" aria-label="Show {name}" aria-current="{"true" if i == 0 else "false"}"></button>'
 
     # Build latest review cards — the 3 most recently updated reviews, with
@@ -2476,10 +2582,31 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .hero-slide.active { opacity:1; }
         .hero-slide img { width:100%; height:100%; object-fit:cover; display:block; }
         .hero-slide figcaption { position:absolute; left:0; right:0; bottom:0; background:linear-gradient(transparent, rgba(0,0,0,0.85)); color:#fff; padding: 52px var(--space-lg) var(--space-md); font-weight:600; font-size:0.95rem; }
-        .hero-slider__dots { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); display:flex; z-index:5; }
+        .hero-slide__scrim { position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,10,10,0.35), transparent 38%, rgba(10,10,10,0.62)); pointer-events:none; }
+        .hero-slide .hero-verdict { position:absolute; left: var(--space-md); right: var(--space-md); bottom: var(--space-md); background:#fff; color:#0a0a0a; border-radius: var(--radius-md); box-shadow: 0 10px 30px rgba(0,0,0,0.35); padding: var(--space-sm) var(--space-md) var(--space-sm); }
+        .hero-verdict__head { display:flex; justify-content:space-between; align-items:center; gap: var(--space-md); margin-bottom:6px; }
+        .hero-verdict__eyebrow { display:block; font-size:0.55rem; font-weight:800; text-transform:uppercase; letter-spacing:0.14em; color: var(--clr-accent-text); margin-bottom:2px; }
+        .hero-verdict__product { display:block; font-family: var(--font-display); font-size:0.88rem; font-weight:700; letter-spacing:-0.01em; line-height:1.2; color:#0a0a0a; }
+        .hero-verdict__overall { text-align:right; flex:none; }
+        .hero-verdict__num { font-family: var(--font-display); font-size:1.9rem; font-weight:800; letter-spacing:-0.03em; line-height:1; display:block; color:#0a0a0a; }
+        .hero-verdict__num small { font-size:0.75rem; font-weight:600; color:#888; letter-spacing:0; margin-left:2px; }
+        .hero-verdict__label { font-size:0.55rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:#fff; background:#0a0a0a; padding:2px 8px; border-radius:100px; display:inline-block; margin-top:3px; }
+        .hero-verdict__bars { display:flex; flex-direction:column; gap:5px; border-top:1.5px solid #0a0a0a; padding-top: var(--space-sm); }
+        .hero-verdict__bar { display:grid; grid-template-columns: 1fr 3fr 30px; align-items:center; gap:10px; font-size:0.66rem; }
+        .hero-verdict__bar-label { font-weight:600; color:#555; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .hero-verdict__bar-track { height:6px; background:#e7e3da; border-radius:3px; overflow:hidden; }
+        .hero-verdict__bar-fill { display:block; height:100%; width:0; background:#0a0a0a; border-radius:3px; transition: width 0.75s var(--ease-out) 0.15s; }
+        .hero-slide.active .hero-verdict__bar-fill { width: var(--score); }
+        .hero-verdict__bar.is-top .hero-verdict__bar-fill { background: var(--clr-accent); }
+        .hero-verdict__bar.is-top .hero-verdict__bar-label { color:#0a0a0a; font-weight:700; }
+        .hero-verdict__bar.is-weak .hero-verdict__bar-label { color:#a0988a; }
+        .hero-verdict__bar.is-weak .hero-verdict__bar-fill { background:#cfc9bd; }
+        .hero-verdict__bar-score { text-align:right; font-weight:700; font-variant-numeric: tabular-nums; color:#0a0a0a; }
+        .hero-slider__dots { position:absolute; top: var(--space-sm); right: var(--space-sm); left:auto; bottom:auto; transform:none; display:flex; z-index:6; }
         .hero-slider__dot { width:44px; height:44px; border:none; background:transparent; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
         .hero-slider__dot::before { content:''; width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.45); transition: background var(--duration-fast) var(--ease-out); }
         .hero-slider__dot.active::before { background: var(--clr-accent); }
+        .hero-slider__dot:focus-visible { outline:2px solid var(--clr-accent); outline-offset:2px; border-radius:100px; }
         @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; } }
 
         .how-we-test { background:#0a0a0a; color:#fff; padding: var(--space-2xl) 0; }
