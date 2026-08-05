@@ -1051,32 +1051,44 @@ def build_homepage(state, form_url="", reviews=None, base=None):
 
 
 def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=""):
+    """Niche hub page (e.g. /fitness-trackers/): a dark hero with the featured
+    product photo, the published reviews as polished cards, and a method strip.
+    One shared builder restyles every niche page identically."""
     b = SITE_BASE
-    # Build post cards — same .niche-card standard as the homepage and
-    # category listing pages.
     category = next((c for c, slugs in CATEGORY_MAP.items() if niche_slug in slugs), "")
-    post_cards = ""
-    for p in posts:
-        title = p.get("title", niche_name)
-        link = f"{b}/reviews/{niche_slug}/"
-        img_src = carousel_img(niche_slug, b)
-        post_cards += f'''<div class="niche-card review-card" style="--cat:{category_color(category)}">
-    <div class="review-card__media">
-        <a href="{link}" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><img src="{img_src}" alt="{html_mod.escape(title)}" loading="lazy"></div></a>
-        <span class="review-card__banner" style="background:{category_color(category)}">{category} · {html_mod.escape(niche_name)}</span>
-    </div>
-    <div class="review-card__body">
-        <h2><a href="{link}">{html_mod.escape(title)}</a></h2>
-        <p class="review-card__snippet">Expert-tested and reviewed. See why this made our list.</p>
-        <div class="review-card__footer">
-            <div class="review-card__reactions" data-review="{niche_slug}">
-                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
-                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
-            </div>
-            <a href="{link}" class="read-link">Read more →</a>
-        </div>
-    </div>
-</div>'''
+    cat_color = category_color(category)
+    cat_esc = html_mod.escape(category)
+
+    posts = posts or []
+    latest = posts[0] if posts else None
+
+    def _hero_excerpt(text, n=170):
+        text = html_mod.unescape(re.sub(r"<[^>]+>", "", text or ""))
+        text = re.sub(r"\s+", " ", text).strip()
+        if len(text) <= n:
+            return html_mod.escape(text)
+        return html_mod.escape(text[:n].rstrip()) + "…"
+
+    hero_img = (latest or {}).get("image") or carousel_img(niche_slug, b)
+    hero_img_alt = html_mod.escape((latest or {}).get("title") or niche_name)
+    hero_excerpt = _hero_excerpt((latest or {}).get("snippet") or "")
+    hero_link = f"{b}/reviews/{niche_slug}/" if latest else f"{b}/{niche_slug}/"
+
+    comp_link = ""
+    if os.path.exists(f"docs/comparisons/{niche_slug}.html"):
+        comp_link = f'<a class="niche-hero__secondary" href="{b}/comparisons/{niche_slug}.html">Compare top picks →</a>'
+
+    # Featured-first review cards — same markup as the homepage.
+    if posts:
+        post_cards = "".join(review_card(p, category, b, featured=(i == 0)) for i, p in enumerate(posts))
+        grid_count = f'<span class="category-section__count">{len(posts)} review{"s" if len(posts) != 1 else ""} published</span>'
+    else:
+        post_cards = ('<div class="niche-card review-card"><div class="review-card__media"><div class="niche-card__image-wrapper">'
+                      f'<img src="{b}/assets/hero-home.svg" alt="Coming soon" loading="lazy"></div>'
+                      f'<span class="review-card__banner" style="background:{cat_color}">{cat_esc}</span></div>'
+                      '<div class="review-card__body"><h2>Reviews coming soon</h2>'
+                      '<p class="review-card__snippet">We\'re testing products in this category now.</p></div></div>')
+        grid_count = '<span class="category-section__count">Reviews coming soon</span>'
 
     # Nav dropdown (white mega-menu)
     nav_dd = build_category_dropdown(b)
@@ -1139,9 +1151,43 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
             .nav-dropdown a:hover {{ background:transparent; color:#fff; }}
         }}
 
-        .category-hero {{ background:var(--clr-off-white); padding: var(--space-2xl) 0; border-bottom:1px solid var(--clr-light-gray); }}
-        .category-hero h1 {{ font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-sm); }}
-        .category-hero p {{ font-size: var(--text-lg); color: var(--clr-mid-gray); max-width:50ch; }}
+        .niche-hero {{ background:#0a0a0a; color:#fff; padding: var(--space-2xl) 0; position:relative; overflow:hidden; }}
+        .niche-hero::before {{ content:''; position:absolute; top:-20%; right:-10%; width:560px; height:560px; border-radius:50%; background:radial-gradient(circle, rgba(201,138,44,0.16), transparent 65%); pointer-events:none; }}
+        .niche-hero__grid {{ display:grid; grid-template-columns:1fr 1fr; gap: var(--space-xl); align-items:center; position:relative; }}
+        .niche-hero__eyebrow {{ display:inline-block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:var(--clr-accent); margin-bottom: var(--space-sm); }}
+        .niche-hero h1 {{ color:#fff; font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-md); letter-spacing:-0.03em; }}
+        .niche-hero__excerpt {{ font-size: var(--text-lg); color:#ccc; max-width:48ch; margin-bottom: var(--space-md); }}
+        .niche-hero__trust {{ display:flex; flex-wrap:wrap; gap:16px; margin-bottom: var(--space-lg); }}
+        .niche-hero__trust span {{ display:inline-flex; align-items:center; gap:7px; font-size:0.78rem; font-weight:600; color:#999; }}
+        .niche-hero__trust svg {{ width:14px; height:14px; color:var(--clr-accent); }}
+        .niche-hero__cta-row {{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }}
+        .niche-hero__cta-row .btn {{ background:var(--clr-accent); color:#1a1200; font-weight:800; font-size:0.95rem; padding:0.8em 1.6em; box-shadow:0 6px 22px rgba(201,138,44,0.4); }}
+        .niche-hero__cta-row .btn:hover {{ background:#e0a23f; transform:translateY(-2px); box-shadow:0 10px 30px rgba(201,138,44,0.55); }}
+        .niche-hero__secondary {{ font-size:0.9rem; font-weight:700; color:#fff; text-decoration:none; border-bottom:2px solid rgba(201,138,44,0.6); padding-bottom:2px; }}
+        .niche-hero__secondary:hover {{ color:var(--clr-accent); }}
+        .niche-hero__visual {{ display:flex; flex-direction:column; gap: var(--space-md); }}
+        .hero-product {{ position:relative; border-radius: var(--radius-lg); overflow:hidden; background:#1a1a1a; display:flex; align-items:center; justify-content:center; padding: var(--space-lg); min-height:320px; }}
+        .hero-product img {{ max-width:100%; max-height:460px; width:auto; height:auto; object-fit:contain; }}
+        .hero-product__badge {{ position:absolute; top:14px; left:14px; z-index:2; background:var(--clr-accent); color:#1a1200; font-size:0.62rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; padding:4px 12px; border-radius:100px; box-shadow:var(--shadow-sm); }}
+        @media (max-width:860px) {{ .niche-hero__grid {{ grid-template-columns:1fr; }} .niche-hero__visual {{ order:-1; }} }}
+
+        .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap: var(--space-lg); }}
+        .category-section__header {{ display:flex; justify-content:space-between; align-items:flex-end; gap: var(--space-md); margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom: var(--space-sm); flex-wrap:wrap; }}
+        .category-section__header h2 {{ font-size: var(--text-2xl); margin:0; flex:1 1 auto; min-width:0; }}
+        .category-section__count {{ font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-mid-gray); }}
+        .niche-reviews {{ padding: var(--space-2xl) 0; }}
+
+        .how-we-test {{ background:#0a0a0a; color:#fff; padding: var(--space-2xl) 0; }}
+        .how-we-test__inner {{ max-width:1200px; margin:0 auto; padding:0 var(--space-lg); }}
+        .how-we-test__intro {{ margin-bottom: var(--space-xl); }}
+        .how-we-test__intro h2 {{ color:#fff; font-size: var(--text-3xl); margin-bottom:8px; }}
+        .how-we-test__intro p {{ color:#999; max-width:52ch; margin:0; }}
+        .section-eyebrow {{ display:block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:var(--clr-accent); margin-bottom:6px; }}
+        .hwt-steps {{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap: var(--space-lg); }}
+        .hwt-step {{ border-left:2px solid rgba(201,138,44,0.5); padding:0 0 0 var(--space-lg); }}
+        .hwt-step__num {{ font-family: var(--font-display); font-size: var(--text-xl); font-weight:800; color:var(--clr-accent); letter-spacing:-0.02em; }}
+        .hwt-step h3 {{ color:#fff; font-size: var(--text-lg); margin:6px 0; }}
+        .hwt-step p {{ color:#999; font-size:0.9rem; margin:0; line-height:1.55; }}
 
         .subscribe-band {{ background:var(--clr-off-white); padding: var(--space-xl) 0; border-top:1px solid var(--clr-light-gray); }}
         .subscribe-inner {{ display:flex; justify-content:space-between; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }}
@@ -1157,7 +1203,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .subscribe-msg {{ flex-basis:100%; font-size:0.85rem; color:#666; margin-top:6px; }}
         @media (max-width:700px) {{ .subscribe-inner {{ flex-direction:column; align-items:flex-start; }} .subscribe-form .input {{ width:100%; }} }}
 
-        .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }}
+        .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap: var(--space-lg); }}
         .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); overflow:hidden; transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); background:var(--clr-white); display:flex; flex-direction:column; }}
         .niche-card:hover {{ transform:translateY(-6px); box-shadow:var(--shadow-lg); }}
         .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; background:var(--clr-off-white); }}
@@ -1179,6 +1225,16 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .review-card__reactions .reaction-icon {{ font-size:0.9rem; line-height:1; }}
         .review-card__reactions .reaction-count {{ font-weight:700; min-width:14px; text-align:center; }}
         .review-card__updated {{ display:block; font-size:0.72rem; color:#999; margin-bottom: var(--space-xs); }}
+        .review-card__score {{ position:absolute; right:14px; bottom:14px; z-index:2; display:inline-flex; align-items:baseline; gap:3px; background:rgba(10,10,10,0.92); color:#fff; border-radius:100px; padding:6px 14px; border:1px solid rgba(201,138,44,0.6); backdrop-filter: blur(4px); }}
+        .review-card__score-num {{ font-family: var(--font-display); font-size:1.15rem; font-weight:800; color: var(--clr-accent); letter-spacing:-0.02em; line-height:1; }}
+        .review-card__score-out {{ font-size:0.7rem; color:#aaa; font-weight:600; }}
+        .niche-card--featured {{ grid-column: 1 / -1; display:grid; grid-template-columns: 1.1fr 1fr; align-items:center; }}
+        .niche-card--featured .niche-card__image-wrapper {{ aspect-ratio: 16/10; height:100%; }}
+        .niche-card--featured .review-card__body {{ padding: var(--space-xl); }}
+        .niche-card--featured h2 {{ font-size: var(--text-2xl); }}
+        .niche-card--featured .review-card__score-num {{ font-size:1.5rem; }}
+        .niche-card--featured .review-card__snippet {{ -webkit-line-clamp:3; }}
+        @media (max-width: 760px) {{ .niche-card--featured {{ grid-template-columns: 1fr; }} .niche-card--featured .review-card__body {{ padding: var(--space-md); }} }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
         .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
@@ -1209,12 +1265,49 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     </nav>
 </div></header>
 
-<section class="category-hero"><div class="container">
-    <h1>{blog_title}</h1>
-    <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
+<section class="niche-hero"><div class="container niche-hero__grid">
+    <div>
+        <span class="niche-hero__eyebrow">{cat_esc}</span>
+        <h1>{blog_title}</h1>
+        <p class="niche-hero__excerpt">{hero_excerpt}</p>
+        <div class="niche-hero__trust">
+            <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Independently researched</span>
+            <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>No sponsored placements</span>
+            <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Scored on 5 criteria</span>
+        </div>
+        <div class="niche-hero__cta-row">
+            <a href="{hero_link}" class="btn">Read the full review →</a>
+            {comp_link}
+        </div>
+    </div>
+    <div class="niche-hero__visual">
+        <div class="hero-product">
+            <img src="{hero_img}" alt="{hero_img_alt}" loading="eager">
+            <span class="hero-product__badge">Our pick</span>
+        </div>
+    </div>
 </div></section>
 
-<section class="container posts-grid">{post_list}</section>
+<section class="container niche-reviews">
+    <div class="category-section__header">
+        <h2>Reviews &amp; Buying Guides</h2>
+        {grid_count}
+    </div>
+    <div class="posts-grid">{post_list}</div>
+</section>
+
+<section class="how-we-test"><div class="how-we-test__inner">
+    <div class="how-we-test__intro">
+        <span class="section-eyebrow">Our method</span>
+        <h2>How we test {title_escaped}</h2>
+        <p>Every score follows the same repeatable process. No paid placements, no editorial bias — just a consistent method.</p>
+    </div>
+    <div class="hwt-steps">
+        <div class="hwt-step"><div class="hwt-step__num">01</div><h3>Research</h3><p>We shortlist candidates on price, specs, and verified owner feedback across retailers.</p></div>
+        <div class="hwt-step"><div class="hwt-step__num">02</div><h3>Score</h3><p>Every product is scored on the same 5 weighted criteria before any ranking is drawn.</p></div>
+        <div class="hwt-step"><div class="hwt-step__num">03</div><h3>Recommend</h3><p>We recommend the one we'd actually buy — and say plainly when a product falls short.</p></div>
+    </div>
+</div></section>
 
 <section class="subscribe-band"><div class="container subscribe-inner">
     <div class="subscribe-copy">
@@ -2457,12 +2550,17 @@ footer a{{color:#aaa;text-decoration:none}}
     # Write category pages (post slugs point to reviews/{slug} for article pages)
     for n in state["niches"]:
         niche_reviews = [r for r in reviews if r["slug"] == n["slug"]]
-        latest = max(niche_reviews, key=lambda r: r.get("updated", "")) if niche_reviews else None
-        niche_posts = [{"title": latest["title"], "slug": f"reviews/{n['slug']}"}] if latest else \
-                      [{"title": a.get("post_title", ""), "slug": f"reviews/{n['slug']}"} for a in articles.get(n["slug"], [])]
+        niche_reviews.sort(key=lambda r: r.get("updated", ""), reverse=True)
+        if not niche_reviews:
+            niche_reviews = [
+                {"slug": n["slug"], "name": n["name"], "title": a.get("post_title", n["name"]),
+                 "updated": "", "rel": f"/reviews/{n['slug']}/", "snippet": "",
+                 "image": "", "score": None, "breakdown": {}, "label": "", "product_name": ""}
+                for a in articles.get(n["slug"], [])
+            ]
         cat_dir = docs / n["slug"]
         cat_dir.mkdir(exist_ok=True)
-        write_checked(cat_dir / "index.html", build_category_page(n["slug"], n["name"], niche_posts, all_slugs, amazon_tag), f"niche page {n['slug']}")
+        write_checked(cat_dir / "index.html", build_category_page(n["slug"], n["name"], niche_reviews, all_slugs, amazon_tag), f"niche page {n['slug']}")
 
     # Write comparison pages
     comp_dir = docs / "comparisons"
