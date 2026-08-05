@@ -613,6 +613,7 @@ def review_card(item, category, b, featured=False):
         {score_html}
     </div>
     <div class="review-card__body">
+        {updated_html}
         <h2><a href="{href}">{title}</a></h2>
         {snippet_html}
         <div class="review-card__footer">
@@ -622,7 +623,6 @@ def review_card(item, category, b, featured=False):
             </div>
             <a href="{href}" class="read-link">Read review →</a>
         </div>
-        {updated_html}
     </div>
 </div>'''
 
@@ -1051,7 +1051,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .review-card__reactions .reaction-btn.is-counter {{ cursor:default; }}
         .review-card__reactions .reaction-icon {{ font-size:0.9rem; line-height:1; }}
         .review-card__reactions .reaction-count {{ font-weight:700; min-width:14px; text-align:center; }}
-        .review-card__updated {{ display:block; font-size:0.72rem; color:#999; margin-top: var(--space-sm); }}
+        .review-card__updated {{ display:block; font-size:0.72rem; color:#999; margin-bottom: var(--space-xs); }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
         .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
@@ -1317,7 +1317,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         .review-card__reactions .reaction-btn.is-counter {{ cursor:default; }}
         .review-card__reactions .reaction-icon {{ font-size:0.9rem; line-height:1; }}
         .review-card__reactions .reaction-count {{ font-weight:700; min-width:14px; text-align:center; }}
-        .review-card__updated {{ display:block; font-size:0.72rem; color:#999; margin-top: var(--space-sm); }}
+        .review-card__updated {{ display:block; font-size:0.72rem; color:#999; margin-bottom: var(--space-xs); }}
         .niche-card--featured {{ grid-column: 1 / -1; display:grid; grid-template-columns: 1.1fr 1fr; align-items:center; }}
         .niche-card--featured .niche-card__image-wrapper {{ aspect-ratio: 16/10; height:100%; }}
         .niche-card--featured .review-card__body {{ padding: var(--space-xl); }}
@@ -2721,7 +2721,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .review-card__reactions .reaction-btn.is-counter { cursor:default; }
         .review-card__reactions .reaction-icon { font-size:0.9rem; line-height:1; }
         .review-card__reactions .reaction-count { font-weight:700; min-width:14px; text-align:center; }
-        .review-card__updated { display:block; font-size:0.72rem; color:#999; margin-top: var(--space-sm); }
+        .review-card__updated { display:block; font-size:0.72rem; color:#999; margin-bottom: var(--space-xs); }
         .niche-card--featured { grid-column: 1 / -1; display:grid; grid-template-columns: 1.1fr 1fr; align-items:center; }
         .niche-card--featured .niche-card__image-wrapper { aspect-ratio: 16/10; height:100%; }
         .niche-card--featured .review-card__body { padding: var(--space-xl); }
