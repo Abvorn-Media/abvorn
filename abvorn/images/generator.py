@@ -76,19 +76,19 @@ class ImageGenerator:
             return b""
 
         w, h = output_size
-        img = Image.new("RGB", (w, h), (26, 26, 26))
+        img = Image.new("RGB", (w, h), (255, 255, 255))
         draw = ImageDraw.Draw(img)
 
         for y in range(h):
             ratio = y / h
-            r = int(26 + (40 - 26) * ratio)
-            g = int(26 + (40 - 26) * ratio)
-            b = int(40 + (60 - 40) * ratio)
+            r = int(255 + (246 - 255) * ratio)
+            g = int(255 + (246 - 255) * ratio)
+            b = int(255 + (247 - 255) * ratio)
             draw.line([(0, y), (w, y)], fill=(r, g, b))
 
         niche_label = niche.replace("_", " ").title()
-        draw.rectangle([20, 20, 20 + len(niche_label) * 9, 44], fill=(60, 60, 60))
-        draw.text((24, 24), niche_label, fill=(180, 180, 180))
+        draw.rectangle([20, 20, 20 + len(niche_label) * 9, 44], fill=(232, 232, 235))
+        draw.text((24, 24), niche_label, fill=(70, 70, 80))
 
         try:
             font = ImageFont.truetype("arial.ttf", 42)
@@ -102,12 +102,12 @@ class ImageGenerator:
         for line in lines:
             bbox = draw.textbbox((0, 0), line, font=font)
             tw = bbox[2] - bbox[0]
-            draw.text(((w - tw) // 2, y_start), line, fill=(255, 255, 255), font=font)
+            draw.text(((w - tw) // 2, y_start), line, fill=(30, 30, 34), font=font)
             y_start += 50
 
         bbox = draw.textbbox((0, 0), "Abvorn", font=font_small)
         tw = bbox[2] - bbox[0]
-        draw.text((w - tw - 20, h - 35), "Abvorn", fill=(100, 120, 180), font=font_small)
+        draw.text((w - tw - 20, h - 35), "Abvorn", fill=(80, 95, 120), font=font_small)
 
         buf = BytesIO()
         img.save(buf, format="PNG")

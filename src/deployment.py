@@ -1189,7 +1189,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .niche-hero__secondary {{ font-size:0.9rem; font-weight:700; color:#fff; text-decoration:none; border-bottom:2px solid rgba(201,138,44,0.6); padding-bottom:2px; }}
         .niche-hero__secondary:hover {{ color:var(--clr-accent); }}
         .niche-hero__visual {{ display:flex; flex-direction:column; gap: var(--space-md); }}
-        .hero-product {{ position:relative; border-radius: var(--radius-lg); overflow:hidden; background:#1a1a1a; display:flex; align-items:center; justify-content:center; padding: clamp(var(--space-sm), 1.5vw, var(--space-lg)); min-height:0; }}
+        .hero-product {{ position:relative; border-radius: var(--radius-lg); overflow:hidden; background:#ffffff; display:flex; align-items:center; justify-content:center; padding: clamp(var(--space-sm), 1.5vw, var(--space-lg)); min-height:0; }}
         .hero-product img {{ max-width:100%; max-height:min(460px, 40vh); width:auto; height:auto; object-fit:contain; }}
         .hero-product__badge {{ position:absolute; top:14px; left:14px; z-index:2; background:var(--clr-accent); color:#1a1200; font-size:0.62rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; padding:4px 12px; border-radius:100px; box-shadow:var(--shadow-sm); }}
         @media (max-width:860px) {{ .niche-hero {{ padding: clamp(1.5rem, 3vh, 2.5rem) 0; }} .niche-hero__grid {{ grid-template-columns:1fr; gap: var(--space-md); }} .niche-hero__visual {{ order:-1; }} .hero-product {{ min-height:0; padding: var(--space-sm); }} .hero-product img {{ max-height:160px; }} .niche-hero h1 {{ font-size: var(--text-2xl); }} .niche-hero__excerpt {{ font-size: var(--text-base); }} }}
@@ -2238,7 +2238,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .article-hero .meta .published-date, .article-hero .meta .updated-date {{ display:inline-block; font-size:0.75rem; color:var(--clr-mid-gray); background:var(--clr-off-white); padding:2px 10px; border-radius:var(--radius-sm); margin-left:6px; }}
         .article-hero .meta .updated-date {{ background:var(--clr-accent); color:#1a1200; font-weight:600; }}
         .article-hero .excerpt {{ font-size:var(--text-lg); color:#ccc; max-width:50ch; margin-top:var(--space-md); }}
-        .hero-image-wrapper {{ position:relative; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; min-height:0; padding:var(--space-md); }}
+        .hero-image-wrapper {{ position:relative; border-radius:var(--radius-md); background:#fff; display:flex; align-items:center; justify-content:center; min-height:0; padding:var(--space-md); }}
         .hero-image-wrapper img.hero-plain {{ width:100%; height:auto; max-height:min(320px, 40vh); object-fit:contain; border-radius:var(--radius-md); }}
         @media (max-width:860px) {{ .article-hero {{ padding: clamp(1.5rem, 3vh, 2.5rem) 0; }} .article-hero .hero-grid {{ grid-template-columns:1fr; gap: var(--space-md); }} .hero-image-wrapper {{ order:-1; min-height:auto; padding:0; }} .hero-image-wrapper img.hero-plain {{ max-height:200px; }} .article-hero .excerpt {{ font-size: var(--text-base); }} }}
         /* ===== VERDICT RADAR CHART ===== */

@@ -1912,7 +1912,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .article-hero .meta .published-date, .article-hero .meta .updated-date {{ display:inline-block; font-size:0.75rem; color:var(--clr-mid-gray); background:var(--clr-off-white); padding:2px 10px; border-radius:var(--radius-sm); margin-left:6px; }}
         .article-hero .meta .updated-date {{ background:var(--clr-accent); color:#1a1200; font-weight:600; }}
         .article-hero .excerpt {{ font-size:var(--text-lg); color:#ccc; max-width:50ch; margin-top:var(--space-md); }}
-        .hero-image-wrapper {{ position:relative; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; min-height:0; padding:var(--space-md); }}
+        .hero-image-wrapper {{ position:relative; border-radius:var(--radius-md); background:#fff; display:flex; align-items:center; justify-content:center; min-height:0; padding:var(--space-md); }}
         .hero-image-wrapper img.hero-plain {{ width:100%; height:auto; max-height:min(320px, 40vh); object-fit:contain; border-radius:var(--radius-md); }}
         @media (max-width:860px) {{ .article-hero {{ padding: clamp(1.5rem, 3vh, 2.5rem) 0; }} .article-hero .hero-grid {{ grid-template-columns:1fr; gap: var(--space-md); }} .hero-image-wrapper {{ order:-1; min-height:auto; padding:0; }} .hero-image-wrapper img.hero-plain {{ max-height:200px; }} .article-hero .excerpt {{ font-size: var(--text-base); }} }}
         /* ===== VERDICT RADAR CHART ===== */
