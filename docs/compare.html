@@ -219,7 +219,7 @@ footer a{color:var(--clr-mid-gray)}
   function loadData() {
     Promise.all([
       fetch('/abvorn/data/latest_prices.json').then(r => r.json()).catch(() => ({})),
-      fetch('/abvorn/data/price_sparklines.json').then(r => r.json()).catch(() => []))
+      fetch('/abvorn/data/price_sparklines.json').then(r => r.json()).catch(() => [])
     ]).then(([p, s]) => {
       priceCache = p || {};
       sparkCache = {};

@@ -477,7 +477,11 @@ const CATEGORY_NAME = "Gaming";
     const links = [...document.querySelectorAll('.category-index__link')];
     if (!links.length || !('IntersectionObserver' in window)) return;
     const targets = links
-        .map(l => document.querySelector(l.getAttribute('href')))
+        .map(l => {
+            const href = l.getAttribute('href') || '';
+            if (!href.startsWith('#')) return null;
+            return document.getElementById(href.slice(1));
+        })
         .filter(Boolean);
     if (!targets.length) return;
     const io = new IntersectionObserver((entries) => {
