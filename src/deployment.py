@@ -388,6 +388,14 @@ _INTRO_RE = re.compile(r"<h2>\s*Introduction\s*</h2>\s*<p[^>]*>(.*?)</p>", re.S)
 _EXCERPT_RE = re.compile(r'<p[^>]*class="[^"]*excerpt[^"]*"[^>]*>(.*?)</p>', re.S)
 # Any non-empty paragraph, to catch pages that skip an explicit introduction.
 _ANY_P_RE = re.compile(r"<p[^>]*>(.*?)</p>", re.S)
+# The article body element, used to scope snippet extraction away from
+# chrome like the cookie banner, nav, and footer.
+_ARTICLE_RE = re.compile(r"<article[^>]*>(.*?)</article>", re.S)
+# Paragraphs that are chrome rather than review copy.
+_COOKIE_RE = re.compile(r"cook(ie|ies)|consent|privacy policy", re.I)
+_UPDATED_RE = re.compile(r"^Updated:\s*\d{4}-\d{2}-\d{2}", re.I)
+_SHARE_RE = re.compile(r"facebook|pinterest|related categories|share on|tweet", re.I)
+_WIDGET_RE = re.compile(r"alert me|\$\d+\.\d{2}|price drop|track price", re.I)
 # The "Our Choice" hero pick product photo rendered into the article hero.
 _HERO_PICK_IMG_RE = re.compile(r'<div class="hero-pick".*?<img class="product-shot__img" src="([^"]+)"', re.S)
 # Fallback: the niche page's hero product photo (hero-image-wrapper > img),
@@ -448,6 +456,8 @@ def _clean_snippet(raw):
             break
     if len(text) < 40 or _BOILERPLATE_RE.search(text):
         return ""
+    if _COOKIE_RE.search(text) or _UPDATED_RE.search(text) or _SHARE_RE.search(text) or _WIDGET_RE.search(text):
+        return ""
     if len(text) > 180:
         cut = text.rfind(" ", 0, 180)
         text = text[:cut].rstrip(" ,.;:") + "…"
@@ -460,18 +470,26 @@ def review_snippet(html):
     Tries, in order: the Introduction block, the article's excerpt line, then
     the first substantial paragraph. Pages without an explicit Introduction
     (e.g. wireless-headphones, 4k-monitors) still get a snippet this way.
+
+    Extraction is scoped to the <article> element when present and skips
+    boilerplate (cookie consent, navigation) so card snippets never show
+    chrome text instead of review copy.
     """
-    m = _INTRO_RE.search(html)
+    body = html
+    m = _ARTICLE_RE.search(html)
+    if m:
+        body = m.group(1)
+    m = _INTRO_RE.search(body)
     if m:
         text = _clean_snippet(m.group(1))
         if text:
             return text
-    m = _EXCERPT_RE.search(html)
+    m = _EXCERPT_RE.search(body)
     if m:
         text = _clean_snippet(m.group(1))
         if text:
             return text
-    for m in _ANY_P_RE.finditer(html):
+    for m in _ANY_P_RE.finditer(body):
         text = _clean_snippet(m.group(1))
         if text:
             return text
@@ -704,7 +722,11 @@ def review_card(item, category, b, featured=False):
     generated niche hero image otherwise.
     """
     title = html_mod.escape(item["title"])
-    href = f'{b}/reviews/{item["slug"]}/'
+    _slug = item.get("slug", "")
+    _rel = item.get("rel")
+    if not _rel:
+        _rel = f"/{_slug}/" if _slug.startswith("reviews/") else f"/reviews/{_slug}/"
+    href = f'{b.rstrip("/")}{_rel if _rel.startswith("/") else "/" + _rel}'
     color = category_color(category)
     snippet = item.get("snippet", "")
     snippet_html = (
@@ -2922,10 +2944,11 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .subscribe-msg { flex-basis:100%; font-size:0.85rem; color:#666; margin-top:8px; }
         @media (max-width: 700px) { .subscribe-inner { flex-direction:column; align-items:flex-start; } .subscribe-form .input { width:100%; } }
 
-        .guides-section { padding: var(--space-2xl) 0; }
+        .guides-section { padding: var(--space-2xl) 0 var(--space-xl); }
         .latest-reviews-section { padding: var(--space-2xl) 0; }
         .section-eyebrow { display:block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color: var(--clr-accent-text); margin-bottom:6px; }
         .category-section { margin-bottom: var(--space-2xl); }
+        .category-section:last-child { margin-bottom: 0; }
         .category-section__header { display:flex; justify-content:space-between; align-items:flex-end; gap: var(--space-md); margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom: var(--space-sm); flex-wrap:wrap; }
         .category-section__header h2 { font-size: var(--text-2xl); margin:0; display:flex; align-items:baseline; gap:12px; flex:1 1 auto; min-width:0; }
         .category-section__header h2 .sec-num { font-size:0.8rem; font-weight:800; color: var(--cat, var(--clr-accent-text)); letter-spacing:0.04em; }
