@@ -1904,17 +1904,17 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         }}
 
         /* ===== ARTICLE HERO (dark bg, product image, chart bars) ===== */
-        .article-hero {{ background:#0a0a0a; color:#fff; padding: var(--space-2xl) 0; }}
-        .article-hero .hero-grid {{ display:grid; grid-template-columns:1fr 1fr; gap: var(--space-xl); align-items:center; }}
+        .article-hero {{ background:#0a0a0a; color:#fff; padding: clamp(2rem, 4vh, 4rem) 0; }}
+        .article-hero .hero-grid {{ display:grid; grid-template-columns:1fr 1fr; gap: clamp(var(--space-md), 3vw, var(--space-xl)); align-items:center; }}
         .article-hero .hero-category {{ display:inline-block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-accent); margin-bottom:var(--space-sm); }}
         .article-hero h1 {{ font-size:clamp(var(--text-2xl), 4vw, var(--text-4xl)); margin-bottom:var(--space-sm); color:#fff; }}
         .article-hero .meta {{ font-size:0.85rem; color:#999; }}
         .article-hero .meta .published-date, .article-hero .meta .updated-date {{ display:inline-block; font-size:0.75rem; color:var(--clr-mid-gray); background:var(--clr-off-white); padding:2px 10px; border-radius:var(--radius-sm); margin-left:6px; }}
         .article-hero .meta .updated-date {{ background:var(--clr-accent); color:#1a1200; font-weight:600; }}
         .article-hero .excerpt {{ font-size:var(--text-lg); color:#ccc; max-width:50ch; margin-top:var(--space-md); }}
-        .hero-image-wrapper {{ position:relative; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; min-height:260px; padding:var(--space-md); }}
-        .hero-image-wrapper img.hero-plain {{ width:100%; height:auto; max-height:320px; object-fit:contain; border-radius:var(--radius-md); }}
-        @media (max-width:860px) {{ .article-hero .hero-grid {{ grid-template-columns:1fr; }} .hero-image-wrapper {{ order:-1; min-height:auto; padding:0; }} }}
+        .hero-image-wrapper {{ position:relative; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; min-height:0; padding:var(--space-md); }}
+        .hero-image-wrapper img.hero-plain {{ width:100%; height:auto; max-height:min(320px, 40vh); object-fit:contain; border-radius:var(--radius-md); }}
+        @media (max-width:860px) {{ .article-hero {{ padding: clamp(1.5rem, 3vh, 2.5rem) 0; }} .article-hero .hero-grid {{ grid-template-columns:1fr; gap: var(--space-md); }} .hero-image-wrapper {{ order:-1; min-height:auto; padding:0; }} .hero-image-wrapper img.hero-plain {{ max-height:200px; }} .article-hero .excerpt {{ font-size: var(--text-base); }} }}
         /* ===== VERDICT RADAR CHART ===== */
         .chart-section {{ margin:var(--space-xl) 0; padding:var(--space-lg); background:var(--clr-white); border-radius:var(--radius-md); border:1px solid var(--clr-light-gray); }}
         .chart-wrapper {{ width:100%; max-width:500px; height:400px; margin:0 auto; }}
@@ -2296,8 +2296,8 @@ def build_methodology_page(all_slugs, form_url=""):
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
 {nav_html(all_slugs)}
-<section class="hero" id="main"><div class="container">
-<img src="{b}/assets/hero-home.svg" alt="Abvorn testing" style="width:100%;max-width:900px;height:auto;border-radius:var(--radius-md);margin-bottom:24px;display:block;box-shadow:var(--shadow-md)">
+<section class="hero" id="main" style="padding:clamp(2rem,4vh,4rem) 0 1.5rem"><div class="container">
+<img src="{b}/assets/hero-home.svg" alt="Abvorn testing" style="width:100%;max-width:min(560px,100%);height:auto;object-fit:contain;border-radius:var(--radius-md);margin-bottom:24px;display:block;box-shadow:var(--shadow-md)">
 <h1>How We Test</h1>
 <p>Every recommendation on Abvorn is earned through real testing — not press releases or affiliate quotas.</p>
 </div></section>
