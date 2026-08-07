@@ -1,4 +1,4 @@
-"""Rebuild all review pages through the fixed build pipeline.
+﻿"""Rebuild all review pages through the fixed build pipeline.
 
 Reconstructs the articles dict from the existing rendered pages (docs/reviews/*/index.html),
 merges product details from products_cache.json, and calls run_cycle.build_article_page
@@ -13,6 +13,17 @@ from urllib.parse import unquote
 
 import run_cycle
 from src.deployment import _title_slug
+
+
+def _fully_unescape(text):
+    """Unescape until stable so pre-encoded &amp;amp; sequences collapse to &."""
+    if not text:
+        return text
+    prev = None
+    while prev != text:
+        prev = text
+        text = html_lib.unescape(text)
+    return text
 
 NICHES = [
     "4k-monitors",
@@ -35,16 +46,16 @@ def extract_article(path):
     c = Path(path).read_text(encoding="utf-8")
 
     m = re.search(r"<title>([^<]*?)\s*\|\s*Abvorn</title>", c)
-    post_title = html_lib.unescape(m.group(1).strip()) if m else ""
+    post_title = _fully_unescape(m.group(1).strip()) if m else ""
 
     m = re.search(r'<meta name="description" content="([^"]*)"', c)
-    meta_desc = html_lib.unescape(m.group(1)) if m else ""
+    meta_desc = _fully_unescape(m.group(1)) if m else ""
 
     m = re.search(r'data-review="([^"]+)"', c)
     niche_slug = m.group(1) if m else ""
 
     m = re.search(r'<h3 class="av-product">(.*?)</h3>', c)
-    product_name = html_lib.unescape(m.group(1)) if m else ""
+    product_name = _fully_unescape(m.group(1)) if m else ""
 
     body = re.search(r'<article class="article-body" id="main">(.*?)</article>', c, re.S)
     if not body:
@@ -98,7 +109,7 @@ def extract_article(path):
         stop = min(ends) if ends else r_open
         article_html = body[verdict_close:stop].strip()
         # Drop stray non-structural fragments (e.g. leftover "User Safety: safe"
-        # text) — real prose always contains block-level elements.
+        # text) â€” real prose always contains block-level elements.
         if article_html and not re.search(r"<(?:p|h[1-6]|ul|ol|figure|table|div|section)\b", article_html):
             article_html = ""
 
@@ -123,10 +134,10 @@ def extract_article(path):
             if m_asin:
                 asin = m_asin.group(1)
         products.append({
-            "name": html_lib.unescape(nm.group(1)).strip() if nm else "",
-            "price": html_lib.unescape(price.group(1)).strip() if price else "",
+            "name": _fully_unescape(nm.group(1)).strip() if nm else "",
+            "price": _fully_unescape(price.group(1)).strip() if price else "",
             "image": img.group(1) if img else "",
-            "description": html_lib.unescape(desc.group(1)).strip() if desc else "",
+            "description": _fully_unescape(desc.group(1)).strip() if desc else "",
             "url": url,
             "asin": asin,
         })
@@ -231,3 +242,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
