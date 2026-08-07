@@ -1658,6 +1658,25 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     # "Our latest … Reviews" = the newest reviews across the category (max 4).
     latest_items = sorted(items, key=lambda r: r.get("updated", ""), reverse=True)[:4]
 
+    # Subscribe CTA band — sits directly after the Latest reviews section so
+    # the conversion prompt follows the freshest content, before the deeper
+    # per-niche sections.
+    subscribe_band = (
+        '<section class="subscribe-band"><div class="container subscribe-inner">'
+        '<div class="subscribe-copy">'
+        f'<h2>Get alerted when we publish a new {title_escaped} review</h2>'
+        '<p>One email whenever we publish a new guide in this category. No spam, unsubscribe anytime.</p>'
+        '</div>'
+        f'<form class="subscribe-form" id="category-subscribe-form" onsubmit="submitCategorySubscribe(event)">'
+        '<input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off">'
+        '<label for="category-subscribe-email" class="sr-only">Email address</label>'
+        '<input type="email" class="input" id="category-subscribe-email" placeholder="you@example.com" required>'
+        '<button type="submit" class="btn">Notify Me</button>'
+        '<p class="subscribe-msg" id="category-subscribe-msg" aria-live="polite"></p>'
+        '</form>'
+        '</div></section>'
+    )
+
     sections = []
     if items:
         # Latest review cards — same treatment as the homepage's "Latest
@@ -1673,6 +1692,8 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
             f'<div class="category-section__header"><h2>Latest {title_escaped} reviews</h2></div>'
             f'<div class="niche-grid">{latest_cards}</div></section>'
         )
+        # The CTA band follows the latest reviews, before the niche sections.
+        sections.append(subscribe_band)
         for slug in niche_order:
             n = len(by_niche[slug])
             niche_cards = "".join(review_card(r, category_name, b) for r in by_niche[slug])
@@ -1686,6 +1707,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         sections.append(
             '<p style="grid-column:1/-1;text-align:center;color:var(--clr-mid-gray);padding:40px 0">Reviews coming soon.</p>'
         )
+        sections.append(subscribe_band)
     sections_html = "".join(sections)
 
     index_nav = build_category_index(category_name, b, niche_slugs=niche_order or None) if items else ""
@@ -1857,20 +1879,6 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
 {index_nav}
 
 {sections_html}
-
-<section class="subscribe-band"><div class="container subscribe-inner">
-    <div class="subscribe-copy">
-        <h2>Get alerted when we publish a new {title_escaped} review</h2>
-        <p>One email whenever we publish a new guide in this category. No spam, unsubscribe anytime.</p>
-    </div>
-    <form class="subscribe-form" id="category-subscribe-form" onsubmit="submitCategorySubscribe(event)">
-        <input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off">
-        <label for="category-subscribe-email" class="sr-only">Email address</label>
-        <input type="email" class="input" id="category-subscribe-email" placeholder="you@example.com" required>
-        <button type="submit" class="btn">Notify Me</button>
-        <p class="subscribe-msg" id="category-subscribe-msg" aria-live="polite"></p>
-    </form>
-</div></section>
 
 <footer class="footer"><div class="container">
     <div class="footer-grid">
