@@ -32,6 +32,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Restore content state cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            cycle_state.json
+            products_cache.json
+          key: abvorn-state-${{ runner.os }}
+          restore-keys: |
+            abvorn-state-
+
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -63,6 +73,15 @@ jobs:
           if [ -n "${{ inputs.niche }}" ]; then ARGS="$ARGS --niche ${{ inputs.niche }}"; fi
           if [ "${{ inputs.force }}" = "true" ]; then ARGS="$ARGS --force"; fi
           python run_cycle.py $ARGS
+
+      - name: Save content state cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            cycle_state.json
+            products_cache.json
+          key: abvorn-state-${{ runner.os }}-${{ github.run_id }}
 
       - name: Commit and push changes
         run: |

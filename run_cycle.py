@@ -2690,6 +2690,10 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     ]
     for page_name, title, content in static_pages:
         page_path = docs / page_name
+        # Hand-crafted pages (about/privacy) are committed as full designs; don't clobber them.
+        if page_path.exists() and page_name in ("about.html", "privacy.html"):
+            print(f"  Skipped (committed static page): docs/{page_name}")
+            continue
         full_page = f'''<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="{b}/assets/favicon-32x32.png"><title>{title} | Abvorn</title>

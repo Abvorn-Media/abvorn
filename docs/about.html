@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="/abvorn/assets/favicon-32x32.png"><title>About Abvorn | Abvorn</title>
-<meta name="description" content="About Abvorn - Abvorn">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/abvorn/assets/favicon-32x32.png">
+    <title>About Abvorn — Reviews Based on Real Testing, Not Spec Sheets</title>
+    <meta name="description" content="About Abvorn — independent product reviews built on real testing, accurate pricing, and verified customer feedback.">
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
 :root {
   --clr-black: #0a0a0a; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
   --clr-mid-gray: #666; --clr-light-gray: #e8e8e8; --clr-off-white: #f6f5f2; --clr-white: #ffffff;
@@ -49,21 +51,14 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 .signal-tag--badge { position: absolute; top: 12px; left: 12px; padding: 5px 12px; border-radius: var(--radius-sm); font-size: 0.68rem; box-shadow: var(--shadow-sm); z-index: 2; }
 .rank-chip { display: inline-block; background: var(--clr-off-white); color: var(--clr-mid-gray); border: 1px solid var(--clr-light-gray); padding: 4px 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: var(--radius-sm); position: absolute; top: 12px; left: 12px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+@media (prefers-color-scheme: dark) { :root { --clr-black: #f0f0f0; --clr-off-black: #e0e0e0; --clr-mid-gray: #999; --clr-light-gray: #333; --clr-off-white: #1a1a1a; --clr-white: #111; } body { background: #111; color: #e0e0e0; } h1, h2, h3, h4 { color: #f0f0f0; } .card { background: #1a1a1a; border-color: #333; } .input { background: #222; color: #e0e0e0; } }
 @media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 :focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
-
-/* ── Footer category columns ──────────────────────────────────── */
-.footer-cat-cols { display: flex; gap: var(--space-xl); }
-.footer-cat-col { display: flex; flex-direction: column; }
-.footer-col h4 + a + h4 { margin-top: var(--space-lg); }
-
-
-/* ── Site-wide chrome (header + footer), used on every page ───── */
 .top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
 .top-bar .container { display:flex; justify-content:space-between; }
-header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100; box-shadow:0 2px 10px rgba(0,0,0,0.25); }
-.navbar { display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }
+header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100; }
+.navbar { display:flex; justify-content:space-between; align-items:center; }
 .logo img { max-height:44px; width:auto; }
 .nav-links { display:flex; align-items:center; }
 .nav-links > a, .nav-item > a { color:#fff; text-decoration:none; margin-left:28px; font-weight:600; font-size:0.9rem; }
@@ -71,7 +66,7 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
 .nav-item { position:relative; margin-left:28px; }
 .nav-item > a { margin-left:0; }
 .nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:14px}
-.nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#fff; min-width:240px; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding:8px 0; z-index:30; }
+.nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }
 .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
 .nav-dropdown a { display:block; color:#1a1a1a; padding:9px 20px; font-weight:500; font-size:0.9rem; text-decoration:none; }
 .nav-dropdown a:hover { background:#f6f5f2; color: var(--clr-accent-text); }
@@ -87,8 +82,93 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
     .nav-dropdown a { color:#ccc; padding:7px 0; }
     .nav-dropdown a:hover { background:transparent; }
 }
+.trending-ticker { background:var(--clr-accent); color:#1a1200; padding:9px 0; font-size:0.82rem; overflow:hidden; white-space:nowrap; }
+.trending-ticker__track { display:inline-flex; animation: ticker-scroll 30s linear infinite; }
+.trending-ticker__label { font-weight:700; margin-right:15px; color:#1a1200; }
+.trending-ticker__inner { display:inline-block; }
+.trending-ticker__item { color:#1a1200; text-decoration:none; padding:0 10px; }
+.trending-ticker__item:hover { color:#000; text-decoration:underline; }
+@keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.hero { background:#f6f5f2; padding: var(--space-2xl) 0; }
+.hero-grid { display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items:center; }
+.hero-eyebrow { display:inline-block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#666; margin-bottom: var(--space-md); }
+.hero h1 { font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-md); color:#0a0a0a; }
+.hero p { font-size: var(--text-lg); color:#555; max-width:46ch; margin-bottom: var(--space-lg); }
+.hero .btn { background:#1a1a1a; color:#fff; }
+.hero .btn:hover { background: var(--clr-accent); color:#1a1200; }
+.hero-slider { position:relative; border-radius: var(--radius-md); overflow:hidden; box-shadow: var(--shadow-lg); aspect-ratio: 4/3; background:#111; }
+.hero-slide { position:absolute; inset:0; opacity:0; transition:opacity 0.9s var(--ease-out); }
+.hero-slide.active { opacity:1; }
+.hero-slide img { width:100%; height:100%; object-fit:cover; display:block; }
+.hero-slide figcaption { position:absolute; left:0; right:0; bottom:0; background:linear-gradient(transparent, rgba(0,0,0,0.8)); color:#fff; padding: 44px var(--space-lg) var(--space-md); font-weight:600; font-size:0.95rem; }
+.hero-slider__dots { position:absolute; bottom:6px; left:50%; transform:translateX(-50%); display:flex; z-index:5; }
+.hero-slider__dot { width:44px; height:44px; border:none; background:transparent; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
+.hero-slider__dot::before { content:''; width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.45); transition: background var(--duration-fast) var(--ease-out); }
+.hero-slider__dot.active::before { background:#fff; }
+@media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; } }
+.stats-band { background:#0a0a0a; color:#fff; padding: var(--space-lg) 0; }
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap: var(--space-lg); text-align:center; }
+.stat-icon { width:28px; height:28px; margin:0 auto 10px; color: var(--clr-accent); opacity:0.9; }
+.stat-icon svg { width:100%; height:100%; }
+.stat-number { font-family: var(--font-display); font-size: var(--text-3xl); font-weight:700; color: var(--clr-accent); }
+.stat-label { font-size:0.82rem; color:#999; text-transform:uppercase; letter-spacing:0.06em; margin-top:4px; }
+.subscribe-band { background:#f6f5f2; padding: var(--space-xl) 0; }
+.subscribe-inner { display:flex; justify-content:center; align-items:center; gap: var(--space-lg); flex-wrap:wrap; text-align:center; }
+.subscribe-copy h2 { font-size: var(--text-xl); margin-bottom:6px; color:#0a0a0a; }
+.subscribe-copy p { margin:0; color:#555; max-width:42ch; }
+.subscribe-form { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.subscribe-form .input { width:260px; }
+.subscribe-form .hp-field { position:absolute; left:-9999px; }
+.subscribe-form .btn { background: var(--clr-accent); color:#1a1200; font-size:1rem; font-weight:800; padding:0.85em 1.7em; gap:8px; box-shadow: 0 6px 22px rgba(201,138,44,0.4); }
+.subscribe-form .btn:hover { background:#e0a23f; transform: scale(1.045); box-shadow: 0 8px 28px rgba(201,138,44,0.55); }
+.subscribe-band .btn { background: var(--clr-accent); color:#1a1200; font-size:1rem; font-weight:800; padding:0.85em 1.7em; gap:8px; box-shadow: 0 6px 22px rgba(201,138,44,0.4); }
+.subscribe-band .btn:hover { background:#e0a23f; transform: scale(1.045); box-shadow: 0 8px 28px rgba(201,138,44,0.55); }
+.subscribe-form .btn svg { width:18px; height:18px; }
+.subscribe-msg { flex-basis:100%; font-size:0.85rem; color:#666; margin-top:8px; }
+@media (max-width: 700px) { .subscribe-inner { flex-direction:column; align-items:center; } .subscribe-form .input { width:100%; } }
+.guides-section { padding: var(--space-2xl) 0; }
+.latest-reviews-section { padding-top: var(--space-2xl); }
+.category-section { margin-bottom: var(--space-2xl); }
+.category-section__header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-light-gray); padding-bottom: var(--space-sm); }
+.category-section__header h2 { font-size: var(--text-2xl); margin:0; }
+.category-section__header a { font-size:0.85rem; font-weight:700; color: var(--clr-accent-text); text-decoration:none; white-space:nowrap; }
+.category-section__header a:hover { text-decoration:underline; }
+.niche-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }
+.niche-card { border-radius: var(--radius-md); overflow:hidden; transition: transform var(--duration-base) var(--ease-out); }
+.niche-card:hover { transform: translateY(-3px); }
+.niche-card__image-wrapper { aspect-ratio: 4/3; overflow:hidden; border-radius: var(--radius-md); }
+.niche-card img { width:100%; height:100%; object-fit:cover; transition: transform var(--duration-slow) var(--ease-out); }
+.niche-card:hover img { transform: scale(1.04); }
+.niche-card h2 { font-size: var(--text-lg); margin: var(--space-md) 0 8px; }
+.niche-card h2 a { color:inherit; text-decoration:none; }
+.niche-card p { font-size:0.92rem; color: var(--clr-mid-gray); margin-bottom: var(--space-sm); max-width:none; }
+.niche-card .read-link { font-weight:700; font-size:0.88rem; color: var(--clr-black); text-decoration:none; border-bottom:2px solid var(--clr-accent); padding-bottom:1px; }
+.niche-card .read-link:hover { color: var(--clr-accent-text); }
+.category-group { display: none; }
+.category-group.visible { display: block; }
+.show-more-btn { display: inline-flex; align-items: center; gap: var(--space-sm); margin: var(--space-xl) auto 0; padding: 0.85em 1.5em; font-family: var(--font-body); font-weight: 700; font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.06em; color: var(--clr-accent-text); background: none; border: 2px solid var(--clr-accent); border-radius: var(--radius-sm); cursor: pointer; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+.show-more-btn:hover { background: var(--clr-accent); color: var(--clr-black); }
+.show-more-btn svg { width: 16px; height: 16px; transition: transform var(--duration-fast) var(--ease-out); }
+.show-more-btn:hover svg { transform: translateX(4px); }
+
+.about-grid { display:grid; grid-template-columns: 1fr; gap: var(--space-xl); }
+.about-grid--split { grid-template-columns: 1fr 1fr; }
+.about-divider { height:1px; background: var(--clr-light-gray); margin: var(--space-2xl) 0; }
+.about-card { background: var(--clr-white); border: 1px solid var(--clr-light-gray); border-radius: var(--radius-md); padding: var(--space-xl); transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); border-top: 4px solid var(--clr-accent); opacity: 0; transform: translateY(20px); }
+.about-card.visible { opacity: 1; transform: translateY(0); transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out), box-shadow var(--duration-base) var(--ease-out); }
+.about-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.about-card:focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
+.about-card h2 { font-size: var(--text-xl); margin-bottom: var(--space-md); padding-bottom: var(--space-md); border-bottom: 2px solid var(--clr-light-gray); }
+.about-card--accent { background: var(--clr-off-white); border-color: var(--clr-accent); border-width: 2px; border-top-width: 4px; }
+.about-card-icon { width:32px; height:32px; color: var(--clr-accent); opacity:0.9; margin-bottom: var(--space-sm); }
+.about-card-icon svg { width:100%; height:100%; }
+.about-card ul { margin: var(--space-md) 0 var(--space-lg); padding-left: 1.4em; }
+.about-card ul li { margin-bottom: var(--space-sm); line-height: 1.6; position: relative; }
+.about-card ul li::before { content: ''; position: absolute; left: -1.2em; top: 0.6em; width: 6px; height: 6px; background: var(--clr-accent); border-radius: 50%; }
+.about-card ul li strong { color: var(--clr-black); }
+@media (max-width: 768px) { .about-grid--split { grid-template-columns: 1fr; } }
 .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
-.footer-grid { display:grid; grid-template-columns: 1.6fr 2fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
+.footer-grid { display:grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
 .footer-col h4 { color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }
 .footer-col p { color:#999; font-size:0.9rem; max-width:32ch; }
 .footer-col a { display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }
@@ -99,8 +179,7 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
 .footer-social svg { width:16px; height:16px; }
 .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
 @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
-
-
+    
 .nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
 .nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
 .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
@@ -113,40 +192,178 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
     .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
 }
 
-.main { padding: var(--space-2xl) 0; }
-.main .container { max-width:800px; }
-.main h1 { margin-bottom: var(--space-lg); }
-.main h2 { margin: var(--space-lg) 0 var(--space-md); }
-.main p { color: var(--clr-mid-gray); }
-</style></head>
+</style>
+</head>
 <body>
-
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
-    <a href="/abvorn/" class="logo"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:44px;width:auto"></a>
+    <a href="/abvorn/" class="logo"><img src="/abvorn/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><a class="category-label" href="/abvorn/categories/audio/">Audio</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/gaming/">Gaming</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a><a href="/abvorn/webcams/">Webcams</a></div></div></div>
+        <div class="nav-item"><a href="/abvorn/index.html">Categories ▾</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><span class="category-label">Audio</span><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><span class="category-label">Computing & Monitors</span><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a></div><div class="category-group"><span class="category-label">Fitness & Health</span><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><span class="category-label">Gaming</span><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><span class="category-label">Home & Lifestyle</span><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><span class="category-label">Webcams & Accessories</span><a href="/abvorn/webcams/">Webcams</a></div></div></div>
         <a href="/abvorn/">Home</a>
         <a href="/abvorn/about.html">About</a>
         <a href="/abvorn/privacy.html">Privacy</a>
     </nav>
 </div></header>
-<script>
-(function(){var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")})})();
-</script>
-<main class="main"><div class="container"><h1>About Abvorn</h1><h2>About Abvorn</h2><p>We are an AI-powered media network delivering expert product reviews and buying guides.</p></div></main>
+<section class="hero"><div class="container hero-grid">
+    <div>
+        <span class="hero-eyebrow">About Abvorn</span>
+        <h1>Independent product reviews built on real testing, not spec sheets.</h1>
+        <p>We bring together current pricing, technical specifications, and verified customer feedback — and lay it out clearly enough to help you make confident buying decisions without the noise.</p>
+        <a href="/abvorn/index.html" class="btn">Browse our guides</a>
+    </div>
+    <div class="hero-slider" id="hero-slider">
+        <div class="hero-slide active"><img src="/abvorn/assets/wireless-headphones.svg" alt="Wireless Headphones"><figcaption>Wireless Headphones reviews — expert tested</figcaption></div><div class="hero-slide"><img src="/abvorn/assets/wireless-earbuds.svg" alt="Wireless Earbuds"><figcaption>Wireless Earbuds reviews — expert tested</figcaption></div><div class="hero-slide"><img src="/abvorn/assets/webcams.svg" alt="Webcams"><figcaption>Webcams reviews — expert tested</figcaption></div><div class="hero-slide"><img src="/abvorn/assets/streaming-devices.svg" alt="Streaming Devices"><figcaption>Streaming Devices reviews — expert tested</figcaption></div><div class="hero-slide"><img src="/abvorn/assets/smart-home.svg" alt="Smart Home"><figcaption>Smart Home reviews — expert tested</figcaption></div>
+        <div class="hero-slider__dots"><button class="hero-slider__dot active" aria-label="Show Wireless Headphones" aria-current="true"></button><button class="hero-slider__dot" aria-label="Show Wireless Earbuds" aria-current="false"></button><button class="hero-slider__dot" aria-label="Show Webcams" aria-current="false"></button><button class="hero-slider__dot" aria-label="Show Streaming Devices" aria-current="false"></button><button class="hero-slider__dot" aria-label="Show Smart Home" aria-current="false"></button></div>
+    </div>
+</div></section>
+
+<section class="stats-band"><div class="container stats-grid">
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="77">0</div><div class="stat-label">Guides published</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="stat-number" data-target="10">0</div><div class="stat-label">Categories covered</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="231">0</div><div class="stat-label">Products compared</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="stat-number" data-target="1">0</div><div class="stat-label">Year in operation</div></div>
+</div></section>
+
+<section class="subscribe-band"><div class="container subscribe-inner">
+    <div class="subscribe-copy"><h2>Our mission</h2><p>Independent product research and buying guides, built to help you decide faster.</p></div>
+    <a href="/abvorn/index.html" class="btn">Browse our guides</a>
+</div></section>
+
+<section class="guides-section container">
+    <div class="about-grid">
+        <div class="about-card">
+            <div class="about-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+            <h2>Why Abvorn?</h2>
+            <p>Shopping for almost anything today means wading through sponsored placements, recycled spec sheets, and reviews that all seem to reach the same conclusion. You're left wondering: who actually tested this? Who paid for this review? Can I trust this?</p>
+            <p>We felt the same frustration. So we built something different.</p>
+            <p>Abvorn exists to cut through the noise. We bring together real pricing, technical specifications, and verified customer feedback — and lay it out clearly enough that you can make a confident decision without losing an evening to it.</p>
+        </div>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <div class="about-grid">
+        <div class="about-card">
+            <div class="about-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+            <h2>How We Build Our Guides</h2>
+            <p>Every guide starts with current, real data — live pricing, published specifications, and aggregated customer ratings across the products we cover.</p>
+            <p>We organize that around the questions people actually ask before buying:</p>
+            <ul>
+                <li><strong>What's the best overall option?</strong></li>
+                <li><strong>What's the best value?</strong></li>
+                <li><strong>What's worth skipping?</strong></li>
+            </ul>
+            <p>Then we write it up in plain language, without the padding.</p>
+            <p>We're a lean, technology-assisted operation. We use research tools and AI-assisted writing to help us cover more products and keep guides current as prices and options change — always grounded in real product data, not fabricated opinions.</p>
+        </div>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <div class="about-grid about-grid--split">
+        <div class="about-card">
+            <div class="about-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></div>
+            <h2>What's Coming</h2>
+            <p>We're building something bigger than a review site. Our system is designed to learn, adapt, and evolve — so that every guide you read is better than the last:</p>
+            <ul>
+                <li><strong>Personalized recommendations</strong> — products matched to your preferences</li>
+                <li><strong>Regret prediction</strong> — know before you buy if a product is right for you</li>
+                <li><strong>Real-time price tracking</strong> — get alerted when your pick goes on sale</li>
+                <li><strong>Community insights</strong> — what real users are saying, not just the marketing</li>
+            </ul>
+        </div>
+        <div class="about-card">
+            <div class="about-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+            <h2>How We Make Money</h2>
+            <p>Abvorn earns a commission when you buy something through the links in our guides, at no extra cost to you.</p>
+            <p>Our policy is that this never influences which products we recommend or how we rank them. We're here to help you make the best decision, not the most profitable one for us.</p>
+            <p style="margin-top:var(--space-xl);font-size:var(--text-lg);color:var(--clr-accent);font-weight:700">Questions or Feedback?</p>
+            <p>Reach us at <a href="mailto:abvorn.hq@gmail.com">abvorn.hq@gmail.com</a> with questions, corrections, or suggestions for what to cover next.</p>
+        </div>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <div class="about-card about-card--accent" style="text-align:center;max-width:720px;margin:0 auto">
+        <div class="about-card-icon" style="margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+        <p style="font-size:var(--text-2xl);font-weight:700;color:var(--clr-black);margin-bottom:var(--space-md)">Abvorn — outpace tomorrow.</p>
+        <p style="max-width:52ch;margin:0 auto">Every guide is a step toward better decisions, less regret, and more confidence in what you buy.</p>
+    </div>
+</section>
+
 <footer class="footer"><div class="container">
     <div class="footer-grid">
-        <div class="footer-col"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div></div>
-        <div class="footer-col"><h4>Categories</h4><div class="footer-cat-cols"><div class="footer-cat-col"><a href="/abvorn/categories/audio/">Audio</a><a href="/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="/abvorn/categories/gaming/">Gaming</a><a href="/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a></div></div></div>
         <div class="footer-col">
-            <h4>Company</h4><a href="/abvorn/about.html">About</a>
-            <h4>Legal</h4><a href="/abvorn/privacy.html">Privacy policy</a>
+            <img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px">
+            <p>Independent product research and buying guides, built to help you decide faster.</p>
+            <div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div>
         </div>
+        <div class="footer-col"><h4>Categories</h4><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/laptops/">Laptops</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div>
+        <div class="footer-col"><h4>Company</h4><a href="/abvorn/about.html">About</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="/abvorn/privacy.html">Privacy policy</a></div>
     </div>
     <div class="footer-bottom"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; 2026 Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
 </div></footer>
-</body></html>
+<script>
+(function() {
+    const btn = document.getElementById('nav-toggle');
+    const nav = document.getElementById('nav-links');
+    if (!btn || !nav) return;
+    btn.addEventListener('click', () => {
+        const open = nav.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+})();
+(function() {
+    const nums = document.querySelectorAll('.stat-number[data-target]');
+    if (!nums.length) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function animate(el) {
+        const target = parseInt(el.dataset.target, 10);
+        if (isNaN(target)) return;
+        if (reduceMotion) { el.textContent = target.toLocaleString(); return; }
+        const duration = 1200, start = performance.now();
+        function tick(now) {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.round(eased * target).toLocaleString();
+            if (progress < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+    }
+    if ('IntersectionObserver' in window) {
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) { animate(entry.target); obs.unobserve(entry.target); } });
+        }, { threshold: 0.4 });
+        nums.forEach(n => obs.observe(n));
+    } else { nums.forEach(n => { n.textContent = n.dataset.target; }); }
+})();
+(function() {
+    const cards = document.querySelectorAll('.about-card');
+    if (!cards.length) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) {
+        cards.forEach(c => c.classList.add('visible'));
+        return;
+    }
+    if ('IntersectionObserver' in window) {
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+        cards.forEach(c => obs.observe(c));
+    } else {
+        cards.forEach(c => c.classList.add('visible'));
+    }
+})();
+</script>
+</body>
+</html>
