@@ -1656,11 +1656,18 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
 
     sections = []
     if items:
-        latest_cards = "".join(review_card(r, category_name, b) for r in latest_items)
+        # Latest review cards — same treatment as the homepage's "Latest
+        # reviews" section: an eyebrow, then the newest review promoted to a
+        # full-width featured spotlight card above the rest of the grid.
+        latest_cards = "".join(
+            review_card(r, category_name, b, featured=(i == 0))
+            for i, r in enumerate(latest_items)
+        )
         sections.append(
             f'<section class="category-section container" id="latest">'
-            f'<div class="category-section__header"><h2>Our latest {title_escaped} Reviews</h2></div>'
-            f'<div class="posts-grid">{latest_cards}</div></section>'
+            f'<span class="section-eyebrow">Fresh this week</span>'
+            f'<div class="category-section__header"><h2>Latest {title_escaped} reviews</h2></div>'
+            f'<div class="niche-grid">{latest_cards}</div></section>'
         )
         for slug in niche_order:
             n = len(by_niche[slug])
@@ -1772,6 +1779,8 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         @media (max-width:700px) {{ .subscribe-inner {{ flex-direction:column; align-items:flex-start; }} .subscribe-form .input {{ width:100%; }} }}
 
         .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }}
+        .niche-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }}
+        .section-eyebrow {{ display:block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:var(--clr-accent-text); margin-bottom:6px; }}
         .category-section {{ padding-top: var(--space-2xl); scroll-margin-top: 90px; }}
         .category-section__header {{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom: var(--space-sm); flex-wrap:wrap; gap: var(--space-sm); }}
         .category-section__header h2 {{ font-size: var(--text-2xl); margin:0; flex:1 1 auto; min-width:0; }}

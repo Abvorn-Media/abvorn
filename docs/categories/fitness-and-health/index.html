@@ -214,6 +214,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         @media (max-width:700px) { .subscribe-inner { flex-direction:column; align-items:flex-start; } .subscribe-form .input { width:100%; } }
 
         .posts-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }
+        .niche-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }
+        .section-eyebrow { display:block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:var(--clr-accent-text); margin-bottom:6px; }
         .category-section { padding-top: var(--space-2xl); scroll-margin-top: 90px; }
         .category-section__header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom: var(--space-sm); flex-wrap:wrap; gap: var(--space-sm); }
         .category-section__header h2 { font-size: var(--text-2xl); margin:0; flex:1 1 auto; min-width:0; }
@@ -301,7 +303,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 
 <nav class="category-index" aria-label="Guides in this category"><div class="container category-index__inner"><span class="category-index__label">In this category</span><div class="category-index__links"><a class="category-index__link is-current" aria-current="true" href="#latest"><span class="category-index__tick" style="--cat:#b7ddc0"></span>All reviews</a><a class="category-index__link" href="#fitness-trackers"><span class="category-index__tick" style="--cat:#b7ddc0"></span>Fitness Trackers</a></div></div></nav>
 
-<section class="category-section container" id="latest"><div class="category-section__header"><h2>Our latest Fitness &amp; Health Reviews</h2></div><div class="posts-grid"><div class="niche-card review-card" style="--cat:#b7ddc0">
+<section class="category-section container" id="latest"><span class="section-eyebrow">Fresh this week</span><div class="category-section__header"><h2>Latest Fitness &amp; Health reviews</h2></div><div class="niche-grid"><div class="niche-card review-card niche-card--featured" style="--cat:#b7ddc0">
     <div class="review-card__media">
         <a href="https://abvorn-media.github.io/abvorn/reviews/fitness-trackers/the-ultimate-buying-guide-to-fitness-trackers-find-the-best-one-for-your-needs-2026-07-27.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/618Y6apfa0L._AC_SL1500_.jpg" alt="The Ultimate Buying Guide to Fitness Trackers: Find the Best One for Your Needs" loading="lazy"></figure></div></a>
         <span class="review-card__score" aria-label="Abvorn Verdict 7.0 out of 10"><span class="review-card__score-num">7.0</span><span class="review-card__score-out">/10</span></span>
