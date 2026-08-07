@@ -546,14 +546,25 @@ def scan_published_reviews(docs_dir="docs"):
                     m = _NICHE_HERO_IMG_RE.search(html)
                 if m:
                     hero_img = html_mod.unescape(m.group(1))
-            m_score = _VERDICT_OVERALL_RE.search(html)
-            score = float(m_score.group(1)) if m_score else None
             breakdown, bd_overall, bd_label, bd_product = _parse_verdict_data(html)
             # Dated article pages carry the niche's canonical verdict from
             # index.html as fallback, so hero cards always have criteria.
             if not breakdown:
                 breakdown, bd_overall, bd_label, bd_product = index_breakdown, index_overall, index_label, index_product
-                score = score if score else index_overall
+            # Prefer the structured verdict JSON. Only fall back to the loose
+            # prose regex when no structured overall exists, and only accept a
+            # plausible 0-10 score — the regex otherwise latches onto product
+            # model numbers in prose (e.g. "Sony WH-1000XM5" -> 1000).
+            score = bd_overall
+            if score is None:
+                m_score = _VERDICT_OVERALL_RE.search(html)
+                cand = float(m_score.group(1)) if m_score else None
+                if cand is not None and 0 < cand <= 10:
+                    score = cand
+            elif not (isinstance(score, (int, float)) and 0 < float(score) <= 10):
+                # Guard against corrupt structured data so cards never show a
+                # nonsensical score.
+                score = None
             reviews.append({
                 "slug": slug,
                 "name": _niche_name(slug),
