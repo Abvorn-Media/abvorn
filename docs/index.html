@@ -6,8 +6,9 @@
     <title>Abvorn – Reviews Based on Real Testing, Not Spec Sheets</title>
     <meta name="description" content="Independent product reviews and buying guides. We test before we recommend.">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
+        :root { --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }
         
 :root {
   --clr-black: #0a0a0a; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
@@ -111,7 +112,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
   background:var(--clr-accent);color:#1a1200;font-size:.7rem;font-weight:800;
   text-transform:uppercase;letter-spacing:.06em;padding:4px 12px;border-radius:100px;
   box-shadow:var(--shadow-sm)}
-.product-shot--hero{aspect-ratio:1/1;width:100%;max-width:340px;margin:0 auto;
+.product-shot--hero{aspect-ratio:1/1;width:100%;max-width:300px;margin:0 auto;
   padding:var(--space-lg);box-shadow:none}
 .product-shot--hero .product-shot__img{filter:saturate(1.06) contrast(1.03) brightness(1.02)}
 .product-shot--hero .product-shot__badge{box-shadow:none}
@@ -169,76 +170,80 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
             .nav-dropdown a { color:#ccc; padding:7px 0; }
             .nav-dropdown a:hover { background:transparent; }
         }
-        .trending-ticker { background:var(--clr-accent); color:#1a1200; padding:9px 0; font-size:0.82rem; overflow:hidden; white-space:nowrap; }
+        .trending-ticker { background:var(--clr-accent); color:#1a1200; padding:9px 0; font-size:0.8rem; overflow:hidden; white-space:nowrap; }
         .trending-ticker__track { display:inline-flex; align-items:center; will-change:transform; animation: ticker-scroll 30s linear infinite; }
-        .trending-ticker__label { font-weight:700; margin-right:15px; color:#1a1200; }
+        .trending-ticker__label { font-family:var(--font-mono); font-weight:700; font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; margin-right:14px; color:#1a1200; }
         .trending-ticker__inner { display:inline-flex; align-items:center; flex-shrink:0; }
-        .trending-ticker__item { color:#1a1200; text-decoration:none; padding:0 10px; }
+        .trending-ticker__item { color:#1a1200; text-decoration:none; padding:0 10px; font-weight:600; }
         .trending-ticker__item:hover { color:#000; text-decoration:underline; }
         @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .hero { background:#f6f5f2; padding: clamp(2rem, 4vh, 4rem) 0; position:relative; overflow:hidden; display:flex; align-items:center; }
-        .hero::before { content:''; position:absolute; top:-20%; right:-8%; width:560px; height:560px; border-radius:50%; background:radial-gradient(circle, rgba(201,138,44,0.14), transparent 65%); pointer-events:none; }
-        .hero-grid { display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items:center; position:relative; width:100%; }
-        .hero-eyebrow { display:inline-flex; align-items:center; gap:8px; font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color: var(--clr-accent-text); background:rgba(201,138,44,0.12); border:1px solid rgba(201,138,44,0.32); padding:6px 14px; border-radius:100px; margin-bottom: var(--space-md); }
-        .hero h1 { font-size: clamp(1.9rem, 3.8vw, var(--text-4xl)); margin-bottom: var(--space-md); color:#0a0a0a; letter-spacing:-0.03em; font-weight:700; }
-        .hero p { font-size: clamp(1rem, 1.3vw, var(--text-lg)); color:#555; max-width:52ch; margin-bottom: var(--space-lg); line-height:1.55; }
-        .hero .btn { background:#1a1a1a; color:#fff; }
-        .hero .btn:hover { background: var(--clr-accent); color:#1a1200; }
-        .hero-cta { width:100%; display:flex; justify-content:center; margin-bottom: var(--space-lg); }
-        .hero-cta .btn { margin: 0; }
-        .hero-trust { display:flex; flex-wrap:nowrap; justify-content:center; gap:22px; margin-top: var(--space-md); white-space:nowrap; }
-        .hero-trust span { display:inline-flex; align-items:center; gap:7px; font-size:0.78rem; font-weight:600; color:#666; }
-        .hero-trust svg { width:15px; height:15px; color: var(--clr-accent); flex:none; }
-        .hero-slider { position:relative; border-radius: var(--radius-lg); overflow:hidden; box-shadow: var(--shadow-xl); aspect-ratio: 4/3; background:#fff; }
+        .hero { background:#0d0d0d; color:#fff; padding: clamp(32px,4vw,56px) 0; position:relative; overflow:hidden; display:flex; align-items:center; border-bottom:1px solid #222; }
+        .hero::before { content:''; position:absolute; inset:0; pointer-events:none; background:
+            radial-gradient(900px 460px at 84% 8%, color-mix(in srgb, var(--clr-accent) 16%, transparent), transparent 65%),
+            radial-gradient(640px 380px at 4% 100%, color-mix(in srgb, var(--clr-accent) 9%, transparent), transparent 60%); }
+        .hero-grid { display:grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(24px,4vw,56px); align-items:center; position:relative; width:100%; }
+        .hero-eyebrow { display:inline-flex; align-items:center; gap:10px; margin:0 0 18px; font-family:var(--font-mono); font-size:0.72rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--clr-accent); }
+        .hero-dot { width:8px; height:8px; border-radius:2px; background:var(--clr-accent); box-shadow:0 0 14px var(--clr-accent); flex-shrink:0; }
+        .hero h1 { font-family:var(--font-display); font-weight:800; font-size:clamp(1.9rem,4vw,3rem); line-height:1.08; letter-spacing:-0.02em; color:#fff; margin:0 0 14px; }
+        .hero-tagline { font-size:clamp(0.95rem,1.3vw,1.08rem); color:#b9b9b4; max-width:50ch; margin:0 0 22px; line-height:1.6; }
+        .hero-trust { display:flex; flex-wrap:wrap; gap:8px 24px; }
+        .hero-trust span { display:inline-flex; align-items:center; gap:7px; font-size:0.78rem; font-weight:600; color:#b9b9b4; }
+        .hero-trust svg { width:15px; height:15px; color:var(--clr-accent); flex:none; }
+        .hero-cta { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin: 0 0 26px; }
+        .hero-cta .btn { background:var(--clr-accent); color:#0a0a0a; border-radius:12px; font-family:var(--font-display); font-weight:800; font-size:1rem; text-transform:none; letter-spacing:0; padding:0.95em 1.6em; box-shadow:0 10px 34px color-mix(in srgb, var(--clr-accent) 45%, transparent); }
+        .hero-cta .btn:hover { background:#e0a23f; transform:translateY(-2px); box-shadow:0 14px 44px color-mix(in srgb, var(--clr-accent) 60%, transparent); }
+        .hero-hint { font-family:var(--font-body); font-size:0.8rem; color:#8a8a86; }
+        .hero-slider { position:relative; border-radius:20px; overflow:hidden; box-shadow:0 24px 70px rgba(0,0,0,0.5); aspect-ratio: 4/3; max-height:360px; background:#fff; border:1px solid rgba(255,255,255,0.08); }
         .hero-slide { position:absolute; inset:0; opacity:0; transition:opacity 0.9s var(--ease-out); }
         .hero-slide.active { opacity:1; }
         .hero-slide img { width:100%; height:100%; object-fit:contain; display:block; padding: 8% 4%; box-sizing:border-box; }
         .hero-slide figcaption { position:absolute; left:0; right:0; bottom:0; background:linear-gradient(transparent, rgba(0,0,0,0.85)); color:#fff; padding: 52px var(--space-lg) var(--space-md); font-weight:600; font-size:0.95rem; }
-        .hero-slide__scrim { position:absolute; inset:0; background:linear-gradient(to top, rgba(10,10,10,0.96) 0%, rgba(10,10,10,0.62) 34%, rgba(10,10,10,0.18) 52%, rgba(10,10,10,0) 60%); pointer-events:none; }
-        .hero-slide .hero-verdict { position:absolute; left: var(--space-md); right: var(--space-md); bottom: var(--space-md); background:rgba(255,255,255,0.65); color:#0a0a0a; border-radius: var(--radius-md); box-shadow: 0 10px 30px rgba(0,0,0,0.35); padding: var(--space-sm) var(--space-md) var(--space-sm); }
-        .hero-verdict__head { display:flex; justify-content:space-between; align-items:center; gap: var(--space-md); margin-bottom:6px; }
-        .hero-verdict__eyebrow { display:block; font-size:0.55rem; font-weight:800; text-transform:uppercase; letter-spacing:0.14em; color: var(--clr-accent-text); margin-bottom:2px; }
-        .hero-verdict__product { display:block; font-family: var(--font-display); font-size:0.88rem; font-weight:700; letter-spacing:-0.01em; line-height:1.2; color:#0a0a0a; }
+        .hero-slide__scrim { position:absolute; inset:0; background:linear-gradient(to top, rgba(10,10,10,0.97) 0%, rgba(10,10,10,0.66) 32%, rgba(10,10,10,0.16) 55%, rgba(10,10,10,0) 62%); pointer-events:none; }
+        .hero-slide .hero-verdict { position:absolute; left:16px; right:16px; bottom:16px; background:rgba(13,13,13,0.82); backdrop-filter:blur(10px); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:14px 18px 16px; box-shadow:0 10px 30px rgba(0,0,0,0.4); }
+        .hero-verdict__head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:10px; }
+        .hero-verdict__eyebrow { display:block; font-family:var(--font-mono); font-size:0.6rem; font-weight:600; text-transform:uppercase; letter-spacing:0.14em; color:var(--clr-accent); margin-bottom:4px; }
+        .hero-verdict__product { display:block; font-family:var(--font-display); font-size:0.92rem; font-weight:700; letter-spacing:-0.01em; line-height:1.2; color:#fff; }
         .hero-verdict__overall { text-align:right; flex:none; }
-        .hero-verdict__num { font-family: var(--font-display); font-size:1.9rem; font-weight:800; letter-spacing:-0.03em; line-height:1; display:block; color:#0a0a0a; }
-        .hero-verdict__num small { font-size:0.75rem; font-weight:600; color:#888; letter-spacing:0; margin-left:2px; }
-        .hero-verdict__label { font-size:0.55rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:#fff; background:#0a0a0a; padding:2px 8px; border-radius:100px; display:inline-block; margin-top:3px; }
-        .hero-verdict__bars { display:flex; flex-direction:column; gap:5px; border-top:1.5px solid #0a0a0a; padding-top: var(--space-sm); }
-        .hero-verdict__bar { display:grid; grid-template-columns: 1fr 3fr 30px; align-items:center; gap:10px; font-size:0.66rem; }
-        .hero-verdict__bar-label { font-weight:600; color:#555; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .hero-verdict__bar-track { height:6px; background:#e7e3da; border-radius:3px; overflow:hidden; }
-        .hero-verdict__bar-fill { display:block; height:100%; width:0; background:#0a0a0a; border-radius:3px; transition: width 0.75s var(--ease-out) 0.15s; }
+        .hero-verdict__num { font-family:var(--font-mono); font-size:1.9rem; font-weight:700; letter-spacing:-0.02em; line-height:1; display:block; color:var(--clr-accent); }
+        .hero-verdict__num small { font-size:0.7rem; font-weight:600; color:#8a8a86; letter-spacing:0; margin-left:2px; }
+        .hero-verdict__label { font-size:0.56rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:#0a0a0a; background:var(--clr-accent); padding:2px 8px; border-radius:100px; display:inline-block; margin-top:4px; }
+        .hero-verdict__bars { display:flex; flex-direction:column; gap:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px; }
+        .hero-verdict__bar { display:grid; grid-template-columns:1fr 3fr 30px; align-items:center; gap:10px; font-size:0.66rem; }
+        .hero-verdict__bar-label { font-weight:600; color:#b9b9b4; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:var(--font-mono); font-size:0.62rem; }
+        .hero-verdict__bar-track { height:6px; background:rgba(255,255,255,0.12); border-radius:3px; overflow:hidden; }
+        .hero-verdict__bar-fill { display:block; height:100%; width:0; background:#fff; border-radius:3px; transition: width 0.75s var(--ease-out) 0.15s; }
         .hero-slide.active .hero-verdict__bar-fill { width: var(--score); }
         .hero-verdict__bar.is-top .hero-verdict__bar-fill { background: var(--clr-accent); }
-        .hero-verdict__bar.is-top .hero-verdict__bar-label { color:#0a0a0a; font-weight:700; }
-        .hero-verdict__bar.is-weak .hero-verdict__bar-label { color:#a0988a; }
-        .hero-verdict__bar.is-weak .hero-verdict__bar-fill { background:#cfc9bd; }
-        .hero-verdict__bar-score { text-align:right; font-weight:700; font-variant-numeric: tabular-nums; color:#0a0a0a; }
-        .hero-slider__dots { position:absolute; top: var(--space-sm); right: var(--space-sm); left:auto; bottom:auto; transform:none; display:flex; z-index:6; }
+        .hero-verdict__bar.is-top .hero-verdict__bar-label { color:#fff; font-weight:700; }
+        .hero-verdict__bar.is-weak .hero-verdict__bar-label { color:#6b6b68; }
+        .hero-verdict__bar.is-weak .hero-verdict__bar-fill { background:#555; }
+        .hero-verdict__bar-score { text-align:right; font-weight:700; font-variant-numeric: tabular-nums; color:#fff; font-family:var(--font-mono); font-size:0.68rem; }
+        .hero-slider__dots { position:absolute; top:14px; right:14px; display:flex; gap:2px; z-index:6; }
         .hero-slider__dot { width:44px; height:44px; border:none; background:transparent; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
-        .hero-slider__dot::before { content:''; width:8px; height:8px; border-radius:50%; background:rgba(10,10,10,0.38); transition: background var(--duration-fast) var(--ease-out); }
-        .hero-slider__dot.active::before { background: var(--clr-accent); }
+        .hero-slider__dot::before { content:''; width:8px; height:8px; border-radius:2px; background:rgba(255,255,255,0.35); transition: background var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+        .hero-slider__dot.active::before { background: var(--clr-accent); box-shadow:0 0 10px var(--clr-accent); }
         .hero-slider__dot:focus-visible { outline:2px solid var(--clr-accent); outline-offset:2px; border-radius:100px; }
-        @media (max-width: 860px) { .hero-grid { grid-template-columns: minmax(0,1fr); } .hero-slider { order:-1; width:100%; margin:0 auto var(--space-lg); } .hero-trust { flex-wrap:wrap; row-gap:8px; white-space:normal; } }
+        @media (max-width: 860px) { .hero-grid { grid-template-columns: minmax(0,1fr); } .hero-slider { order:-1; width:100%; margin:0 auto var(--space-lg); } .hero-trust { white-space:normal; } }
 
-        .how-we-test { background:#0a0a0a; color:#fff; padding: var(--space-2xl) 0; }
+        .how-we-test { background:#0d0d0d; color:#fff; padding: var(--space-2xl) 0; border-top:1px solid #222; }
         .how-we-test__inner { max-width:1200px; margin:0 auto; padding:0 var(--space-lg); }
         .how-we-test__intro { margin-bottom: var(--space-xl); }
-        .how-we-test__intro h2 { color:#fff; font-size: var(--text-3xl); margin-bottom:8px; }
-        .how-we-test__intro p { color:#999; max-width:52ch; margin:0; }
+        .how-we-test__intro h2 { color:#fff; font-size: var(--text-3xl); margin-bottom:8px; letter-spacing:-0.02em; }
+        .how-we-test__intro p { color:#b9b9b4; max-width:52ch; margin:0; }
         .how-we-test .section-eyebrow { color: var(--clr-accent); }
         .hwt-steps { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap: var(--space-lg); }
-        .hwt-step { border-left:2px solid rgba(201,138,44,0.5); padding:0 0 0 var(--space-lg); }
-        .hwt-step__num { font-family: var(--font-display); font-size: var(--text-xl); font-weight:800; color: var(--clr-accent); letter-spacing:-0.02em; }
-        .hwt-step h3 { color:#fff; font-size: var(--text-lg); margin:6px 0; }
-        .hwt-step p { color:#999; font-size:0.9rem; margin:0; line-height:1.55; }
+        .hwt-step { border:1px solid rgba(255,255,255,0.12); border-radius:14px; background:rgba(255,255,255,0.03); padding: var(--space-lg); }
+        .hwt-step__num { font-family: var(--font-mono); font-size: var(--text-xl); font-weight:700; color: var(--clr-accent); letter-spacing:-0.02em; display:inline-flex; align-items:center; gap:10px; }
+        .hwt-step__num::after { content:''; width:26px; height:2px; background:var(--clr-accent); opacity:0.6; }
+        .hwt-step h3 { color:#fff; font-size: var(--text-lg); margin:10px 0 6px; }
+        .hwt-step p { color:#b9b9b4; font-size:0.9rem; margin:0; line-height:1.55; }
 
         .stats-band { background:var(--clr-accent); color:var(--clr-black); padding: var(--space-lg) 0; }
         .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap: var(--space-lg); text-align:center; }
         .stat-icon { width:28px; height:28px; margin:0 auto 10px; color: var(--clr-black); opacity:0.9; }
         .stat-icon svg { width:100%; height:100%; }
         .stat-number { font-family: var(--font-display); font-size: var(--text-3xl); font-weight:700; color: var(--clr-black); }
-        .stat-label { font-size:0.82rem; color:rgba(10,10,10,0.82); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px; }
+        .stat-label { font-family: var(--font-mono); font-size:0.7rem; color:rgba(10,10,10,0.8); text-transform:uppercase; letter-spacing:0.1em; margin-top:4px; }
 
         .subscribe-band { background:#f6f5f2; padding: var(--space-xl) 0; }
         .subscribe-inner { display:flex; justify-content:space-between; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }
@@ -261,8 +266,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .category-section { margin-bottom: var(--space-2xl); }
         .category-section:last-child { margin-bottom: 0; }
         .category-section__header { display:flex; justify-content:space-between; align-items:flex-end; gap: var(--space-md); margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom: var(--space-sm); flex-wrap:wrap; }
-        .category-section__header h2 { font-size: var(--text-2xl); margin:0; display:flex; align-items:baseline; gap:12px; flex:1 1 auto; min-width:0; }
-        .category-section__header h2 .sec-num { font-size:0.8rem; font-weight:800; color: var(--cat, var(--clr-accent-text)); letter-spacing:0.04em; }
+        .category-section__header h2 { font-size: var(--text-2xl); margin:0; display:flex; align-items:center; gap:12px; flex:1 1 auto; min-width:0; }
+        .category-section__header h2 .cat-tick { width:10px; height:10px; border-radius:2px; background:var(--cat, var(--clr-accent)); box-shadow:0 0 0 4px color-mix(in srgb, var(--cat, var(--clr-accent)) 14%, transparent); flex-shrink:0; }
         .category-section__header a { font-size:0.85rem; font-weight:700; color: var(--clr-black); text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; flex-shrink:0; }
         .category-section__header a:hover { text-decoration:underline; }
         .niche-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }
@@ -337,10 +342,10 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 
 <section class="hero"><div class="container hero-grid">
     <div>
-        <span class="hero-eyebrow"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>How we work</span>
+        <span class="hero-eyebrow"><span class="hero-dot" aria-hidden="true"></span>Reviews scored on 5 criteria</span>
         <h1>Clear, honest guidance on what's actually worth your money.</h1>
-        <p>We compare real prices, specifications, and verified customer feedback, then break down the trade-offs in plain language &mdash; so you can go from confused to confident in minutes.</p>
-        <div class="hero-cta"><a href="#latest-reviews" class="btn">See our latest guides</a></div>
+        <p class="hero-tagline">We compare real prices, specifications, and verified customer feedback, then break down the trade-offs in plain language &mdash; so you can go from confused to confident in minutes.</p>
+        <div class="hero-cta"><a href="#latest-reviews" class="btn">See our latest guides</a><span class="hero-hint">Independent · Tested · Updated weekly</span></div>
         <div class="hero-trust">
             <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Independently researched</span>
             <span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>No sponsored placements</span>
@@ -352,11 +357,11 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         <div class="hero-verdict__head">
             <div class="hero-verdict__title">
                 <span class="hero-verdict__eyebrow">Wireless Headphones · Abvorn Verdict</span>
-                <span class="hero-verdict__product">Hybrid ANC Headphones</span>
+                <span class="hero-verdict__product">Hybrid Active Noise Cancelling Bluetoot…</span>
             </div>
-            <div class="hero-verdict__overall"><span class="hero-verdict__num">6.4<small>/10</small></span><span class="hero-verdict__label">Solid</span></div>
+            <div class="hero-verdict__overall"><span class="hero-verdict__num">7.0<small>/10</small></span><span class="hero-verdict__label">Good</span></div>
         </div>
-        <div class="hero-verdict__bars"><div class="hero-verdict__bar is-top"><span class="hero-verdict__bar-label">Sound Quality</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:75%"></span></span><span class="hero-verdict__bar-score">7.5</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Comfort &amp; Fit</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:70%"></span></span><span class="hero-verdict__bar-score">7.0</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Battery Life</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:75%"></span></span><span class="hero-verdict__bar-score">7.5</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Features &amp; Tech</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:50%"></span></span><span class="hero-verdict__bar-score">5.0</span></div><div class="hero-verdict__bar is-weak"><span class="hero-verdict__bar-label">Value for Money</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:50%"></span></span><span class="hero-verdict__bar-score">5.0</span></div></div>
+        <div class="hero-verdict__bars"><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Sound Quality</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:75%"></span></span><span class="hero-verdict__bar-score">7.5</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Comfort &amp; Fit</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:70%"></span></span><span class="hero-verdict__bar-score">7.0</span></div><div class="hero-verdict__bar"><span class="hero-verdict__bar-label">Battery Life</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:75%"></span></span><span class="hero-verdict__bar-score">7.5</span></div><div class="hero-verdict__bar is-weak"><span class="hero-verdict__bar-label">Features &amp; Tech</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:50%"></span></span><span class="hero-verdict__bar-score">5.0</span></div><div class="hero-verdict__bar is-top"><span class="hero-verdict__bar-label">Value for Money</span><span class="hero-verdict__bar-track"><span class="hero-verdict__bar-fill" style="--score:80%"></span></span><span class="hero-verdict__bar-score">8.0</span></div></div>
     </div></div><div class="hero-slide"><img src="https://m.media-amazon.com/images/I/61QGlXzWdKL._AC_SL1500_.jpg" alt="Wireless Earbuds"><div class="hero-slide__scrim" aria-hidden="true"></div><div class="hero-verdict">
         <div class="hero-verdict__head">
             <div class="hero-verdict__title">
@@ -441,24 +446,6 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <div class="review-card__media">
-        <a href="/abvorn/reviews/wireless-headphones/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones in 2024: Top Picks for Sound, Battery, and Noise Cancellation" loading="lazy"></figure></div></a>
-        <span class="review-card__score" aria-label="Abvorn Verdict 6.4 out of 10"><span class="review-card__score-num">6.4</span><span class="review-card__score-out">/10</span></span>
-    </div>
-    <div class="review-card__body">
-        <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
-        <span class="review-card__updated">Updated Aug 2026</span>
-        <h2><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones in 2024: Top Picks for Sound, Battery, and Noise Cancellation</a></h2>
-        <p class="review-card__snippet">We compare top-rated models like JBL and Soundcore.</p>
-        <div class="review-card__footer">
-            <div class="review-card__reactions" data-review="wireless-headphones">
-                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
-                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
-            </div>
-            <a href="/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
-        </div>
-    </div>
-</div><div class="niche-card review-card" style="--cat:#c98a2c">
-    <div class="review-card__media">
         <a href="/abvorn/reviews/wireless-headphones/the-ultimate-wireless-headphones-buying-guide-compare-top-models-for-2024-2026-08-06.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="The Ultimate Wireless Headphones Buying Guide: Compare Top Models for 2024" loading="lazy"></figure></div></a>
         <span class="review-card__score" aria-label="Abvorn Verdict 7.0 out of 10"><span class="review-card__score-num">7.0</span><span class="review-card__score-out">/10</span></span>
     </div>
@@ -473,6 +460,24 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
                 <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
             </div>
             <a href="/abvorn/reviews/wireless-headphones/the-ultimate-wireless-headphones-buying-guide-compare-top-models-for-2024-2026-08-06.html" class="read-link">Read review →</a>
+        </div>
+    </div>
+</div><div class="niche-card review-card" style="--cat:#c98a2c">
+    <div class="review-card__media">
+        <a href="/abvorn/reviews/wireless-headphones/the-ultimate-2024-wireless-headphones-buying-guide-compare-review-and-choose-the-best-2026-08-05.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="The Ultimate 2024 Wireless Headphones Buying Guide: Compare, Review, and Choose the Best" loading="lazy"></figure></div></a>
+        <span class="review-card__score" aria-label="Abvorn Verdict 7.0 out of 10"><span class="review-card__score-num">7.0</span><span class="review-card__score-out">/10</span></span>
+    </div>
+    <div class="review-card__body">
+        <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
+        <span class="review-card__updated">Updated Aug 2026</span>
+        <h2><a href="/abvorn/reviews/wireless-headphones/the-ultimate-2024-wireless-headphones-buying-guide-compare-review-and-choose-the-best-2026-08-05.html">The Ultimate 2024 Wireless Headphones Buying Guide: Compare, Review, and Choose the Best</a></h2>
+        <p class="review-card__snippet">Welcome to the definitive wireless headphones buying guide for 2024. Whether you need over‑ear headphones for the office, earbuds for workouts, or a hybrid model with Active Noise…</p>
+        <div class="review-card__footer">
+            <div class="review-card__reactions" data-review="wireless-headphones">
+                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
+            </div>
+            <a href="/abvorn/reviews/wireless-headphones/the-ultimate-2024-wireless-headphones-buying-guide-compare-review-and-choose-the-best-2026-08-05.html" class="read-link">Read review →</a>
         </div>
     </div>
 </div></div>
@@ -494,7 +499,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 
 <section class="guides-section container" id="niches">
     <div class="category-section" style="--cat:#c98a2c">
-    <div class="category-section__header"><h2><span class="sec-num">01</span>Audio</h2><a href="/abvorn/categories/audio/">View all in Audio →</a></div>
+    <div class="category-section__header"><h2><span class="cat-tick" aria-hidden="true"></span>Audio</h2><a href="/abvorn/categories/audio/">View all in Audio →</a></div>
     <div class="niche-grid"><div class="niche-card review-card" style="--cat:#c98a2c">
     <div class="review-card__media">
         <a href="/abvorn/reviews/wireless-headphones/best-wireless-headphones-in-2024-top-picks-for-sound-battery-and-noise-cancellation-2026-08-07.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones in 2024: Top Picks for Sound, Battery, and Noise Cancellation" loading="lazy"></figure></div></a>
@@ -515,24 +520,6 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     </div>
 </div><div class="niche-card review-card" style="--cat:#c98a2c">
     <div class="review-card__media">
-        <a href="/abvorn/reviews/wireless-headphones/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones in 2024: Top Picks for Sound, Battery, and Noise Cancellation" loading="lazy"></figure></div></a>
-        <span class="review-card__score" aria-label="Abvorn Verdict 6.4 out of 10"><span class="review-card__score-num">6.4</span><span class="review-card__score-out">/10</span></span>
-    </div>
-    <div class="review-card__body">
-        <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
-        <span class="review-card__updated">Updated Aug 2026</span>
-        <h2><a href="/abvorn/reviews/wireless-headphones/">Best Wireless Headphones in 2024: Top Picks for Sound, Battery, and Noise Cancellation</a></h2>
-        <p class="review-card__snippet">We compare top-rated models like JBL and Soundcore.</p>
-        <div class="review-card__footer">
-            <div class="review-card__reactions" data-review="wireless-headphones">
-                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
-                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
-            </div>
-            <a href="/abvorn/reviews/wireless-headphones/" class="read-link">Read review →</a>
-        </div>
-    </div>
-</div><div class="niche-card review-card" style="--cat:#c98a2c">
-    <div class="review-card__media">
         <a href="/abvorn/reviews/wireless-headphones/the-ultimate-wireless-headphones-buying-guide-compare-top-models-for-2024-2026-08-06.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="The Ultimate Wireless Headphones Buying Guide: Compare Top Models for 2024" loading="lazy"></figure></div></a>
         <span class="review-card__score" aria-label="Abvorn Verdict 7.0 out of 10"><span class="review-card__score-num">7.0</span><span class="review-card__score-out">/10</span></span>
     </div>
@@ -549,9 +536,27 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
             <a href="/abvorn/reviews/wireless-headphones/the-ultimate-wireless-headphones-buying-guide-compare-top-models-for-2024-2026-08-06.html" class="read-link">Read review →</a>
         </div>
     </div>
+</div><div class="niche-card review-card" style="--cat:#c98a2c">
+    <div class="review-card__media">
+        <a href="/abvorn/reviews/wireless-headphones/the-ultimate-2024-wireless-headphones-buying-guide-compare-review-and-choose-the-best-2026-08-05.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="The Ultimate 2024 Wireless Headphones Buying Guide: Compare, Review, and Choose the Best" loading="lazy"></figure></div></a>
+        <span class="review-card__score" aria-label="Abvorn Verdict 7.0 out of 10"><span class="review-card__score-num">7.0</span><span class="review-card__score-out">/10</span></span>
+    </div>
+    <div class="review-card__body">
+        <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
+        <span class="review-card__updated">Updated Aug 2026</span>
+        <h2><a href="/abvorn/reviews/wireless-headphones/the-ultimate-2024-wireless-headphones-buying-guide-compare-review-and-choose-the-best-2026-08-05.html">The Ultimate 2024 Wireless Headphones Buying Guide: Compare, Review, and Choose the Best</a></h2>
+        <p class="review-card__snippet">Welcome to the definitive wireless headphones buying guide for 2024. Whether you need over‑ear headphones for the office, earbuds for workouts, or a hybrid model with Active Noise…</p>
+        <div class="review-card__footer">
+            <div class="review-card__reactions" data-review="wireless-headphones">
+                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
+            </div>
+            <a href="/abvorn/reviews/wireless-headphones/the-ultimate-2024-wireless-headphones-buying-guide-compare-review-and-choose-the-best-2026-08-05.html" class="read-link">Read review →</a>
+        </div>
+    </div>
 </div></div>
 </div><div class="category-section" style="--cat:#a7c3e8">
-    <div class="category-section__header"><h2><span class="sec-num">02</span>Computing & Monitors</h2><a href="/abvorn/categories/computing-and-monitors/">View all in Computing & Monitors →</a></div>
+    <div class="category-section__header"><h2><span class="cat-tick" aria-hidden="true"></span>Computing & Monitors</h2><a href="/abvorn/categories/computing-and-monitors/">View all in Computing & Monitors →</a></div>
     <div class="niche-grid"><div class="niche-card review-card" style="--cat:#a7c3e8">
     <div class="review-card__media">
         <a href="/abvorn/reviews/4k-monitors/best-4k-monitors-2026-07-30.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61pF09VcRPL._AC_SL1500_.jpg" alt="Best 4K Monitors" loading="lazy"></figure></div></a>
@@ -608,7 +613,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     </div>
 </div></div>
 </div><div class="category-section" style="--cat:#b7ddc0">
-    <div class="category-section__header"><h2><span class="sec-num">03</span>Fitness & Health</h2><a href="/abvorn/categories/fitness-and-health/">View all in Fitness & Health →</a></div>
+    <div class="category-section__header"><h2><span class="cat-tick" aria-hidden="true"></span>Fitness & Health</h2><a href="/abvorn/categories/fitness-and-health/">View all in Fitness & Health →</a></div>
     <div class="niche-grid"><div class="niche-card review-card" style="--cat:#b7ddc0">
     <div class="review-card__media">
         <a href="/abvorn/reviews/fitness-trackers/the-ultimate-buying-guide-to-fitness-trackers-find-the-best-one-for-your-needs-2026-07-27.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/618Y6apfa0L._AC_SL1500_.jpg" alt="The Ultimate Buying Guide to Fitness Trackers: Find the Best One for Your Needs" loading="lazy"></figure></div></a>
@@ -629,7 +634,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     </div>
 </div></div>
 </div><div class="category-section" style="--cat:#cfc0ee">
-    <div class="category-section__header"><h2><span class="sec-num">04</span>Gaming</h2><a href="/abvorn/categories/gaming/">View all in Gaming →</a></div>
+    <div class="category-section__header"><h2><span class="cat-tick" aria-hidden="true"></span>Gaming</h2><a href="/abvorn/categories/gaming/">View all in Gaming →</a></div>
     <div class="niche-grid"><div class="niche-card review-card" style="--cat:#cfc0ee">
     <div class="review-card__media">
         <a href="/abvorn/reviews/gaming-mice/the-ultimate-gaming-mouse-buying-guide-top-picks-and-expert-reviews-2026-07-27.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/51sg9BLSMTL._AC_SL1500_.jpg" alt="The Ultimate Gaming Mouse Buying Guide: Top Picks and Expert Reviews" loading="lazy"></figure></div></a>
@@ -668,7 +673,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     </div>
 </div></div>
 </div><div class="category-section" style="--cat:#f0c8b6">
-    <div class="category-section__header"><h2><span class="sec-num">05</span>Home & Lifestyle</h2><a href="/abvorn/categories/home-and-lifestyle/">View all in Home & Lifestyle →</a></div>
+    <div class="category-section__header"><h2><span class="cat-tick" aria-hidden="true"></span>Home & Lifestyle</h2><a href="/abvorn/categories/home-and-lifestyle/">View all in Home & Lifestyle →</a></div>
     <div class="niche-grid"><div class="niche-card review-card" style="--cat:#f0c8b6">
     <div class="review-card__media">
         <a href="/abvorn/reviews/smart-home/transform-your-space-the-complete-smart-home-buying-guide-2026-07-27.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61xQl81iYQL._AC_UL960_QL65_.jpg" alt="Transform Your Space: The Complete Smart Home Buying Guide" loading="lazy"></figure></div></a>
@@ -707,7 +712,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     </div>
 </div></div>
 </div><div class="category-section" style="--cat:#a8d7d2">
-    <div class="category-section__header"><h2><span class="sec-num">06</span>Webcams & Accessories</h2><a href="/abvorn/categories/webcams-and-accessories/">View all in Webcams & Accessories →</a></div>
+    <div class="category-section__header"><h2><span class="cat-tick" aria-hidden="true"></span>Webcams & Accessories</h2><a href="/abvorn/categories/webcams-and-accessories/">View all in Webcams & Accessories →</a></div>
     <div class="niche-grid"><div class="niche-card review-card" style="--cat:#a8d7d2">
     <div class="review-card__media">
         <a href="/abvorn/reviews/webcams/best-webcams-2024-how-to-choose-the-perfect-webcam-for-streaming-meetings-video-calls-2026-07-31.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/71A0Pp767BL._AC_SL1500_.jpg" alt="Best Webcams 2024: How to Choose the Perfect Webcam for Streaming, Meetings &amp;amp;amp; Video Calls" loading="lazy"></figure></div></a>

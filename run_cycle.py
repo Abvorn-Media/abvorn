@@ -1904,7 +1904,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         }}
 
         /* ===== ARTICLE HERO (dark bg, product image, chart bars) ===== */
-        .article-hero {{ background:#0a0a0a; color:#fff; padding: clamp(2rem, 4vh, 4rem) 0; }}
+        .article-hero {{ background:#0a0a0a; color:#fff; padding: clamp(1.25rem, 3vh, 2.5rem) 0; }}
         .article-hero .hero-grid {{ display:grid; grid-template-columns:1fr 1fr; gap: clamp(var(--space-md), 3vw, var(--space-xl)); align-items:center; }}
         .article-hero .hero-category {{ display:inline-block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-accent); margin-bottom:var(--space-sm); }}
         .article-hero h1 {{ font-size:clamp(var(--text-2xl), 4vw, var(--text-4xl)); margin-bottom:var(--space-sm); color:#fff; }}
@@ -2005,7 +2005,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .cat-card .cat-name {{ font-weight:700; font-size:1.1rem; color:var(--clr-black); margin-bottom:4px; font-family:var(--font-display); }}
         .cat-card .cat-count {{ font-size:.85rem; color:var(--clr-mid-gray); }}
 
-        .product-shot {{ max-width:100%; }}
+        :where(.product-shot) {{ max-width:100%; }}
         .article-body .product-shot--body img {{ max-width:100%; margin:0; height:100%; object-fit:contain; }}
         .product-shot img {{ margin:0 !important; }}
 

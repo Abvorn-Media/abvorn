@@ -28,7 +28,7 @@ PROD_SHOT_CSS = """
   background:var(--clr-accent);color:#1a1200;font-size:.7rem;font-weight:800;
   text-transform:uppercase;letter-spacing:.06em;padding:4px 12px;border-radius:100px;
   box-shadow:var(--shadow-sm)}
-.product-shot--hero{aspect-ratio:1/1;width:100%;max-width:340px;margin:0 auto;
+.product-shot--hero{aspect-ratio:1/1;width:100%;max-width:300px;margin:0 auto;
   padding:var(--space-lg);box-shadow:none}
 .product-shot--hero .product-shot__img{filter:saturate(1.06) contrast(1.03) brightness(1.02)}
 .product-shot--hero .product-shot__badge{box-shadow:none}
