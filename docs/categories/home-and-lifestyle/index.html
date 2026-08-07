@@ -5,9 +5,9 @@
     <title>Home &amp; Lifestyle Reviews | Abvorn</title>
     <meta name="description" content="Independent home & lifestyle reviews and buying guides. We test before we recommend.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --niche-primary: #0a0a0a; --niche-accent: #c98a2c; }
+        :root { --niche-primary: #0a0a0a; --niche-accent: #c98a2c; --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }
         
 :root {
   --clr-black: #0a0a0a; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
@@ -166,10 +166,29 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
             .nav-dropdown a:hover { background:transparent; color:#fff; }
         }
 
-        .category-hero { background:var(--clr-off-white); padding: var(--space-2xl) 0; border-bottom:1px solid var(--clr-light-gray); }
-        .category-hero h1 { font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-sm); }
-        .category-hero p { font-size: var(--text-lg); color: var(--clr-mid-gray); max-width:50ch; }
-        .category-hero__meta { display:inline-block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-accent-text); margin-bottom: var(--space-md); }
+        .cat-hero { position:relative; overflow:hidden; background:#0d0d0d; color:#fff; padding:clamp(52px,7vw,92px) 0; border-bottom:1px solid #222; }
+        .cat-hero__bg { position:absolute; inset:0; pointer-events:none; background:
+            radial-gradient(900px 420px at 80% 12%, color-mix(in srgb, var(--cat) 16%, transparent), transparent 65%),
+            radial-gradient(640px 380px at 8% 96%, color-mix(in srgb, var(--cat) 8%, transparent), transparent 60%); }
+        .cat-hero__grid { position:relative; display:grid; grid-template-columns:1.15fr 0.85fr; gap:clamp(24px,4vw,56px); align-items:center; }
+        .cat-hero__eyebrow { display:flex; align-items:center; gap:10px; margin:0 0 18px; font-family:var(--font-mono); font-size:0.74rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--cat); }
+        .cat-hero__dot { width:8px; height:8px; border-radius:2px; background:var(--cat); box-shadow:0 0 14px var(--cat); flex-shrink:0; }
+        .cat-hero__title { font-family:var(--font-display); font-weight:800; font-size:clamp(2rem,4.5vw,3.4rem); line-height:1.06; letter-spacing:-0.02em; color:#fff; margin:0 0 16px; }
+        .cat-hero__tagline { font-family:var(--font-body); font-size:clamp(1rem,1.5vw,1.15rem); line-height:1.6; color:#b9b9b4; max-width:52ch; margin:0 0 26px; }
+        .cat-hero__chips { display:flex; flex-wrap:wrap; gap:12px; margin:0 0 28px; }
+        .cat-hero__chip { display:flex; flex-direction:column; gap:3px; min-width:104px; padding:12px 16px; border:1px solid rgba(255,255,255,0.12); border-radius:14px; background:rgba(255,255,255,0.03); }
+        .cat-hero__chip-num { font-family:var(--font-mono); font-size:1.5rem; font-weight:700; line-height:1; color:#fff; }
+        .cat-hero__chip-num em { font-style:normal; color:var(--cat); }
+        .cat-hero__chip-label { font-family:var(--font-body); font-size:0.68rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#8a8a86; }
+        .cat-hero__cta { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+        .cat-hero__btn { display:inline-flex; align-items:center; gap:10px; background:var(--cat); color:#0a0a0a; font-family:var(--font-display); font-weight:800; font-size:1rem; text-decoration:none; padding:0.95em 1.6em; border-radius:12px; box-shadow:0 10px 34px color-mix(in srgb, var(--cat) 45%, transparent); transition:transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+        .cat-hero__btn:hover { transform:translateY(-2px); box-shadow:0 14px 44px color-mix(in srgb, var(--cat) 60%, transparent); }
+        .cat-hero__btn svg { width:18px; height:18px; }
+        .cat-hero__hint { font-family:var(--font-body); font-size:0.8rem; color:#8a8a86; }
+        .cat-hero__coming { font-family:var(--font-body); font-size:0.95rem; color:#b9b9b4; }
+        .cat-hero__stage { position:relative; display:flex; align-items:center; justify-content:center; }
+        .cat-hero__stage svg { width:100%; max-width:440px; height:auto; filter:drop-shadow(0 24px 60px rgba(0,0,0,0.5)); }
+        @media (max-width:900px) { .cat-hero__grid { grid-template-columns:1fr; } .cat-hero__stage { order:-1; max-width:340px; margin:0 auto; } }
 
         .category-index { background:var(--clr-off-white); border-bottom:1px solid var(--clr-light-gray); padding:10px 0; }
         .category-index__inner { display:flex; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }
@@ -262,11 +281,23 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     </nav>
 </div></header>
 
-<section class="category-hero"><div class="container">
-    <span class="category-hero__meta">Home &amp; Lifestyle · 2 reviews published</span>
-    <h1>Home &amp; Lifestyle Reviews</h1>
-    <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
-</div></section>
+<section class="cat-hero" style="--cat:#f0c8b6">
+    <div class="cat-hero__bg" aria-hidden="true"></div>
+    <div class="container cat-hero__grid">
+        <div class="cat-hero__copy">
+            <p class="cat-hero__eyebrow"><span class="cat-hero__dot" aria-hidden="true"></span>HOME &amp; LIFESTYLE · 2 reviews published</p>
+            <h1 class="cat-hero__title">Home &amp; Lifestyle Reviews</h1>
+            <p class="cat-hero__tagline">Streaming boxes and smart gadgets promise a better living room. We test which ones deliver without the subscription trap.</p>
+            <div class="cat-hero__chips">
+                <div class="cat-hero__chip"><span class="cat-hero__chip-num">2</span><span class="cat-hero__chip-label">reviews published</span></div>
+                <div class="cat-hero__chip"><span class="cat-hero__chip-num"><em>6.8</em>/10</span><span class="cat-hero__chip-label">best score</span></div>
+                <div class="cat-hero__chip"><span class="cat-hero__chip-num">2</span><span class="cat-hero__chip-label">niches tested</span></div>
+            </div>
+            <div class="cat-hero__cta"><a class="cat-hero__btn" href="#latest">Browse the reviews<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></a><span class="cat-hero__hint">Independent · Tested · Updated weekly</span></div>
+        </div>
+        <div class="cat-hero__stage" aria-hidden="true"><svg viewBox="0 0 420 300" role="img" aria-label="Home and lifestyle category review scores"><rect x="10" y="10" width="400" height="280" rx="20" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)"/><defs><radialGradient id="homeglow" cx="50%" cy="50%" r="70%"><stop offset="0%" stop-color="#ffb95c" stop-opacity="0.9"/><stop offset="100%" stop-color="#ffb95c" stop-opacity="0.3"/></radialGradient></defs><rect x="110" y="40" width="200" height="200" rx="6" fill="#141619"/><rect x="128" y="58" width="164" height="148" rx="4" fill="#2a1c08"/><rect x="128" y="58" width="164" height="148" rx="4" fill="url(#homeglow)" opacity="0.55"/><circle cx="170" cy="96" r="16" fill="#ffd9a0" opacity="0.95"/><circle cx="177" cy="91" r="14" fill="#2a1c08"/><circle cx="252" cy="80" r="2.5" fill="#ffd9a0" opacity="0.85"/><circle cx="268" cy="112" r="1.8" fill="#ffd9a0" opacity="0.7"/><circle cx="238" cy="140" r="1.8" fill="#ffd9a0" opacity="0.6"/><path d="M252,206 l10,22 h-20 z" fill="#0b0d10"/><ellipse cx="252" cy="196" rx="10" ry="14" fill="#0b0d10"/><rect x="128" y="58" width="164" height="148" rx="4" fill="none" stroke="#f0c8b6" stroke-width="4" opacity="0.9"/><line x1="210" y1="58" x2="210" y2="206" stroke="#f0c8b6" stroke-width="4" opacity="0.9"/><line x1="128" y1="132" x2="292" y2="132" stroke="#f0c8b6" stroke-width="4" opacity="0.9"/><rect x="118" y="206" width="184" height="8" rx="3" fill="#f0c8b6" opacity="0.55"/><text x="60" y="252" text-anchor="start" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700" fill="#f0c8b6">STREAMING</text><text x="60" y="274" text-anchor="start" font-family="JetBrains Mono, monospace" font-size="22" font-weight="700" fill="#ffffff">4K HDR READY</text><text x="300" y="252" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700" fill="#f0c8b6">TOP SCORE</text><text x="300" y="274" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="22" font-weight="700" fill="#ffffff">6.8</text></svg></div>
+    </div>
+</section>
 
 <nav class="category-index" aria-label="Guides in this category"><div class="container category-index__inner"><span class="category-index__label">In this category</span><div class="category-index__links"><a class="category-index__link is-current" aria-current="true" href="#latest"><span class="category-index__tick" style="--cat:#f0c8b6"></span>All reviews</a><a class="category-index__link" href="#smart-home"><span class="category-index__tick" style="--cat:#f0c8b6"></span>Smart Home</a><a class="category-index__link" href="#streaming-devices"><span class="category-index__tick" style="--cat:#f0c8b6"></span>Streaming Devices</a></div></div></nav>
 

@@ -1137,9 +1137,9 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     <title>{blog_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; }}
+        :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }}
         {DESIGN_SYSTEM_CSS}
         {PROD_SHOT_CSS}
         
@@ -1394,6 +1394,216 @@ async function submitCategorySubscribe(e) {{
 </html>'''
 
 
+# ── Category hero (dark "showroom" band with per-category motif) ────────
+# Tailored tagline per category; falls back to the generic promise.
+CATEGORY_TAGLINES = {
+    "audio": "Marketing copy calls everything 'studio-quality.' We check real prices and verified owner feedback to find the headphones and earbuds actually worth your ears.",
+    "computing-and-monitors": "Spec sheets can't tell you what a laptop feels like at 2am before a deadline. We benchmark the monitors and machines that actually deserve your desk space.",
+    "fitness-and-health": "Most fitness trackers count steps and little else. We check which ones measure what matters — heart, sleep, and recovery — and which are just jewelry.",
+    "gaming": "Latency and build quality beat RGB every time. We test the mice and keyboards that survive the grind, not just the hype.",
+    "home-and-lifestyle": "Streaming boxes and smart gadgets promise a better living room. We test which ones deliver without the subscription trap.",
+    "webcams-and-accessories": "Your webcam is what eight hours of meetings sees. We test video, audio, and software so your calls look like you put effort in.",
+}
+
+
+def _hero_numerics(items):
+    """Review count, niche count, highest valid score (<=10) and its breakdown."""
+    count = len(items)
+    niches = len({r.get("slug") for r in items})
+    valid = [r for r in items if r.get("score")]
+    valid = [r for r in valid if float(r["score"]) <= 10.0]
+    top = max(valid, key=lambda r: float(r["score"])) if valid else None
+    top_score = float(top["score"]) if top else None
+    breakdown = (top or {}).get("breakdown") or {}
+    return count, niches, top_score, breakdown
+
+
+def _mono(text, x, y, size, fill, weight="600", anchor="start"):
+    return (f'<text x="{x}" y="{y}" text-anchor="{anchor}" font-family="JetBrains Mono, monospace" '
+            f'font-size="{size}" font-weight="{weight}" fill="{fill}">{text}</text>')
+
+
+def _motif_audio(accent, breakdown):
+    order = [("Sound Quality", "SND"), ("Comfort & Fit", "COMF"), ("Battery Life", "BATT"),
+             ("Features & Tech", "FEAT"), ("Value for Money", "VAL")]
+    rows = [(lab, min(max(float(breakdown[k]) / 10.0, 0.2), 1.0)) for k, lab in order if k in breakdown]
+    if not rows:
+        rows = [(lab, 0.7) for _, lab in order]
+    bw, gap, base, maxh = 46, 26, 248, 178
+    n = len(rows)
+    total = n * bw + (n - 1) * gap
+    x0 = (420 - total) / 2
+    parts = ['<rect x="10" y="10" width="400" height="280" rx="20" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)"/>',
+             f'<line x1="40" y1="{base}" x2="380" y2="{base}" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>']
+    for i, (lab, frac) in enumerate(rows):
+        x = x0 + i * (bw + gap)
+        h = max(24, round(frac * maxh))
+        y = base - h
+        parts.append(f'<rect x="{x}" y="{y}" width="{bw}" height="{h}" rx="8" fill="{accent}" opacity="{0.55 + 0.45 * (i % 2)}"/>')
+        parts.append(f'<rect x="{x}" y="{y}" width="{bw}" height="4" rx="2" fill="#fff" opacity="0.35"/>')
+        parts.append(f'<text x="{x + bw / 2}" y="{base + 22}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600" letter-spacing="0.08em" fill="#8a8a86">{lab}</text>')
+        parts.append(f'<text x="{x + bw / 2}" y="{y - 10}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700" fill="#fff">{frac:.1f}</text>')
+    return '<svg viewBox="0 0 420 300" role="img" aria-label="Audio category review scores">' + "".join(parts) + "</svg>"
+
+
+def _motif_computing(accent, breakdown, top_score):
+    order = [("Performance", "PERF"), ("Display", "DISP"), ("Battery Life", "BATT"), ("Build & Portability", "BUILD")]
+    rows = [(lab, min(max(float(breakdown[k]) / 10.0, 0.2), 1.0)) for k, lab in order if k in breakdown]
+    parts = ['<rect x="10" y="10" width="400" height="280" rx="20" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)"/>',
+             f'<rect x="70" y="46" width="280" height="182" rx="14" fill="#14161a" stroke="{accent}" stroke-width="2"/>',
+             '<rect x="84" y="60" width="252" height="142" rx="8" fill="#0b0d10"/>']
+    for yy in range(72, 202, 8):
+        parts.append(f'<line x1="84" y1="{yy}" x2="336" y2="{yy}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>')
+    parts.append(_mono("LAPTOP BUYING GUIDE", 98, 86, 11, accent, weight="700", anchor="start"))
+    score_txt = f"SCORE {top_score:.1f}/10" if top_score else "SCORE --/10"
+    parts.append(_mono(score_txt, 98, 110, 20, "#ffffff", weight="700", anchor="start"))
+    ry = 136
+    for lab, frac in rows:
+        parts.append(_mono(lab, 98, ry, 10, "#8a8a86", weight="600", anchor="start"))
+        parts.append(f'<rect x="158" y="{ry - 12}" width="112" height="8" rx="4" fill="rgba(255,255,255,0.08)"/>')
+        parts.append(f'<rect x="158" y="{ry - 12}" width="{int(112 * frac)}" height="8" rx="4" fill="{accent}"/>')
+        parts.append(_mono(f"{frac:.1f}", 278, ry, 10, "#ffffff", weight="700", anchor="start"))
+        ry += 26
+    parts.append(f'<rect x="196" y="228" width="28" height="14" fill="{accent}" opacity="0.7"/>')
+    parts.append(f'<rect x="150" y="242" width="120" height="8" rx="4" fill="rgba(255,255,255,0.15)"/>')
+    return '<svg viewBox="0 0 420 300" role="img" aria-label="Computing category review scores">' + "".join(parts) + "</svg>"
+
+
+def _motif_fitness(accent, breakdown):
+    parts = ['<rect x="10" y="10" width="400" height="280" rx="20" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)"/>']
+    for gx in range(50, 381, 44):
+        parts.append(f'<line x1="{gx}" y1="60" x2="{gx}" y2="230" stroke="rgba(255,255,255,0.05)"/>')
+    for gy in range(80, 221, 30):
+        parts.append(f'<line x1="50" y1="{gy}" x2="380" y2="{gy}" stroke="rgba(255,255,255,0.05)"/>')
+    ecg = ("M50,150 L78,150 L90,148 L100,146 L108,150 L118,150 L126,128 L132,104 L136,88 "
+           "L142,150 L152,150 L164,150 L174,152 L184,150 L196,150 L224,150 L236,148 L246,146 "
+           "L254,150 L264,150 L272,128 L278,104 L282,88 L288,150 L298,150 L310,150 L320,152 "
+           "L330,150 L342,150 L370,150")
+    parts.append(f'<path d="{ecg}" fill="none" stroke="{accent}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>')
+    parts.append(f'<circle cx="370" cy="150" r="4" fill="{accent}"/>')
+    parts.append(f'<circle cx="370" cy="150" r="4" fill="{accent}" opacity="0.35"/>')
+    acc = float(breakdown.get("Accuracy", 7.5))
+    parts.append(_mono("HEART RATE", 60, 252, 13, accent, weight="700", anchor="start"))
+    parts.append(_mono("72 BPM", 60, 274, 22, "#ffffff", weight="700", anchor="start"))
+    parts.append(_mono("ACCURACY", 300, 252, 13, accent, weight="700", anchor="end"))
+    parts.append(_mono(f"{acc:.1f}/10", 300, 274, 22, "#ffffff", weight="700", anchor="end"))
+    return '<svg viewBox="0 0 420 300" role="img" aria-label="Fitness category review scores">' + "".join(parts) + "</svg>"
+
+
+def _motif_gaming(accent, top_score):
+    cx, cy = 210, 150
+    parts = ['<rect x="10" y="10" width="400" height="280" rx="20" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)"/>',
+             f'<circle cx="{cx}" cy="{cy}" r="96" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>',
+             f'<line x1="{cx}" y1="44" x2="{cx}" y2="256" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>',
+             f'<line x1="104" y1="{cy}" x2="316" y2="{cy}" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>',
+             f'<circle cx="{cx}" cy="{cy}" r="20" fill="none" stroke="{accent}" stroke-width="2.5"/>',
+             f'<line x1="{cx}" y1="112" x2="{cx}" y2="130" stroke="{accent}" stroke-width="2.5" stroke-linecap="round"/>',
+             f'<line x1="{cx}" y1="170" x2="{cx}" y2="188" stroke="{accent}" stroke-width="2.5" stroke-linecap="round"/>',
+             f'<line x1="172" y1="{cy}" x2="190" y2="{cy}" stroke="{accent}" stroke-width="2.5" stroke-linecap="round"/>',
+             f'<line x1="230" y1="{cy}" x2="248" y2="{cy}" stroke="{accent}" stroke-width="2.5" stroke-linecap="round"/>',
+             f'<circle cx="{cx}" cy="{cy}" r="4" fill="{accent}"/>']
+    for x1, y1, x2, y2, x3, y3 in [(30, 30, 56, 30, 30, 56), (390, 30, 364, 30, 390, 56),
+                                   (30, 270, 56, 270, 30, 244), (390, 270, 364, 270, 390, 244)]:
+        parts.append(f'<path d="M{x1},{y1} L{x2},{y2} M{x1},{y1} L{x3},{y3}" stroke="rgba(255,255,255,0.25)" stroke-width="2" fill="none" stroke-linecap="round"/>')
+    score_txt = f"{top_score:.1f}" if top_score else "--"
+    parts.append(_mono("SENSOR", 60, 252, 13, accent, weight="700", anchor="start"))
+    parts.append(_mono("26000 DPI", 60, 274, 22, "#ffffff", weight="700", anchor="start"))
+    parts.append(_mono("TOP SCORE", 300, 252, 13, accent, weight="700", anchor="end"))
+    parts.append(_mono(score_txt, 300, 274, 22, "#ffffff", weight="700", anchor="end"))
+    return '<svg viewBox="0 0 420 300" role="img" aria-label="Gaming category review scores">' + "".join(parts) + "</svg>"
+
+
+def _motif_home(accent, top_score):
+    parts = ['<rect x="10" y="10" width="400" height="280" rx="20" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)"/>',
+             '<defs><radialGradient id="homeglow" cx="50%" cy="50%" r="70%">'
+             '<stop offset="0%" stop-color="#ffb95c" stop-opacity="0.9"/>'
+             '<stop offset="100%" stop-color="#ffb95c" stop-opacity="0.3"/></radialGradient></defs>',
+             '<rect x="110" y="40" width="200" height="200" rx="6" fill="#141619"/>',
+             '<rect x="128" y="58" width="164" height="148" rx="4" fill="#2a1c08"/>',
+             '<rect x="128" y="58" width="164" height="148" rx="4" fill="url(#homeglow)" opacity="0.55"/>',
+             '<circle cx="170" cy="96" r="16" fill="#ffd9a0" opacity="0.95"/>',
+             '<circle cx="177" cy="91" r="14" fill="#2a1c08"/>',
+             '<circle cx="252" cy="80" r="2.5" fill="#ffd9a0" opacity="0.85"/>',
+             '<circle cx="268" cy="112" r="1.8" fill="#ffd9a0" opacity="0.7"/>',
+             '<circle cx="238" cy="140" r="1.8" fill="#ffd9a0" opacity="0.6"/>',
+             '<path d="M252,206 l10,22 h-20 z" fill="#0b0d10"/>',
+             '<ellipse cx="252" cy="196" rx="10" ry="14" fill="#0b0d10"/>',
+             f'<rect x="128" y="58" width="164" height="148" rx="4" fill="none" stroke="{accent}" stroke-width="4" opacity="0.9"/>',
+             f'<line x1="210" y1="58" x2="210" y2="206" stroke="{accent}" stroke-width="4" opacity="0.9"/>',
+             f'<line x1="128" y1="132" x2="292" y2="132" stroke="{accent}" stroke-width="4" opacity="0.9"/>',
+             f'<rect x="118" y="206" width="184" height="8" rx="3" fill="{accent}" opacity="0.55"/>']
+    score_txt = f"{top_score:.1f}" if top_score else "--"
+    parts.append(_mono("STREAMING", 60, 252, 13, accent, weight="700", anchor="start"))
+    parts.append(_mono("4K HDR READY", 60, 274, 22, "#ffffff", weight="700", anchor="start"))
+    parts.append(_mono("TOP SCORE", 300, 252, 13, accent, weight="700", anchor="end"))
+    parts.append(_mono(score_txt, 300, 274, 22, "#ffffff", weight="700", anchor="end"))
+    return '<svg viewBox="0 0 420 300" role="img" aria-label="Home and lifestyle category review scores">' + "".join(parts) + "</svg>"
+
+
+def _motif_webcams(accent, top_score):
+    parts = ['<rect x="10" y="10" width="400" height="280" rx="20" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)"/>',
+             f'<rect x="96" y="120" width="228" height="92" rx="14" fill="#14161a" stroke="{accent}" stroke-width="2"/>',
+             f'<circle cx="210" cy="166" r="34" fill="#0b0d10" stroke="{accent}" stroke-width="2"/>',
+             '<circle cx="210" cy="166" r="22" fill="#0d0f12" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>',
+             '<circle cx="210" cy="166" r="10" fill="#161a1f" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>',
+             f'<circle cx="210" cy="166" r="3.5" fill="{accent}" opacity="0.9"/>',
+             '<circle cx="128" cy="142" r="6" fill="#ff4b4b"/>',
+             '<text x="140" y="146" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" letter-spacing="0.1em" fill="#ff4b4b">REC</text>']
+    for x1, y1, x2, y2, x3, y3 in [(176, 132, 196, 132, 176, 152), (244, 132, 224, 132, 244, 152),
+                                   (176, 200, 196, 200, 176, 180), (244, 200, 224, 200, 244, 180)]:
+        parts.append(f'<path d="M{x1},{y1} L{x2},{y1} M{x1},{y1} L{x1},{y3}" stroke="{accent}" stroke-width="3" fill="none" stroke-linecap="round"/>')
+    score_txt = f"{top_score:.1f}" if top_score else "--"
+    parts.append(_mono("FOV", 60, 252, 13, accent, weight="700", anchor="start"))
+    parts.append(_mono("90 DEG", 60, 274, 22, "#ffffff", weight="700", anchor="start"))
+    parts.append(_mono("TOP SCORE", 300, 252, 13, accent, weight="700", anchor="end"))
+    parts.append(_mono(score_txt, 300, 274, 22, "#ffffff", weight="700", anchor="end"))
+    return '<svg viewBox="0 0 420 300" role="img" aria-label="Webcams category review scores">' + "".join(parts) + "</svg>"
+
+
+def _cat_motif(category_slug, accent, breakdown, top_score):
+    if category_slug == "audio":
+        return _motif_audio(accent, breakdown)
+    if category_slug == "computing-and-monitors":
+        return _motif_computing(accent, breakdown, top_score)
+    if category_slug == "fitness-and-health":
+        return _motif_fitness(accent, breakdown)
+    if category_slug == "gaming":
+        return _motif_gaming(accent, top_score)
+    if category_slug == "home-and-lifestyle":
+        return _motif_home(accent, top_score)
+    return _motif_webcams(accent, top_score)
+
+
+def _build_category_hero(category_name, category_slug, items, accent, tagline):
+    """Dark 'showroom' hero: eyebrow, headline, tagline, data chips, CTA, motif stage."""
+    count, niches, top_score, breakdown = _hero_numerics(items)
+    top_txt = f"{top_score:.1f}" if top_score else "--"
+    motif = _cat_motif(category_slug, accent, breakdown, top_score)
+    eyebrow = f"{html_mod.escape(category_name.upper())} · {count} review{'s' if count != 1 else ''} published"
+    if items:
+        cta = ('<a class="cat-hero__btn" href="#latest">Browse the reviews'
+               '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></a>')
+    else:
+        cta = '<span class="cat-hero__coming">Reviews coming soon — subscribe below to be first.</span>'
+    return f'''<section class="cat-hero" style="--cat:{accent}">
+    <div class="cat-hero__bg" aria-hidden="true"></div>
+    <div class="container cat-hero__grid">
+        <div class="cat-hero__copy">
+            <p class="cat-hero__eyebrow"><span class="cat-hero__dot" aria-hidden="true"></span>{eyebrow}</p>
+            <h1 class="cat-hero__title">{html_mod.escape(category_name)} Reviews</h1>
+            <p class="cat-hero__tagline">{html_mod.escape(tagline)}</p>
+            <div class="cat-hero__chips">
+                <div class="cat-hero__chip"><span class="cat-hero__chip-num">{count}</span><span class="cat-hero__chip-label">reviews published</span></div>
+                <div class="cat-hero__chip"><span class="cat-hero__chip-num"><em>{top_txt}</em>/10</span><span class="cat-hero__chip-label">best score</span></div>
+                <div class="cat-hero__chip"><span class="cat-hero__chip-num">{niches}</span><span class="cat-hero__chip-label">niche{'' if niches == 1 else 's'} tested</span></div>
+            </div>
+            <div class="cat-hero__cta">{cta}<span class="cat-hero__hint">Independent · Tested · Updated weekly</span></div>
+        </div>
+        <div class="cat-hero__stage" aria-hidden="true">{motif}</div>
+    </div>
+</section>'''
+
+
 def build_category_listing_page(category_name, category_slug, items, all_slugs, base=None, affiliate_tag=""):
     """Full page listing every review published in a category (e.g. /categories/audio/)."""
     b = base or SITE_BASE
@@ -1414,11 +1624,13 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     blog_title = f"{title_escaped} Reviews"
     meta_desc = f"Independent {category_name.lower()} reviews and buying guides. We test before we recommend."
 
-    # Per-category hero taglines. Falls back to the generic promise.
-    CATEGORY_HERO = {
-        "audio": "Marketing copy calls everything 'studio-quality.' We check real prices and verified owner feedback to find the headphones and earbuds actually worth your ears.",
-    }
-    hero_tagline = CATEGORY_HERO.get(category_slug.lower(), "Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.")
+    # Per-category hero tagline. Falls back to the generic promise.
+    hero_tagline = CATEGORY_TAGLINES.get(
+        category_slug.lower(),
+        "Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.",
+    )
+    hero_accent = category_color(category_name)
+    hero_html = _build_category_hero(category_name, category_slug, items, hero_accent, hero_tagline)
 
     # Group reviews by niche; sort niche sections alphabetically by display name.
     by_niche: dict = {}
@@ -1456,7 +1668,6 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
 
     index_nav = build_category_index(category_name, b, niche_slugs=niche_order or None) if items else ""
     count = len(items)
-    count_label = f"{count} review{'s' if count != 1 else ''} published"
 
     return f'''<!DOCTYPE html>
 <html lang="en">
@@ -1465,9 +1676,9 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     <title>{blog_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; }}
+        :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }}
         {DESIGN_SYSTEM_CSS}
         {PROD_SHOT_CSS}
         
@@ -1502,10 +1713,29 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
             .nav-dropdown a:hover {{ background:transparent; color:#fff; }}
         }}
 
-        .category-hero {{ background:var(--clr-off-white); padding: var(--space-2xl) 0; border-bottom:1px solid var(--clr-light-gray); }}
-        .category-hero h1 {{ font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-sm); }}
-        .category-hero p {{ font-size: var(--text-lg); color: var(--clr-mid-gray); max-width:50ch; }}
-        .category-hero__meta {{ display:inline-block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-accent-text); margin-bottom: var(--space-md); }}
+        .cat-hero {{ position:relative; overflow:hidden; background:#0d0d0d; color:#fff; padding:clamp(52px,7vw,92px) 0; border-bottom:1px solid #222; }}
+        .cat-hero__bg {{ position:absolute; inset:0; pointer-events:none; background:
+            radial-gradient(900px 420px at 80% 12%, color-mix(in srgb, var(--cat) 16%, transparent), transparent 65%),
+            radial-gradient(640px 380px at 8% 96%, color-mix(in srgb, var(--cat) 8%, transparent), transparent 60%); }}
+        .cat-hero__grid {{ position:relative; display:grid; grid-template-columns:1.15fr 0.85fr; gap:clamp(24px,4vw,56px); align-items:center; }}
+        .cat-hero__eyebrow {{ display:flex; align-items:center; gap:10px; margin:0 0 18px; font-family:var(--font-mono); font-size:0.74rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--cat); }}
+        .cat-hero__dot {{ width:8px; height:8px; border-radius:2px; background:var(--cat); box-shadow:0 0 14px var(--cat); flex-shrink:0; }}
+        .cat-hero__title {{ font-family:var(--font-display); font-weight:800; font-size:clamp(2rem,4.5vw,3.4rem); line-height:1.06; letter-spacing:-0.02em; color:#fff; margin:0 0 16px; }}
+        .cat-hero__tagline {{ font-family:var(--font-body); font-size:clamp(1rem,1.5vw,1.15rem); line-height:1.6; color:#b9b9b4; max-width:52ch; margin:0 0 26px; }}
+        .cat-hero__chips {{ display:flex; flex-wrap:wrap; gap:12px; margin:0 0 28px; }}
+        .cat-hero__chip {{ display:flex; flex-direction:column; gap:3px; min-width:104px; padding:12px 16px; border:1px solid rgba(255,255,255,0.12); border-radius:14px; background:rgba(255,255,255,0.03); }}
+        .cat-hero__chip-num {{ font-family:var(--font-mono); font-size:1.5rem; font-weight:700; line-height:1; color:#fff; }}
+        .cat-hero__chip-num em {{ font-style:normal; color:var(--cat); }}
+        .cat-hero__chip-label {{ font-family:var(--font-body); font-size:0.68rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#8a8a86; }}
+        .cat-hero__cta {{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; }}
+        .cat-hero__btn {{ display:inline-flex; align-items:center; gap:10px; background:var(--cat); color:#0a0a0a; font-family:var(--font-display); font-weight:800; font-size:1rem; text-decoration:none; padding:0.95em 1.6em; border-radius:12px; box-shadow:0 10px 34px color-mix(in srgb, var(--cat) 45%, transparent); transition:transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }}
+        .cat-hero__btn:hover {{ transform:translateY(-2px); box-shadow:0 14px 44px color-mix(in srgb, var(--cat) 60%, transparent); }}
+        .cat-hero__btn svg {{ width:18px; height:18px; }}
+        .cat-hero__hint {{ font-family:var(--font-body); font-size:0.8rem; color:#8a8a86; }}
+        .cat-hero__coming {{ font-family:var(--font-body); font-size:0.95rem; color:#b9b9b4; }}
+        .cat-hero__stage {{ position:relative; display:flex; align-items:center; justify-content:center; }}
+        .cat-hero__stage svg {{ width:100%; max-width:440px; height:auto; filter:drop-shadow(0 24px 60px rgba(0,0,0,0.5)); }}
+        @media (max-width:900px) {{ .cat-hero__grid {{ grid-template-columns:1fr; }} .cat-hero__stage {{ order:-1; max-width:340px; margin:0 auto; }} }}
 
         .category-index {{ background:var(--clr-off-white); border-bottom:1px solid var(--clr-light-gray); padding:10px 0; }}
         .category-index__inner {{ display:flex; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }}
@@ -1598,11 +1828,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     </nav>
 </div></header>
 
-<section class="category-hero"><div class="container">
-    <span class="category-hero__meta">{title_escaped} · {count_label}</span>
-    <h1>{blog_title}</h1>
-    <p>{hero_tagline}</p>
-</div></section>
+{hero_html}
 
 {index_nav}
 
