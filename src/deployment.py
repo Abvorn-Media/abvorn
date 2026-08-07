@@ -167,15 +167,15 @@ VERDICT_CARD_CSS = """
 .av-number{font-size:3rem;font-weight:700;font-family:'Libre Franklin',Georgia,sans-serif;color:#1a1a1a;line-height:1;letter-spacing:-.03em}
 .av-outof{font-size:1.2rem;color:#666;font-weight:600}
 .av-label-row{display:flex;flex-direction:column;gap:2px}
-.av-label{font-size:1.1rem;font-weight:700;color:#c98a2c;font-family:'Libre Franklin',Georgia,sans-serif}
+.av-label{font-size:1.1rem;font-weight:700;color:var(--clr-accent-text,#996015);font-family:'Libre Franklin',Georgia,sans-serif}
 .av-product{font-size:1.2rem;font-weight:800;color:#1a1a1a;font-family:'Libre Franklin',Georgia,sans-serif;line-height:1.3;margin:0 0 4px}
 .av-breakdown{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
 .av-bar-row{display:flex;align-items:center;gap:12px}
-.av-bar-label{flex:0 0 140px;font-size:.82rem;font-weight:600;color:#888;text-align:right}
+.av-bar-label{flex:0 0 140px;font-size:.82rem;font-weight:600;color:#666;text-align:right}
 .av-bar-track{flex:1;height:8px;background:#e8e8e8;border-radius:100px;overflow:hidden}
 .av-bar-fill{height:100%;border-radius:100px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .av-bar-score{flex:0 0 36px;font-size:.85rem;font-weight:700;color:#1a1a1a;text-align:right}
-.av-summary{font-size:.95rem;color:#888;line-height:1.5;margin-bottom:20px}
+.av-summary{font-size:.95rem;color:#666;line-height:1.5;margin-bottom:20px}
 .av-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 @media(max-width:640px){.av-score-row{flex-direction:column;align-items:flex-start;gap:8px}.av-bar-label{flex:0 0 100px;font-size:.75rem}.abvorn-verdict{padding:20px 16px}}
 """
@@ -841,7 +841,7 @@ MEGA_MENU_CSS = """
 .nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
 .nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
 .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
-.nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent,#c98a2c); font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
+.nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent-text,var(--clr-accent,#c98a2c)); font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
 .nav-dropdown.nav-dropdown--mega a { padding:6px 20px; }
 @media (max-width:640px) {
     .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; }
@@ -1191,7 +1191,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .niche-hero__visual {{ display:flex; flex-direction:column; gap: var(--space-md); }}
         .hero-product {{ position:relative; border-radius: var(--radius-lg); overflow:hidden; background:#ffffff; display:flex; align-items:center; justify-content:center; padding: clamp(var(--space-sm), 1.5vw, var(--space-lg)); min-height:0; }}
         .hero-product img {{ max-width:100%; max-height:min(460px, 40vh); width:auto; height:auto; object-fit:contain; }}
-        .hero-product__badge {{ position:absolute; top:14px; left:14px; z-index:2; background:var(--clr-accent); color:#1a1200; font-size:0.62rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; padding:4px 12px; border-radius:100px; box-shadow:var(--shadow-sm); }}
+        .hero-product__badge {{ position:absolute; top:14px; left:14px; z-index:2; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; padding:4px 12px; border-radius:100px; box-shadow:var(--shadow-sm); }}
         @media (max-width:860px) {{ .niche-hero {{ padding: clamp(1.5rem, 3vh, 2.5rem) 0; }} .niche-hero__grid {{ grid-template-columns:1fr; gap: var(--space-md); }} .niche-hero__visual {{ order:-1; }} .hero-product {{ min-height:0; padding: var(--space-sm); }} .hero-product img {{ max-height:160px; }} .niche-hero h1 {{ font-size: var(--text-2xl); }} .niche-hero__excerpt {{ font-size: var(--text-base); }} }}
 
         .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap: var(--space-lg); }}

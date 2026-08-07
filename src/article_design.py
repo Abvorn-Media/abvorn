@@ -25,7 +25,7 @@ PROD_SHOT_CSS = """
 .product-shot__img{width:100%;height:100%;object-fit:contain;display:block;
   filter:saturate(1.05) contrast(1.02) brightness(1.01)}
 .product-shot__badge{position:absolute;top:12px;left:12px;z-index:2;
-  background:var(--clr-accent);color:#1a1200;font-size:.62rem;font-weight:800;
+  background:var(--clr-accent);color:#1a1200;font-size:.7rem;font-weight:800;
   text-transform:uppercase;letter-spacing:.06em;padding:4px 12px;border-radius:100px;
   box-shadow:var(--shadow-sm)}
 .product-shot--hero{aspect-ratio:1/1;width:100%;max-width:340px;margin:0 auto;
@@ -87,14 +87,14 @@ FAQ_CSS = """
 HERO_PICK_CSS = """
 .hero-pick{display:flex;flex-direction:column;gap:var(--space-md);align-items:stretch}
 .hero-pick__info{text-align:center}
-.hero-pick__name{font-size:var(--text-xl);color:#fff;margin-bottom:6px}
+.hero-pick__name{font-size:var(--text-xl);color:var(--clr-black);margin-bottom:6px}
 .hero-pick__meta{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;
   font-size:var(--text-sm);margin-bottom:var(--space-md)}
 .hero-pick__score{display:inline-flex;align-items:center;gap:6px;background:var(--clr-accent);
   color:#1a1200;font-weight:800;padding:3px 12px;border-radius:100px}
-.hero-pick__price{display:inline-flex;align-items:center;color:#fff;font-weight:600}
-.hero-pick__link{color:#bbb;font-size:.8rem;text-decoration:none;display:inline-block;margin-top:6px}
-.hero-pick__link:hover{color:#fff;text-decoration:underline}
+.hero-pick__price{display:inline-flex;align-items:center;color:var(--clr-off-black);font-weight:600}
+.hero-pick__link{color:var(--clr-mid-gray);font-size:.8rem;text-decoration:none;display:inline-block;margin-top:6px}
+.hero-pick__link:hover{color:var(--clr-black);text-decoration:underline}
 """
 
 # ── RPS (Regret Probability Score) widget ──────────────────────────────
@@ -395,7 +395,6 @@ def hero_pick_html(product, overall, label, affiliate_url, base="", niche_slug="
                 <span class="hero-pick__price">{html_mod.escape(str(price))}</span>
             </div>
             <a class="buy-btn" href="{affiliate_url}" target="_blank" rel="sponsored">Check Price on Amazon &rarr;</a>
-            <a class="hero-pick__link" href="{base}/reviews/{niche_slug}/">Read the full review below</a>
         </div>
     </div>"""
 

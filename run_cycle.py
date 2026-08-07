@@ -587,15 +587,15 @@ VERDICT_CARD_CSS = """
 .av-number{font-size:3rem;font-weight:700;font-family:'Libre Franklin',Georgia,sans-serif;color:#1a1a1a;line-height:1;letter-spacing:-.03em}
 .av-outof{font-size:1.2rem;color:#666;font-weight:600}
 .av-label-row{display:flex;flex-direction:column;gap:2px}
-.av-label{font-size:1.1rem;font-weight:700;color:#c98a2c;font-family:'Libre Franklin',Georgia,sans-serif}
+.av-label{font-size:1.1rem;font-weight:700;color:var(--clr-accent-text,#996015);font-family:'Libre Franklin',Georgia,sans-serif}
 .av-product{font-size:1.2rem;font-weight:800;color:#1a1a1a;font-family:'Libre Franklin',Georgia,sans-serif;line-height:1.3;margin:0 0 4px}
 .av-breakdown{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
 .av-bar-row{display:flex;align-items:center;gap:12px}
-.av-bar-label{flex:0 0 140px;font-size:.82rem;font-weight:600;color:#888;text-align:right}
+.av-bar-label{flex:0 0 140px;font-size:.82rem;font-weight:600;color:#666;text-align:right}
 .av-bar-track{flex:1;height:8px;background:#e8e8e8;border-radius:100px;overflow:hidden}
 .av-bar-fill{height:100%;border-radius:100px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .av-bar-score{flex:0 0 36px;font-size:.85rem;font-weight:700;color:#1a1a1a;text-align:right}
-.av-summary{font-size:.95rem;color:#888;line-height:1.5;margin-bottom:20px}
+.av-summary{font-size:.95rem;color:#666;line-height:1.5;margin-bottom:20px}
 .av-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 @media(max-width:640px){.av-score-row{flex-direction:column;align-items:flex-start;gap:8px}.av-bar-label{flex:0 0 100px;font-size:.75rem}.abvorn-verdict{padding:20px 16px}}
 """

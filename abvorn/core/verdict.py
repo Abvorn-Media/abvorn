@@ -94,7 +94,8 @@ LABELS = [
     (9.0, "Exceptional"),
     (8.0, "Excellent"),
     (7.0, "Good"),
-    (6.0, "Average"),
+    (6.0, "Solid"),
+    (5.0, "Average"),
     (0.0, "Poor"),
 ]
 
