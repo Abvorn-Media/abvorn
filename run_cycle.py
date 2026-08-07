@@ -36,7 +36,7 @@ from src.social_permission import SocialPermissionFramework, create_social_permi
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
-from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, scan_published_reviews, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS
+from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, scan_published_reviews, _overlay_review, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS
 from src.click_tracker import get_clicks, register_articles_batch
 from src.article_design import (ARTICLE_DESIGN_CSS, upgrade_product_image, product_shot_html,
                                 info_dot, sanitize_article_html, inject_product_photos,
@@ -2652,13 +2652,11 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     docs.mkdir(exist_ok=True)
     for slug, post_list in articles.items():
         for a in post_list:
-            reviews.append({
-                "slug": slug,
-                "name": next((n["name"] for n in state["niches"] if n["slug"] == slug), slug.replace("-", " ").title()),
-                "title": a.get("post_title", ""),
-                "updated": today,
-                "rel": f"/reviews/{slug}/",
-            })
+            reviews.append(_overlay_review(
+                a, slug,
+                next((n["name"] for n in state["niches"] if n["slug"] == slug), slug.replace("-", " ").title()),
+                today,
+            ))
 
     # Collect all published posts across niches (drives feed, sitemap, niche pages)
     all_posts = [{"title": r["title"], "slug": r["rel"].lstrip("/")} for r in reviews]

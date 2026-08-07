@@ -1052,10 +1052,14 @@ def build_homepage(state, form_url="", reviews=None, base=None):
     if not cat_sections:
         cat_sections = '<div class="category-section"><div class="niche-card"><div class="niche-card__image-wrapper"><img src="' + b + '/assets/hero-home.svg" alt="Coming soon"></div><div class="niche-card__body"><h2>Our first guide is in testing</h2><p>Check back shortly for hands-on reviews.</p></div></div></div>'
 
-    # Trending ticker items text
+    # Trending ticker items text. Drives off the actually-published reviews
+    # rather than the gitignored cycle_state.json so the ticker survives a
+    # fresh checkout (where every niche reports posts=0 and would render
+    # "No reviews yet").
+    published_slugs = {r["slug"] for r in review_list}
     ticker_items = " · ".join(
         f'<a href="{b}/{n["slug"]}/" class="trending-ticker__item">{n["name"]}</a>'
-        for n in niches if n["posts"]
+        for n in niches if n["slug"] in published_slugs
     )
 
     # Footer
@@ -2742,6 +2746,51 @@ document.addEventListener('DOMContentLoaded', function() {{
 
 # ─── AI Research (skip DDGS, use AI knowledge directly) ──────────────────
 
+def _overlay_review(a, slug, niche_name, today):
+    """Build a full review entry for a freshly-written article so its card shows
+    the real product photo and verdict instead of the blank generated fallback.
+
+    scan_published_reviews() reads published pages from disk, but an article
+    written this cycle is not on disk yet when the homepage/category pages are
+    built. The overlay entry carries the same image/score the published page
+    will embed, so the newest review renders correctly immediately.
+    """
+    image = ""
+    score = None
+    breakdown = {}
+    label = ""
+    product_name = a.get("product_name", "")
+    products = a.get("products") or []
+    if products:
+        p0 = products[0]
+        image = p0.get("image", "")
+        if image:
+            image = upgrade_product_image(image)
+        product_name = p0.get("name", product_name)
+        try:
+            from abvorn.core.verdict import AbvornVerdictEngine
+            verdict = AbvornVerdictEngine(weight_overrides=load_verdict_weights()).score_product(slug, p0)
+            if verdict:
+                score = verdict.get("overall")
+                label = verdict.get("label", "")
+                breakdown = verdict.get("breakdown", {})
+        except Exception:
+            score = None
+    return {
+        "slug": slug,
+        "name": niche_name,
+        "title": a.get("post_title", ""),
+        "updated": today,
+        "rel": f"/reviews/{slug}/",
+        "snippet": (a.get("intro") or "")[:160],
+        "image": image,
+        "score": score,
+        "breakdown": breakdown,
+        "label": label,
+        "product_name": product_name,
+    }
+
+
 def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_url="", hero_images=None, google_client_id=""):
     """Write all HTML files to docs/ directory."""
     all_slugs = sorted([n["slug"] for n in state["niches"]], key=lambda s: _slugify_title(s).lower())
@@ -2756,13 +2805,11 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     docs.mkdir(exist_ok=True)
     for slug, post_list in articles.items():
         for a in post_list:
-            reviews.append({
-                "slug": slug,
-                "name": next((n["name"] for n in state["niches"] if n["slug"] == slug), slug.replace("-", " ").title()),
-                "title": a.get("post_title", ""),
-                "updated": today,
-                "rel": f"/reviews/{slug}/",
-            })
+            reviews.append(_overlay_review(
+                a, slug,
+                next((n["name"] for n in state["niches"] if n["slug"] == slug), slug.replace("-", " ").title()),
+                today,
+            ))
 
     # Collect all published posts across niches (drives feed, sitemap, niche pages)
     all_posts = [{"title": r["title"], "slug": r["rel"].lstrip("/")} for r in reviews]
