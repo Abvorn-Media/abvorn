@@ -3116,6 +3116,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="hKduUnYJjstWTZehDR7W7YOEhx0NWKzujAXX_neehMk" />
     <link rel="icon" type="image/png" href="__SITE_BASE__/assets/favicon-32x32.png">
     <title>Abvorn – Reviews Based on Real Testing, Not Spec Sheets</title>
     <meta name="description" content="Independent product reviews and buying guides. We test before we recommend.">
