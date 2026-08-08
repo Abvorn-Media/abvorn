@@ -17,6 +17,9 @@ Thumbs.db
 *.db
 *.log
 
+# Graphify knowledge graph (generated)
+graphify-out/
+
 # Google Search Console credentials (secret)
 gsc-credentials.json
 cycle_state.json

@@ -64,7 +64,7 @@ class GenesisProtocol:
             except Exception:
                 pass
 
-        graph_dir = Path(".graphify")
+        graph_dir = Path("graphify-out")
         if graph_dir.exists():
             genome["memory"] = {
                 "entities": len(list(graph_dir.glob("*.json"))),
@@ -140,7 +140,7 @@ class GenesisProtocol:
             "data/relentless_state.json",
             "data/economic_records.json",
             ".win/state/",
-            ".graphify/",
+            "graphify-out/",
             "data/spawn_state.json",
             "data/neural_memory_state.json"
         ]

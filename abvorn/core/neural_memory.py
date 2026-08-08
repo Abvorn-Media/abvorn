@@ -1,11 +1,10 @@
 """neural_memory.py — Abvorn Neural Memory (Graphify).
 
 Self-updating knowledge graph over the codebase, pipeline, data and docs.
-Discovers correlations and insights. Graphify is optional: if the CLI is
+Discovers correlations and insights. Graphify is optional: if the package is
 unavailable the layer degrades gracefully instead of breaking the core.
 """
 
-import subprocess
 import json
 import logging
 from pathlib import Path
@@ -18,7 +17,8 @@ logger = logging.getLogger(__name__)
 class NeuralMemory:
     def __init__(self, repo_path: str = "."):
         self.repo_path = Path(repo_path).resolve()
-        self.graph_dir = self.repo_path / ".graphify"
+        self.graph_dir = self.repo_path / "graphify-out"
+        self.graph_file = self.graph_dir / "graph.json"
         self.memory_file = self.repo_path / "data/neural_memory_state.json"
         self.available = True
         self._ensure_directories()
@@ -26,6 +26,7 @@ class NeuralMemory:
 
     def _ensure_directories(self):
         self.memory_file.parent.mkdir(parents=True, exist_ok=True)
+        self.graph_dir.mkdir(parents=True, exist_ok=True)
         if not self.memory_file.exists():
             self.memory_file.write_text(json.dumps({
                 "last_ingestion": None,
@@ -35,17 +36,18 @@ class NeuralMemory:
                 "queries": [],
                 "correlations": [],
                 "versions": []
-            }, indent=2))
+            }, indent=2), encoding='utf-8')
 
     def _check_graphify(self):
         try:
-            subprocess.run(["graphify", "--version"], capture_output=True, check=True, timeout=15)
-        except FileNotFoundError:
-            logger.warning("Graphify CLI not installed (pip install graphifyy && graphify install). "
-                           "Neural memory will run in offline mode.")
-            self.available = False
+            from graphify.extract import extract, collect_files, _get_extractor  # noqa: F401
+            from graphify.build import build_merge  # noqa: F401
+            from graphify.export import to_json  # noqa: F401
+            from graphify.serve import _score_query, _query_terms  # noqa: F401
+            self.available = True
         except Exception as e:
-            logger.warning("Graphify check failed: %s. Running offline.", e)
+            logger.warning("Graphify Python API unavailable (pip install graphifyy): %s. "
+                           "Neural memory will run in offline mode.", e)
             self.available = False
 
     def _load_state(self) -> dict:
@@ -58,26 +60,67 @@ class NeuralMemory:
     def _save_state(self, state: dict):
         self.memory_file.write_text(json.dumps(state, indent=2), encoding='utf-8')
 
+    def _load_graph(self):
+        """Load graph.json into a NetworkX graph, mirroring graphify.serve._load_graph
+        but returning None (instead of sys.exit) on any failure."""
+        if not self.graph_file.exists():
+            return None
+        from networkx.readwrite import json_graph
+        try:
+            data = json.loads(self.graph_file.read_text(encoding='utf-8'))
+            if "links" not in data and "edges" in data:
+                data = dict(data, links=data["edges"])
+            data = {**data, "directed": True}
+            try:
+                return json_graph.node_link_graph(data, edges="links")
+            except TypeError:
+                return json_graph.node_link_graph(data)
+        except Exception as e:
+            logger.warning("Graphify graph could not be loaded: %s", e)
+            return None
+
     def ingest(self, path: str = ".", mode: str = "normal") -> dict:
+        """Extract a file or directory and merge it into the persistent graph.
+
+        Uses graphify's in-process Python API (no CLI spawn). The target's
+        nodes/edges are merged incrementally into graphify-out/graph.json;
+        re-ingesting a changed file replaces its prior contribution.
+        """
         if not self.available:
             return {"entities": 0, "relationships": 0}
-        cmd = ["graphify", str(path), "--mode", mode, "--json"]
+        target = Path(path)
+        if not target.exists():
+            logger.warning("Graphify ingest target not found: %s", target)
+            return {"entities": 0, "relationships": 0}
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-        except Exception as e:
-            logger.error("Graphify run failed: %s", e)
-            return {"error": str(e)}
-        try:
-            data = json.loads(result.stdout)
+            from graphify.extract import collect_files, extract, _get_extractor
+            from graphify.build import build_merge
+            from graphify.export import to_json
+
+            if target.is_dir():
+                files = [f for f in collect_files(target) if _get_extractor(f) is not None]
+            else:
+                files = [target] if _get_extractor(target) is not None else []
+            if not files:
+                logger.info("Graphify: no extractable files under %s", target)
+                return {"entities": 0, "relationships": 0}
+
+            extraction = extract(files, cache_root=self.graph_dir, root=self.repo_path)
+            G = build_merge([extraction], graph_path=self.graph_file, root=str(self.repo_path))
+            ok = to_json(G, {}, str(self.graph_file))
+            if not ok:
+                logger.warning("Graphify to_json refused to persist (shrink guard?)")
+            entities = G.number_of_nodes()
+            relationships = G.number_of_edges()
             state = self._load_state()
             state["last_ingestion"] = datetime.now().isoformat()
-            state["entities"] = data.get("entities", 0)
-            state["relationships"] = data.get("relationships", 0)
+            state["entities"] = entities
+            state["relationships"] = relationships
             self._save_state(state)
-            return data
-        except json.JSONDecodeError:
-            logger.error("Graphify ingestion failed: %s", result.stderr)
-            return {"error": result.stderr}
+            return {"entities": entities, "relationships": relationships}
+        except Exception as e:
+            logger.error("Graphify ingestion failed: %s", e)
+            return {"error": str(e)}
 
     def ingest_all(self) -> dict:
         results = {}
@@ -96,22 +139,45 @@ class NeuralMemory:
         return results
 
     def query(self, query: str) -> List[Dict]:
+        """Query the knowledge graph and return structured, ranked results."""
         if not self.available:
             return []
-        result = subprocess.run(["graphify", "query", query, "--json"],
-                                capture_output=True, text=True, timeout=60)
+        G = self._load_graph()
+        if G is None or G.number_of_nodes() == 0:
+            return []
         try:
-            data = json.loads(result.stdout)
+            from graphify.serve import _score_query, _query_terms
+
+            terms = _query_terms(query)
+            if not terms:
+                return []
+            qs = _score_query(G, terms, collect_per_term_seeds=True)
+            scored = qs.ranked[:10]
+            if not scored:
+                return []
+            top = scored[0][0]
+            results = []
+            for score, nid in scored:
+                d = G.nodes[nid]
+                results.append({
+                    "source": d.get("source_file", ""),
+                    "insight": d.get("label", nid),
+                    "text": d.get("label", nid),
+                    "confidence": (float(score) / top) if top > 0 else 0.0,
+                    "location": d.get("source_location", ""),
+                    "community": d.get("community", 0),
+                    "type": d.get("type", "node"),
+                })
             state = self._load_state()
             state["queries"].append({
                 "query": query,
                 "timestamp": datetime.now().isoformat(),
-                "results": len(data)
+                "results": len(results)
             })
             self._save_state(state)
-            return data
-        except json.JSONDecodeError:
-            logger.error("Graphify query failed: %s", result.stderr)
+            return results
+        except Exception as e:
+            logger.error("Graphify query failed: %s", e)
             return []
 
     def get_correlation(self, entity_a: str, entity_b: str) -> Optional[Dict]:
