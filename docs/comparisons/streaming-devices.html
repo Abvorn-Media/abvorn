@@ -19,10 +19,14 @@
 
 <link rel="canonical" href="/abvorn/comparisons/streaming-devices/">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Abvorn","item":"https://Abvorn-Media.github.io/abvorn/"},{"@type":"ListItem","position":2,"name":"Best Streaming Devices","item":"https://Abvorn-Media.github.io/abvorn/streaming-devices/"},{"@type":"ListItem","position":3,"name":"Comparison","item":"https://Abvorn-Media.github.io/abvorn/comparisons/streaming-devices/"}]}</script>
-
+<script>window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()</script>
+<div id="cookie-banner" role="dialog" aria-label="Cookie consent">
+<p>We use cookies to analyze traffic and improve your experience. <a href="/abvorn/privacy/">Privacy Policy</a></p>
+<button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
+<button class="btn" onclick="acceptAnalytics()">Accept</button>
+</div>
 <style>
 :root{--primary:#d4633e;--primary-dark:#b84d2a;--primary-light:#fce9e1;--accent:#1a8a7a;--accent-dark:#147062;--accent-light:#d4ede8;--green:#3a8a5c;--green-light:#d6f0df;--purple:#8b6fba;--purple-light:#ebe3f5;--bg:#faf6f1;--bg-alt:#f0ebe3;--text:#2a2724;--text-secondary:#6b6560;--text-muted:#9e9690;--border:#e3dbd4;--shadow-sm:0 1px 3px rgba(42,39,36,.06);--shadow-md:0 4px 14px rgba(42,39,36,.07);--shadow-lg:0 10px 30px rgba(42,39,36,.08);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--font-display:'Fraunces',Georgia,'Times New Roman',serif;--font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-@media(prefers-color-scheme:dark){:root{--bg:#1a1715;--bg-alt:#221f1c;--text:#e8e2dc;--text-secondary:#a69e96;--text-muted:#7e756d;--border:#34302b}}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;font-family:var(--font-body);-webkit-font-smoothing:antialiased;scroll-behavior:smooth;touch-action:manipulation}
 body{color:var(--text);background:var(--bg);line-height:1.6}
@@ -32,7 +36,7 @@ a{color:var(--primary);text-decoration:none;transition:color .15s}
 a:hover{color:var(--primary-dark);text-decoration:underline}
 .top-bar{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}
 .top-bar .container{display:flex;justify-content:space-between}
-header{background:#0a0a0a;padding:18px 0;position:sticky;top:0;z-index:100;border-bottom:1px solid #2a2a2a}
+header{background:#0a0a0a;padding:18px 0;position:sticky;top:0;z-index:100;border-bottom:1px solid #2a2a2a;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 .navbar{display:flex;justify-content:space-between;align-items:center}
 .logo img{max-height:44px;width:auto}
 .nav-links{display:flex;align-items:center;gap:8px}
@@ -40,12 +44,25 @@ header{background:#0a0a0a;padding:18px 0;position:sticky;top:0;z-index:100;borde
 .nav-links > a:hover,.nav-item > a:hover{background:rgba(255,255,255,0.08);color:var(--clr-accent,#c98a2c)}
 .nav-item{position:relative}
 .nav-item > a{padding:8px 16px;display:flex;align-items:center;gap:4px}
-.nav-item > a::after{content:'\25be';font-size:0.6rem;opacity:0.5}
+.nav-item > a::after{content:'▾';font-size:0.6rem;opacity:0.5}
 .nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:8px}
-.nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:8px;background:#ffffff;min-width:240px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:8px 0;z-index:30}
 .nav-item:hover .nav-dropdown{display:block}
 .nav-dropdown a{display:block;color:#1a1a1a;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
-.nav-dropdown a:hover{background:#f6f5f2;color:var(--clr-accent-text)}
+.nav-dropdown a:hover{background:#f6f5f2;color:#996015}
+
+.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
+.nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
+.nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
+.nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent-text,var(--clr-accent,#c98a2c)); font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
+.nav-dropdown.nav-dropdown--mega a { padding:6px 20px; }
+@media (max-width:640px) {
+    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; }
+    .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 auto; }
+    .nav-dropdown.nav-dropdown--mega .category-label { padding:8px 0 2px; }
+    .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
+}
+
 .nav-toggle{display:none;background:none;border:none;color:#fff;padding:6px;cursor:pointer}
 .nav-toggle svg{width:24px;height:24px}
 @media(max-width:640px){
@@ -72,23 +89,6 @@ h3{font-size:clamp(1.1rem,2vw,1.25rem);font-weight:600;margin-bottom:8px;letter-
 .hero .featured-pick .fp-badge{background:var(--primary);color:#fff;font-size:.7rem;font-weight:600;padding:2px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.04em}
 .hero .featured-pick .fp-title{font-weight:600;color:var(--text);font-size:1rem}
 .hero .featured-pick .fp-arrow{color:var(--primary);font-size:1.2rem}
-.pick-card{display:flex;gap:clamp(16px,3vw,32px);padding:28px 32px;border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:24px;align-items:flex-start;box-shadow:var(--shadow-sm);transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;background:var(--bg)}
-.pick-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);border-color:color-mix(in srgb,var(--primary) 20%,var(--border))}
-.pick-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary);border-radius:0 4px 4px 0}
-.pick-card.budget::before{background:var(--green)}
-.pick-card.upgrade::before{background:var(--purple)}
-.pick-card .rank{flex-shrink:0;width:44px;height:44px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;box-shadow:0 2px 8px rgba(212,99,62,.3);position:relative;z-index:1}
-.pick-card .rank.budget{background:var(--green);box-shadow:0 2px 8px rgba(58,138,92,.3)}
-.pick-card .rank.upgrade{background:var(--purple);box-shadow:0 2px 8px rgba(139,111,186,.3)}
-.pick-card .info{flex:1}
-.pick-card .info h3{font-size:1.2rem;font-weight:600;margin-bottom:4px;font-family:var(--font-display)}
-.pick-card .info .price{color:var(--green);font-weight:600;font-size:.95rem;margin-bottom:8px}
-.pick-card .info p{font-size:.95rem;color:var(--text-secondary);margin-bottom:12px;line-height:1.5}
-.pick-card .info .badge{display:inline-block;background:var(--primary-light);color:var(--primary);font-size:.75rem;font-weight:600;padding:2px 10px;border-radius:100px;margin-right:8px;text-transform:uppercase;letter-spacing:.04em}
-.pick-card .info .badge.budget{background:var(--green-light);color:#2d6b47}
-.pick-card .info .badge.upgrade{background:var(--purple-light);color:#634e8a}
-.pick-card .tested-badge{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin-left:8px}
-.pick-card .tested-badge::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent)}
 .grid-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
 .cat-card{padding:24px;border:1px solid var(--border);border-radius:var(--radius-md);transition:all .25s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow-sm);text-decoration:none;display:block;background:var(--bg);position:relative;overflow:hidden}
 .cat-card::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:3px;background:var(--primary);border-radius:3px 3px 0 0;transform:scaleX(0);transition:transform .25s cubic-bezier(.4,0,.2,1)}
@@ -96,10 +96,6 @@ h3{font-size:clamp(1.1rem,2vw,1.25rem);font-weight:600;margin-bottom:8px;letter-
 .cat-card:hover::after{transform:scaleX(1)}
 .cat-card .cat-name{font-weight:700;font-size:1.1rem;color:var(--text);margin-bottom:4px;font-family:var(--font-display)}
 .cat-card .cat-count{font-size:.85rem;color:var(--text-muted)}
-.post-card{padding:20px;border:1px solid var(--border);border-radius:var(--radius-md);transition:all .2s;box-shadow:var(--shadow-sm);background:var(--bg)}
-.post-card:hover{box-shadow:var(--shadow-md);border-color:color-mix(in srgb,var(--primary) 15%,var(--border))}
-.post-card .post-title{font-weight:600;margin-bottom:4px;color:var(--text)}
-.post-card .post-meta{font-size:.85rem;color:var(--text-muted)}
 .section{padding:clamp(40px,6vw,64px) 0}
 .section-title{font-size:.85rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.1em;margin-bottom:24px;padding-bottom:12px;border-bottom:2px solid var(--border);position:relative}
 .section-title::after{content:'';position:absolute;bottom:-2px;left:0;width:48px;height:2px;background:var(--primary)}
@@ -111,15 +107,20 @@ article .content p{margin:16px 0;font-size:1.05rem;color:var(--text)}
 article .content h2{margin:32px 0 12px;font-size:1.35rem}
 article .content ul{padding-left:24px;margin:12px 0}
 article .content li{margin:6px 0;color:var(--text)}
-footer{padding:48px 0;border-top:1px solid var(--border);text-align:center}
-footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
-.footer-links{display:flex;justify-content:center;gap:24px;margin:12px 0;flex-wrap:wrap}
-.footer-links a{font-size:.8rem;color:var(--text-muted);text-decoration:none;transition:color .15s}
-.footer-links a:hover{color:var(--primary);text-decoration:underline}
-.social{margin-top:16px;display:flex;gap:20px;justify-content:center}
-.social a{color:var(--text-muted);text-decoration:none;display:flex;align-items:center;transition:color .15s}
-.social a:hover{color:var(--text)}
-.social svg{width:22px;height:22px;fill:currentColor}
+.footer{background:#0a0a0a;color:#999;padding:64px 0 32px}
+.footer-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:32px;margin-bottom:32px}
+.footer-col h4{color:#fff;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
+.footer-col p{color:#999;font-size:.9rem;max-width:32ch}
+.footer-col a{display:block;color:#999;text-decoration:none;padding:4px 0;font-size:.9rem}
+.footer-col a:hover{color:#fff}
+.footer-social{display:flex;gap:10px;margin-top:16px}
+.footer-social a{width:44px;height:44px;border-radius:50%;background:#1e1e1e;display:flex;align-items:center;justify-content:center;color:#ccc;transition:background .15s,color .15s}
+.footer-social a:hover{background:var(--accent,#c98a2c);color:#0a0a0a}
+.footer-social svg{width:16px;height:16px}
+.footer-bottom{border-top:1px solid #222;padding-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:.85rem;color:#777}
+.footer-cat-cols{display:flex;gap:32px}
+.footer-cat-col{display:flex;flex-direction:column}
+@media(max-width:760px){.footer-grid{grid-template-columns:1fr 1fr}}
 .story-section{padding:clamp(40px,6vw,64px) 0;background:var(--bg-alt);border-top:1px solid var(--border)}
 .story-section .container{max-width:680px;margin:0 auto;padding:0 24px}
 .story-section h2{font-size:1.4rem;font-weight:700;margin-bottom:12px;text-align:center}
@@ -143,14 +144,6 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 .decision-matrix tr:last-child td{border-bottom:none}
 .decision-matrix td:first-child{font-weight:500;color:var(--text)}
 .decision-matrix td:last-child{color:var(--text)}
-.product-card{display:flex;gap:24px;padding:24px;border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:20px;align-items:flex-start;box-shadow:var(--shadow-sm);transition:box-shadow .2s;background:var(--bg)}
-.product-card:hover{box-shadow:var(--shadow-md)}
-.product-card img{width:160px;height:160px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0}
-.product-card-body{flex:1}
-.product-card-body h3{font-size:1.15rem;font-weight:600;margin-bottom:4px;font-family:var(--font-display)}
-.product-card-body .price{color:var(--green);font-weight:600;font-size:.95rem;margin-bottom:8px}
-.product-card-body p{font-size:.95rem;color:var(--text-secondary);margin-bottom:8px}
-.product-card-body ul{padding-left:20px;margin:8px 0;font-size:.9rem;color:var(--text-secondary)}
 .product-card-body li{margin:4px 0}
 .buy-btn{display:inline-block;padding:10px 24px;background:var(--primary);color:#fff;border-radius:8px;font-weight:600;font-size:.95rem;margin-top:8px;text-decoration:none;box-shadow:0 1px 3px rgba(212,99,62,.25);transition:all .2s;border:none;cursor:pointer}
 .buy-btn:hover{background:var(--primary-dark);text-decoration:none;box-shadow:0 2px 8px rgba(212,99,62,.35);transform:translateY(-1px);color:#fff}
@@ -199,8 +192,7 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 @media(prefers-reduced-motion:reduce){.carousel-track{transition:none}}
 
 /* ── Abvorn Verdict Card ────────────────────────────────────────── */
-.abvorn-verdict{border:2px solid var(--border);border-radius:var(--radius-lg);padding:28px 32px;margin:32px 0;background:linear-gradient(135deg,var(--bg),var(--bg-alt));box-shadow:var(--shadow-md);position:relative;overflow:hidden}
-.abvorn-verdict::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--primary),var(--accent))}
+.abvorn-verdict{padding:28px 32px;margin:32px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:transparent;position:relative}
 .av-badge{display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:#fff;font-size:.7rem;font-weight:700;padding:4px 14px;border-radius:100px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
 .av-badge::before{content:'\01F525';font-size:.8rem}
 .av-score-row{display:flex;align-items:center;gap:20px;margin-bottom:20px}
@@ -209,17 +201,15 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 .av-outof{font-size:1.2rem;color:var(--text-muted);font-weight:600}
 .av-label-row{display:flex;flex-direction:column;gap:2px}
 .av-label{font-size:1.1rem;font-weight:700;color:var(--accent);font-family:var(--font-display)}
-.av-product{font-size:.85rem;color:var(--text-secondary)}
+.av-product{font-size:1.2rem;font-weight:800;color:var(--text);font-family:var(--font-display);line-height:1.3;margin:0 0 4px}
 .av-breakdown{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
 .av-bar-row{display:flex;align-items:center;gap:12px}
 .av-bar-label{flex:0 0 140px;font-size:.82rem;font-weight:600;color:var(--text-secondary);text-align:right}
 .av-bar-track{flex:1;height:8px;background:var(--border);border-radius:100px;overflow:hidden}
 .av-bar-fill{height:100%;border-radius:100px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .av-bar-score{flex:0 0 36px;font-size:.85rem;font-weight:700;color:var(--text);text-align:right}
-.av-summary{font-size:.95rem;color:var(--text-secondary);line-height:1.5;margin-bottom:20px;padding:16px;background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--accent);font-style:italic}
+.av-summary{font-size:.95rem;color:var(--text-secondary);line-height:1.5;margin-bottom:20px}
 .av-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.av-detail-link{font-size:.9rem;color:var(--text-muted);text-decoration:none;font-weight:600}
-.av-detail-link:hover{color:var(--primary);text-decoration:none}
 .av-score-cell{text-align:center;min-width:80px}
 .av-compact-score{display:block;font-size:1.3rem;font-weight:700;font-family:var(--font-display);color:var(--text);line-height:1}
 .av-compact-label{display:block;font-size:.65rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
@@ -257,73 +247,26 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 #cookie-banner .btn:hover{background:#b84d2a}
 #cookie-banner .btn-secondary{background:transparent;color:#e3dbd4;border:1px solid #6b6560;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
 #cookie-banner .btn-secondary:hover{border-color:#9e9690}
-
-.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
-.nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
-.nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
-.nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent,#c98a2c); font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
-.nav-dropdown.nav-dropdown--mega a { padding:6px 20px; }
-@media (max-width:640px) {
-    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; }
-    .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 auto; }
-    .nav-dropdown.nav-dropdown--mega .category-label { padding:8px 0 2px; }
-    .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
-}
-
-        .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
-        .footer .container { max-width:1200px; margin:0 auto; padding:0 24px; }
-        .footer-grid { display:grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
-        .footer-col h4 { color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }
-        .footer-col p { color:#999; font-size:0.9rem; max-width:32ch; }
-        .footer-col a { display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }
-        .footer-col a:hover { color:#fff; }
-        .footer-social { display:flex; gap:10px; margin-top:16px; }
-        .footer-social a { width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
-        .footer-social a:hover { background: var(--clr-accent); color:#0a0a0a; }
-        .footer-social svg { width:16px; height:16px; }
-        .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
-        @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
-
 </style>
-
-
-
-<style>
-#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
-#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
-#cookie-banner p{margin:0;color:#ffffff;font-size:13px}
-#cookie-banner a{color:#c98a2c;text-decoration:underline}
-#cookie-banner .btn{background:#c98a2c;color:#0a0a0a;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}
-#cookie-banner .btn:hover{background:#d4a03a}
-#cookie-banner .btn-secondary{background:transparent;color:#ffffff;border:1px solid #555;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
-#cookie-banner .btn-secondary:hover{border-color:#888}
-</style>
-<script>window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()</script>
-<div id="cookie-banner" role="dialog" aria-label="Cookie consent">
-<p>We use cookies to analyze traffic and improve your experience. <a href="/abvorn/privacy/">Privacy Policy</a></p>
-<button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
-<button class="btn" onclick="acceptAnalytics()">Accept</button>
-</div>
-<script>
-(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){return}var b=document.getElementById("cookie-banner");if(b){b.classList.add("show")}window.acceptAnalytics=function(){document.cookie="analytics_consent=granted; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show");if(typeof loadAnalytics==="function"){loadAnalytics()}};window.declineAnalytics=function(){document.cookie="analytics_consent=denied; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show")}})();
-</script>
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
 
 <div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
-    <a href="/abvorn/" class="logo"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:44px;width:auto"></a>
+    <a href="https://abvorn-media.github.io/abvorn/" class="logo"><img src="https://abvorn-media.github.io/abvorn/logo.svg" alt="Abvorn" style="max-height:44px;width:auto"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><span class="category-label">Audio</span><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><span class="category-label">Computing & Monitors</span><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a></div><div class="category-group"><span class="category-label">Fitness & Health</span><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><span class="category-label">Gaming</span><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><span class="category-label">Home & Lifestyle</span><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><span class="category-label">Webcams & Accessories</span><a href="/abvorn/webcams/">Webcams</a></div></div></div>
-        <a href="/abvorn/">Home</a>
-        <a href="/abvorn/about.html">About</a>
-        <a href="/abvorn/privacy.html">Privacy</a>
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><a class="category-label" href="https://abvorn-media.github.io/abvorn/categories/audio/">Audio</a><a href="https://abvorn-media.github.io/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="https://abvorn-media.github.io/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><a class="category-label" href="https://abvorn-media.github.io/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="https://abvorn-media.github.io/abvorn/4k-monitors/">4K Monitors</a><a href="https://abvorn-media.github.io/abvorn/laptops/">Laptops</a></div><div class="category-group"><a class="category-label" href="https://abvorn-media.github.io/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="https://abvorn-media.github.io/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><a class="category-label" href="https://abvorn-media.github.io/abvorn/categories/gaming/">Gaming</a><a href="https://abvorn-media.github.io/abvorn/gaming-mice/">Gaming Mice</a><a href="https://abvorn-media.github.io/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><a class="category-label" href="https://abvorn-media.github.io/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="https://abvorn-media.github.io/abvorn/smart-home/">Smart Home</a><a href="https://abvorn-media.github.io/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><a class="category-label" href="https://abvorn-media.github.io/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a><a href="https://abvorn-media.github.io/abvorn/webcams/">Webcams</a></div></div></div>
+        <a href="https://abvorn-media.github.io/abvorn/">Home</a>
+        <a href="https://abvorn-media.github.io/abvorn/about.html">About</a>
+        <a href="https://abvorn-media.github.io/abvorn/privacy.html">Privacy</a>
     </nav>
 </div></header>
-
+<script>
+(function(){var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")})})();
+</script>
 <section class="hero" id="main" style="padding:24px 16px"><div class="container">
 <h1>Best Streaming Devices Compared</h1>
 <p>We put the top streaming devices head-to-head. Here's how they stack up.</p>
@@ -331,21 +274,19 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 <section class="section"><div class="container">
 <div style="overflow-x:auto"><table class="comparison-table">
 <thead><tr><th>Product</th><th>Abvorn Score</th><th>Price</th><th>Weight</th><th>Battery</th><th>Rating</th><th>Warranty</th><th>Buy</th></tr></thead>
-<tbody><tr><td><strong>1. Roku Streaming Stick HD with Voice Remote | Compact 4K Streaming Device for TV with Roku Voice Remote &amp;amp; Long-Range Wi-Fi - Free &amp;amp; Live Local News</strong><br><small>Roku Streaming Stick HD with Voice Remote | Compact 4K Streaming Device for TV w</small></td><td class="av-score-cell"><span class="av-compact-score">6.8</span><span class="av-compact-label">Average</span></td><td>$29.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0DXXYS4BJ?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>2. Roku Streaming Stick Plus with Voice Remote - 4K &amp;amp; HDR10+ | 4K &amp;amp; HDR Streaming Device for TV with Roku Voice Remote - Free &amp;amp; Live Local News</strong><br><small>Roku Streaming Stick Plus with Voice Remote - 4K &amp;amp; HDR10+ | 4K &amp;amp;</small></td><td class="av-score-cell"><span class="av-compact-score">6.8</span><span class="av-compact-label">Average</span></td><td>$38.09</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0DXY833HV?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>3. Roku Ultra</strong><br><small>Roku Ultra, Ultimate Streaming Player - 4K Streaming Device for TV | HDR10+, Dol</small></td><td class="av-score-cell"><span class="av-compact-score">6.5</span><span class="av-compact-label">Average</span></td><td>$90.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0DF44RTTP?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>4. Amazon Fire TV Stick 4K Plus (newest model) with AI-powered Fire TV Search</strong><br><small>Amazon Fire TV Stick 4K Plus (newest model) with AI-powered Fire TV Search, Wi-F</small></td><td class="av-score-cell"><span class="av-compact-score">7.0</span><span class="av-compact-label">Average</span></td><td>$49.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0F7Z4QZTT?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>5. Amazon Fire TV Stick HD</strong><br><small>Amazon Fire TV Stick HD, free and live TV, Alexa Voice Remote, smart home contro</small></td><td class="av-score-cell"><span class="av-compact-score">6.9</span><span class="av-compact-label">Average</span></td><td>$34.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0CQMRKRV5?tag=viraltestco-20" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr></tbody>
+<tbody><tr><td><strong>1. Roku Streaming Stick HD with Voice Remote | Compact 4K Streaming Device for TV with Roku Voice Remote &amp; Long-Range Wi-Fi - Free &amp; Live Local News</strong><br><small>Roku Streaming Stick HD with Voice Remote | Compact 4K Streaming Device for TV w</small></td><td class="av-score-cell"><span class="av-compact-score">6.8</span><span class="av-compact-label">Solid</span></td><td>$29.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0DXXYS4BJ" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>2. Roku Streaming Stick Plus with Voice Remote - 4K &amp; HDR10+ | 4K &amp; HDR Streaming Device for TV with Roku Voice Remote - Free &amp; Live Local News</strong><br><small>Roku Streaming Stick Plus with Voice Remote - 4K &amp;amp; HDR10+ | 4K &amp;amp;</small></td><td class="av-score-cell"><span class="av-compact-score">6.8</span><span class="av-compact-label">Solid</span></td><td>$38.09</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0DXY833HV" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>3. Roku Ultra</strong><br><small>Roku Ultra, Ultimate Streaming Player - 4K Streaming Device for TV | HDR10+, Dol</small></td><td class="av-score-cell"><span class="av-compact-score">6.5</span><span class="av-compact-label">Solid</span></td><td>$90.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0DF44RTTP" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>4. Amazon Fire TV Stick 4K Plus (newest model) with AI-powered Fire TV Search</strong><br><small>Amazon Fire TV Stick 4K Plus (newest model) with AI-powered Fire TV Search, Wi-F</small></td><td class="av-score-cell"><span class="av-compact-score">7.0</span><span class="av-compact-label">Solid</span></td><td>$49.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0F7Z4QZTT" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr><tr><td><strong>5. Amazon Fire TV Stick HD</strong><br><small>Amazon Fire TV Stick HD, free and live TV, Alexa Voice Remote, smart home contro</small></td><td class="av-score-cell"><span class="av-compact-score">6.9</span><span class="av-compact-label">Solid</span></td><td>$34.99</td><td>-</td><td>-</td><td>-</td><td>-</td><td><a class="buy-btn" href="https://www.amazon.com/dp/B0CQMRKRV5" target="_blank" rel="sponsored" style="padding:4px 12px;font-size:.8rem">Check Price</a></td></tr></tbody>
 </table></div>
 </div></section>
 <div class="container"><div class="affiliate-banner">We earn from qualifying purchases.</div></div>
 <footer class="footer"><div class="container">
     <div class="footer-grid">
+        <div class="footer-col"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div></div>
+        <div class="footer-col"><h4>Categories</h4><div class="footer-cat-cols"><div class="footer-cat-col"><a href="/abvorn/categories/audio/">Audio</a><a href="/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="/abvorn/categories/gaming/">Gaming</a><a href="/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a></div></div></div>
         <div class="footer-col">
-            <img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px">
-            <p>Independent product reviews and buying guides, based on real testing.</p>
-            <div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div>
+            <h4>Company</h4><a href="/abvorn/about.html">About</a>
+            <h4>Legal</h4><a href="/abvorn/privacy.html">Privacy policy</a>
         </div>
-        <div class="footer-col"><h4>Categories</h4><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/laptops/">Laptops</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a><a href="/abvorn/webcams/">Webcams</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div>
-        <div class="footer-col"><h4>Company</h4><a href="/abvorn/about.html">About</a></div>
-        <div class="footer-col"><h4>Legal</h4><a href="/abvorn/privacy.html">Privacy policy</a></div>
     </div>
     <div class="footer-bottom"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; 2026 Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
 </div></footer>
-<script>(function(){var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")})})();</script></body></html>
+</body></html>
