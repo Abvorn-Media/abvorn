@@ -186,6 +186,25 @@ def _read_gsc_state() -> Dict[str, Any]:
     }
 
 
+def _read_cortex_state() -> Dict[str, Any]:
+    """Read Cortex (Obsidian vault) status for the dashboard."""
+    try:
+        from abvorn.core.cortex_watcher import cortex_status, get_recent_journal
+
+        status = cortex_status()
+        recent = get_recent_journal(limit=3)
+        return {
+            "enabled": bool(status.get("enabled")),
+            "watching": bool(status.get("watching")),
+            "vault": status.get("vault"),
+            "corrections_logged": int(status.get("corrections_logged", 0) or 0),
+            "recent_entries": recent,
+        }
+    except Exception as e:
+        logger.warning(f"Cortex state unavailable: {e}")
+        return {"enabled": False, "watching": False, "vault": None, "corrections_logged": 0, "recent_entries": []}
+
+
 def _read_brain_state() -> Dict[str, Any]:
     try:
         from abvorn.core.brain import get_brain
@@ -219,6 +238,7 @@ def get_system_status() -> Dict[str, Any]:
     unified = _read_unified_db_summary()
     brain = _read_brain_state()
     gsc = _read_gsc_state()
+    cortex = _read_cortex_state()
 
     return {
         "timestamp": datetime.now().isoformat(),
@@ -247,6 +267,7 @@ def get_system_status() -> Dict[str, Any]:
         "unified": unified,
         "brain": brain,
         "gsc": gsc,
+        "cortex": cortex,
     }
 
 
@@ -362,6 +383,33 @@ def generate_dashboard_html() -> str:
         <div class="fable-item"><span class="fable-label">Avg Position</span><span class="fable-value">{gsc.get("avg_position", 0):.1f}</span></div>
         <div class="fable-item"><span class="fable-label">Window</span><span class="fable-value">{gsc.get("days", 0)}d</span></div>
         <div class="fable-item"><span class="fable-label">Last Ingest</span><span class="fable-value">{str(gsc.get("last_ingestion", "Never"))[:16]}</span></div>
+    </div>
+    """
+
+    cortex = status.get("cortex", {})
+    cortex_recent_html = ""
+    for entry in cortex.get("recent_entries", [])[:3]:
+        name = entry.get("file", "")
+        modified = str(entry.get("modified", ""))[:16]
+        preview = str(entry.get("preview", ""))[:80].replace("\n", " ")
+        cortex_recent_html += (
+            f'<div class="cortex-entry"><strong>{name}</strong> '
+            f'<span style="color:var(--text-dim);font-size:12px;">{modified}</span>'
+            f'<div style="font-size:12px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{preview}</div></div>'
+        )
+    cortex_status_txt = "Active" if cortex.get("watching") else ("Enabled" if cortex.get("enabled") else "Disabled")
+    cortex_html = f"""
+    <div class="fable-grid">
+        <div class="fable-item"><span class="fable-label">Status</span><span class="fable-value">{cortex_status_txt}</span></div>
+        <div class="fable-item"><span class="fable-label">Corrections</span><span class="fable-value">{cortex.get("corrections_logged", 0)}</span></div>
+        <div class="fable-item" style="grid-column: 1 / -1;">
+            <span class="fable-label">Vault</span>
+            <span class="fable-value" style="font-size:12px;word-break:break-all;">{cortex.get("vault") or "Not set"}</span>
+        </div>
+        <div class="fable-item" style="grid-column: 1 / -1;">
+            <span class="fable-label">Recent Journal</span>
+            <div style="grid-column:1/-1;">{cortex_recent_html or '<span style="color:var(--text-dim);font-size:12px;">No entries yet</span>'}</div>
+        </div>
     </div>
     """
 
@@ -599,6 +647,10 @@ def generate_dashboard_html() -> str:
         <div class="card">
             <div class="card-title">Google Search Console</div>
             {gsc_html}
+        </div>
+        <div class="card">
+            <div class="card-title">Symbiotic Cortex</div>
+            {cortex_html}
         </div>
     </div>
 

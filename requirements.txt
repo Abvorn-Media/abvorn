@@ -21,3 +21,9 @@ feedparser
 networkx>=3.1
 python-louvain
 
+# Symbiotic Cortex (Obsidian vault)
+watchdog>=3.0.0
+python-frontmatter>=1.0.0
+markdown2>=2.4.0
+PyYAML>=6.0
+

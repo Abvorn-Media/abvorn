@@ -6,6 +6,7 @@ No simulations. No fake APIs.
 
 import json
 import logging
+import os
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -120,6 +121,19 @@ class RelentlessCore:
             self.colosseum = get_colosseum()
         except Exception as e:
             logger.warning(f"Colosseum unavailable: {e}")
+
+        # Optional Symbiotic Cortex (Obsidian vault) — never fatal if unavailable
+        self.cortex = None
+        try:
+            from abvorn.core.cortex_watcher import cortex_enabled, get_cortex_watcher
+
+            if cortex_enabled():
+                self.cortex = get_cortex_watcher()
+                if self.cortex is not None:
+                    self.cortex.start()
+                    logger.info("Symbiotic Cortex watcher started.")
+        except Exception as e:
+            logger.warning(f"Cortex watcher unavailable: {e}")
 
     def _read_clicks(self) -> Dict[str, int]:
         """Read total clicks per article from clicks.db."""
@@ -516,12 +530,63 @@ class RelentlessCore:
             "timestamp": datetime.now().isoformat(),
         }
 
+    def _write_to_cortex(self, result: Dict[str, Any]):
+        """Write the evolution journal entry to the Obsidian vault."""
+        if self.cortex is None:
+            return
+        try:
+            from abvorn.core.cortex_watcher import get_vault_path
+
+            vault = get_vault_path()
+            if vault is None:
+                return
+            journal_dir = vault / "Journal"
+            journal_dir.mkdir(parents=True, exist_ok=True)
+
+            today = datetime.now().strftime("%Y-%m-%d")
+            journal_file = journal_dir / f"{today}.md"
+
+            frontmatter = {
+                "generation": result.get("version", self.version),
+                "date": datetime.now().isoformat(),
+                "drive_score": result.get("drive_score", 0.0),
+                "ambition": result.get("ambition_level", 0.5),
+                "action": result.get("action", "unknown"),
+                "role": result.get("role", "solo"),
+            }
+
+            result_text = str(result.get("result", ""))
+            narrative = (
+                f"Drive score {result.get('drive_score', 0.0):.3f} — "
+                f"action '{result.get('action', 'unknown')}': {result_text}"
+            )
+
+            if journal_file.exists():
+                existing = journal_file.read_text(encoding="utf-8")
+                if f"Cycle {result.get('version', self.version)}" in existing:
+                    return
+                with open(journal_file, "a", encoding="utf-8") as f:
+                    f.write(f"\n\n## Cycle {result.get('version', self.version)}\n\n")
+                    f.write(narrative)
+            else:
+                content = "---\n"
+                content += "\n".join([f"{k}: {v}" for k, v in frontmatter.items()])
+                content += "\n---\n\n"
+                content += f"# Ab's Evolution Journal - {today}\n\n"
+                content += narrative
+                journal_file.write_text(content, encoding="utf-8")
+
+            logger.info("Journal entry written to %s", journal_file)
+        except Exception as e:
+            logger.warning(f"Cortex journal write failed: {e}")
+
     def cycle(self) -> Dict[str, Any]:
         """Run one drive cycle (Think → Act → Prove → Grow when Fable is available)."""
         # 0. Evolution trigger: after enough cycles, evolve to a child core
         self.evolution_counter += 1
         if self.evolution_counter >= 10 and self.genesis is not None:
             evolution = self._evolve()
+            self._write_to_cortex({**evolution, "drive_score": self.drive_score})
             return {**evolution, "drive_score": self.drive_score}
         # 1. Calculate current drive score
         drive_score = self._calculate_drive_score()
@@ -595,7 +660,7 @@ class RelentlessCore:
         if len(self.history) > 100:
             self.history = self.history[-100:]
 
-        return {
+        cycle_result = {
             "drive_score": drive_score,
             "action": action,
             "result": result,
@@ -607,4 +672,9 @@ class RelentlessCore:
             "fable_verification": verification,
             "fable_learning": learning,
         }
+
+        # 6. Write the journal entry to the Symbiotic Cortex vault
+        self._write_to_cortex(cycle_result)
+
+        return cycle_result
 

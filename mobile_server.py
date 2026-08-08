@@ -159,6 +159,23 @@ async def dashboard_page():
     return HTMLResponse(content=html, media_type="text/html")
 
 
+# ── Symbiotic Cortex (Obsidian) API endpoints ───────────────────────
+@app.get("/api/cortex/status")
+async def cortex_status():
+    """Cortex watcher status and vault path."""
+    from abvorn.core.cortex_watcher import cortex_status as get_cortex_status
+
+    return get_cortex_status()
+
+
+@app.get("/api/cortex/recent")
+async def cortex_recent(limit: int = 10):
+    """Get the most recent Evolution Journal entries from the vault."""
+    from abvorn.core.cortex_watcher import get_recent_journal
+
+    return {"entries": get_recent_journal(limit)}
+
+
 # ── Google Search Console API endpoints ─────────────────────────────
 @app.get("/api/gsc/summary")
 async def get_gsc_summary():
