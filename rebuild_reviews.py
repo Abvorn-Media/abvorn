@@ -99,15 +99,36 @@ def extract_article(path):
             d_close = body.find("</div>", d_open) + len("</div>")
             intro = body[d_close:v_open].strip()
             intro = re.sub(r"^(?:</div>\s*)+", "", intro)
+        # Handle both old (verdict → prose → matrix) and new (verdict → matrix
+        # → prose) orders: prose is the block between the verdict and the chart
+        # that sits on the opposite side of the decision-matrix-wrap.
+        prose_start = verdict_close
+        prose_end = None
+        mwrap = body.find('<div class="decision-matrix-wrap">', verdict_close)
+        if mwrap >= 0:
+            gap = body[verdict_close:mwrap]
+            if re.search(r"<(?:p|h[1-6]|ul|ol|figure|table)\b", gap):
+                prose_end = mwrap
+            else:
+                depth = 0
+                for mt in re.finditer(r"<div\b|</div>", body[mwrap:]):
+                    if mt.group(0) == "<div":
+                        depth += 1
+                    else:
+                        depth -= 1
+                        if depth == 0:
+                            prose_start = mwrap + mt.end()
+                            break
         ends = []
-        for marker in ['<div class="decision-matrix-wrap">', '<div class="chart-section">',
-                       '<div class="cta-banner">', '<section class="faq-section"',
-                       '<div class="reactions-bar"']:
-            j = body.find(marker, verdict_close)
+        for marker in ['<div class="chart-section">', '<div class="cta-banner">',
+                       '<section class="faq-section"', '<div class="reactions-bar"']:
+            j = body.find(marker, prose_start)
             if j >= 0:
                 ends.append(j)
         stop = min(ends) if ends else r_open
-        article_html = body[verdict_close:stop].strip()
+        if prose_end is not None:
+            stop = prose_end
+        article_html = body[prose_start:stop].strip()
         # Drop stray non-structural fragments (e.g. leftover "User Safety: safe"
         # text) â€” real prose always contains block-level elements.
         if article_html and not re.search(r"<(?:p|h[1-6]|ul|ol|figure|table|div|section)\b", article_html):

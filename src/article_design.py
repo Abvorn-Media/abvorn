@@ -66,7 +66,7 @@ INFO_DOT_CSS = """
 # ── Guaranteed FAQ section ──────────────────────────────────────────────
 FAQ_CSS = """
 .faq-section{margin:var(--space-xl) 0;padding:var(--space-lg);background:var(--clr-white);
-  border:1px solid var(--clr-light-gray);border-radius:var(--radius-md)}
+  border:1px solid var(--clr-light-gray);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)}
 .faq-section .section-title{margin-bottom:var(--space-lg)}
 .faq-item{border:1px solid var(--clr-light-gray);background:var(--clr-white);
   border-radius:var(--radius-sm);margin-bottom:var(--space-sm);overflow:hidden}
@@ -364,6 +364,7 @@ def build_faq(niche_slug, niche_name, products, product_name, price_floor,
     )
     faq_html = (
         f'<section class="faq-section" id="faq">'
+        f'<span class="section-eyebrow">Answers</span>'
         f'<h3 class="section-title">Frequently Asked Questions</h3>{items}</section>'
     )
     return faq_html, questions
@@ -404,19 +405,20 @@ def render_article_body(disclosure, intro, verdict_html, chart_html, article_htm
                         product_cards, further_reading, cta=""):
     """Assemble the strategic article-body flow in the order readers consume.
 
-    Hook (intro) first, then the verdict, then the evidence (article body,
-    matrix, chart), then FAQ, then engagement + related content.
+    Hook (intro) first, then the verdict, then the at-a-glance comparison,
+    then the evidence (article body, chart), then the buyable lineup, then
+    FAQ, then the lead-capture CTA, then engagement + related content.
     """
     return f"""{disclosure}
 {intro}
 {verdict_html}
-{article_html}
 {matrix_html}
+{article_html}
 {chart_html}
-{cta}
+{product_cards}
 {faq_html}
+{cta}
 {reactions}
 {share}
 {related_html}
-{product_cards}
 {further_reading}"""

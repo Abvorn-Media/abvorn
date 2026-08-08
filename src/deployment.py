@@ -185,9 +185,16 @@ _SITE_URL = os.environ.get("SITE_URL", "https://abvorn-media.github.io/abvorn").
 
 CTA_BANNER = """
 <div class="cta-banner">
-<h3>Ready to buy?</h3>
-<p>We've done the research. Now get the best price on Amazon.</p>
-<a class="buy-btn" href="https://www.amazon.com/s?k={query}&tag={tag}" target="_blank" rel="sponsored">Shop all picks on Amazon &rarr;</a>
+<h3>Want this guide as a PDF?</h3>
+<p>Enter your email and we'll send this review straight to your inbox as a clean, printable PDF — specs, scores, and buy links included.</p>
+<form id="cta-lead-form" onsubmit="submitLead(event)" data-source="cta_banner">
+    <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
+    <div class="cta-lead-row">
+        <input type="email" id="cta-email" placeholder="your@email.com" class="input" required>
+        <button type="submit" class="btn">Send me the PDF</button>
+    </div>
+    <p class="lead-msg" style="font-size:0.8rem;margin-top:10px;"></p>
+</form>
 </div>"""
 
 
@@ -1132,8 +1139,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     nav_dd = build_category_dropdown(b)
 
     # Footer
-    footer_cats = build_footer_categories(b)
-    footer_social = render_footer_social()
+    footer_chrome = build_site_footer(b)
 
     # Subscribe form action
     form_url = os.environ.get("APPS_SCRIPT_URL", "")
@@ -1275,7 +1281,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         @media (max-width: 760px) {{ .niche-card--featured {{ grid-template-columns: 1fr; }} .niche-card--featured .review-card__body {{ padding: var(--space-md); }} }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
-        .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
+        .footer-grid {{ display:grid; grid-template-columns:1.6fr 2fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
         .footer-col h4 {{ color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }}
         .footer-col p {{ color:#999; font-size:0.9rem; max-width:32ch; }}
         .footer-col a {{ display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }}
@@ -1361,15 +1367,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     </form>
 </div></section>
 
-<footer class="footer"><div class="container">
-    <div class="footer-grid">
-        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{footer_social}</div></div>
-        <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
-        <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
-        <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
-    </div>
-    <div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
-</div></footer>
+{footer_chrome}
 
 <script>
 const APPS_SCRIPT_URL = "{form_url}";
@@ -1627,8 +1625,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     nav_dd = build_category_dropdown(b)
 
     # Footer
-    footer_cats = build_footer_categories(b)
-    footer_social = render_footer_social()
+    footer_chrome = build_site_footer(b)
 
     # Subscribe form action
     form_url = os.environ.get("APPS_SCRIPT_URL", "")
@@ -1846,7 +1843,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         @media (max-width: 760px) {{ .niche-card--featured {{ grid-template-columns: 1fr; }} .niche-card--featured .review-card__body {{ padding: var(--space-md); }} }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
-        .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
+        .footer-grid {{ display:grid; grid-template-columns:1.6fr 2fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
         .footer-col h4 {{ color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }}
         .footer-col p {{ color:#999; font-size:0.9rem; max-width:32ch; }}
         .footer-col a {{ display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }}
@@ -1880,15 +1877,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
 
 {sections_html}
 
-<footer class="footer"><div class="container">
-    <div class="footer-grid">
-        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{footer_social}</div></div>
-        <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
-        <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
-        <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
-    </div>
-    <div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
-</div></footer>
+{footer_chrome}
 
 <script>
 const APPS_SCRIPT_URL = "{form_url}";
@@ -2225,7 +2214,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     article_html = inject_product_photos(article_html, products or [])
     product_cards = ""
     if products:
-        product_cards = '<section class="section"><div class="container"><div class="section-title">Products Mentioned</div><div class="product-section">'
+        product_cards = '<section class="section"><div class="container"><span class="section-eyebrow">The lineup</span><div class="section-title">Products Mentioned</div><div class="product-section">'
         for prod in products:
             product_cards += product_card_html(prod, pexels_key, t)
         product_cards += "</div></div></section>"
@@ -2337,7 +2326,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             f'<a class="cat-card" href="{b}/{r["slug"]}/"><div class="cat-name">{r["name"]}</div><div class="cat-count">{r.get("posts", 0)} reviews</div></a>'
             for r in related_niches
         )
-        related_html = f'<section class="section"><div class="container"><div class="section-title">Related Categories</div><div class="grid-3">{cards}</div></div></section>'
+        related_html = f'<section class="section"><div class="container"><span class="section-eyebrow">Keep reading</span><div class="section-title">Related Categories</div><div class="grid-3">{cards}</div></div></section>'
     # Guaranteed FAQ section + FAQPage JSON-LD (generated from rubric + products).
     faq_html = ""
     faq_jsonld = ""
@@ -2354,8 +2343,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     # Build nav dropdown (white mega-menu)
     nav_dd = build_category_dropdown(b)
     # Footer
-    footer_cats = build_footer_categories(b)
-    footer_social = render_footer_social()
+    footer_chrome = build_site_footer(b)
 
     if article_id:
         article_html = rewrite_affiliate_urls(article_html, article_id)
@@ -2383,6 +2371,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     ) if '<div class="av-badge">' in verdict_html else verdict_html
     chart_html = (
         '<div class="chart-section">'
+        '<span class="section-eyebrow">The scoring</span>'
         f'<h3 class="section-title">Performance Breakdown {chart_explainer}</h3>'
         '<div class="chart-wrapper"><canvas id="verdictChart"></canvas></div>'
         '<p class="chart-note">Scores out of 10. Based on the Abvorn Verdict Engine.</p>'
@@ -2391,6 +2380,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     if matrix_html:
         matrix_html = (
             '<div class="decision-matrix-wrap">'
+            '<span class="section-eyebrow">Quick compare</span>'
             f'<h3 class="section-title">At a glance {matrix_explainer}</h3>'
             f'{matrix_html}</div>'
         )
@@ -2500,7 +2490,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .hero-image-wrapper img.hero-plain {{ width:100%; height:auto; max-height:min(320px, 40vh); object-fit:contain; border-radius:var(--radius-md); }}
         @media (max-width:860px) {{ .article-hero {{ padding: clamp(1.5rem, 3vh, 2.5rem) 0; }} .article-hero .hero-grid {{ grid-template-columns:1fr; gap: var(--space-md); }} .hero-image-wrapper {{ order:-1; min-height:auto; padding:0; }} .hero-image-wrapper img.hero-plain {{ max-height:200px; }} .article-hero .excerpt {{ font-size: var(--text-base); }} }}
         /* ===== VERDICT RADAR CHART ===== */
-        .chart-section {{ margin:var(--space-xl) 0; padding:var(--space-lg); background:var(--clr-white); border-radius:var(--radius-md); border:1px solid var(--clr-light-gray); }}
+        .chart-section {{ margin:var(--space-xl) 0; padding:var(--space-lg); background:var(--clr-white); border-radius:var(--radius-lg); border:1px solid var(--clr-light-gray); box-shadow:var(--shadow-sm); }}
         .chart-wrapper {{ width:100%; max-width:500px; height:400px; margin:0 auto; }}
         .chart-note {{ text-align:center; font-size:0.8rem; color:var(--clr-mid-gray); margin-top:var(--space-sm); margin-bottom:0; }}
         @media (max-width:600px) {{ .chart-wrapper {{ height:300px; }} }}
@@ -2517,10 +2507,22 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .article-body blockquote {{ border-left:4px solid var(--clr-accent); padding-left:var(--space-lg); margin:var(--space-lg) 0; color:var(--clr-mid-gray); font-style:italic; }}
         .disclosure {{ background:var(--clr-off-white); padding:var(--space-md); border-radius:var(--radius-sm); font-size:0.85rem; color:var(--clr-mid-gray); margin-bottom:var(--space-lg); }}
 
+        .cta-banner {{ position:relative; overflow:hidden; margin:var(--space-xl) 0; padding:clamp(32px,5vw,48px) clamp(24px,4vw,40px); background:linear-gradient(135deg,var(--clr-black),var(--clr-dark-gray)); color:#fff; border-radius:var(--radius-lg); text-align:center; box-shadow:var(--shadow-md); }}
+        .cta-banner::before {{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 25% 40%,rgba(201,138,44,.28),transparent 55%); }}
+        .cta-banner h3 {{ color:#fff; font-size:clamp(1.3rem,2.5vw,1.8rem); margin-bottom:8px; font-family:var(--font-display); position:relative; }}
+        .cta-banner p {{ color:#fff; opacity:.92; max-width:56ch; margin:0 auto 20px; font-size:1rem; position:relative; }}
+        .cta-banner .cta-lead-row {{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; max-width:480px; margin:0 auto; position:relative; }}
+        .cta-banner .input {{ flex:1 1 240px; background:#1a1a1a; color:#fff; border-color:#333; }}
+        .cta-banner .input:focus {{ border-color:var(--clr-accent); box-shadow:0 0 0 3px rgba(201,138,44,.25); }}
+        .cta-banner .btn {{ background:var(--clr-accent); color:#1a1200; font-weight:800; box-shadow:0 6px 22px rgba(201,138,44,.4); }}
+        .cta-banner .btn:hover {{ background:#e0a23f; transform:scale(1.045); box-shadow:0 8px 28px rgba(201,138,44,.55); }}
+        .cta-banner .lead-msg {{ color:#fff; opacity:.9; position:relative; }}
+
         .product-section {{ margin:var(--space-xl) 0; }}
-        .section-title {{ font-weight:800; text-transform:uppercase; letter-spacing:0.08em; font-size:0.75rem; margin-bottom:var(--space-md); border-bottom:3px solid var(--clr-primary); padding-bottom:8px; display:inline-block; }}
-        .product-section {{ display:grid; grid-template-columns:1fr; gap:var(--space-xl); }}
-        .product-card {{ display:grid; grid-template-columns:1fr; gap:var(--space-md); background:var(--clr-white); border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); padding:var(--space-lg); transition: transform var(--duration-base), box-shadow var(--duration-base); }}
+        .section-eyebrow {{ display:block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:var(--clr-accent-text); margin-bottom:6px; }}
+        .article-body .section-title {{ font-family:var(--font-display); font-weight:600; letter-spacing:-0.01em; font-size:var(--text-2xl); color:var(--clr-black); margin:0 0 var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom:var(--space-sm); display:block; }}
+        .product-section {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:var(--space-lg); }}
+        .product-card {{ display:grid; grid-template-columns:1fr; gap:var(--space-md); background:var(--clr-white); border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); padding:var(--space-lg); box-shadow:var(--shadow-sm); transition: transform var(--duration-base), box-shadow var(--duration-base); }}
         .product-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
         .product-card img {{ width:100%; height:auto; max-height:360px; object-fit:contain; border-radius:var(--radius-sm); background:var(--clr-white); }}
         .product-card-body h3 {{ font-size:var(--text-base); margin-bottom:2px; overflow-wrap:anywhere; }}
@@ -2565,7 +2567,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .further-reading a:hover {{ color:var(--clr-accent-text); }}
 
         .decision-matrix-wrap {{ margin:var(--space-xl) 0; }}
-        .decision-matrix {{ margin:var(--space-lg) 0; overflow-x:auto; background:var(--clr-white); border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); padding:var(--space-lg); }}
+        .decision-matrix {{ margin:var(--space-lg) 0; overflow-x:auto; background:var(--clr-white); border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); padding:var(--space-lg); box-shadow:var(--shadow-sm); }}
         .decision-matrix table {{ width:100%; border-collapse:collapse; font-size:var(--text-sm); }}
         .decision-matrix th {{ background:var(--clr-white); text-align:left; padding:12px 16px; font-weight:700; color:var(--clr-black); font-family:var(--font-display); border-bottom:2px solid var(--clr-light-gray); }}
         .decision-matrix td {{ padding:12px 16px; border-bottom:1px solid var(--clr-light-gray); color:var(--clr-mid-gray); vertical-align:top; }}
@@ -2574,7 +2576,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .decision-matrix td:last-child {{ color:var(--clr-off-black); }}
 
         .grid-3 {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:var(--space-lg); }}
-        .cat-card {{ padding:var(--space-lg); border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); transition:all .25s cubic-bezier(.4,0,.2,1); box-shadow:var(--shadow-sm); text-decoration:none; display:block; background:var(--clr-off-white); position:relative; overflow:hidden; }}
+        .cat-card {{ padding:var(--space-lg); border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); transition:all .25s cubic-bezier(.4,0,.2,1); box-shadow:var(--shadow-sm); text-decoration:none; display:block; background:var(--clr-off-white); position:relative; overflow:hidden; }}
         .cat-card::after {{ content:''; position:absolute; bottom:0; left:20%; right:20%; height:3px; background:var(--clr-accent); border-radius:3px 3px 0 0; transform:scaleX(0); transition:transform .25s cubic-bezier(.4,0,.2,1); }}
         .cat-card:hover {{ box-shadow:var(--shadow-md); transform:translateY(-4px); text-decoration:none; }}
         .cat-card:hover::after {{ transform:scaleX(1); }}
@@ -2586,7 +2588,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .product-shot img {{ margin:0 !important; }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
-        .footer-grid {{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
+        .footer-grid {{ display:grid; grid-template-columns:1.6fr 2fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
         .footer-col h4 {{ color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }}
         .footer-col p {{ color:#999; font-size:0.9rem; max-width:32ch; }}
         .footer-col a {{ display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }}
@@ -2644,15 +2646,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     </aside>
 </section>
 
-<footer class="footer"><div class="container">
-    <div class="footer-grid">
-        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{footer_social}</div></div>
-        <div class="footer-col"><h4>Categories</h4>{footer_cats}</div>
-        <div class="footer-col"><h4>Company</h4><a href="{b}/about.html">About</a></div>
-        <div class="footer-col"><h4>Legal</h4><a href="{b}/privacy.html">Privacy policy</a></div>
-    </div>
-    <div class="footer-bottom"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; {year_str} Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
-</div></footer>
+{footer_chrome}
 
 <script>
 const APPS_SCRIPT_URL="{form_url}";
@@ -2672,15 +2666,18 @@ const LEAD_MAGNET_TITLE = "{lead_magnet_title}";
 async function submitLead(e) {{
     e.preventDefault();
     const f = e.target;
-    const msg = document.getElementById('subscribe-msg');
+    const box = f.closest('.sidebar-box, .cta-banner') || f.parentElement;
+    const msg = box.querySelector('.lead-msg, #subscribe-msg');
+    if (!msg) return;
     if (f._gotcha.value !== "") {{ msg.innerText = 'Success! Check your inbox.'; return; }}
-    const email = f.querySelector('#lead-email').value.trim();
+    let email = (f.querySelector('input[type="email"]') || {{}}).value || '';
+    email = email.trim();
     if (!email) return;
     msg.innerText = 'Sending...';
     try {{
         const response = await fetch(APPS_SCRIPT_URL, {{
             method: 'POST', headers: {{'Content-Type': 'application/json'}},
-            body: JSON.stringify({{ email: email, niche: CATEGORY_SLUG, source: 'blog_sidebar', lead_magnet: LEAD_MAGNET_TITLE }})
+            body: JSON.stringify({{ email: email, niche: CATEGORY_SLUG, source: f.dataset.source || 'blog_sidebar', lead_magnet: LEAD_MAGNET_TITLE }})
         }});
         const result = await response.json();
         msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
