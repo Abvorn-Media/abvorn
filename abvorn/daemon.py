@@ -324,6 +324,9 @@ class AbvornDaemon:
         domination_task = asyncio.create_task(self._domination_loop())
         self._tasks.append(domination_task)
 
+        gsc_task = asyncio.create_task(self._gsc_loop())
+        self._tasks.append(gsc_task)
+
         logger.info(f"Daemon running with {len(self.agents)} agents")
 
     async def _bus_loop(self):
@@ -351,6 +354,27 @@ class AbvornDaemon:
             except Exception as e:
                 logger.debug(f"Telegram poll error (non-fatal): {e}")
             await asyncio.sleep(5)
+
+    async def _gsc_loop(self):
+        """Run Google Search Console ingestion every 24 hours."""
+        while self.running:
+            last_run = self.state.get_meta("gsc_last_run", "")
+            if last_run:
+                last_time = datetime.fromisoformat(last_run)
+                elapsed = datetime.now() - last_time
+                if elapsed < timedelta(hours=24):
+                    await asyncio.sleep(1800)
+                    continue
+            try:
+                from abvorn.core.gsc_ingestor import GSCIngestor
+
+                result = GSCIngestor().ingest_performance(days=7)
+                logger.info("GSC ingestion: %s", result.get("status"))
+                if result.get("status") == "success":
+                    self.state.set_meta("gsc_last_run", datetime.now().isoformat())
+            except Exception as e:
+                logger.warning("GSC ingestion error (non-fatal): %s", e)
+            await asyncio.sleep(43200)
 
     async def _domination_loop(self):
         """Run domination cycle every 4 hours (or on bus signal)."""

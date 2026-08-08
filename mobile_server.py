@@ -159,6 +159,45 @@ async def dashboard_page():
     return HTMLResponse(content=html, media_type="text/html")
 
 
+# ── Google Search Console API endpoints ─────────────────────────────
+@app.get("/api/gsc/summary")
+async def get_gsc_summary():
+    """Get GSC summary stats."""
+    from abvorn.core.gsc_client import GSCClient
+
+    return GSCClient().get_summary()
+
+
+@app.get("/api/gsc/top")
+async def get_gsc_top(days: int = 30, limit: int = 20):
+    """Get top performing content."""
+    from abvorn.core.gsc_client import GSCClient
+
+    client = GSCClient()
+    if not client.enabled:
+        return {"error": "GSC Client disabled"}
+    return {"top_content": client.fetch_top_performing(days, limit)}
+
+
+@app.get("/api/gsc/opportunities")
+async def get_gsc_opportunities(days: int = 30):
+    """Get growth opportunities."""
+    from abvorn.core.gsc_client import GSCClient
+
+    client = GSCClient()
+    if not client.enabled:
+        return {"error": "GSC Client disabled"}
+    return {"opportunities": client.fetch_growth_opportunities(days)}
+
+
+@app.post("/api/gsc/ingest")
+async def trigger_gsc_ingest(days: int = 7):
+    """Manually trigger GSC data ingestion."""
+    from abvorn.core.gsc_ingestor import GSCIngestor
+
+    return GSCIngestor().ingest_performance(days)
+
+
 # ── Evolution Stack API endpoints ──────────────────────────────────
 @app.get("/api/subscribers")
 async def get_subscribers():

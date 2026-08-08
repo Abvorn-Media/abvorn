@@ -16,6 +16,9 @@ Thumbs.db
 # Data files
 *.db
 *.log
+
+# Google Search Console credentials (secret)
+gsc-credentials.json
 cycle_state.json
 relentless_state.json
 products_cache.json

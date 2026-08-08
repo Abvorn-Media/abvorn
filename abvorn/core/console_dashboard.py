@@ -172,6 +172,20 @@ def _read_unified_db_summary() -> Dict[str, Any]:
         return {"total_subscribers": 0, "active_alerts": 0, "total_profit": 0, "total_campaigns": 0}
 
 
+def _read_gsc_state() -> Dict[str, Any]:
+    """Read the latest Google Search Console summary written by the ingestor."""
+    data = _read_json(PROJECT_DIR / "data" / "gsc_latest_summary.json") or {}
+    return {
+        "enabled": bool(data.get("total_clicks") is not None and data.get("timestamp")),
+        "total_clicks": int(data.get("total_clicks", 0) or 0),
+        "total_impressions": int(data.get("total_impressions", 0) or 0),
+        "avg_ctr": float(data.get("avg_ctr", 0.0) or 0.0),
+        "avg_position": float(data.get("avg_position", 0.0) or 0.0),
+        "days": int(data.get("days", 0) or 0),
+        "last_ingestion": data.get("timestamp", "Never"),
+    }
+
+
 def _read_brain_state() -> Dict[str, Any]:
     try:
         from abvorn.core.brain import get_brain
@@ -204,6 +218,7 @@ def get_system_status() -> Dict[str, Any]:
     lineage = _read_lineage()
     unified = _read_unified_db_summary()
     brain = _read_brain_state()
+    gsc = _read_gsc_state()
 
     return {
         "timestamp": datetime.now().isoformat(),
@@ -231,6 +246,7 @@ def get_system_status() -> Dict[str, Any]:
         "lineage": lineage,
         "unified": unified,
         "brain": brain,
+        "gsc": gsc,
     }
 
 
@@ -334,6 +350,18 @@ def generate_dashboard_html() -> str:
         <div class="fable-item"><span class="fable-label">Categories</span><span class="fable-value">{brain.get("categories", 0)}</span></div>
         <div class="fable-item"><span class="fable-label">Entities</span><span class="fable-value">{brain.get("entities", 0)}</span></div>
         <div class="fable-item"><span class="fable-label">Status</span><span class="fable-value">{brain.get("status", "unavailable")}</span></div>
+    </div>
+    """
+
+    gsc = status.get("gsc", {})
+    gsc_html = f"""
+    <div class="fable-grid">
+        <div class="fable-item"><span class="fable-label">Clicks</span><span class="fable-value">{gsc.get("total_clicks", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Impressions</span><span class="fable-value">{gsc.get("total_impressions", 0)}</span></div>
+        <div class="fable-item"><span class="fable-label">Avg CTR</span><span class="fable-value">{gsc.get("avg_ctr", 0):.2%}</span></div>
+        <div class="fable-item"><span class="fable-label">Avg Position</span><span class="fable-value">{gsc.get("avg_position", 0):.1f}</span></div>
+        <div class="fable-item"><span class="fable-label">Window</span><span class="fable-value">{gsc.get("days", 0)}d</span></div>
+        <div class="fable-item"><span class="fable-label">Last Ingest</span><span class="fable-value">{str(gsc.get("last_ingestion", "Never"))[:16]}</span></div>
     </div>
     """
 
@@ -567,6 +595,10 @@ def generate_dashboard_html() -> str:
         <div class="card">
             <div class="card-title">Brain Library</div>
             {brain_html}
+        </div>
+        <div class="card">
+            <div class="card-title">Google Search Console</div>
+            {gsc_html}
         </div>
     </div>
 
