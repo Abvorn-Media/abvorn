@@ -847,7 +847,7 @@ def build_category_index(category_name, b="", niche_slugs=None):
             f'<a class="category-index__link" href="#{s}"><span class="category-index__tick" style="--cat:{color}"></span>{html_mod.escape(_niche_name(s))}</a>'
         )
     return (
-        '<nav class="category-index" aria-label="Guides in this category">'
+        '<nav class="category-index" aria-label="Guides in this category" style="--cat:' + color + '">'
         '<div class="container category-index__inner">'
         f'<span class="category-index__label">In this category</span>'
         f'<div class="category-index__links">{"".join(links)}</div>'
@@ -1778,13 +1778,13 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         .cat-hero__stage svg {{ width:100%; max-width:440px; height:auto; filter:drop-shadow(0 24px 60px rgba(0,0,0,0.5)); }}
         @media (max-width:900px) {{ .cat-hero__grid {{ grid-template-columns:1fr; }} .cat-hero__stage {{ order:-1; max-width:340px; margin:0 auto; }} }}
 
-        .category-index {{ background:var(--clr-off-white); border-bottom:1px solid var(--clr-light-gray); padding:10px 0; }}
+        .category-index {{ background:color-mix(in srgb, var(--cat) 12%, var(--clr-off-white)); border-bottom:1px solid color-mix(in srgb, var(--cat) 34%, var(--clr-light-gray)); padding:10px 0; }}
         .category-index__inner {{ display:flex; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }}
-        .category-index__label {{ font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-accent-text); flex-shrink:0; }}
+        .category-index__label {{ font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:color-mix(in srgb, var(--cat) 44%, #0a0a0a); flex-shrink:0; }}
         .category-index__links {{ display:flex; flex-wrap:wrap; align-items:center; gap: var(--space-md); row-gap:8px; }}
         .category-index__link {{ font-family:var(--font-display); font-weight:600; font-size:0.95rem; color:var(--clr-black); text-decoration:none; display:inline-flex; align-items:center; gap:8px; padding:4px 0; border-bottom:2px solid transparent; transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out); }}
-        .category-index__link:hover {{ color:var(--clr-accent-text); border-color:var(--clr-accent); }}
-        .category-index__link.is-current {{ color:var(--clr-accent-text); border-color:var(--clr-accent); }}
+        .category-index__link:hover {{ color:color-mix(in srgb, var(--cat) 44%, #0a0a0a); border-color:var(--cat); }}
+        .category-index__link.is-current {{ color:color-mix(in srgb, var(--cat) 44%, #0a0a0a); border-color:var(--cat); }}
         .category-index__tick {{ width:7px; height:7px; border-radius:1px; background:var(--cat, var(--clr-accent)); flex-shrink:0; }}
 
         .subscribe-band {{ background:var(--clr-off-white); padding: var(--space-xl) 0; border-top:1px solid var(--clr-light-gray); }}

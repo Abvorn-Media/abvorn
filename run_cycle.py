@@ -36,9 +36,9 @@ from src.social_permission import SocialPermissionFramework, create_social_permi
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
-from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, scan_published_reviews, _overlay_review, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS
+from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, scan_published_reviews, _overlay_review, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS, review_card, CATEGORY_TAGLINES
 from src.click_tracker import get_clicks, register_articles_batch
-from src.article_design import (ARTICLE_DESIGN_CSS, upgrade_product_image, product_shot_html,
+from src.article_design import (ARTICLE_DESIGN_CSS, PROD_SHOT_CSS, upgrade_product_image, product_shot_html,
                                 info_dot, sanitize_article_html, inject_product_photos,
                                 build_faq, hero_pick_html, render_article_body, price_floor_for)
 
@@ -1250,45 +1250,163 @@ def carousel_img(niche_slug, b):
 CAROUSEL_JS = """<script>(function(){var c=document.querySelector('.carousel');if(!c)return;var t=c.querySelector('.carousel-track');if(!t)return;var s=t.querySelectorAll('.carousel-slide');if(s.length<2)return;var dots=c.querySelectorAll('.carousel-dot');var prev=c.querySelector('.carousel-arrow.prev');var next=c.querySelector('.carousel-arrow.next');var i=0,n=s.length;var go=function(idx){i=((idx%n)+n)%n;t.style.transform='translateX(-'+(i*100)+'%)';dots.forEach(function(d){d.classList.toggle('active',parseInt(d.dataset.slide)===i)})};dots.forEach(function(d){d.addEventListener('click',function(){go(parseInt(this.dataset.slide))})});if(prev){prev.addEventListener('click',function(){go(i-1)})}if(next){next.addEventListener('click',function(){go(i+1)})};var iv=setInterval(function(){go(i+1)},5000);c.addEventListener('mouseenter',function(){clearInterval(iv)});c.addEventListener('mouseleave',function(){iv=setInterval(function(){go(i+1)},5000)})})();</script>"""
 
 
-def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=""):
+NICHE_TAGLINES = {
+    "4k-monitors": "Every panel claims '4K'. We check which ones deliver real sharpness, color, and desk presence — not just a resolution number.",
+    "fitness-trackers": "Most trackers count steps and little else. We check which ones measure what matters — heart, sleep, and recovery.",
+    "gaming-mice": "Latency and build quality beat RGB every time. We test the mice that survive the grind.",
+    "laptops": "Spec sheets can't tell you what a laptop feels like at 2am before a deadline. We benchmark the machines that deserve your desk.",
+    "mechanical-keyboards": "Switches, stabilizers, and build feel beat RGB every time. We type on the boards that survive the grind.",
+    "smart-home": "Smart gadgets promise a better home. We test which ones deliver without the subscription trap.",
+    "streaming-devices": "Streaming boxes promise a better living room. We test which ones deliver without the bloatware.",
+    "webcams": "Your webcam is what eight hours of meetings sees. We test video, audio, and software so you look like you put effort in.",
+    "wireless-earbuds": "Marketing copy calls everything 'studio-quality'. We check real fit, battery, and sound to find the earbuds actually worth your ears.",
+    "wireless-headphones": "Every pair claims 'studio-quality'. We check real sound, ANC, and battery to find the cans actually worth your commute.",
+}
+
+
+def _archive_row(r, accent, b, niche_slug):
+    rel = r.get("rel")
+    if not rel:
+        rel = f"/reviews/{niche_slug}/"
+    href = f'{b.rstrip("/")}{rel if rel.startswith("/") else "/" + rel}'
+    title = html_mod.escape(r.get("title", ""))
+    date_lbl = ""
+    if r.get("updated"):
+        try:
+            date_lbl = datetime.strptime(r["updated"], "%Y-%m-%d").strftime("%b %d, %Y")
+        except ValueError:
+            date_lbl = html_mod.escape(r["updated"])
+    score_txt = ""
+    if r.get("score") and float(r["score"]) <= 10.0:
+        score_txt = f'<span class="archive-row__score">{float(r["score"]):.1f}<span class="archive-row__score-out">/10</span></span>'
+    return (
+        f'<a class="archive-row" style="--cat:{accent}" href="{href}">'
+        f'<span class="archive-row__date">{date_lbl}</span>'
+        f'<span class="archive-row__title">{title}</span>'
+        f'{score_txt}'
+        f'<span class="archive-row__arrow" aria-hidden="true">\u2192</span>'
+        f'</a>'
+    )
+
+
+def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_tag=""):
+    """Niche landing page — dark showroom hero, contents rail, latest reviews,
+    full archive index, subscribe band. Mirrors the category listing pages."""
     b = SITE_BASE
-    # Build post cards — same .niche-card standard as the homepage and
-    # category listing pages.
     category = next((c for c, slugs in CATEGORY_MAP.items() if niche_slug in slugs), "")
-    post_cards = ""
-    for p in posts:
-        title = p.get("title", niche_name)
-        link = f"{b}/reviews/{niche_slug}/"
-        img_src = carousel_img(niche_slug, b)
-        post_cards += f'''<div class="niche-card review-card" style="--cat:{category_color(category)}">
-    <a href="{link}"><div class="niche-card__image-wrapper"><img src="{img_src}" alt="{html_mod.escape(title)}" loading="lazy"></div></a>
-    <span class="review-card__banner" style="background:{category_color(category)}">{category} · {html_mod.escape(niche_name)}</span>
-    <h2><a href="{link}">{html_mod.escape(title)}</a></h2>
-    <p class="review-card__snippet">Expert-tested and reviewed. See why this made our list.</p>
-    <div class="review-card__footer">
-        <div class="review-card__reactions" data-review="{niche_slug}">
-            <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
-            <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
-        </div>
-        <a href="{link}" class="read-link">Read more →</a>
-    </div>
-</div>'''
+    accent = category_color(category)
 
-    # Nav dropdown (white mega-menu)
+    # Newest first; the freshest review becomes the featured spotlight card.
+    sorted_reviews = sorted(reviews, key=lambda r: r.get("updated", ""), reverse=True)
+    count = len(sorted_reviews)
+
+    # Hero numerics
+    valid = [r for r in sorted_reviews if r.get("score") and float(r["score"]) <= 10.0]
+    top = max(valid, key=lambda r: float(r["score"])) if valid else None
+    top_score = float(top["score"]) if top else None
+    top_txt = f"{top_score:.1f}" if top_score else "--"
+    latest_date = ""
+    if sorted_reviews and sorted_reviews[0].get("updated"):
+        try:
+            latest_date = datetime.strptime(sorted_reviews[0]["updated"], "%Y-%m-%d").strftime("%b %Y")
+        except ValueError:
+            latest_date = html_mod.escape(sorted_reviews[0]["updated"])
+
+    tagline = NICHE_TAGLINES.get(
+        niche_slug,
+        CATEGORY_TAGLINES.get(
+            _category_slug(category),
+            "Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.",
+        ),
+    )
+
     nav_dd = build_category_dropdown(b)
-
-    # Footer
     footer_chrome = build_site_footer(b)
-
-    # Subscribe form action
     form_url = os.environ.get("APPS_SCRIPT_URL", "")
 
     title_escaped = html_mod.escape(niche_name)
-    year_str = str(datetime.now().year)
-
     blog_title = f"Best {title_escaped} Reviews"
     meta_desc = f"Expert {niche_name.lower()} reviews and buying guides. Independent testing, real recommendations."
-    post_list = post_cards or '<p style="grid-column:1/-1;text-align:center;color:var(--clr-mid-gray);padding:40px 0">Reviews coming soon.</p>'
+
+    eyebrow = f"{html_mod.escape(category.upper())} · {title_escaped.upper()}"
+    if sorted_reviews:
+        cta = ('<a class="cat-hero__btn" href="#latest">Browse the reviews'
+               '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></a>')
+    else:
+        cta = '<span class="cat-hero__coming">Reviews coming soon — subscribe below to be first.</span>'
+
+    hero_html = f'''<section class="cat-hero" style="--cat:{accent}">
+    <div class="cat-hero__bg" aria-hidden="true"></div>
+    <div class="container cat-hero__grid">
+        <div class="cat-hero__copy">
+            <p class="cat-hero__eyebrow"><span class="cat-hero__dot" aria-hidden="true"></span>{eyebrow}</p>
+            <h1 class="cat-hero__title">{blog_title}</h1>
+            <p class="cat-hero__tagline">{html_mod.escape(tagline)}</p>
+            <div class="cat-hero__chips">
+                <div class="cat-hero__chip"><span class="cat-hero__chip-num">{count}</span><span class="cat-hero__chip-label">review{"s" if count != 1 else ""} published</span></div>
+                <div class="cat-hero__chip"><span class="cat-hero__chip-num"><em>{top_txt}</em>/10</span><span class="cat-hero__chip-label">best verdict</span></div>
+                <div class="cat-hero__chip"><span class="cat-hero__chip-num">{latest_date}</span><span class="cat-hero__chip-label">latest update</span></div>
+            </div>
+            <div class="cat-hero__cta">{cta}<span class="cat-hero__hint">Independent · Tested · Updated weekly</span></div>
+        </div>
+        <div class="cat-hero__stage" aria-hidden="true"><img class="cat-hero__art" src="{carousel_img(niche_slug, b)}" alt=""></div>
+    </div>
+</section>'''
+
+    index_nav = f'''<nav class="category-index" aria-label="In this niche" style="--cat:{accent}">
+    <div class="container category-index__inner">
+        <span class="category-index__label">In this niche</span>
+        <div class="category-index__links">
+            <a class="category-index__link is-current" aria-current="true" href="#latest"><span class="category-index__tick" style="--cat:{accent}"></span>Latest reviews</a>
+            <a class="category-index__link" href="#archive"><span class="category-index__tick" style="--cat:{accent}"></span>All {title_escaped} guides</a>
+        </div>
+    </div>
+</nav>'''
+
+    subscribe_band = (
+        '<section class="subscribe-band"><div class="container subscribe-inner">'
+        '<div class="subscribe-copy">'
+        f'<h2>Get alerted when we publish a new {title_escaped} review</h2>'
+        '<p>One email whenever we publish a new guide in this niche. No spam, unsubscribe anytime.</p>'
+        '</div>'
+        f'<form class="subscribe-form" id="category-subscribe-form" onsubmit="submitCategorySubscribe(event)">'
+        '<input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off">'
+        '<label for="category-subscribe-email" class="sr-only">Email address</label>'
+        '<input type="email" class="input" id="category-subscribe-email" placeholder="you@example.com" required>'
+        '<button type="submit" class="btn">Notify Me</button>'
+        '<p class="subscribe-msg" id="category-subscribe-msg" aria-live="polite"></p>'
+        '</form>'
+        '</div></section>'
+    )
+
+    sections = []
+    if sorted_reviews:
+        # Latest reviews — newest promoted to a full-width featured card.
+        latest_cards = "".join(
+            review_card(r, category, b, featured=(i == 0))
+            for i, r in enumerate(sorted_reviews[:4])
+        )
+        sections.append(
+            f'<section class="category-section container" id="latest">'
+            f'<span class="section-eyebrow">Fresh this week</span>'
+            f'<div class="category-section__header"><h2>Latest {title_escaped} reviews</h2>'
+            f'<span class="category-section__count">{count} guide{"s" if count != 1 else ""} published</span></div>'
+            f'<div class="niche-grid">{latest_cards}</div></section>'
+        )
+        sections.append(subscribe_band)
+
+        # Full archive index — every published review, newest first.
+        archive_rows = "".join(_archive_row(r, accent, b, niche_slug) for r in sorted_reviews)
+        sections.append(
+            f'<section class="category-section container" id="archive">'
+            f'<span class="section-eyebrow">The full record</span>'
+            f'<div class="category-section__header"><h2>{title_escaped} review archive</h2>'
+            f'<span class="category-section__count">{count} guide{"s" if count != 1 else ""}</span></div>'
+            f'<div class="archive-list">{archive_rows}</div></section>'
+        )
+    else:
+        sections.append(subscribe_band)
+    sections_html = "".join(sections)
 
     return f'''<!DOCTYPE html>
 <html lang="en">
@@ -1297,10 +1415,11 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     <title>{blog_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; }}
+        :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }}
         {DESIGN_SYSTEM_CSS}
+        {PROD_SHOT_CSS}
         
         .top-bar {{ background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }}
         .top-bar .container {{ display:flex; justify-content:space-between; }}
@@ -1333,9 +1452,38 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
             .nav-dropdown a:hover {{ background:transparent; color:#fff; }}
         }}
 
-        .category-hero {{ background:var(--clr-off-white); padding: var(--space-2xl) 0; border-bottom:1px solid var(--clr-light-gray); }}
-        .category-hero h1 {{ font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); margin-bottom: var(--space-sm); }}
-        .category-hero p {{ font-size: var(--text-lg); color: var(--clr-mid-gray); max-width:50ch; }}
+        .cat-hero {{ position:relative; overflow:hidden; background:#0d0d0d; color:#fff; padding:clamp(44px,5.5vw,84px) 0; border-bottom:1px solid #222; }}
+        .cat-hero__bg {{ position:absolute; inset:0; pointer-events:none; background:
+            radial-gradient(900px 420px at 80% 12%, color-mix(in srgb, var(--cat) 16%, transparent), transparent 65%),
+            radial-gradient(640px 380px at 8% 96%, color-mix(in srgb, var(--cat) 8%, transparent), transparent 60%); }}
+        .cat-hero__grid {{ position:relative; display:grid; grid-template-columns:1.15fr 0.85fr; gap:clamp(24px,4vw,56px); align-items:center; }}
+        .cat-hero__eyebrow {{ display:flex; align-items:center; gap:10px; margin:0 0 18px; font-family:var(--font-mono); font-size:0.74rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--cat); }}
+        .cat-hero__dot {{ width:8px; height:8px; border-radius:2px; background:var(--cat); box-shadow:0 0 14px var(--cat); flex-shrink:0; }}
+        .cat-hero__title {{ font-family:var(--font-display); font-weight:800; font-size:clamp(2rem,4.5vw,3.4rem); line-height:1.06; letter-spacing:-0.02em; color:#fff; margin:0 0 16px; }}
+        .cat-hero__tagline {{ font-family:var(--font-body); font-size:clamp(1rem,1.5vw,1.15rem); line-height:1.6; color:#b9b9b4; max-width:52ch; margin:0 0 26px; }}
+        .cat-hero__chips {{ display:flex; flex-wrap:wrap; gap:12px; margin:0 0 28px; }}
+        .cat-hero__chip {{ display:flex; flex-direction:column; gap:3px; min-width:104px; padding:12px 16px; border:1px solid rgba(255,255,255,0.12); border-radius:14px; background:rgba(255,255,255,0.03); }}
+        .cat-hero__chip-num {{ font-family:var(--font-mono); font-size:1.5rem; font-weight:700; line-height:1; color:#fff; }}
+        .cat-hero__chip-num em {{ font-style:normal; color:var(--cat); }}
+        .cat-hero__chip-label {{ font-family:var(--font-body); font-size:0.68rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#8a8a86; }}
+        .cat-hero__cta {{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; }}
+        .cat-hero__btn {{ display:inline-flex; align-items:center; gap:10px; background:var(--cat); color:#0a0a0a; font-family:var(--font-display); font-weight:800; font-size:1rem; text-decoration:none; padding:0.95em 1.6em; border-radius:12px; box-shadow:0 10px 34px color-mix(in srgb, var(--cat) 45%, transparent); transition:transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }}
+        .cat-hero__btn:hover {{ transform:translateY(-2px); box-shadow:0 14px 44px color-mix(in srgb, var(--cat) 60%, transparent); }}
+        .cat-hero__btn svg {{ width:18px; height:18px; }}
+        .cat-hero__hint {{ font-family:var(--font-body); font-size:0.8rem; color:#8a8a86; }}
+        .cat-hero__coming {{ font-family:var(--font-body); font-size:0.95rem; color:#b9b9b4; }}
+        .cat-hero__stage {{ position:relative; display:flex; align-items:center; justify-content:center; }}
+        .cat-hero__art {{ width:100%; max-width:460px; height:auto; border-radius:20px; border:1px solid rgba(255,255,255,0.16); box-shadow:0 24px 70px rgba(0,0,0,0.55); background:#fff; }}
+        @media (max-width:900px) {{ .cat-hero__grid {{ grid-template-columns:1fr; }} .cat-hero__stage {{ order:-1; max-width:340px; margin:0 auto; }} }}
+
+        .category-index {{ background:color-mix(in srgb, var(--cat) 12%, var(--clr-off-white)); border-bottom:1px solid color-mix(in srgb, var(--cat) 34%, var(--clr-light-gray)); padding:10px 0; }}
+        .category-index__inner {{ display:flex; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }}
+        .category-index__label {{ font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:color-mix(in srgb, var(--cat) 44%, #0a0a0a); flex-shrink:0; }}
+        .category-index__links {{ display:flex; flex-wrap:wrap; align-items:center; gap: var(--space-md); row-gap:8px; }}
+        .category-index__link {{ font-family:var(--font-display); font-weight:600; font-size:0.95rem; color:var(--clr-black); text-decoration:none; display:inline-flex; align-items:center; gap:8px; padding:4px 0; border-bottom:2px solid transparent; transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out); }}
+        .category-index__link:hover {{ color:color-mix(in srgb, var(--cat) 44%, #0a0a0a); border-color:var(--cat); }}
+        .category-index__link.is-current {{ color:color-mix(in srgb, var(--cat) 44%, #0a0a0a); border-color:var(--cat); }}
+        .category-index__tick {{ width:7px; height:7px; border-radius:1px; background:var(--cat, var(--clr-accent)); flex-shrink:0; }}
 
         .subscribe-band {{ background:var(--clr-off-white); padding: var(--space-xl) 0; border-top:1px solid var(--clr-light-gray); }}
         .subscribe-inner {{ display:flex; justify-content:space-between; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }}
@@ -1351,26 +1499,60 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .subscribe-msg {{ flex-basis:100%; font-size:0.85rem; color:#666; margin-top:6px; }}
         @media (max-width:700px) {{ .subscribe-inner {{ flex-direction:column; align-items:flex-start; }} .subscribe-form .input {{ width:100%; }} }}
 
-        .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) 0; }}
-        .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-md); overflow:hidden; transition: transform var(--duration-base), box-shadow var(--duration-base); background:var(--clr-white); display:flex; flex-direction:column; }}
-        .niche-card:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-md); }}
-        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; }}
-        .niche-card img {{ width:100%; height:100%; object-fit:contain; }}
-        .niche-card h2 {{ font-size:var(--text-lg); margin: var(--space-md) var(--space-md) 8px; }}
-        .niche-card h2 a {{ color:inherit; text-decoration:none; }}
-        .niche-card p {{ font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }}
-        .niche-card .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
-        .niche-card .read-link {{ font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }}
-        .niche-card .read-link:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
-        .review-card__banner {{ display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background:var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }}
-        .review-card__banner + h2 {{ margin: 6px var(--space-md) 8px; }}
-        .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding: var(--space-sm) var(--space-md) var(--space-md); }}
-        .review-card__footer .read-link {{ margin:0; align-self:auto; }}
+        .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }}
+        .niche-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }}
+        .section-eyebrow {{ display:block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:var(--clr-accent-text); margin-bottom:6px; }}
+        .category-section {{ padding-top: var(--space-2xl); scroll-margin-top: 90px; }}
+        #archive {{ padding-bottom: var(--space-2xl); }}
+        .category-section__header {{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom: var(--space-sm); flex-wrap:wrap; gap: var(--space-sm); }}
+        .category-section__header h2 {{ font-size: var(--text-2xl); margin:0; flex:1 1 auto; min-width:0; }}
+        .category-section__count {{ font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-mid-gray); }}
+        html {{ scroll-behavior:smooth; }}
+        @media (prefers-reduced-motion: reduce) {{ html {{ scroll-behavior:auto; }} }}
+
+        .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); overflow:hidden; transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); background:var(--clr-white); display:flex; flex-direction:column; }}
+        .niche-card:hover {{ transform:translateY(-6px); box-shadow:var(--shadow-lg); }}
+        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; background:var(--clr-white); padding:20px; }}
+        .niche-card img {{ width:100%; height:100%; object-fit:contain; transition: transform var(--duration-slow) var(--ease-out); }}
+        .niche-card:hover img {{ transform: scale(1.04); }}
+        .review-card__media {{ position:relative; }}
+        .review-card__banner {{ display:inline-block; padding:4px 12px; border-radius:6px; color:#1a1200; font-size:0.64rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:6px; }}
+        .review-card__score {{ position:absolute; right:14px; bottom:14px; z-index:2; display:inline-flex; align-items:baseline; gap:3px; background:rgba(10,10,10,0.92); color:#fff; border-radius:100px; padding:6px 14px; border:1px solid rgba(201,138,44,0.6); backdrop-filter: blur(4px); }}
+        .review-card__score-num {{ font-family: var(--font-display); font-size:1.15rem; font-weight:800; color: var(--clr-accent); letter-spacing:-0.02em; line-height:1; }}
+        .review-card__score-out {{ font-size:0.7rem; color:#aaa; font-weight:600; }}
+        .review-card__body {{ display:flex; flex-direction:column; flex:1; padding: var(--space-md); }}
+        .review-card__body h2 {{ font-size: var(--text-lg); margin:0 0 8px; line-height:1.25; }}
+        .review-card__body h2 a {{ color:inherit; text-decoration:none; }}
+        .review-card__body h2 a:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
+        .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
+        .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top: var(--space-sm); }}
+        .review-card__footer .read-link {{ font-weight:700; font-size:0.82rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); border-bottom-color: color-mix(in srgb, var(--cat, var(--clr-accent)) 55%, #1a1200); padding-bottom:1px; }}
+        .review-card__footer .read-link:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
         .review-card__reactions {{ display:flex; gap:6px; }}
         .review-card__reactions .reaction-btn {{ display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; font-family:var(--font-body); }}
         .review-card__reactions .reaction-btn.is-counter {{ cursor:default; }}
         .review-card__reactions .reaction-icon {{ font-size:0.9rem; line-height:1; }}
         .review-card__reactions .reaction-count {{ font-weight:700; min-width:14px; text-align:center; }}
+        .review-card__updated {{ display:block; font-size:0.72rem; color:#999; margin-bottom: var(--space-xs); }}
+        .niche-card--featured {{ grid-column: 1 / -1; display:grid; grid-template-columns: 1.1fr 1fr; align-items:center; }}
+        .niche-card--featured .niche-card__image-wrapper {{ aspect-ratio: 16/10; height:100%; }}
+        .niche-card--featured .review-card__body {{ padding: var(--space-xl); }}
+        .niche-card--featured h2 {{ font-size: var(--text-2xl); }}
+        .niche-card--featured .review-card__score-num {{ font-size:1.5rem; }}
+        .niche-card--featured .review-card__snippet {{ -webkit-line-clamp:3; }}
+        @media (max-width: 760px) {{ .niche-card--featured {{ grid-template-columns: 1fr; }} .niche-card--featured .review-card__body {{ padding: var(--space-md); }} }}
+
+        .archive-list {{ display:flex; flex-direction:column; border-top:1px solid var(--clr-light-gray); }}
+        .archive-row {{ display:grid; grid-template-columns:130px minmax(0,1fr) 70px 28px; gap: var(--space-md); align-items:center; padding: var(--space-md) var(--space-sm); border-bottom:1px solid var(--clr-light-gray); text-decoration:none; transition: background var(--duration-fast) var(--ease-out); }}
+        .archive-row:hover {{ background:var(--clr-off-white); }}
+        .archive-row__date {{ font-family:var(--font-mono); font-size:0.78rem; color:var(--clr-mid-gray); letter-spacing:0.03em; }}
+        .archive-row__title {{ font-family:var(--font-display); font-weight:600; font-size:1rem; color:var(--clr-black); line-height:1.3; }}
+        .archive-row:hover .archive-row__title {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
+        .archive-row__score {{ display:inline-flex; align-items:baseline; gap:2px; font-family:var(--font-display); font-weight:800; font-size:1rem; color:var(--clr-black); justify-self:end; }}
+        .archive-row__score-out {{ font-size:0.68rem; color:var(--clr-mid-gray); font-weight:600; }}
+        .archive-row__arrow {{ font-size:1.1rem; color:var(--clr-mid-gray); justify-self:center; transition: transform var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }}
+        .archive-row:hover .archive-row__arrow {{ color: var(--cat, var(--clr-accent)); transform: translateX(3px); }}
+        @media (max-width:640px) {{ .archive-row {{ grid-template-columns:1fr auto; }} .archive-row__date {{ grid-column:1 / -1; margin-bottom:2px; }} .archive-row__score {{ justify-self:start; }} }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
         .footer-grid {{ display:grid; grid-template-columns:1.6fr 2fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
@@ -1401,26 +1583,11 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     </nav>
 </div></header>
 
-<section class="category-hero"><div class="container">
-    <h1>{blog_title}</h1>
-    <p>Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.</p>
-</div></section>
+{hero_html}
 
-<section class="container posts-grid">{post_list}</section>
+{index_nav}
 
-<section class="subscribe-band"><div class="container subscribe-inner">
-    <div class="subscribe-copy">
-        <h2>Get alerted when we publish a new {title_escaped} review</h2>
-        <p>One email whenever we publish a new guide in this category. No spam, unsubscribe anytime.</p>
-    </div>
-    <form class="subscribe-form" id="category-subscribe-form" onsubmit="submitCategorySubscribe(event)">
-        <input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off">
-        <label for="category-subscribe-email" class="sr-only">Email address</label>
-        <input type="email" class="input" id="category-subscribe-email" placeholder="you@example.com" required>
-        <button type="submit" class="btn">Notify Me</button>
-        <p class="subscribe-msg" id="category-subscribe-msg" aria-live="polite"></p>
-    </form>
-</div></section>
+{sections_html}
 
 {footer_chrome}
 
@@ -1437,6 +1604,32 @@ const CATEGORY_NAME = "{title_escaped}";
         const open = nav.classList.toggle('open');
         btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     }});
+}})();
+
+(function() {{
+    const links = [...document.querySelectorAll('.category-index__link')];
+    if (!links.length || !('IntersectionObserver' in window)) return;
+    const targets = links
+        .map(l => {{
+            const href = l.getAttribute('href') || '';
+            if (!href.startsWith('#')) return null;
+            return document.getElementById(href.slice(1));
+        }})
+        .filter(Boolean);
+    if (!targets.length) return;
+    const io = new IntersectionObserver((entries) => {{
+        for (const e of entries) {{
+            if (!e.isIntersecting) continue;
+            links.forEach(l => {{
+                const active = l.getAttribute('href') === '#' + e.target.id;
+                l.classList.toggle('is-current', active);
+                if (active) l.setAttribute('aria-current', 'true');
+                else l.removeAttribute('aria-current');
+            }});
+            return;
+        }}
+    }}, {{ rootMargin: '-10% 0px -70% 0px', threshold: 0 }});
+    targets.forEach(t => io.observe(t));
 }})();
 
 async function submitCategorySubscribe(e) {{
@@ -2725,12 +2918,9 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     # Write category pages (post slugs point to reviews/{slug} for article pages)
     for n in state["niches"]:
         niche_reviews = [r for r in reviews if r["slug"] == n["slug"]]
-        latest = max(niche_reviews, key=lambda r: r.get("updated", "")) if niche_reviews else None
-        niche_posts = [{"title": latest["title"], "slug": f"reviews/{n['slug']}"}] if latest else \
-                      [{"title": a.get("post_title", ""), "slug": f"reviews/{n['slug']}"} for a in articles.get(n["slug"], [])]
         cat_dir = docs / n["slug"]
         cat_dir.mkdir(exist_ok=True)
-        (cat_dir / "index.html").write_text(build_category_page(n["slug"], n["name"], niche_posts, all_slugs, amazon_tag), encoding="utf-8")
+        (cat_dir / "index.html").write_text(build_category_page(n["slug"], n["name"], niche_reviews, all_slugs, amazon_tag), encoding="utf-8")
 
     # Write comparison pages
     comp_dir = docs / "comparisons"
