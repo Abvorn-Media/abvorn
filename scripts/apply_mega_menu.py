@@ -45,7 +45,6 @@ CANON_HEADER = (
     '        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">' + MEGA_GROUPS + '</div></div>\n'
     '        <a href="/abvorn/">Home</a>\n'
     '        <a href="/abvorn/about.html">About</a>\n'
-    '        <a href="/abvorn/privacy.html">Privacy</a>\n'
     '    </nav>\n'
     '</div></header>'
 )

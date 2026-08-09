@@ -1301,7 +1301,6 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/journal/">Journal</a>
-        <a href="{b}/privacy.html">Privacy</a>
     </nav>
 </div></header>
 
@@ -1862,7 +1861,6 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/journal/">Journal</a>
-        <a href="{b}/privacy.html">Privacy</a>
     </nav>
 </div></header>
 
@@ -2607,7 +2605,6 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/journal/">Journal</a>
-        <a href="{b}/privacy.html">Privacy</a>
     </nav>
 </div></header>
 
@@ -3056,7 +3053,6 @@ def build_site_header(b="", all_slugs=None):
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/journal/">Journal</a>
-        <a href="{b}/privacy.html">Privacy</a>
     </nav>
 </div></header>
 <script>
@@ -3684,7 +3680,6 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         <a href="__SITE_BASE__/">Home</a>
         <a href="__SITE_BASE__/about.html">About</a>
         <a href="__SITE_BASE__/journal/">Journal</a>
-        <a href="__SITE_BASE__/privacy.html">Privacy</a>
     </nav>
 </div></header>
 <div class="trending-ticker"><div class="container"><div class="trending-ticker__track"><div class="trending-ticker__inner"><span class="trending-ticker__label">Latest updates:</span><span id="trending-items">LATEST_UPDATES_PLACEHOLDER</span></div><div class="trending-ticker__inner" aria-hidden="true"><span class="trending-ticker__label">Latest updates:</span><span>LATEST_UPDATES_PLACEHOLDER</span></div></div></div></div>

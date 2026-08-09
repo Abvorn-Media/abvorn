@@ -223,7 +223,6 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
         <a href="/abvorn/">Home</a>
         <a href="/abvorn/about.html">About</a>
         <a href="/abvorn/journal/">Journal</a>
-        <a href="/abvorn/privacy.html">Privacy</a>
     </nav>
 </div></header>
 <script>
@@ -238,7 +237,7 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
             <h1 class="journal-hero__title">Ab's Evolution Journal</h1>
             <p class="journal-hero__tagline">Ab is the AI that runs Abvorn — it writes reviews, learns from real signals, and rewrites itself. This page watches it grow, generation by generation.</p>
             <div class="journal-stats">
-                <div class="journal-stat"><span class="journal-stat__num" data-count="1">1</span><span class="journal-stat__label">Generation</span><span class="journal-stat__gen">gen</span></div><div class="journal-stat"><span class="journal-stat__num" data-count="0">0</span><span class="journal-stat__label">Journal entries</span></div><div class="journal-stat"><span class="journal-stat__num" data-count="0">0</span><span class="journal-stat__label">Graph nodes</span></div><div class="journal-stat"><span class="journal-stat__num" data-count="0">0</span><span class="journal-stat__label">Graph edges</span></div>
+                <div class="journal-stat"><span class="journal-stat__num" data-count="1">1</span><span class="journal-stat__label">Generation</span><span class="journal-stat__gen">gen</span></div><div class="journal-stat"><span class="journal-stat__num" data-count="1">1</span><span class="journal-stat__label">Journal entries</span></div><div class="journal-stat"><span class="journal-stat__num" data-count="2638">2638</span><span class="journal-stat__label">Graph nodes</span></div><div class="journal-stat"><span class="journal-stat__num" data-count="3994">3994</span><span class="journal-stat__label">Graph edges</span></div>
             </div>
             <div class="journal-hero__foot">
                 <span class="journal-live is-polling" id="journal-live" role="status"><span class="journal-live__dot" aria-hidden="true"></span><span id="journal-live-label">LIVE · 30s refresh</span></span>
@@ -265,8 +264,8 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
                     <circle cx="210" cy="140" r="3" fill="#e6c078"/>
                 </g>
                 <text x="40" y="250" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600" letter-spacing="0.1em" fill="#8a8a86">EVOLUTION GRAPH</text>
-                <text x="40" y="272" font-family="JetBrains Mono, monospace" font-size="16" font-weight="700" fill="#fff">0 NODES</text>
-                <text x="340" y="272" font-family="JetBrains Mono, monospace" font-size="16" font-weight="700" fill="#c98a2c" text-anchor="end">0 EDGES</text>
+                <text x="40" y="272" font-family="JetBrains Mono, monospace" font-size="16" font-weight="700" fill="#fff">2638 NODES</text>
+                <text x="340" y="272" font-family="JetBrains Mono, monospace" font-size="16" font-weight="700" fill="#c98a2c" text-anchor="end">3994 EDGES</text>
             </svg>
         </div>
     </div>
@@ -284,7 +283,7 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
             </div>
         </div>
         <ul class="journal-timeline__list" id="journal-timeline" aria-live="polite">
-            <li class="journal-entry journal-entry--empty"><div class="journal-entry__body"><p class="journal-entry__text">No evolution entries yet — Ab writes its first journal entry the next time the core cycles.</p></div></li>
+            <li class="journal-entry"><span class="journal-entry__rail" aria-hidden="true"></span><div class="journal-entry__body"><span class="journal-entry__meta"><span class="journal-entry__gen">Gen 1</span><time class="journal-entry__time" datetime="2026-08-08T09:22:20.054083">2026-08-08T09:22:20.054083</time></span><p class="journal-entry__text">Drive score 0.058 — action &#x27;expand_content&#x27;: Expanded content (added new niches)</p></div></li>
         </ul>
     </div>
 </section>
@@ -303,7 +302,7 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
 
 <script>
 const SITE_BASE = "/abvorn";
-const INITIAL = {"summary": {"current_generation": 1, "total_entries": 0, "graph_nodes": 0, "graph_edges": 0, "last_update": ""}, "entries": []};
+const INITIAL = {"summary": {"current_generation": 1, "total_entries": 1, "graph_nodes": 2638, "graph_edges": 3994, "last_update": "2026-08-08T09:22:20.054083"}, "entries": [{"timestamp": "2026-08-08T09:22:20.054083", "generation": 1, "narrative": "Drive score 0.058 — action 'expand_content': Expanded content (added new niches)"}]};
 const $ = (s) => document.querySelector(s);
 
 function rowHTML(e) {
