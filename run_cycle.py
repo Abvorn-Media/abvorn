@@ -1504,6 +1504,7 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
         .section-eyebrow {{ display:block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:var(--clr-accent-text); margin-bottom:6px; }}
         .category-section {{ padding-top: var(--space-2xl); scroll-margin-top: 90px; }}
         #archive {{ padding-bottom: var(--space-2xl); }}
+        #latest {{ margin-bottom: var(--space-xl); }}
         .category-section__header {{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom: var(--space-sm); flex-wrap:wrap; gap: var(--space-sm); }}
         .category-section__header h2 {{ font-size: var(--text-2xl); margin:0; flex:1 1 auto; min-width:0; }}
         .category-section__count {{ font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-mid-gray); }}
