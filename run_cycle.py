@@ -1387,7 +1387,7 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
             for i, r in enumerate(sorted_reviews[:4])
         )
         sections.append(
-            f'<section class="category-section container" id="latest">'
+            f'<section class="category-section container" id="latest" style="--cat:{accent}">'
             f'<span class="section-eyebrow">Fresh this week</span>'
             f'<div class="category-section__header"><h2>Latest {title_escaped} reviews</h2>'
             f'<span class="category-section__count">{count} guide{"s" if count != 1 else ""} published</span></div>'
@@ -1398,7 +1398,7 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
         # Full archive index — every published review, newest first.
         archive_rows = "".join(_archive_row(r, accent, b, niche_slug) for r in sorted_reviews)
         sections.append(
-            f'<section class="category-section container" id="archive">'
+            f'<section class="category-section container" id="archive" style="--cat:{accent}">'
             f'<span class="section-eyebrow">The full record</span>'
             f'<div class="category-section__header"><h2>{title_escaped} review archive</h2>'
             f'<span class="category-section__count">{count} guide{"s" if count != 1 else ""}</span></div>'
@@ -1501,7 +1501,7 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
 
         .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }}
         .niche-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }}
-        .section-eyebrow {{ display:block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:var(--clr-accent-text); margin-bottom:6px; }}
+        .section-eyebrow {{ display:block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:color-mix(in srgb, var(--cat, var(--clr-accent-text)) 50%, #0a0a0a); margin-bottom:6px; }}
         .category-section {{ padding-top: var(--space-2xl); scroll-margin-top: 90px; }}
         #archive {{ padding-bottom: var(--space-2xl); }}
         #latest {{ margin-bottom: var(--space-xl); }}

@@ -1684,7 +1684,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
             for i, r in enumerate(latest_items)
         )
         sections.append(
-            f'<section class="category-section container" id="latest">'
+            f'<section class="category-section container" id="latest" style="--cat:{hero_accent}">'
             f'<span class="section-eyebrow">Fresh this week</span>'
             f'<div class="category-section__header"><h2>Latest {title_escaped} reviews</h2></div>'
             f'<div class="niche-grid">{latest_cards}</div></section>'
@@ -1695,7 +1695,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
             n = len(by_niche[slug])
             niche_cards = "".join(review_card(r, category_name, b) for r in by_niche[slug])
             sections.append(
-                f'<section class="category-section container" id="{slug}">'
+                f'<section class="category-section container" id="{slug}" style="--cat:{hero_accent}">'
                 f'<div class="category-section__header"><h2>{html_mod.escape(_niche_name(slug))}</h2>'
                 f'<span class="category-section__count">{n} review{"s" if n != 1 else ""}</span></div>'
                 f'<div class="posts-grid">{niche_cards}</div></section>'
@@ -1803,7 +1803,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
 
         .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }}
         .niche-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }}
-        .section-eyebrow {{ display:block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:var(--clr-accent-text); margin-bottom:6px; }}
+        .section-eyebrow {{ display:block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:color-mix(in srgb, var(--cat, var(--clr-accent-text)) 50%, #0a0a0a); margin-bottom:6px; }}
         .category-section {{ padding-top: var(--space-2xl); scroll-margin-top: 90px; }}
         #latest {{ margin-bottom: var(--space-xl); }}
         .category-section__header {{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom: var(--space-sm); flex-wrap:wrap; gap: var(--space-sm); }}
