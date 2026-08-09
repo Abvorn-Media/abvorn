@@ -149,30 +149,38 @@ def main():
     # Run the abvorn pipeline directly
     run_pipeline_direct()
 
-    # Optionally execute cell files for full environment setup (ChromaDB, etc.)
-    # These use mock objects to replace google.colab imports
-    namespace = {
-        '__name__': '__main__',
-        '__builtins__': __builtins__,
-        'drive': colab_drive,
-        'auth': colab_auth,
-        'userdata': colab_userdata,
-    }
+    # Legacy cell files (abvorn_cell1/2/3.py) still contain the full old
+    # pipeline and auto-run it at module level (run_swarm, deploy_and_ping,
+    # poll_ceo_commands, etc.). Exec'ing them here ran the entire legacy
+    # pipeline on top of run_pipeline_direct() every cycle — double AI spend,
+    # double scraping, double deploys. They are now DISABLED by default.
+    # Set ABVORN_RUN_LEGACY_CELLS=1 to opt back in (advanced use only).
+    if os.environ.get('ABVORN_RUN_LEGACY_CELLS') == '1':
+        namespace = {
+            # Do NOT set '__main__': cell files guard their auto-run blocks
+            # with `if __name__ == "__main__"`, and exec'ing with that name
+            # would re-trigger the full legacy pipeline.
+            '__name__': 'abvorn_legacy_cells',
+            '__builtins__': __builtins__,
+            'drive': colab_drive,
+            'auth': colab_auth,
+            'userdata': colab_userdata,
+        }
 
-    for cell_path_str in _CELL_FILES:
-        cell_path = pathlib.Path(cell_path_str)
-        if not cell_path.exists():
-            logger.error(f"Cell file not found: {cell_path}")
-            continue
-        logger.info(f"─── Executing {cell_path} (environment setup) ───")
-        raw = cell_path.read_text(encoding='utf-8')
-        processed = preprocess_cell(raw)
-        try:
-            exec(processed, namespace)
-        except SystemExit:
-            logger.warning(f"{cell_path} called sys.exit() — continuing")
-        except Exception:
-            logger.exception(f"{cell_path} raised an exception — continuing")
+        for cell_path_str in _CELL_FILES:
+            cell_path = pathlib.Path(cell_path_str)
+            if not cell_path.exists():
+                logger.error(f"Cell file not found: {cell_path}")
+                continue
+            logger.info(f"─── Executing {cell_path} (environment setup) ───")
+            raw = cell_path.read_text(encoding='utf-8')
+            processed = preprocess_cell(raw)
+            try:
+                exec(processed, namespace)
+            except SystemExit:
+                logger.warning(f"{cell_path} called sys.exit() — continuing")
+            except Exception:
+                logger.exception(f"{cell_path} raised an exception — continuing")
 
     _save_cache()
     logger.info("Abvorn cycle complete.")
