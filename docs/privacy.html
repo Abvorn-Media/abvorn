@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="/abvorn/assets/favicon-32x32.png"><title>Privacy Policy | Abvorn</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/abvorn/assets/favicon-32x32.png">
+    <title>Privacy Policy — Abvorn</title>
+    <meta name="description" content="How Abvorn collects, uses, and protects your data — cookies, analytics, affiliate links, and your rights under GDPR and CCPA.">
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
 :root {
-  --clr-black: #0a0a0a; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
+  --clr-black: #2b2419; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
   --clr-mid-gray: #666; --clr-light-gray: #e8e8e8; --clr-off-white: #f6f5f2; --clr-white: #ffffff;
   --clr-primary: var(--niche-primary, #1a1a1a); --clr-accent: var(--niche-accent, #c98a2c);
   --clr-accent-text: var(--niche-accent-text, #996015);
@@ -25,7 +29,8 @@
 }
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior: smooth; font-size: 16px; }
-body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: var(--clr-off-black); background: var(--clr-white); -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: #3f382f; background: #faf7f2; -webkit-font-smoothing: antialiased; }
+::selection { background:#e6c98f; color:#241e17; }
 h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; color: var(--clr-black); }
 h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 500; }
 h2 { font-size: var(--text-2xl); letter-spacing: -0.01em; }
@@ -34,15 +39,23 @@ h4 { font-size: var(--text-lg); }
 p { margin-bottom: var(--space-lg); max-width: 65ch; }
 .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 var(--space-lg); }
 @media (max-width: 768px) { .container { padding: 0 var(--space-md); } h1 { font-size: var(--text-2xl); } h2 { font-size: var(--text-xl); } }
+.card { background: var(--clr-white); border: 1px solid var(--clr-light-gray); border-radius: var(--radius-md); padding: var(--space-lg); transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); }
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.btn { display: inline-flex; align-items: center; gap: var(--space-sm); padding: 0.75em 1.5em; font-family: var(--font-body); font-weight: 600; font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; color: var(--clr-white); background: var(--clr-primary); border: none; border-radius: var(--radius-sm); cursor: pointer; transition: background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-out); }
+.btn:hover { background: var(--clr-accent); transform: scale(1.03); box-shadow: var(--shadow-md); }
+.btn:active { transform: scale(0.97); }
+.input { width: 100%; padding: 0.75em 1em; font-family: var(--font-body); font-size: var(--text-base); color: var(--clr-off-black); background: var(--clr-off-white); border: 2px solid transparent; border-radius: var(--radius-sm); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+.input:focus { outline: none; border-color: var(--clr-accent); box-shadow: 0 0 0 3px rgba(90,125,154,0.15); }
+.header--scrolled { padding: 10px 0 !important; background: rgba(0,0,0,0.95) !important; box-shadow: 0 2px 20px rgba(0,0,0,0.3); backdrop-filter: blur(10px); }
+.signal-tag { position: relative; display: inline-flex; align-items: center; gap: 6px; background: var(--clr-accent); color: var(--clr-black); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.signal-tag--tag { padding: 6px 14px; border-radius: var(--radius-sm); font-size: 0.75rem; }
+.signal-tag--badge { position: absolute; top: 12px; left: 12px; padding: 5px 12px; border-radius: var(--radius-sm); font-size: 0.68rem; box-shadow: var(--shadow-sm); z-index: 2; }
+.rank-chip { display: inline-block; background: var(--clr-off-white); color: var(--clr-mid-gray); border: 1px solid var(--clr-light-gray); padding: 4px 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: var(--radius-sm); position: absolute; top: 12px; left: 12px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
-@media (prefers-color-scheme: dark) { :root { --clr-black: #f0f0f0; --clr-off-black: #e0e0e0; --clr-mid-gray: #999; --clr-light-gray: #333; --clr-off-white: #1a1a1a; --clr-white: #111; } body { background: #111; color: #e0e0e0; } h1, h2, h3, h4 { color: #f0f0f0; } }
+@media (prefers-color-scheme: dark) { :root { --clr-black: #2b2419; --clr-off-black: #3a3226; --clr-mid-gray: #6b6252; --clr-light-gray: #e2d8c4; --clr-off-white: #f0e9da; --clr-white: #ffffff; } body { background: #faf7f2; color: #4a4236; } h1, h2, h3, h4 { color: #2b2419; } .card { background: #ffffff; border-color: #e2d8c4; } .input { background: #f5efe2; color: #4a4236; } }
+@media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 :focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
-.main { padding: 60px 20px; max-width: 800px; margin: 0 auto; }
-.main h1 { font-size: var(--text-3xl); margin-bottom: var(--space-md); }
-.main h2 { font-size: var(--text-xl); margin: var(--space-xl) 0 var(--space-sm); }
-.main p { color: var(--clr-mid-gray); }
-/* ── Header chrome (site-wide, matches all category/niche pages) ─ */
 
 header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100; }
 .navbar { display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }
@@ -58,13 +71,16 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
 .nav-dropdown a { display:block; color:#1a1a1a; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }
 .nav-dropdown a:hover { background:#f6f5f2; color: var(--clr-accent-text); }
-.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
+.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; opacity:1; transform:translateY(0); transition:opacity var(--duration-fast) var(--ease-out),transform var(--duration-fast) var(--ease-out); }
+@starting-style {
+    .nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { opacity:0; transform:translateY(6px); }
+}
 .nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
 .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
 .nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent-text,var(--clr-accent,#c98a2c)); font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
 .nav-dropdown.nav-dropdown--mega a { padding:6px 20px; }
 @media (max-width:640px) {
-    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; }
+    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; opacity:1; transform:none; }
     .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 auto; }
     .nav-dropdown.nav-dropdown--mega .category-label { padding:8px 0 2px; }
     .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
@@ -82,7 +98,54 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
     .nav-dropdown a { color:#888; padding:6px 0; font-size:0.8rem; }
     .nav-dropdown a:hover { background:transparent; color:#fff; }
 }
-/* ── Footer chrome (site-wide, matches all category/niche pages) ─ */
+
+/* ── Document (privacy / legal) surface ─────────────────────── */
+.doc-hero { background:#faf7f2; padding: var(--space-xl) 0 var(--space-lg); border-bottom:1px solid #e2d8c4; }
+.doc-hero__inner { animation: doc-rise 0.7s var(--ease-out) both; }
+@keyframes doc-rise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+.doc-updated { display:inline-flex; align-items:center; gap:10px; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#996015; margin-bottom: var(--space-md); }
+.doc-updated::before { content:''; width:8px; height:8px; border-radius:2px; background:var(--clr-accent); flex:none; }
+.doc-hero h1 { font-size: clamp(var(--text-3xl), 4vw, var(--text-4xl)); color:#2b2419; margin-bottom: var(--space-md); }
+.doc-intro { font-size: var(--text-lg); color:#5a5146; max-width: 62ch; line-height:1.65; margin-bottom:0; }
+.doc-layout { display:grid; grid-template-columns: 260px minmax(0,1fr); gap: var(--space-xl); padding: var(--space-xl) 0 var(--space-2xl); }
+.doc-toc { position:sticky; top:96px; align-self:start; font-size:0.85rem; }
+.doc-toc__title { font-family:var(--font-display); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; font-size:0.72rem; color:#996015; margin-bottom: var(--space-md); padding-bottom: var(--space-sm); border-bottom:1px solid #e2d8c4; }
+.doc-toc ol { list-style:none; padding:0; margin:0; }
+.doc-toc li { margin-bottom:2px; }
+.doc-toc a { display:block; padding:6px 10px; border-radius: var(--radius-sm); color:#5a5146; text-decoration:none; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+.doc-toc a:hover { color:#2b2419; background:#f1e9d7; }
+.doc-toc a.is-active { color:#2b2419; background:#f1e9d7; font-weight:700; }
+.doc-toc .sec-num { color:#996015; margin-right:0.5em; font-variant-numeric: tabular-nums; font-weight:600; }
+.doc-body { max-width: 72ch; }
+.doc-section { padding: var(--space-lg) 0; border-top:1px solid #e2d8c4; scroll-margin-top: 110px; }
+.doc-section:first-of-type { border-top:none; }
+.doc-section h2 { font-size: var(--text-xl); margin-bottom: var(--space-md); color:#2b2419; }
+.doc-section h2 .sec-num { color:#996015; margin-right:0.5em; font-variant-numeric: tabular-nums; }
+.doc-section h3 { font-size: var(--text-lg); margin: var(--space-md) 0 var(--space-sm); color:#2b2419; }
+.doc-body p { color:#4a4236; margin-bottom: var(--space-md); }
+.doc-body ul, .doc-body ol { margin:0 0 var(--space-md); padding-left:1.4em; color:#4a4236; }
+.doc-body li { margin-bottom: var(--space-sm); }
+.doc-body li > ul, .doc-body li > ol { margin-top: var(--space-sm); }
+.doc-body strong { color:#2b2419; }
+.doc-body a { color:#996015; text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1px; }
+.doc-body a:hover { color:#7a4c10; }
+.callout { background:#f1e9d7; border-radius: var(--radius-md); padding: var(--space-lg); margin: var(--space-lg) 0; }
+.callout p:last-child { margin-bottom:0; }
+.table-wrap { overflow-x:auto; margin: var(--space-md) 0 var(--space-lg); border:1px solid #e2d8c4; border-radius: var(--radius-md); background:#fff; }
+.doc-table { width:100%; border-collapse:collapse; font-size:0.92rem; min-width:520px; }
+.doc-table th { text-align:left; font-family:var(--font-display); font-weight:700; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:#2b2419; background:#f1e9d7; padding:10px 14px; border-bottom:1px solid #e2d8c4; }
+.doc-table td { padding:12px 14px; border-top:1px solid #e2d8c4; color:#4a4236; vertical-align:top; }
+.doc-table a { white-space:nowrap; }
+.doc-back { display:inline-flex; align-items:center; gap:8px; margin-top: var(--space-md); font-weight:700; font-size:0.85rem; color:#996015; text-decoration:none; }
+.doc-back:hover { color:#7a4c10; }
+.doc-back svg { width:14px; height:14px; transition: transform var(--duration-fast) var(--ease-out); }
+.doc-back:hover svg { transform: translateY(-2px); }
+@media (max-width: 900px) {
+    .doc-layout { grid-template-columns: 1fr; gap: var(--space-lg); }
+    .doc-toc { position:static; }
+    .doc-toc ol { display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:4px; }
+    .doc-toc a { padding:6px 8px; }
+}
 .footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
 .footer-grid { display:grid; grid-template-columns:1.6fr 2fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
 .footer-cat-cols { display: flex; gap: var(--space-xl); }
@@ -98,23 +161,174 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 .footer-social svg { width:16px; height:16px; }
 .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
 @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+
+#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
+#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
+#cookie-banner p{margin:0;color:#ffffff;font-size:13px}
+#cookie-banner a{color:#c98a2c;text-decoration:underline}
+#cookie-banner .btn{background:#c98a2c;color:#0a0a0a;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}
+#cookie-banner .btn:hover{background:#d4a03a}
+#cookie-banner .btn-secondary{background:transparent;color:#ffffff;border:1px solid #555;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
+#cookie-banner .btn-secondary:hover{border-color:#888}
 </style></head>
-<body>
+<body id="top">
+<!--
+THESIS: The Privacy Policy as a quiet, scannable legal document inside the About page's warm editorial world — a sticky section index plus numbered sections, refusing the generic dark legal-template look the placeholder shipped.
+OWN-WORLD: Warm paper (#faf7f2) ground, Libre Franklin display over Inter body, #2b2419 ink, #c98a2c accent, #e2d8c4 hairlines, #f1e9d7 callouts, the site's dark mega-nav header and footer.
+STORY: A visitor who clicks Privacy Policy anywhere on the site lands on a calm, plain-language policy, can jump to any section, and finds the same navigation, cookie consent, and footer as every other page.
+FIRST VIEWPORT: Dark sticky header, then a warm hero with "Privacy Policy", a last-updated accent mark, and the plain-language intro; the "On this page" index sits sticky in the left rail.
+FORM: Document surface inside an established world — extended directly, no concept roll.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md.
+-->
 <header><div class="container navbar">
-    <a href="/abvorn/" class="logo"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:44px;width:auto"></a>
+    <a href="/abvorn/" class="logo"><img src="/abvorn/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><span class="category-label">Audio</span><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><span class="category-label">Computing & Monitors</span><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a></div><div class="category-group"><span class="category-label">Fitness & Health</span><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><span class="category-label">Gaming</span><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><span class="category-label">Home & Lifestyle</span><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><span class="category-label">Webcams & Accessories</span><a href="/abvorn/webcams/">Webcams</a></div></div></div>
+        <div class="nav-item"><a href="/abvorn/index.html">Categories ▾</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><span class="category-label">Audio</span><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><span class="category-label">Computing & Monitors</span><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a></div><div class="category-group"><span class="category-label">Fitness & Health</span><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><span class="category-label">Gaming</span><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><span class="category-label">Home & Lifestyle</span><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><span class="category-label">Webcams & Accessories</span><a href="/abvorn/webcams/">Webcams</a></div></div></div>
         <a href="/abvorn/">Home</a>
         <a href="/abvorn/about.html">About</a>
         <a href="/abvorn/journal/">Journal</a>
     </nav>
 </div></header>
 
+<section class="doc-hero"><div class="container doc-hero__inner">
+    <p class="doc-updated">Last updated: August 9, 2026</p>
+    <h1>Privacy Policy</h1>
+    <p class="doc-intro">This policy explains what information Abvorn ("we," "us," "our") collects when you visit abvorn-media.github.io (the "Site"), how we use it, and the choices you have. It's written in plain language on purpose. If anything here is unclear, contact us at <a href="mailto:abvorn.hq@gmail.com">abvorn.hq@gmail.com</a>.</p>
+</div></section>
 
-<main class="main"><h1>Privacy Policy</h1><h2>Privacy Policy</h2><p>We respect your privacy. This site uses cookies for analytics and affiliate tracking. No personal data is sold.</p></main>
+<div class="container doc-layout">
+    <nav class="doc-toc" aria-label="On this page">
+        <p class="doc-toc__title">On this page</p>
+        <ol>
+            <li><a href="#who-we-are"><span class="sec-num">1</span>Who we are</a></li>
+            <li><a href="#information-we-collect"><span class="sec-num">2</span>Information we collect</a></li>
+            <li><a href="#cookies"><span class="sec-num">3</span>Cookies</a></li>
+            <li><a href="#how-we-use"><span class="sec-num">4</span>How we use your information</a></li>
+            <li><a href="#third-parties"><span class="sec-num">5</span>Third parties</a></li>
+            <li><a href="#affiliate-disclosure"><span class="sec-num">6</span>Affiliate disclosure</a></li>
+            <li><a href="#your-rights"><span class="sec-num">7</span>Your rights</a></li>
+            <li><a href="#data-retention"><span class="sec-num">8</span>Data retention</a></li>
+            <li><a href="#security"><span class="sec-num">9</span>Security</a></li>
+            <li><a href="#changes"><span class="sec-num">10</span>Changes to this policy</a></li>
+            <li><a href="#contact-us"><span class="sec-num">11</span>Contact us</a></li>
+        </ol>
+    </nav>
+
+    <div class="doc-body">
+        <section class="doc-section" id="who-we-are">
+            <h2><span class="sec-num">1.</span> Who we are</h2>
+            <p>Abvorn is an independent product-research and buying-guide site. We are not affiliated with any of the brands or products we write about unless explicitly stated.</p>
+            <p><strong>Contact:</strong> <a href="mailto:abvorn.hq@gmail.com">abvorn.hq@gmail.com</a></p>
+        </section>
+
+        <section class="doc-section" id="information-we-collect">
+            <h2><span class="sec-num">2.</span> Information we collect</h2>
+            <p><strong>Information you give us directly:</strong></p>
+            <ul>
+                <li><strong>Email address</strong>, if you subscribe to our "notify me about new guides" feature, either on the homepage or on a category page.</li>
+            </ul>
+            <p><strong>Information collected automatically:</strong></p>
+            <ul>
+                <li><strong>Usage data</strong>, via Google Analytics — pages visited, time on page, general location (city/country level, not precise), device and browser type, and which links you click, including affiliate links.</li>
+                <li><strong>Cookies</strong>, set by us and by third parties (see Section 3).</li>
+            </ul>
+            <p>We do not knowingly collect any information from children under 13. This Site is not directed at children, and we do not request or knowingly retain data from anyone we know to be under 13. If you believe a child has provided us information, contact us and we will delete it.</p>
+        </section>
+
+        <section class="doc-section" id="cookies">
+            <h2><span class="sec-num">3.</span> Cookies and how we use them</h2>
+            <p>We use cookies and similar technologies for three purposes:</p>
+            <ol>
+                <li><strong>Analytics</strong> — Google Analytics uses cookies to help us understand how visitors use the Site, so we can improve it.</li>
+                <li><strong>Advertising</strong> — We use <strong>Google AdSense</strong> to display ads. Google and its advertising partners use cookies to serve ads based on your visits to this Site and other sites, and to measure ad performance.
+                    <ul>
+                        <li>You can opt out of personalized advertising by visiting <a href="https://adssettings.google.com" target="_blank" rel="noopener">Google Ads Settings</a>.</li>
+                        <li>You can learn how Google uses information from sites that use its services at <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">Google's Partner Sites policy</a>.</li>
+                    </ul>
+                </li>
+                <li><strong>Affiliate tracking</strong> — When you click a link to a retailer (Amazon, or another affiliate partner), that retailer may set a cookie to track that the click came from this Site, so we may earn a commission if you buy something.</li>
+            </ol>
+            <p><strong>Your choices:</strong> most browsers let you block or delete cookies through their settings. Blocking cookies may affect how some parts of the Site work (for example, ads may become less relevant, but the Site will still function). When you first visit, you'll see a cookie notice where you can accept or decline non-essential cookies. You can also manage your cookie preferences at any time via the cookie settings link at the bottom of the page.</p>
+        </section>
+
+        <section class="doc-section" id="how-we-use">
+            <h2><span class="sec-num">4.</span> How we use your information</h2>
+            <p>We use the information above to:</p>
+            <ul>
+                <li>Send you the email updates you signed up for, and nothing else.</li>
+                <li>Understand which content is useful so we can improve the Site.</li>
+                <li>Serve and measure advertising through Google AdSense.</li>
+                <li>Track affiliate referrals so we're credited for purchases made through our links.</li>
+                <li>Maintain the security and proper functioning of the Site.</li>
+            </ul>
+            <p>We do not sell your personal information, and we do not share your email address with anyone outside the service providers listed in Section 5.</p>
+            <aside class="callout">
+                <p><strong>California residents:</strong> We do not sell your personal information in the traditional sense (we do not provide your email address to third parties for money). However, we use Google AdSense, which may use cookies to show you personalized ads based on your visits to this site and other sites. Under California law, this use of cookies for cross-context behavioral advertising may be considered "sharing" of personal information. You can opt out of this sharing via your browser settings, Google's Ad Settings page, or by contacting us at <a href="mailto:abvorn.hq@gmail.com">abvorn.hq@gmail.com</a>.</p>
+            </aside>
+        </section>
+
+        <section class="doc-section" id="third-parties">
+            <h2><span class="sec-num">5.</span> Third parties we work with</h2>
+            <div class="table-wrap">
+                <table class="doc-table">
+                    <thead>
+                        <tr><th scope="col">Service</th><th scope="col">Purpose</th><th scope="col">Their privacy policy</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Google AdSense</td><td>Displaying and measuring ads</td><td><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></td></tr>
+                        <tr><td>Google Analytics</td><td>Site usage analytics</td><td><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></td></tr>
+                        <tr><td>Google Apps Script / Sheets</td><td>Processing and storing email signups</td><td><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></td></tr>
+                        <tr><td>Amazon Associates</td><td>Affiliate links and commission tracking</td><td><a href="https://www.amazon.com/gp/help/customer/display.html?nodeId=468496" target="_blank" rel="noopener">amazon.com/privacy</a></td></tr>
+                        <tr><td>GitHub Pages</td><td>Website hosting</td><td><a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">docs.github.com/site-policy</a></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>We are actively using only Amazon Associates at this time. If we add other affiliate partners, this list will be updated.</p>
+            <!-- Moonshot AI (Kimi) row: only add when Moonshot processing is actually active.
+                 | Moonshot AI (Kimi) | Processing product review data and content generation | moonshot.ai/privacy | -->
+        </section>
+
+        <section class="doc-section" id="affiliate-disclosure">
+            <h2><span class="sec-num">6.</span> Affiliate disclosure</h2>
+            <p>Some links on this Site are affiliate links. If you click one and make a purchase, we may earn a commission at no additional cost to you. This is how the Site is funded. It does not affect which products we choose to cover or how we describe them — our policy is that commission rates never determine our recommendations.</p>
+        </section>
+
+        <section class="doc-section" id="your-rights">
+            <h2><span class="sec-num">7.</span> Your rights</h2>
+            <h3>If you are in the European Economic Area or UK (GDPR)</h3>
+            <p>You have the right to access, correct, delete, or export the personal data we hold about you (in practice, this is limited to your email address if you've subscribed), and the right to object to or restrict our processing of it. To exercise any of these rights, contact us at <a href="mailto:abvorn.hq@gmail.com">abvorn.hq@gmail.com</a>. We will respond within 30 days as required by law. We may ask for verification of your identity before fulfilling your request.</p>
+            <p>Our legal basis for processing your email is your consent (you opted in), and for analytics/advertising cookies, it's consent obtained via the cookie notice on the Site.</p>
+            <h3>If you are a California resident (CCPA/CPRA)</h3>
+            <p>You have the right to know what personal information we collect and how it's used, the right to request deletion of your personal information, and the right to opt out of the "sale" or "sharing" of your personal information. As described in Section 4, we do not sell your personal information. Advertising cookies used for AdSense may be considered "sharing" under CCPA's broad definition; you can opt out of this via the cookie controls described in Section 3 or by contacting us at <a href="mailto:abvorn.hq@gmail.com">abvorn.hq@gmail.com</a>.</p>
+        </section>
+
+        <section class="doc-section" id="data-retention">
+            <h2><span class="sec-num">8.</span> Data retention</h2>
+            <p>We retain your email address for as long as you remain subscribed, and delete it upon request or when you unsubscribe.</p>
+            <p>Analytics data is retained for <strong>14 months</strong>, after which it is automatically deleted by Google Analytics.</p>
+        </section>
+
+        <section class="doc-section" id="security">
+            <h2><span class="sec-num">9.</span> Security</h2>
+            <p>We take reasonable steps to protect the information we collect, including using secure connections (HTTPS) and restricting access to your email address to authorized personnel only. However, no method of transmission over the internet is completely secure, and we cannot guarantee absolute security.</p>
+        </section>
+
+        <section class="doc-section" id="changes">
+            <h2><span class="sec-num">10.</span> Changes to this policy</h2>
+            <p>We may update this policy as the Site changes. We'll update the "Last updated" date at the top when we do. Continued use of the Site after a change means you accept the updated policy.</p>
+        </section>
+
+        <section class="doc-section" id="contact-us">
+            <h2><span class="sec-num">11.</span> Contact us</h2>
+            <p>Questions about this policy or your data: <a href="mailto:abvorn.hq@gmail.com">abvorn.hq@gmail.com</a></p>
+            <a class="doc-back" href="#top"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Back to top</a>
+        </section>
+    </div>
+</div>
+
 <footer class="footer"><div class="container">
     <div class="footer-grid">
         <div class="footer-col"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div></div>
@@ -126,7 +340,36 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
     </div>
     <div class="footer-bottom"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; 2026 Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
 </div></footer>
+
 <script>
-(function(){var b=document.getElementById('nav-toggle');var n=document.getElementById('nav-links');if(!b||!n)return;b.addEventListener('click',function(){var o=n.classList.toggle('open');b.setAttribute('aria-expanded',o?'true':'false')})})();
+window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()
 </script>
-</body></html>
+<div id="cookie-banner" role="dialog" aria-label="Cookie consent">
+<p>We use cookies to analyze traffic and improve your experience. <a href="/abvorn/privacy/">Privacy Policy</a></p>
+<button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
+<button class="btn" onclick="acceptAnalytics()">Accept</button>
+</div>
+<script>
+(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){return}var b=document.getElementById("cookie-banner");if(b){b.classList.add("show")}window.acceptAnalytics=function(){document.cookie="analytics_consent=granted; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show");if(typeof loadAnalytics==="function"){loadAnalytics()}};window.declineAnalytics=function(){document.cookie="analytics_consent=denied; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show")}})();
+(function(){var b=document.getElementById('nav-toggle');var n=document.getElementById('nav-links');if(!b||!n)return;b.addEventListener('click',function(){var o=n.classList.toggle('open');b.setAttribute('aria-expanded',o?'true':'false')})})();
+(function(){
+    var links=Array.prototype.slice.call(document.querySelectorAll('.doc-toc a'));
+    var sections=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1))}).filter(Boolean);
+    if(!sections.length||!('IntersectionObserver' in window))return;
+    var active=null;
+    function set(link){if(active)active.classList.remove('is-active');link.classList.add('is-active');active=link;}
+    var spy=new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+            if(entry.isIntersecting){
+                var id=entry.target.id;
+                var link=links.filter(function(a){return a.getAttribute('href')==='#'+id})[0];
+                if(link)set(link);
+            }
+        });
+    },{rootMargin:'-20% 0px -70% 0px',threshold:0});
+    sections.forEach(function(s){spy.observe(s)});
+    set(links[0]);
+})();
+</script>
+</body>
+</html>
