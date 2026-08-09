@@ -53,7 +53,8 @@ INFO_DOT_CSS = """
 .info-dot__tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);
   width:270px;padding:12px 14px;background:#0a0a0a;color:#fff;font-size:.76rem;line-height:1.55;
   font-weight:400;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);text-align:left;
-  opacity:0;visibility:hidden;transition:all var(--duration-fast) var(--ease-out);
+  opacity:0;visibility:hidden;
+  transition:opacity var(--duration-fast) var(--ease-out),visibility var(--duration-fast),transform var(--duration-fast) var(--ease-out);
   z-index:60;pointer-events:none}
 .info-dot:hover .info-dot__tip,.info-dot:focus .info-dot__tip{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
 .info-dot__tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
@@ -126,7 +127,7 @@ RPS_CSS = """
   text-transform:uppercase;letter-spacing:.04em}
 .rps-alt-item{display:flex;align-items:center;gap:12px;padding:12px 14px;
   border:1px solid var(--clr-light-gray);border-radius:var(--radius-sm);margin-bottom:8px;
-  text-decoration:none;transition:all .15s;background:var(--clr-white)}
+  text-decoration:none;transition:border-color var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out);background:var(--clr-white)}
 .rps-alt-item:hover{text-decoration:none;border-color:var(--clr-primary);box-shadow:var(--shadow-sm)}
 .rps-alt-name{flex:1;font-weight:600;color:var(--clr-off-black);font-size:.9rem}
 .rps-alt-prob{font-size:.78rem;font-weight:600;white-space:nowrap}
@@ -134,7 +135,7 @@ RPS_CSS = """
 .rps-footer{font-size:.78rem;color:var(--clr-mid-gray);display:flex;align-items:center;gap:12px;
   margin-top:12px;padding-top:12px;border-top:1px solid var(--clr-light-gray)}
 .rps-reset{background:none;border:1px solid var(--clr-light-gray);border-radius:100px;padding:4px 12px;
-  font-size:.75rem;color:var(--clr-mid-gray);cursor:pointer;font-family:inherit;transition:all .15s}
+  font-size:.75rem;color:var(--clr-mid-gray);cursor:pointer;font-family:inherit;transition:border-color var(--duration-fast) var(--ease-out),color var(--duration-fast) var(--ease-out)}
 .rps-reset:hover{border-color:var(--clr-primary);color:var(--clr-primary)}
 """
 
