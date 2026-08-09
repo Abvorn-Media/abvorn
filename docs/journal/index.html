@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+THESIS: A transparent, dark "core readout" for Ab's self-improvement — the
+category-default "blog-style about page" it refuses is a static marketing wall.
+OWN-WORLD: inherits the dark showroom — #0d0d0d hero, brand gold #c98a2c,
+Libre Franklin display, Inter body, JetBrains Mono data. LIVE pulse, mono stat
+chips, and a timeline rail make the system feel alive and honest.
+STORY: a visitor understands Ab is an evolving system, sees its real counters
+and journal, and watches the page refresh itself every 30s.
+FIRST VIEWPORT: dark hero with the brand eyebrow + LIVE badge, a 2x2 stat grid
+in mono, and the top of the timeline rail with its newest entry.
+FORM: shaped directly inside the established world (precise request, no seed).
+FINISH: unreviewed and undocumented is unfinished; this build ends with the
+finish review, the verdict, and DESIGN.md
+-->
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/abvorn/assets/favicon-32x32.png">
+<title>Ab's Evolution Journal | Abvorn</title>
+<meta name="description" content="Watch Ab — Abvorn's AI — evolve, generation by generation. A live journal of the system writing itself smarter.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root { --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }
+
+:root {
+  --clr-black: #0a0a0a; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
+  --clr-mid-gray: #666; --clr-light-gray: #e8e8e8; --clr-off-white: #f6f5f2; --clr-white: #ffffff;
+  --clr-primary: var(--niche-primary, #1a1a1a); --clr-accent: var(--niche-accent, #c98a2c);
+  --clr-accent-text: var(--niche-accent-text, #996015);
+  --font-display: 'Libre Franklin', -apple-system, sans-serif; --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --scale-ratio: 1.25;
+  --text-xs: calc(1rem / var(--scale-ratio) / var(--scale-ratio)); --text-sm: calc(1rem / var(--scale-ratio));
+  --text-base: 1rem; --text-lg: calc(1rem * var(--scale-ratio)); --text-xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio));
+  --text-2xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
+  --text-3xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
+  --text-4xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
+  --space-xs: 0.25rem; --space-sm: 0.5rem; --space-md: 1rem; --space-lg: 2rem; --space-xl: 4rem; --space-2xl: 8rem;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08); --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12); --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 150ms; --duration-base: 300ms; --duration-slow: 500ms;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: var(--clr-off-black); background: var(--clr-white); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; color: var(--clr-black); }
+h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 500; }
+h2 { font-size: var(--text-2xl); letter-spacing: -0.01em; }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+p { margin-bottom: var(--space-lg); max-width: 65ch; }
+.container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 var(--space-lg); }
+@media (max-width: 768px) { .container { padding: 0 var(--space-md); } h1 { font-size: var(--text-2xl); } h2 { font-size: var(--text-xl); } }
+.card { background: var(--clr-white); border: 1px solid var(--clr-light-gray); border-radius: var(--radius-md); padding: var(--space-lg); transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); }
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.btn { display: inline-flex; align-items: center; gap: var(--space-sm); padding: 0.75em 1.5em; font-family: var(--font-body); font-weight: 600; font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; color: var(--clr-white); background: var(--clr-primary); border: none; border-radius: var(--radius-sm); cursor: pointer; transition: background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-out); }
+.btn:hover { background: var(--clr-accent); transform: scale(1.03); box-shadow: var(--shadow-md); }
+.btn:active { transform: scale(0.97); }
+.input { width: 100%; padding: 0.75em 1em; font-family: var(--font-body); font-size: var(--text-base); color: var(--clr-off-black); background: var(--clr-off-white); border: 2px solid transparent; border-radius: var(--radius-sm); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+.input:focus { outline: none; border-color: var(--clr-accent); box-shadow: 0 0 0 3px rgba(90,125,154,0.15); }
+.header--scrolled { padding: 10px 0 !important; background: rgba(0,0,0,0.95) !important; box-shadow: 0 2px 20px rgba(0,0,0,0.3); backdrop-filter: blur(10px); }
+.signal-tag { position: relative; display: inline-flex; align-items: center; gap: 6px; background: var(--clr-accent); color: var(--clr-black); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.signal-tag--tag { padding: 6px 14px; border-radius: var(--radius-sm); font-size: 0.75rem; }
+.signal-tag--badge { position: absolute; top: 12px; left: 12px; padding: 5px 12px; border-radius: var(--radius-sm); font-size: 0.68rem; box-shadow: var(--shadow-sm); z-index: 2; }
+.rank-chip { display: inline-block; background: var(--clr-off-white); color: var(--clr-mid-gray); border: 1px solid var(--clr-light-gray); padding: 4px 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: var(--radius-sm); position: absolute; top: 12px; left: 12px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+@media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+:focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
+
+/* ── Compare & Watchlist ──────────────────────────────────────── */
+.av-compare-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; color: var(--clr-accent); border: 1px solid var(--clr-accent);
+  padding: 4px 12px; border-radius: 100px; font-size: 0.78rem; font-weight: 700;
+  cursor: pointer; font-family: var(--font-body); transition: all .15s; margin-top: 8px;
+}
+.av-compare-btn:hover { background: var(--clr-accent); color: var(--clr-white); }
+.av-compare-btn.added { background: var(--clr-primary); color: var(--clr-white); border-color: var(--clr-primary); }
+.av-compare-icon { font-size: 1rem; font-weight: 700; }
+#av-compare-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
+  background: var(--clr-black); color: var(--clr-white);
+  padding: 12px 24px; display: none; align-items: center; justify-content: space-between;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.15); border-top: 2px solid var(--clr-accent);
+  font-family: var(--font-body);
+}
+#av-compare-bar.show { display: flex; }
+#av-compare-bar .av-compare-items { display: flex; gap: 12px; overflow-x: auto; flex: 1; align-items: center; }
+#av-compare-bar .av-compare-pill {
+  display: flex; align-items: center; gap: 8px; background: var(--clr-dark-gray);
+  padding: 6px 12px; border-radius: 100px; font-size: 0.82rem; white-space: nowrap; min-width: fit-content;
+}
+#av-compare-bar .av-compare-pill img { width: 24px; height: 24px; border-radius: 4px; object-fit: contain; }
+#av-compare-bar .av-compare-remove { background: none; border: none; color: var(--clr-mid-gray); cursor: pointer; font-size: 1rem; padding: 0 2px; }
+#av-compare-bar .av-compare-remove:hover { color: #ff6b6b; }
+#av-compare-bar .av-compare-cta {
+  background: var(--clr-accent); color: var(--clr-black); border: none; padding: 8px 20px;
+  border-radius: var(--radius-sm); font-weight: 700; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
+}
+#av-compare-bar .av-compare-cta:hover { filter: brightness(1.1); }
+#av-compare-bar .av-compare-clear { background: none; border: none; color: var(--clr-mid-gray); cursor: pointer; font-size: 0.8rem; text-decoration: underline; margin-right: 16px; white-space: nowrap; }
+@media (max-width: 640px) {
+  #av-compare-bar { flex-wrap: wrap; gap: 8px; padding: 10px 16px; }
+  #av-compare-bar .av-compare-cta { width: 100%; justify-content: center; }
+  #av-compare-bar .av-compare-clear { width: 100%; margin: 0; text-align: center; }
+}
+
+/* ── Footer category columns ──────────────────────────────────── */
+.footer-cat-cols { display: flex; gap: var(--space-xl); }
+.footer-cat-col { display: flex; flex-direction: column; }
+.footer-col h4 + a + h4 { margin-top: var(--space-lg); }
+
+
+/* ── Site-wide chrome (header + footer), used on every page ───── */
+.top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
+.top-bar .container { display:flex; justify-content:space-between; }
+header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100; box-shadow:0 2px 10px rgba(0,0,0,0.25); }
+.navbar { display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }
+.logo img { max-height:44px; width:auto; }
+.nav-links { display:flex; align-items:center; }
+.nav-links > a, .nav-item > a { color:#fff; text-decoration:none; margin-left:28px; font-weight:600; font-size:0.9rem; }
+.nav-links > a:hover, .nav-item > a:hover { color: var(--clr-accent); }
+.nav-item { position:relative; margin-left:28px; }
+.nav-item > a { margin-left:0; }
+.nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:14px}
+.nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#fff; min-width:240px; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding:8px 0; z-index:30; }
+.nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
+.nav-dropdown a { display:block; color:#1a1a1a; padding:9px 20px; font-weight:500; font-size:0.9rem; text-decoration:none; }
+.nav-dropdown a:hover { background:#f6f5f2; color: var(--clr-accent-text); }
+.nav-toggle { display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }
+.nav-toggle svg { width:24px; height:24px; }
+@media (max-width: 640px) {
+    .nav-toggle { display:block; }
+    .nav-links { display:none; position:absolute; top:100%; left:0; right:0; background:#0a0a0a; flex-direction:column; align-items:flex-start; padding: 8px 24px 20px; gap:4px; box-shadow: var(--shadow-lg); }
+    .nav-links.open { display:flex; }
+    .nav-links > a, .nav-item { margin-left:0; width:100%; }
+    .nav-links > a, .nav-item > a { padding:10px 0; }
+    .nav-dropdown { position:static; box-shadow:none; margin-top:0; padding-left:12px; display:block; background:transparent; }
+    .nav-dropdown a { color:#ccc; padding:7px 0; }
+    .nav-dropdown a:hover { background:transparent; }
+}
+.footer { background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }
+.footer-grid { display:grid; grid-template-columns: 1.6fr 2fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
+.footer-col h4 { color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }
+.footer-col p { color:#999; font-size:0.9rem; max-width:32ch; }
+.footer-col a { display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }
+.footer-col a:hover { color:#fff; }
+.footer-social { display:flex; gap:10px; margin-top:16px; }
+.footer-social a { width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+.footer-social a:hover { background: var(--clr-accent); color:#0a0a0a; }
+.footer-social svg { width:16px; height:16px; }
+.footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
+@media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+
+
+.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
+.nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
+.nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
+.nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent-text,var(--clr-accent,#c98a2c)); font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
+.nav-dropdown.nav-dropdown--mega a { padding:6px 20px; }
+@media (max-width:640px) {
+    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; }
+    .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 auto; }
+    .nav-dropdown.nav-dropdown--mega .category-label { padding:8px 0 2px; }
+    .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
+}
+
+.top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
+.top-bar .container { display:flex; justify-content:space-between; }
+.journal-hero { position:relative; overflow:hidden; background:#0d0d0d; color:#fff; padding:clamp(56px,7vw,96px) 0; border-bottom:1px solid #222; }
+.journal-hero__bg { position:absolute; inset:0; pointer-events:none; background:
+  radial-gradient(900px 460px at 82% 8%, rgba(201,138,44,0.16), transparent 62%),
+  radial-gradient(640px 400px at 6% 100%, rgba(201,138,44,0.07), transparent 58%); }
+.journal-hero__grid { position:relative; display:grid; grid-template-columns:1.15fr 0.85fr; gap:clamp(24px,4vw,56px); align-items:center; }
+.journal-hero__eyebrow { display:flex; align-items:center; gap:12px; margin:0 0 20px; font-family:var(--font-mono); font-size:0.74rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:#c98a2c; }
+.journal-hero__dot { width:8px; height:8px; border-radius:2px; background:#c98a2c; box-shadow:0 0 14px #c98a2c; flex-shrink:0; }
+.journal-live { display:inline-flex; align-items:center; gap:8px; padding:5px 14px; border:1px solid rgba(201,138,44,0.5); border-radius:100px; font-size:0.7rem; font-weight:700; letter-spacing:0.12em; color:#e6c078; }
+.journal-live__dot { width:7px; height:7px; border-radius:50%; background:#7fbf7f; box-shadow:0 0 10px rgba(127,191,127,0.9); }
+.journal-live.is-polling .journal-live__dot { animation: live-pulse 2s ease-in-out infinite; }
+@keyframes live-pulse { 0%,100% { opacity:1; box-shadow:0 0 10px rgba(127,191,127,0.9); } 50% { opacity:0.45; box-shadow:0 0 4px rgba(127,191,127,0.4); } }
+.journal-hero__title { font-family:var(--font-display); font-weight:800; font-size:clamp(2.1rem,4.8vw,3.6rem); line-height:1.04; letter-spacing:-0.02em; color:#fff; margin:0 0 18px; }
+.journal-hero__tagline { font-family:var(--font-body); font-size:clamp(1rem,1.5vw,1.15rem); line-height:1.65; color:#b9b9b4; max-width:50ch; margin:0 0 30px; }
+.journal-stats { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; margin-bottom:34px; }
+.journal-stat { position:relative; padding:16px 18px; border:1px solid rgba(255,255,255,0.12); border-radius:14px; background:rgba(255,255,255,0.03); }
+.journal-stat__num { font-family:var(--font-mono); font-size:clamp(1.5rem,2.6vw,2.1rem); font-weight:700; line-height:1; color:#fff; display:block; margin-bottom:8px; }
+.journal-stat__label { font-family:var(--font-body); font-size:0.66rem; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; color:#8a8a86; display:block; }
+.journal-stat__gen { position:absolute; top:14px; right:14px; font-family:var(--font-mono); font-size:0.6rem; font-weight:700; letter-spacing:0.1em; color:#8a8a86; text-transform:uppercase; }
+.journal-hero__foot { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.journal-hero__hint { font-family:var(--font-mono); font-size:0.76rem; color:#8a8a86; }
+@media (max-width:900px) { .journal-hero__grid { grid-template-columns:1fr; } .journal-stats { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+@media (max-width:480px) { .journal-stats { grid-template-columns:1fr 1fr; gap:10px; } .journal-stat { padding:14px; } }
+
+.journal-timeline { position:relative; }
+.journal-timeline__head { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom: var(--space-sm); }
+.journal-timeline__title { font-size: var(--text-2xl); margin:0; }
+.journal-timeline__controls { display:flex; align-items:center; gap:14px; }
+.journal-autoscroll { display:flex; align-items:center; gap:8px; font-size:0.8rem; font-weight:600; color:var(--clr-mid-gray); cursor:pointer; user-select:none; }
+.journal-autoscroll input { accent-color:#c98a2c; cursor:pointer; }
+.journal-timeline__list { list-style:none; display:flex; flex-direction:column; gap:0; margin:0; padding:0; }
+.journal-entry { position:relative; display:grid; grid-template-columns:34px minmax(0,1fr); gap:18px; padding:0 0 var(--space-lg); }
+.journal-entry__rail { position:relative; width:2px; background:var(--clr-light-gray); border-radius:2px; justify-self:center; }
+.journal-entry__rail::before { content:''; position:absolute; top:2px; left:50%; transform:translateX(-50%); width:12px; height:12px; border-radius:50%; background:var(--clr-white); border:3px solid #c98a2c; box-shadow:0 0 0 4px rgba(201,138,44,0.14); }
+.journal-entry:last-child .journal-entry__rail { background:linear-gradient(var(--clr-light-gray), transparent); }
+.journal-entry__meta { display:flex; align-items:center; gap:12px; margin-bottom:6px; flex-wrap:wrap; }
+.journal-entry__gen { font-family:var(--font-mono); font-size:0.68rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#1a1200; background:#c98a2c; padding:4px 10px; border-radius:100px; }
+.journal-entry__time { font-family:var(--font-mono); font-size:0.76rem; color:var(--clr-mid-gray); }
+.journal-entry__text { font-family:var(--font-body); font-size:1rem; line-height:1.65; color:var(--clr-off-black); margin:0; max-width:70ch; }
+.journal-entry--empty .journal-entry__text { color:var(--clr-mid-gray); }
+.journal-entry.is-new { animation: entry-in 600ms var(--ease-out); }
+@keyframes entry-in { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+@media (max-width:640px) { .journal-entry { grid-template-columns:22px minmax(0,1fr); gap:12px; } }
+</style>
+</head>
+<body>
+
+<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
+<header><div class="container navbar">
+    <a href="/abvorn/" class="logo"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:44px;width:auto"></a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav-links" id="nav-links">
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><a class="category-label" href="/abvorn/categories/audio/">Audio</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/gaming/">Gaming</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a><a href="/abvorn/webcams/">Webcams</a></div></div></div>
+        <a href="/abvorn/">Home</a>
+        <a href="/abvorn/about.html">About</a>
+        <a href="/abvorn/journal/">Journal</a>
+        <a href="/abvorn/privacy.html">Privacy</a>
+    </nav>
+</div></header>
+<script>
+(function(){var b=document.getElementById("nav-toggle");var n=document.getElementById("nav-links");if(!b||!n)return;b.addEventListener("click",function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false")})})();
+</script>
+
+<section class="journal-hero">
+    <div class="journal-hero__bg" aria-hidden="true"></div>
+    <div class="container journal-hero__grid">
+        <div>
+            <p class="journal-hero__eyebrow"><span class="journal-hero__dot" aria-hidden="true"></span>System readout · generation 1</p>
+            <h1 class="journal-hero__title">Ab's Evolution Journal</h1>
+            <p class="journal-hero__tagline">Ab is the AI that runs Abvorn — it writes reviews, learns from real signals, and rewrites itself. This page watches it grow, generation by generation.</p>
+            <div class="journal-stats">
+                <div class="journal-stat"><span class="journal-stat__num" data-count="1">1</span><span class="journal-stat__label">Generation</span><span class="journal-stat__gen">gen</span></div><div class="journal-stat"><span class="journal-stat__num" data-count="1">1</span><span class="journal-stat__label">Journal entries</span></div><div class="journal-stat"><span class="journal-stat__num" data-count="2638">2638</span><span class="journal-stat__label">Graph nodes</span></div><div class="journal-stat"><span class="journal-stat__num" data-count="3994">3994</span><span class="journal-stat__label">Graph edges</span></div>
+            </div>
+            <div class="journal-hero__foot">
+                <span class="journal-live is-polling" id="journal-live" role="status"><span class="journal-live__dot" aria-hidden="true"></span><span id="journal-live-label">LIVE · 30s refresh</span></span>
+                <span class="journal-hero__hint" id="journal-hint">Snapshot @ build · Polls the local evolution API</span>
+            </div>
+        </div>
+        <div class="journal-hero__stage" aria-hidden="true">
+            <svg viewBox="0 0 420 300" role="img" aria-label="Evolution graph motif">
+                <rect x="10" y="10" width="400" height="280" rx="20" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)"/>
+                <g stroke="rgba(201,138,44,0.35)" stroke-width="1.5" fill="none">
+                    <path d="M120,120 L200,70 L300,130 L260,200 L170,190 Z"/>
+                    <line x1="200" y1="70" x2="300" y2="130"/>
+                    <line x1="120" y1="120" x2="170" y2="190"/>
+                    <line x1="300" y1="130" x2="260" y2="200"/>
+                    <line x1="170" y1="190" x2="260" y2="200"/>
+                    <line x1="200" y1="70" x2="120" y2="120"/>
+                </g>
+                <g>
+                    <circle cx="120" cy="120" r="6" fill="#c98a2c"/>
+                    <circle cx="200" cy="70" r="6" fill="#c98a2c"/>
+                    <circle cx="300" cy="130" r="6" fill="#c98a2c"/>
+                    <circle cx="260" cy="200" r="6" fill="#c98a2c"/>
+                    <circle cx="170" cy="190" r="6" fill="#c98a2c"/>
+                    <circle cx="210" cy="140" r="3" fill="#e6c078"/>
+                </g>
+                <text x="40" y="250" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600" letter-spacing="0.1em" fill="#8a8a86">EVOLUTION GRAPH</text>
+                <text x="40" y="272" font-family="JetBrains Mono, monospace" font-size="16" font-weight="700" fill="#fff">2638 NODES</text>
+                <text x="340" y="272" font-family="JetBrains Mono, monospace" font-size="16" font-weight="700" fill="#c98a2c" text-anchor="end">3994 EDGES</text>
+            </svg>
+        </div>
+    </div>
+</section>
+
+<section class="container" id="journal" style="padding-top:var(--space-2xl);">
+    <div class="journal-timeline">
+        <div class="journal-timeline__head">
+            <h2 class="journal-timeline__title">The journal</h2>
+            <div class="journal-timeline__controls">
+                <label class="journal-autoscroll" for="journal-autoscroll">
+                    <input type="checkbox" id="journal-autoscroll" checked>
+                    <span>Auto-scroll to newest</span>
+                </label>
+            </div>
+        </div>
+        <ul class="journal-timeline__list" id="journal-timeline" aria-live="polite">
+            <li class="journal-entry"><span class="journal-entry__rail" aria-hidden="true"></span><div class="journal-entry__body"><span class="journal-entry__meta"><span class="journal-entry__gen">Gen 1</span><time class="journal-entry__time" datetime="2026-08-08T09:22:20.054083">2026-08-08T09:22:20.054083</time></span><p class="journal-entry__text">Drive score 0.058 — action &#x27;expand_content&#x27;: Expanded content (added new niches)</p></div></li>
+        </ul>
+    </div>
+</section>
+
+<footer class="footer"><div class="container">
+    <div class="footer-grid">
+        <div class="footer-col"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social"><a href="#" aria-label="X" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7.5 9.5L4.3 20H6l6-5.8L16.5 20H20l-8-9.9L19.4 4H17.7l-5.6 5.4L8 4H4zm2.7 1.5h1.9l9.6 13H14.3l-9.6-13z"/></svg></a><a href="#" aria-label="Instagram" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Youtube" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="Tiktok" target="_blank" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg></a></div></div>
+        <div class="footer-col"><h4>Categories</h4><div class="footer-cat-cols"><div class="footer-cat-col"><a href="/abvorn/categories/audio/">Audio</a><a href="/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="/abvorn/categories/gaming/">Gaming</a><a href="/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a></div></div></div>
+        <div class="footer-col">
+            <h4>Company</h4><a href="/abvorn/about.html">About</a>
+            <h4>Legal</h4><a href="/abvorn/privacy.html">Privacy policy</a>
+        </div>
+    </div>
+    <div class="footer-bottom"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; 2026 Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
+</div></footer>
+
+<script>
+const SITE_BASE = "/abvorn";
+const INITIAL = {"summary": {"current_generation": 1, "total_entries": 1, "graph_nodes": 2638, "graph_edges": 3994, "last_update": "2026-08-08T09:22:20.054083"}, "entries": [{"timestamp": "2026-08-08T09:22:20.054083", "generation": 1, "narrative": "Drive score 0.058 — action 'expand_content': Expanded content (added new niches)"}]};
+const $ = (s) => document.querySelector(s);
+
+function rowHTML(e) {
+    const t = document.createElement('template');
+    t.innerHTML = '<li class="journal-entry">'
+        + '<span class="journal-entry__rail" aria-hidden="true"></span>'
+        + '<div class="journal-entry__body">'
+        + '<span class="journal-entry__meta"><span class="journal-entry__gen">Gen ' + (e.generation || 1) + '</span>'
+        + '<time class="journal-entry__time" datetime="' + e.timestamp + '">' + e.timestamp + '</time></span>'
+        + '<p class="journal-entry__text"></p></div></li>';
+    t.content.querySelector('.journal-entry__text').textContent = e.narrative || '';
+    return t.content.firstElementChild;
+}
+
+function render(entries, {newOnTop = false} = {}) {
+    const list = $('#journal-timeline');
+    if (!list) return;
+    const existing = [...list.querySelectorAll('.journal-entry')];
+    const known = new Set(existing.map(li => li.querySelector('.journal-entry__time')?.getAttribute('datetime')));
+    list.textContent = '';
+    for (const e of entries) {
+        const li = rowHTML(e);
+        if (newOnTop) li.classList.add('is-new');
+        list.appendChild(li);
+    }
+    if (newOnTop && $('#journal-autoscroll')?.checked) {
+        $('#journal')?.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+}
+
+function fmtStamp() {
+    try {
+        return new Date().toLocaleString(undefined, {dateStyle:'medium', timeStyle:'short'});
+    } catch (e) { return new Date().toString(); }
+}
+
+function applyData(data) {
+    const s = data.summary || {};
+    const el = (sel, v) => { const n = document.querySelector(sel); if (n) n.textContent = v; };
+    const nums = document.querySelectorAll('.journal-stat__num');
+    if (nums.length >= 4) {
+        nums[0].textContent = s.current_generation ?? '0';
+        nums[1].textContent = s.total_entries ?? '0';
+        nums[2].textContent = s.graph_nodes ?? '0';
+        nums[3].textContent = s.graph_edges ?? '0';
+    }
+    render(data.entries || [], {newOnTop:true});
+    const hint = $('#journal-hint');
+    if (hint) hint.textContent = 'Last live sync · ' + fmtStamp();
+    const live = $('#journal-live');
+    const label = $('#journal-live-label');
+    if (live) live.classList.add('is-polling');
+    if (label) label.textContent = 'LIVE · updated just now';
+}
+
+async function poll() {
+    const endpoint = SITE_BASE.replace(/\/$/, '') + '/api/evolution/public';
+    try {
+        const res = await fetch(endpoint, {cache:'no-store'});
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data && data.summary) applyData(data);
+    } catch (err) {
+        const live = $('#journal-live');
+        const label = $('#journal-live-label');
+        if (live) live.classList.remove('is-polling');
+        if (label) label.textContent = 'SNAPSHOT · live API unreachable';
+    }
+}
+
+(function () {
+    render(INITIAL.entries || []);
+    setInterval(poll, 30000);
+    setTimeout(poll, 1500);
+})();
+</script>
+</body>
+</html>

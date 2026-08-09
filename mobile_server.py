@@ -216,6 +216,33 @@ async def trigger_gsc_ingest(days: int = 7):
 
 
 # ── Evolution Stack API endpoints ──────────────────────────────────
+@app.get("/api/evolution/public")
+async def evolution_public():
+    """Public Evolution Journal payload for the journal page.
+
+    Returns {summary: {current_generation, total_entries, graph_nodes,
+    graph_edges, last_update}, entries: [{timestamp, generation, narrative}]}.
+    Reads real local sources: the Obsidian vault journal, the Genesis lineage
+    file, and the Neural Memory state file. Never raises.
+    """
+    try:
+        from src.deployment import load_evolution_snapshot
+
+        return load_evolution_snapshot()
+    except Exception as e:
+        logger.warning("evolution/public failed: %s", e)
+        return {
+            "summary": {
+                "current_generation": 1,
+                "total_entries": 0,
+                "graph_nodes": 0,
+                "graph_edges": 0,
+                "last_update": None,
+            },
+            "entries": [],
+        }
+
+
 @app.get("/api/subscribers")
 async def get_subscribers():
     """Return all subscribers from the unified database."""

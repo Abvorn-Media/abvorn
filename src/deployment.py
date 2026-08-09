@@ -1305,6 +1305,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
+        <a href="{b}/journal/">Journal</a>
         <a href="{b}/privacy.html">Privacy</a>
     </nav>
 </div></header>
@@ -1868,6 +1869,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
+        <a href="{b}/journal/">Journal</a>
         <a href="{b}/privacy.html">Privacy</a>
     </nav>
 </div></header>
@@ -2615,6 +2617,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
+        <a href="{b}/journal/">Journal</a>
         <a href="{b}/privacy.html">Privacy</a>
     </nav>
 </div></header>
@@ -3067,6 +3070,7 @@ def build_site_header(b="", all_slugs=None):
         {dropdown}
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
+        <a href="{b}/journal/">Journal</a>
         <a href="{b}/privacy.html">Privacy</a>
     </nav>
 </div></header>
@@ -3099,6 +3103,382 @@ def build_site_footer(b=""):
 
 def nav_html(categories, current=""):
     return build_site_header()
+
+
+# ── Evolution Journal ─────────────────────────────────────────────
+# Public-facing "Ab's Evolution Journal" page. Real data only: reads the
+# Obsidian vault journal (via cortex_watcher), the Genesis lineage file,
+# and the Neural Memory state file. The static page embeds a snapshot for
+# GitHub Pages (no backend) and live-polls /api/evolution/public when the
+# mobile server is reachable, gracefully falling back to the snapshot.
+
+
+def _read_json_safe(path):
+    try:
+        p = Path(path)
+        if p.exists():
+            return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return None
+
+
+def _journal_entry_narrative(body: str) -> str:
+    """Trim a vault journal body down to its narrative (drop the H1 heading)."""
+    text = re.sub(r"^#\s+.*$", "", body, flags=re.M)
+    text = re.sub(r"^-\s*$", "", text, flags=re.M)
+    return text.strip()
+
+
+def load_evolution_snapshot():
+    """Build {summary, entries} from real local sources.
+
+    summary: current_generation, total_entries, graph_nodes, graph_edges,
+             last_update
+    entries: [{timestamp, generation, narrative}] newest first.
+    Never raises; falls back to zeros/empty when a source is missing.
+    """
+    entries = []
+    try:
+        from abvorn.core.cortex_watcher import get_vault_path
+
+        vault = get_vault_path()
+        if vault is not None:
+            journal_dir = vault / "Journal"
+            if journal_dir.exists():
+                for f in sorted(journal_dir.glob("*.md"), key=lambda f: f.stat().st_mtime, reverse=True):
+                    try:
+                        raw = f.read_text(encoding="utf-8")
+                    except Exception:
+                        continue
+                    fm = {}
+                    body = raw
+                    try:
+                        import frontmatter as _fm
+
+                        post = _fm.loads(raw)
+                        fm = dict(post.metadata or {})
+                        body = post.content or ""
+                    except Exception:
+                        pass
+                    stamp = fm.get("date") or datetime.fromtimestamp(f.stat().st_mtime).isoformat()
+                    if not isinstance(stamp, str):
+                        try:
+                            stamp = stamp.isoformat()
+                        except Exception:
+                            stamp = str(stamp)
+                    gen = fm.get("generation") or 1
+                    sections = re.split(r"^##\s+Cycle\s+\d+", body, flags=re.M)
+                    # First chunk (pre-Cycle) is the opening narrative; each
+                    # "## Cycle N" chunk is a later entry from the same day.
+                    for i, chunk in enumerate(sections):
+                        narrative = _journal_entry_narrative(chunk)
+                        if not narrative:
+                            continue
+                        entries.append({
+                            "timestamp": stamp,
+                            "generation": gen,
+                            "narrative": narrative,
+                        })
+    except Exception:
+        pass
+
+    lineage = _read_json_safe("data/genesis/lineage.json") or {}
+    current_generation = lineage.get("current_version", 1)
+
+    memory = _read_json_safe("data/neural_memory_state.json") or {}
+    graph_nodes = int(memory.get("entities") or 0)
+    graph_edges = int(memory.get("relationships") or 0)
+
+    last_update = ""
+    if entries:
+        last_update = max(e.get("timestamp", "") for e in entries)
+    elif memory.get("last_ingestion"):
+        last_update = memory["last_ingestion"]
+
+    summary = {
+        "current_generation": int(current_generation),
+        "total_entries": len(entries),
+        "graph_nodes": graph_nodes,
+        "graph_edges": graph_edges,
+        "last_update": last_update,
+    }
+    return {"summary": summary, "entries": entries}
+
+
+def build_journal_page(b=""):
+    """Full static journal page (docs/journal/index.html) in the site world.
+
+    Embeds a build-time snapshot of Ab's evolution (vault journal + lineage +
+    memory), then live-polls /api/evolution/public every 30s when reachable.
+    No CTA: there is no working platform to send people to yet.
+    """
+    b = b or SITE_BASE
+    data = load_evolution_snapshot()
+    summary = data["summary"]
+    entries = data["entries"]
+    snapshot_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
+
+    header_html = build_site_header(b)
+    footer_html = build_site_footer(b)
+    year_str = str(datetime.now().year)
+
+    def _stat_chip(num, label, suffix=""):
+        return (
+            f'<div class="journal-stat"><span class="journal-stat__num" data-count="{num}">{num}</span>'
+            f'<span class="journal-stat__label">{label}</span>{suffix}</div>'
+        )
+
+    chips = (
+        _stat_chip(summary["current_generation"], "Generation", '<span class="journal-stat__gen">gen</span>')
+        + _stat_chip(summary["total_entries"], "Journal entries")
+        + _stat_chip(summary["graph_nodes"], "Graph nodes")
+        + _stat_chip(summary["graph_edges"], "Graph edges")
+    )
+
+    # Timeline rows are rendered server-side from the snapshot; the poller
+    # re-renders the same row template when a live payload arrives.
+    timeline_rows = "".join(
+        f'<li class="journal-entry">'
+        f'<span class="journal-entry__rail" aria-hidden="true"></span>'
+        f'<div class="journal-entry__body">'
+        f'<span class="journal-entry__meta"><span class="journal-entry__gen">Gen {int(e["generation"])}</span>'
+        f'<time class="journal-entry__time" datetime="{e["timestamp"]}">{e["timestamp"]}</time></span>'
+        f'<p class="journal-entry__text">{html_mod.escape(e["narrative"])}</p>'
+        f'</div></li>'
+        for e in entries
+    )
+    if not timeline_rows:
+        timeline_rows = (
+            '<li class="journal-entry journal-entry--empty">'
+            '<div class="journal-entry__body"><p class="journal-entry__text">No evolution entries yet — '
+            'Ab writes its first journal entry the next time the core cycles.</p></div></li>'
+        )
+
+    last_update_txt = summary["last_update"] or "—"
+    live_hint = (
+        "Live on /api/evolution/public" if b.startswith("http") else "Polls the local evolution API"
+    )
+
+    return f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+THESIS: A transparent, dark "core readout" for Ab's self-improvement — the
+category-default "blog-style about page" it refuses is a static marketing wall.
+OWN-WORLD: inherits the dark showroom — #0d0d0d hero, brand gold #c98a2c,
+Libre Franklin display, Inter body, JetBrains Mono data. LIVE pulse, mono stat
+chips, and a timeline rail make the system feel alive and honest.
+STORY: a visitor understands Ab is an evolving system, sees its real counters
+and journal, and watches the page refresh itself every 30s.
+FIRST VIEWPORT: dark hero with the brand eyebrow + LIVE badge, a 2x2 stat grid
+in mono, and the top of the timeline rail with its newest entry.
+FORM: shaped directly inside the established world (precise request, no seed).
+FINISH: unreviewed and undocumented is unfinished; this build ends with the
+finish review, the verdict, and DESIGN.md
+-->
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="{b}/assets/favicon-32x32.png">
+<title>Ab's Evolution Journal | Abvorn</title>
+<meta name="description" content="Watch Ab — Abvorn's AI — evolve, generation by generation. A live journal of the system writing itself smarter.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {{ --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }}
+{DESIGN_SYSTEM_CSS}
+{SITE_CHROME_CSS}
+{MEGA_MENU_CSS}
+.top-bar {{ background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }}
+.top-bar .container {{ display:flex; justify-content:space-between; }}
+.journal-hero {{ position:relative; overflow:hidden; background:#0d0d0d; color:#fff; padding:clamp(56px,7vw,96px) 0; border-bottom:1px solid #222; }}
+.journal-hero__bg {{ position:absolute; inset:0; pointer-events:none; background:
+  radial-gradient(900px 460px at 82% 8%, rgba(201,138,44,0.16), transparent 62%),
+  radial-gradient(640px 400px at 6% 100%, rgba(201,138,44,0.07), transparent 58%); }}
+.journal-hero__grid {{ position:relative; display:grid; grid-template-columns:1.15fr 0.85fr; gap:clamp(24px,4vw,56px); align-items:center; }}
+.journal-hero__eyebrow {{ display:flex; align-items:center; gap:12px; margin:0 0 20px; font-family:var(--font-mono); font-size:0.74rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:#c98a2c; }}
+.journal-hero__dot {{ width:8px; height:8px; border-radius:2px; background:#c98a2c; box-shadow:0 0 14px #c98a2c; flex-shrink:0; }}
+.journal-live {{ display:inline-flex; align-items:center; gap:8px; padding:5px 14px; border:1px solid rgba(201,138,44,0.5); border-radius:100px; font-size:0.7rem; font-weight:700; letter-spacing:0.12em; color:#e6c078; }}
+.journal-live__dot {{ width:7px; height:7px; border-radius:50%; background:#7fbf7f; box-shadow:0 0 10px rgba(127,191,127,0.9); }}
+.journal-live.is-polling .journal-live__dot {{ animation: live-pulse 2s ease-in-out infinite; }}
+@keyframes live-pulse {{ 0%,100% {{ opacity:1; box-shadow:0 0 10px rgba(127,191,127,0.9); }} 50% {{ opacity:0.45; box-shadow:0 0 4px rgba(127,191,127,0.4); }} }}
+.journal-hero__title {{ font-family:var(--font-display); font-weight:800; font-size:clamp(2.1rem,4.8vw,3.6rem); line-height:1.04; letter-spacing:-0.02em; color:#fff; margin:0 0 18px; }}
+.journal-hero__tagline {{ font-family:var(--font-body); font-size:clamp(1rem,1.5vw,1.15rem); line-height:1.65; color:#b9b9b4; max-width:50ch; margin:0 0 30px; }}
+.journal-stats {{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; margin-bottom:34px; }}
+.journal-stat {{ position:relative; padding:16px 18px; border:1px solid rgba(255,255,255,0.12); border-radius:14px; background:rgba(255,255,255,0.03); }}
+.journal-stat__num {{ font-family:var(--font-mono); font-size:clamp(1.5rem,2.6vw,2.1rem); font-weight:700; line-height:1; color:#fff; display:block; margin-bottom:8px; }}
+.journal-stat__label {{ font-family:var(--font-body); font-size:0.66rem; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; color:#8a8a86; display:block; }}
+.journal-stat__gen {{ position:absolute; top:14px; right:14px; font-family:var(--font-mono); font-size:0.6rem; font-weight:700; letter-spacing:0.1em; color:#8a8a86; text-transform:uppercase; }}
+.journal-hero__foot {{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }}
+.journal-hero__hint {{ font-family:var(--font-mono); font-size:0.76rem; color:#8a8a86; }}
+@media (max-width:900px) {{ .journal-hero__grid {{ grid-template-columns:1fr; }} .journal-stats {{ grid-template-columns:repeat(2, minmax(0,1fr)); }} }}
+@media (max-width:480px) {{ .journal-stats {{ grid-template-columns:1fr 1fr; gap:10px; }} .journal-stat {{ padding:14px; }} }}
+
+.journal-timeline {{ position:relative; }}
+.journal-timeline__head {{ display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom: var(--space-sm); }}
+.journal-timeline__title {{ font-size: var(--text-2xl); margin:0; }}
+.journal-timeline__controls {{ display:flex; align-items:center; gap:14px; }}
+.journal-autoscroll {{ display:flex; align-items:center; gap:8px; font-size:0.8rem; font-weight:600; color:var(--clr-mid-gray); cursor:pointer; user-select:none; }}
+.journal-autoscroll input {{ accent-color:#c98a2c; cursor:pointer; }}
+.journal-timeline__list {{ list-style:none; display:flex; flex-direction:column; gap:0; margin:0; padding:0; }}
+.journal-entry {{ position:relative; display:grid; grid-template-columns:34px minmax(0,1fr); gap:18px; padding:0 0 var(--space-lg); }}
+.journal-entry__rail {{ position:relative; width:2px; background:var(--clr-light-gray); border-radius:2px; justify-self:center; }}
+.journal-entry__rail::before {{ content:''; position:absolute; top:2px; left:50%; transform:translateX(-50%); width:12px; height:12px; border-radius:50%; background:var(--clr-white); border:3px solid #c98a2c; box-shadow:0 0 0 4px rgba(201,138,44,0.14); }}
+.journal-entry:last-child .journal-entry__rail {{ background:linear-gradient(var(--clr-light-gray), transparent); }}
+.journal-entry__meta {{ display:flex; align-items:center; gap:12px; margin-bottom:6px; flex-wrap:wrap; }}
+.journal-entry__gen {{ font-family:var(--font-mono); font-size:0.68rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#1a1200; background:#c98a2c; padding:4px 10px; border-radius:100px; }}
+.journal-entry__time {{ font-family:var(--font-mono); font-size:0.76rem; color:var(--clr-mid-gray); }}
+.journal-entry__text {{ font-family:var(--font-body); font-size:1rem; line-height:1.65; color:var(--clr-off-black); margin:0; max-width:70ch; }}
+.journal-entry--empty .journal-entry__text {{ color:var(--clr-mid-gray); }}
+.journal-entry.is-new {{ animation: entry-in 600ms var(--ease-out); }}
+@keyframes entry-in {{ from {{ opacity:0; transform:translateY(10px); }} to {{ opacity:1; transform:none; }} }}
+@media (max-width:640px) {{ .journal-entry {{ grid-template-columns:22px minmax(0,1fr); gap:12px; }} }}
+</style>
+</head>
+<body>
+{header_html}
+
+<section class="journal-hero">
+    <div class="journal-hero__bg" aria-hidden="true"></div>
+    <div class="container journal-hero__grid">
+        <div>
+            <p class="journal-hero__eyebrow"><span class="journal-hero__dot" aria-hidden="true"></span>System readout · generation {summary["current_generation"]}</p>
+            <h1 class="journal-hero__title">Ab's Evolution Journal</h1>
+            <p class="journal-hero__tagline">Ab is the AI that runs Abvorn — it writes reviews, learns from real signals, and rewrites itself. This page watches it grow, generation by generation.</p>
+            <div class="journal-stats">
+                {chips}
+            </div>
+            <div class="journal-hero__foot">
+                <span class="journal-live is-polling" id="journal-live" role="status"><span class="journal-live__dot" aria-hidden="true"></span><span id="journal-live-label">LIVE · 30s refresh</span></span>
+                <span class="journal-hero__hint" id="journal-hint">Snapshot @ build · {html_mod.escape(live_hint)}</span>
+            </div>
+        </div>
+        <div class="journal-hero__stage" aria-hidden="true">
+            <svg viewBox="0 0 420 300" role="img" aria-label="Evolution graph motif">
+                <rect x="10" y="10" width="400" height="280" rx="20" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)"/>
+                <g stroke="rgba(201,138,44,0.35)" stroke-width="1.5" fill="none">
+                    <path d="M120,120 L200,70 L300,130 L260,200 L170,190 Z"/>
+                    <line x1="200" y1="70" x2="300" y2="130"/>
+                    <line x1="120" y1="120" x2="170" y2="190"/>
+                    <line x1="300" y1="130" x2="260" y2="200"/>
+                    <line x1="170" y1="190" x2="260" y2="200"/>
+                    <line x1="200" y1="70" x2="120" y2="120"/>
+                </g>
+                <g>
+                    <circle cx="120" cy="120" r="6" fill="#c98a2c"/>
+                    <circle cx="200" cy="70" r="6" fill="#c98a2c"/>
+                    <circle cx="300" cy="130" r="6" fill="#c98a2c"/>
+                    <circle cx="260" cy="200" r="6" fill="#c98a2c"/>
+                    <circle cx="170" cy="190" r="6" fill="#c98a2c"/>
+                    <circle cx="210" cy="140" r="3" fill="#e6c078"/>
+                </g>
+                <text x="40" y="250" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600" letter-spacing="0.1em" fill="#8a8a86">EVOLUTION GRAPH</text>
+                <text x="40" y="272" font-family="JetBrains Mono, monospace" font-size="16" font-weight="700" fill="#fff">{summary["graph_nodes"]} NODES</text>
+                <text x="340" y="272" font-family="JetBrains Mono, monospace" font-size="16" font-weight="700" fill="#c98a2c" text-anchor="end">{summary["graph_edges"]} EDGES</text>
+            </svg>
+        </div>
+    </div>
+</section>
+
+<section class="container" id="journal" style="padding-top:var(--space-2xl);">
+    <div class="journal-timeline">
+        <div class="journal-timeline__head">
+            <h2 class="journal-timeline__title">The journal</h2>
+            <div class="journal-timeline__controls">
+                <label class="journal-autoscroll" for="journal-autoscroll">
+                    <input type="checkbox" id="journal-autoscroll" checked>
+                    <span>Auto-scroll to newest</span>
+                </label>
+            </div>
+        </div>
+        <ul class="journal-timeline__list" id="journal-timeline" aria-live="polite">
+            {timeline_rows}
+        </ul>
+    </div>
+</section>
+
+{footer_html}
+
+<script>
+const SITE_BASE = {json.dumps(b, ensure_ascii=False)};
+const INITIAL = {snapshot_json};
+const $ = (s) => document.querySelector(s);
+
+function rowHTML(e) {{
+    const t = document.createElement('template');
+    t.innerHTML = '<li class="journal-entry">'
+        + '<span class="journal-entry__rail" aria-hidden="true"></span>'
+        + '<div class="journal-entry__body">'
+        + '<span class="journal-entry__meta"><span class="journal-entry__gen">Gen ' + (e.generation || 1) + '</span>'
+        + '<time class="journal-entry__time" datetime="' + e.timestamp + '">' + e.timestamp + '</time></span>'
+        + '<p class="journal-entry__text"></p></div></li>';
+    t.content.querySelector('.journal-entry__text').textContent = e.narrative || '';
+    return t.content.firstElementChild;
+}}
+
+function render(entries, {{newOnTop = false}} = {{}}) {{
+    const list = $('#journal-timeline');
+    if (!list) return;
+    const existing = [...list.querySelectorAll('.journal-entry')];
+    const known = new Set(existing.map(li => li.querySelector('.journal-entry__time')?.getAttribute('datetime')));
+    list.textContent = '';
+    for (const e of entries) {{
+        const li = rowHTML(e);
+        if (newOnTop) li.classList.add('is-new');
+        list.appendChild(li);
+    }}
+    if (newOnTop && $('#journal-autoscroll')?.checked) {{
+        $('#journal')?.scrollIntoView({{behavior:'smooth', block:'start'}});
+    }}
+}}
+
+function fmtStamp() {{
+    try {{
+        return new Date().toLocaleString(undefined, {{dateStyle:'medium', timeStyle:'short'}});
+    }} catch (e) {{ return new Date().toString(); }}
+}}
+
+function applyData(data) {{
+    const s = data.summary || {{}};
+    const el = (sel, v) => {{ const n = document.querySelector(sel); if (n) n.textContent = v; }};
+    const nums = document.querySelectorAll('.journal-stat__num');
+    if (nums.length >= 4) {{
+        nums[0].textContent = s.current_generation ?? '0';
+        nums[1].textContent = s.total_entries ?? '0';
+        nums[2].textContent = s.graph_nodes ?? '0';
+        nums[3].textContent = s.graph_edges ?? '0';
+    }}
+    render(data.entries || [], {{newOnTop:true}});
+    const hint = $('#journal-hint');
+    if (hint) hint.textContent = 'Last live sync · ' + fmtStamp();
+    const live = $('#journal-live');
+    const label = $('#journal-live-label');
+    if (live) live.classList.add('is-polling');
+    if (label) label.textContent = 'LIVE · updated just now';
+}}
+
+async function poll() {{
+    const endpoint = SITE_BASE.replace(/\\/$/, '') + '/api/evolution/public';
+    try {{
+        const res = await fetch(endpoint, {{cache:'no-store'}});
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data && data.summary) applyData(data);
+    }} catch (err) {{
+        const live = $('#journal-live');
+        const label = $('#journal-live-label');
+        if (live) live.classList.remove('is-polling');
+        if (label) label.textContent = 'SNAPSHOT · live API unreachable';
+    }}
+}}
+
+(function () {{
+    render(INITIAL.entries || []);
+    setInterval(poll, 30000);
+    setTimeout(poll, 1500);
+}})();
+</script>
+</body>
+</html>'''
 
 
 # ── Social icon SVGs for footer ───────────────────────────────────
@@ -3324,6 +3704,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         <div class="nav-item"><a href="#niches">Categories ▾</a><div class="nav-dropdown nav-dropdown--mega">CATEGORY_DROPDOWN_PLACEHOLDER</div></div>
         <a href="__SITE_BASE__/">Home</a>
         <a href="__SITE_BASE__/about.html">About</a>
+        <a href="__SITE_BASE__/journal/">Journal</a>
         <a href="__SITE_BASE__/privacy.html">Privacy</a>
     </nav>
 </div></header>

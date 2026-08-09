@@ -1061,6 +1061,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         <div class="nav-item"><a href="#niches">Categories ▾</a><div class="nav-dropdown">CATEGORY_DROPDOWN_PLACEHOLDER</div></div>
         <a href="__SITE_BASE__/">Home</a>
         <a href="__SITE_BASE__/about.html">About</a>
+        <a href="__SITE_BASE__/journal/">Journal</a>
         <a href="__SITE_BASE__/privacy.html">Privacy</a>
     </nav>
 </div></header>
@@ -1580,6 +1581,7 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
         <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
+        <a href="{b}/journal/">Journal</a>
         <a href="{b}/privacy.html">Privacy</a>
     </nav>
 </div></header>
@@ -2243,6 +2245,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
+        <a href="{b}/journal/">Journal</a>
         <a href="{b}/privacy.html">Privacy</a>
     </nav>
 </div></header>
@@ -2915,6 +2918,19 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
 </body></html>'''
         page_path.write_text(full_page, encoding="utf-8")
         print(f"  Written: docs/{page_name}")
+
+    # Write the Evolution Journal page (docs/journal/index.html) — always
+    # rewritten so the header nav (Journal link) and the live snapshot stay
+    # in sync with the rest of the site.
+    try:
+        from src.deployment import build_journal_page, write_checked as _wc
+
+        journal_dir = docs / "journal"
+        journal_dir.mkdir(exist_ok=True)
+        _wc(journal_dir / "index.html", build_journal_page(b), "journal page")
+        print(f"  Written: docs/journal/index.html")
+    except Exception as e:
+        logger.warning(f"Journal page skipped: {e}")
 
     # Write category pages (post slugs point to reviews/{slug} for article pages)
     for n in state["niches"]:
