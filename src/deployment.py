@@ -117,8 +117,6 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 
 SITE_CHROME_CSS = """
 /* ── Site-wide chrome (header + footer), used on every page ───── */
-.top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
-.top-bar .container { display:flex; justify-content:space-between; }
 header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100; box-shadow:0 2px 10px rgba(0,0,0,0.25); }
 .navbar { display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }
 .logo img { max-height:44px; width:auto; }
@@ -1164,9 +1162,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         {DESIGN_SYSTEM_CSS}
         {PROD_SHOT_CSS}
         
-        .top-bar {{ background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }}
-        .top-bar .container {{ display:flex; justify-content:space-between; }}
-        header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100; }}
+                header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100; }}
         .navbar {{ display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }}
         .logo img {{ max-height:44px; width:auto; }}
         .nav-links {{ display:flex; align-items:center; gap:8px; }}
@@ -1295,7 +1291,6 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     </style>
 </head>
 <body>
-<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
     <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
@@ -1724,9 +1719,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         {DESIGN_SYSTEM_CSS}
         {PROD_SHOT_CSS}
         
-        .top-bar {{ background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }}
-        .top-bar .container {{ display:flex; justify-content:space-between; }}
-        header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100; }}
+                header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100; }}
         .navbar {{ display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }}
         .logo img {{ max-height:44px; width:auto; }}
         .nav-links {{ display:flex; align-items:center; gap:8px; }}
@@ -1859,7 +1852,6 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     </style>
 </head>
 <body>
-<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
     <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
@@ -2449,9 +2441,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         {VERDICT_CARD_CSS}
         {ARTICLE_DESIGN_CSS}
         
-        .top-bar {{ background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }}
-        .top-bar .container {{ display:flex; justify-content:space-between; align-items:center; }}
-        header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100; }}
+                header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100; }}
         .navbar {{ display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }}
         .logo img {{ max-height:44px; width:auto; }}
         .nav-links {{ display:flex; align-items:center; gap:8px; }}
@@ -2607,7 +2597,6 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     {COOKIE_CONSENT_SCRIPT}
 </head>
 <body>
-<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
     <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
@@ -2859,8 +2848,6 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
 <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{{box-sizing:border-box;margin:0;padding:0}}body{{font-family:'Inter',sans-serif;color:#333;line-height:1.6}}
-.top-bar{{background:#0a0a0a;color:#999;font-size:0.8rem;padding:8px 0}}
-.top-bar .container{{display:flex;justify-content:space-between;max-width:1200px;margin:0 auto;padding:0 20px}}
 header{{background:#0a0a0a;padding:18px 0;border-bottom:1px solid #2a2a2a;position:sticky;top:0;z-index:100}}
 .header-inner{{display:flex;justify-content:space-between;align-items:center;max-width:1200px;margin:0 auto;padding:0 20px}}
 .logo-img{{max-height:44px;width:auto}}
@@ -2869,7 +2856,6 @@ footer{{background:#0a0a0a;color:#888;padding:40px 0;text-align:center;border-to
 footer a{{color:#aaa;text-decoration:none}}
 </style></head>
 <body>
-<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="header-inner"><a href="{b}/"><img src="{b}/logo.svg" alt="Abvorn" class="logo-img"></a></div></header>
 <main class="main"><h1>{title}</h1>{content}</main>
 <footer><img src="{b}/logo.svg" alt="Abvorn" style="max-height:24px;width:auto;filter:brightness(0.8);margin-bottom:8px"><p>&copy; {year} Abvorn</p></footer>
@@ -3060,7 +3046,6 @@ def build_site_header(b="", all_slugs=None):
     dd_items = build_category_dropdown(b)
     dropdown = f'<div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{dd_items}</div></div>'
     return f'''
-<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
     <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:44px;width:auto"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
@@ -3288,8 +3273,6 @@ finish review, the verdict, and DESIGN.md
 {DESIGN_SYSTEM_CSS}
 {SITE_CHROME_CSS}
 {MEGA_MENU_CSS}
-.top-bar {{ background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }}
-.top-bar .container {{ display:flex; justify-content:space-between; }}
 .journal-hero {{ position:relative; overflow:hidden; background:#0d0d0d; color:#fff; padding:clamp(56px,7vw,96px) 0; border-bottom:1px solid #222; }}
 .journal-hero__bg {{ position:absolute; inset:0; pointer-events:none; background:
   radial-gradient(900px 460px at 82% 8%, rgba(201,138,44,0.16), transparent 62%),
@@ -3511,9 +3494,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
            invisible nav (white text on a header that turned white) and the
            invisible hero button (background and text both collapsing toward
            black). Hardcoded values below are deliberate, not an oversight. */
-        .top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
-        .top-bar .container { display:flex; justify-content:space-between; }
-        header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100; box-shadow:0 2px 10px rgba(0,0,0,0.25); }
+                header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100; box-shadow:0 2px 10px rgba(0,0,0,0.25); }
         .navbar { display:flex; justify-content:space-between; align-items:center; }
         .logo img { max-height:44px; width:auto; }
         .nav-links { display:flex; align-items:center; }
@@ -3694,7 +3675,6 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     </style>
 </head>
 <body>
-<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>
 <header><div class="container navbar">
     <a href="__SITE_BASE__/" class="logo"><img src="__SITE_BASE__/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">

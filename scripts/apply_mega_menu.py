@@ -36,7 +36,6 @@ CANON_FOOTER = (
 
 # ── Canonical header markup (matches run_cycle.nav_html) ─────────────────
 CANON_HEADER = (
-    '<div class="top-bar"><div class="container"><span>Independent testing. No sponsored placements.</span><span>Updated weekly</span></div></div>\n'
     '<header><div class="container navbar">\n'
     '    <a href="/abvorn/" class="logo"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:44px;width:auto"></a>\n'
     '    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">\n'
@@ -87,9 +86,7 @@ FOOTER_CSS_LITERAL = """        .footer { background:#0a0a0a; color:#999; paddin
 """
 
 # Header CSS for minimal pages (literal values, self-contained)
-HEADER_CSS = """        .top-bar { background:#0a0a0a; color:#999; font-size:0.8rem; padding:8px 0; }
-        .top-bar .container { display:flex; justify-content:space-between; max-width:1200px; margin:0 auto; padding:0 20px; }
-        header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; }
+HEADER_CSS = """        header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; }
         .navbar { display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }
         .logo img { max-height:44px; width:auto; }
         .nav-links { display:flex; align-items:center; gap:8px; }
