@@ -1,4 +1,4 @@
-import asyncio, json, logging
+import asyncio, json, logging, os
 from datetime import datetime
 from .base import AgentBase
 from ..brain.retriever import KnowledgeRetriever
@@ -6,6 +6,10 @@ from ..agents.researcher import research_niche
 from ..core.models import ModelRouter
 
 logger = logging.getLogger("abvorn.orchestrator")
+
+# Centralized affiliate tag: AMAZON_TAG secret, falling back to the real tag.
+def _amazon_tag() -> str:
+    return os.environ.get("AMAZON_TAG") or "viraltestco-20"
 
 class ResearchAgent(AgentBase):
     """Performs product research when content is needed for a niche."""
@@ -372,7 +376,7 @@ class SiteDeployer:
 <div class="badge {rank_class}">{rank_label}</div>
 <h3>{title}</h3>
 <p>In-depth testing and honest comparison. See why this made our list.</p>
-<a class="buy-btn" href="https://www.amazon.com/s?k={query}&tag=viraltestco-20" target="_blank" rel="sponsored">Check Price</a>
+<a class="buy-btn" href="https://www.amazon.com/s?k={query}&tag={_amazon_tag()}" target="_blank" rel="sponsored">Check Price</a>
 <a href="{b}/{slug}/" style="margin-left:12px">Read full review →</a>
 </div></div>"""
 
@@ -436,7 +440,7 @@ class SiteDeployer:
             product_cards = ""
             if product_name:
                 query = product_name.replace(" ", "+").replace("'","")
-                product_cards = f'<div class="product-card"><div class="product-card-body"><h3>{product_name}</h3><a class="buy-btn" href="https://www.amazon.com/s?k={query}&tag=viraltestco-20" target="_blank" rel="sponsored">Check Price on Amazon</a></div></div>'
+                product_cards = f'<div class="product-card"><div class="product-card-body"><h3>{product_name}</h3><a class="buy-btn" href="https://www.amazon.com/s?k={query}&tag={_amazon_tag()}" target="_blank" rel="sponsored">Check Price on Amazon</a></div></div>'
 
             html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -484,7 +488,7 @@ window.postComment=function(){{var n=document.getElementById('comment-name');var
 <div class="cta-banner">
 <h3>Ready to buy?</h3>
 <p>We've done the research. Now get the best price on Amazon.</p>
-<a class="buy-btn" href="https://www.amazon.com/s?k={niche.replace('-','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">Shop all picks on Amazon</a>
+<a class="buy-btn" href="https://www.amazon.com/s?k={niche.replace('-','+')}&tag={_amazon_tag()}" target="_blank" rel="sponsored">Shop all picks on Amazon</a>
 </div></div>
 
 <section class="lead-capture">

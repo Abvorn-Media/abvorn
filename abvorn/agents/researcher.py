@@ -64,9 +64,11 @@ Return a JSON array of objects with keys: name, price, rating, features (array),
     if not products and router:
         prompt = f"""You are a product expert. For the niche '{niche}', recommend exactly 3 specific real products with brand and model names. Use your knowledge of real products available on Amazon.
 
+IMPORTANT: Only include a price when you are confident it is currently accurate. Otherwise set price to "Check Price". Never invent a price you are not sure about.
+
 Return a JSON array. Each product must have:
 - name: specific brand + model (e.g. "Sony WH-1000XM5")
-- price: realistic price string
+- price: realistic price string, or "Check Price" if you are not confident
 - description: 1-2 sentence highlight
 - features: array of 3-4 key features
 - category: "best_overall", "best_value", or "premium_pick"

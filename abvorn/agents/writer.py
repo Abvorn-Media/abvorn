@@ -1,6 +1,12 @@
-import json, re, logging
+import json, os, re, logging
 
 logger = logging.getLogger("abvorn.writer")
+
+# Centralized affiliate tag: AMAZON_TAG secret, falling back to the real
+# Associates tag. Links must never be hardcoded to a different tag, or
+# commissions go to the wrong account.
+def _amazon_tag() -> str:
+    return os.environ.get("AMAZON_TAG") or "viraltestco-20"
 
 CONTENT_ANGLES = {
     "problem_solution": "Lead with a vivid problem the persona faces. Agitate it. Present product as answer.",
@@ -79,6 +85,7 @@ Objections: {json.dumps(persona.get('objections', []))}"""
     copywriting_guidance = ""
     psych_guidance = ""
     seo_guidance = ""
+    amazon_tag = _amazon_tag()
     if brain_context:
         copy_principles = brain_context.get("copywriting_principles", [])
         if copy_principles:
@@ -112,7 +119,7 @@ WRITING RULES:
 - Address objections head-on before the reader raises them
 - Use PAS framework (Problem → Agitate → Solution) for each product section
 - Include exactly 2-3 natural affiliate links within the body
-- Affiliate link format: <a href='https://www.amazon.com/s?k=PRODUCT&tag=abvorn-20' rel='nofollow sponsored' target='_blank'>check price on Amazon</a>
+- Affiliate link format: <a href='https://www.amazon.com/s?k=PRODUCT&tag={amazon_tag}' rel='nofollow sponsored' target='_blank'>check price on Amazon</a>
 - End with a clear, low-risk call to action
 
 Return JSON:

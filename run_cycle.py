@@ -2699,6 +2699,7 @@ Return JSON:
 
 def _persona_article_template(plan, persona, niche_name, products=None):
     """Generate a well-structured HTML template for manual filling."""
+    amazon_tag = os.environ.get("AMAZON_TAG") or "viraltestco-20"
     p_name = persona.get("name", "Your Reader")
     frustrations = persona.get("psychology", {}).get("anxieties", [])
     hopes = persona.get("psychology", {}).get("hopes", [])
@@ -2718,7 +2719,7 @@ def _persona_article_template(plan, persona, niche_name, products=None):
 <h2>What You Can Do About It</h2>
 <p>The good news? You don't have to live with this. Here's a proven approach to solving {frust.lower()} once and for all.</p>
 <p>Start by acknowledging the problem. Then look at the tools and techniques available. And finally — make a decision based on what actually works, not what's marketed the hardest.</p>
-<p>If you're ready to take action, we recommend starting with <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">{prod} ({prod_price})</a> — it's what we use and trust.</p>""",
+<p>If you're ready to take action, we recommend starting with <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod} ({prod_price})</a> — it's what we use and trust.</p>""",
         "problem_deep_dive": f"""<p>Let's talk about {frust}. It's one of the most overlooked issues in {niche_name}, and it's quietly costing people like {p_name} thousands in wasted time and money.</p>
 <p>Most articles tell you what to buy. This one tells you why the problem exists in the first place — and how to fix it at the root.</p>
 <h2>Why {frust} Happens</h2>
@@ -2726,14 +2727,14 @@ def _persona_article_template(plan, persona, niche_name, products=None):
 <p>When you understand the underlying mechanics, you stop wasting money on Band-Aid fixes and start investing in solutions that last.</p>
 <h2>What {p_name} Should Do Instead</h2>
 <p>Here's the framework we use after testing dozens of options. Step one: identify your actual use case. Step two: match it to proven solutions. Step three: ignore everything else.</p>
-<p>Want the shortcut? Start with <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">{prod}</a> — it consistently outperforms alternatives in this exact scenario.</p>""",
+<p>Want the shortcut? Start with <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod}</a> — it consistently outperforms alternatives in this exact scenario.</p>""",
         "how_to": f"""<p>If you've been struggling with {frust}, here's a step-by-step system that will help you achieve {hope}.</p>
 <h2>Step 1: Assess Your Starting Point</h2>
 <p>Before you can fix {frust.lower()}, you need to understand where you are now. Take 5 minutes to evaluate your current setup and identify the specific gaps.</p>
 <h2>Step 2: Choose the Right Approach</h2>
 <p>Not all solutions are created equal. For {p_name}, the best approach prioritizes {hope.lower()} without creating new problems. Here's what to look for...</p>
 <h2>Step 3: Invest in What Works</h2>
-<p>Once you've identified the right approach, it's time to execute. We've tested extensively and found that <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">{prod}</a> delivers the best results for people in your situation.</p>
+<p>Once you've identified the right approach, it's time to execute. We've tested extensively and found that <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod}</a> delivers the best results for people in your situation.</p>
 <h2>Step 4: Optimize and Maintain</h2>
 <p>Getting it right is one thing. Keeping it right is another. Here's how to maintain your setup for long-term success...</p>""",
         "solution_comparison": f"""<p>If you're reading this, you already know {frust} is a problem. Now the question is: what's the best way to solve it?</p>
@@ -2743,7 +2744,7 @@ def _persona_article_template(plan, persona, niche_name, products=None):
 <h2>Option B: The Long-Term Solution</h2>
 <p>More investment upfront, but delivers {hope} sustainably. This is what we recommend for most people.</p>
 <h2>Our Verdict</h2>
-<p>For {p_name}, we recommend <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">{prod}</a>. It strikes the best balance of performance, value, and reliability.</p>""",
+<p>For {p_name}, we recommend <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod}</a>. It strikes the best balance of performance, value, and reliability.</p>""",
         "product_review": f"""<p>After spending [X hours] testing {prod} against its top competitors, here's our honest verdict — including what we didn't like.</p>
 <h2>First Impressions</h2>
 <p>Out of the box, {prod} feels {hope.lower()} in mind. The build quality is solid, the setup is straightforward, and the initial performance is impressive.</p>
@@ -2752,7 +2753,7 @@ def _persona_article_template(plan, persona, niche_name, products=None):
 <strong>What we loved:</strong> [Key strengths]
 <strong>What we didn't:</strong> [Honest weaknesses]</p>
 <h2>Bottom Line</h2>
-<p>Is {prod} right for {p_name}? If {frust} is your main concern, then yes — this is the best option at {prod_price}. <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">Check the current price on Amazon</a>.</p>""",
+<p>Is {prod} right for {p_name}? If {frust} is your main concern, then yes — this is the best option at {prod_price}. <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">Check the current price on Amazon</a>.</p>""",
         "micro_comparison": f"""<p>Quick question for {p_name}: Are you better off with the market leader or the value pick? We tested both to give you a straight answer.</p>
 <h2>At a Glance</h2>
 <table class="decision-matrix"><thead><tr><th>Feature</th><th>{prod}</th><th>Alternative</th></tr></thead><tbody>
@@ -2761,14 +2762,14 @@ def _persona_article_template(plan, persona, niche_name, products=None):
 <tr><td>Best For</td><td>{p_name}</td><td>Budget buyers</td></tr>
 </tbody></table>
 <h2>The Verdict</h2>
-<p>If {frust} is your priority, <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">{prod}</a> is the clear choice.</p>""",
+<p>If {frust} is your priority, <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod}</a> is the clear choice.</p>""",
         "cross_sell": f"""<p>Most people stop at one product. But if you really want to solve {frust}, you need a system — not just a gadget.</p>
 <h2>The Essential Kit for {p_name}</h2>
 <p>After extensive testing, here are the three products {p_name} needs for the perfect {niche_name} setup:</p>
 <p><strong>1. {prod}</strong> — The cornerstone. This handles the core {frust.lower()} problem.</p>
 <p><strong>2. [Complementary product]</strong> — Extends your capabilities and fills the gaps.</p>
 <p><strong>3. [Accessory]</strong> — The finishing touch that makes everything work together seamlessly.</p>
-<p>Start with <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag=viraltestco-20" target="_blank" rel="sponsored">{prod} ({prod_price})</a> and build from there.</p>""",
+<p>Start with <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod} ({prod_price})</a> and build from there.</p>""",
     }
 
     return templates.get(ct, templates["problem_discovery"])
