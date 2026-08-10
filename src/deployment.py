@@ -3190,6 +3190,32 @@ def load_evolution_snapshot():
     return {"summary": summary, "entries": entries}
 
 
+def _read_previous_journal_snapshot():
+    """Load the INITIAL snapshot embedded in the existing docs/journal/index.html.
+
+    Used to avoid clobbering a real journal page with an empty snapshot when the
+    build runs somewhere the local sources (Obsidian vault, lineage, memory
+    state) are absent — e.g. CI content cycles, which have no vault access.
+    Returns None when there is nothing sensible to preserve.
+    """
+    try:
+        path = Path("docs/journal/index.html")
+        if not path.exists():
+            return None
+        html = path.read_text(encoding="utf-8")
+        m = re.search(r"const INITIAL = (\{.*?\});", html, re.S)
+        if not m:
+            return None
+        prev = json.loads(m.group(1))
+        if prev.get("entries"):
+            return prev
+        if prev.get("summary", {}).get("graph_nodes") or prev.get("summary", {}).get("graph_edges"):
+            return prev
+    except Exception:
+        pass
+    return None
+
+
 def build_journal_page(b=""):
     """Full static journal page (docs/journal/index.html) in the site world.
 
@@ -3199,6 +3225,13 @@ def build_journal_page(b=""):
     """
     b = b or SITE_BASE
     data = load_evolution_snapshot()
+    # Preserve the last known-good snapshot when this build has no local
+    # sources (vault/lineage/memory missing, e.g. in CI) — otherwise an empty
+    # snapshot would overwrite real journal entries on every cycle.
+    if not data["entries"] and not (data["summary"]["graph_nodes"] or data["summary"]["graph_edges"]):
+        prev = _read_previous_journal_snapshot()
+        if prev is not None:
+            data = prev
     summary = data["summary"]
     entries = data["entries"]
     snapshot_json = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
