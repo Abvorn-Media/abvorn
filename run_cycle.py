@@ -336,7 +336,7 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
         "image": product_image or "",
         "url": product_url or "",
     })
-    compare_btn = f'<a class="buy-btn" href="/abvorn/compare?{compare_qs}" target="_self" style="background:transparent;color:var(--clr-accent);border:1px solid var(--clr-accent);box-shadow:none;margin-left:8px;font-size:0.85rem;padding:6px 16px">⊕ Compare</a>'
+    compare_btn = f'<a class="buy-btn" href="/abvorn/compare.html?{compare_qs}" target="_self" style="background:transparent;color:var(--clr-accent);border:1px solid var(--clr-accent);box-shadow:none;margin-left:8px;font-size:0.85rem;padding:6px 16px">⊕ Compare</a>'
     return f"""<div class="product-card">
  {img}
  <div class="product-card-body">

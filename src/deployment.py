@@ -255,7 +255,7 @@ def product_card_html(product, pexels_key="", amazon_tag="", include_compare: bo
             f'data-name="{html_mod.escape(name)}" data-price="{html_mod.escape(str(price or ""))}" '
             f'data-image="{html_mod.escape(product_image or "")}" data-url="{html_mod.escape(product_url or "")}" '
             f'data-score="{html_mod.escape(str(verdict_score or ""))}" data-label="{html_mod.escape(verdict_label or "")}" '
-            f'href="/abvorn/compare?{qs}"><span class="av-compare-icon">⊕</span> Compare</a>'
+            f'href="/abvorn/compare.html?{qs}"><span class="av-compare-icon">⊕</span> Compare</a>'
         )
     summary_escaped = html_mod.escape(summary)
     return f"""<div class="product-card"{data_attrs}>
