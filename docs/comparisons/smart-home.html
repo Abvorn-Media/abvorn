@@ -49,13 +49,14 @@ header{background:#0a0a0a;padding:18px 0;position:sticky;top:0;z-index:100;borde
 .nav-dropdown a{display:block;color:#1a1a1a;padding:8px 20px;font-weight:400;font-size:0.85rem;text-decoration:none;transition:background var(--duration-fast)}
 .nav-dropdown a:hover{background:#f6f5f2;color:#996015}
 
-.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; }
+.nav-item:hover .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { display:flex; opacity:1; transform:translateY(0); transition:opacity var(--duration-fast) var(--ease-out),transform var(--duration-fast) var(--ease-out); }
+    .nav-dropdown.nav-dropdown--mega, .nav-item:focus-within .nav-dropdown.nav-dropdown--mega { opacity:0; transform:translateY(6px); }
 .nav-dropdown.nav-dropdown--mega { flex-wrap:wrap; gap:6px 8px; min-width:600px; max-width:90vw; padding:14px 18px; right:0; left:auto; }
 .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 200px; min-width:170px; }
 .nav-dropdown.nav-dropdown--mega .category-label { display:block; color:var(--clr-accent-text,var(--clr-accent,#c98a2c)); font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; padding:4px 20px 2px; }
 .nav-dropdown.nav-dropdown--mega a { padding:6px 20px; }
 @media (max-width:640px) {
-    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; }
+    .nav-dropdown.nav-dropdown--mega { display:block; min-width:0; max-width:none; padding:0; opacity:1; transform:none; }
     .nav-dropdown.nav-dropdown--mega .category-group { display:block; flex:1 1 auto; }
     .nav-dropdown.nav-dropdown--mega .category-label { padding:8px 0 2px; }
     .nav-dropdown.nav-dropdown--mega a { padding:5px 0; }
@@ -250,15 +251,15 @@ article .content li{margin:6px 0;color:var(--text)}
 <a class="skip-link" href="#main">Skip to content</a>
 
 <header><div class="container navbar">
-    <a href="https://abvorn-media.github.io/abvorn/" class="logo"><img src="https://abvorn-media.github.io/abvorn/logo.svg" alt="Abvorn" style="max-height:44px;width:auto"></a>
+    <a href="/abvorn/" class="logo"><img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:44px;width:auto"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><a class="category-label" href="https://abvorn-media.github.io/abvorn/categories/audio/">Audio</a><a href="https://abvorn-media.github.io/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="https://abvorn-media.github.io/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><a class="category-label" href="https://abvorn-media.github.io/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="https://abvorn-media.github.io/abvorn/4k-monitors/">4K Monitors</a><a href="https://abvorn-media.github.io/abvorn/laptops/">Laptops</a></div><div class="category-group"><a class="category-label" href="https://abvorn-media.github.io/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="https://abvorn-media.github.io/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><a class="category-label" href="https://abvorn-media.github.io/abvorn/categories/gaming/">Gaming</a><a href="https://abvorn-media.github.io/abvorn/gaming-mice/">Gaming Mice</a><a href="https://abvorn-media.github.io/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><a class="category-label" href="https://abvorn-media.github.io/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="https://abvorn-media.github.io/abvorn/smart-home/">Smart Home</a><a href="https://abvorn-media.github.io/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><a class="category-label" href="https://abvorn-media.github.io/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a><a href="https://abvorn-media.github.io/abvorn/webcams/">Webcams</a></div></div></div>
-        <a href="https://abvorn-media.github.io/abvorn/">Home</a>
-        <a href="https://abvorn-media.github.io/abvorn/about.html">About</a>
-        <a href="https://abvorn-media.github.io/abvorn/journal/">Journal</a>
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><a class="category-label" href="/abvorn/categories/audio/">Audio</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/gaming/">Gaming</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a><a href="/abvorn/webcams/">Webcams</a></div></div></div>
+        <a href="/abvorn/">Home</a>
+        <a href="/abvorn/about.html">About</a>
+        <a href="/abvorn/journal/">Journal</a>
     </nav>
 </div></header>
 <script>

@@ -903,7 +903,7 @@ def _slugify_title(s):
     return s.replace("-", " ").title()
 
 def nav_html(categories, current=""):
-    return build_site_header()
+    return build_site_header(b=SITE_BASE)
 
 
 # ── Social icon SVGs for footer ───────────────────────────────────
@@ -1569,24 +1569,27 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
     </style>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header><div class="container navbar">
     <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/journal/">Journal</a>
     </nav>
 </div></header>
 
+<main id="main">
 {hero_html}
 
 {index_nav}
 
 {sections_html}
+</main>
 
 {footer_chrome}
 
@@ -2069,13 +2072,14 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     {COOKIE_CONSENT_SCRIPT}
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header><div class="container navbar">
     <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/journal/">Journal</a>
@@ -2715,8 +2719,9 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
 .main p {{ color: var(--clr-mid-gray); }}
 </style></head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 {build_site_header(b)}
-<main class="main"><div class="container"><h1>{title}</h1>{content}</div></main>
+<main class="main" id="main"><div class="container"><h1>{title}</h1>{content}</div></main>
 {build_site_footer(b)}
 </body></html>'''
         page_path.write_text(full_page, encoding="utf-8")

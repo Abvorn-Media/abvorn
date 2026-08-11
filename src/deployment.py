@@ -70,6 +70,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 @media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 :focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
+.skip-link { position: absolute; top: -40px; left: 8px; z-index: 200; background: var(--clr-accent); color: var(--clr-black); padding: 10px 18px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: top var(--duration-fast) var(--ease-out); }
+.skip-link:focus { top: 0; color: var(--clr-black); }
 
 /* ── Compare & Watchlist ──────────────────────────────────────── */
 .av-compare-btn {
@@ -969,7 +971,13 @@ def _hero_slide_verdict(breakdown, overall, label, product, name):
         )
     overall_html = f"{overall:.1f}<small>/10</small>" if overall else "—"
     label_html = f'<span class="hero-verdict__label">{html_mod.escape(label or "Scored")}</span>'
-    title = _truncate(product or name, 40)
+    # Guard against placeholder product names ("Product", blank, generic) leaking
+    # into the hero-verdict — fall back to the niche name so no slide shows a
+    # literal placeholder to readers.
+    _product = (product or "").strip()
+    if not _product or _product.lower() in ("product", "n/a", "tbd", "coming soon", "placeholder", name.lower()):
+        _product = name or _product
+    title = _truncate(_product, 40)
     return f'''<div class="hero-verdict">
         <div class="hero-verdict__head">
             <div class="hero-verdict__title">
@@ -1294,19 +1302,21 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     </style>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header><div class="container navbar">
     <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/journal/">Journal</a>
     </nav>
 </div></header>
 
+<main id="main">
 <section class="niche-hero"><div class="container niche-hero__grid">
     <div>
         <span class="niche-hero__eyebrow">{cat_esc}</span>
@@ -1364,6 +1374,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         <p class="subscribe-msg" id="category-subscribe-msg" aria-live="polite"></p>
     </form>
 </div></section>
+</main>
 
 {footer_chrome}
 
@@ -1853,25 +1864,28 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         @media (max-width:760px) {{ .footer-grid {{ grid-template-columns:1fr 1fr; }} }}
     </style>
 </head>
-<body>
+ <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header><div class="container navbar">
     <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="{b}/">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
         <a href="{b}/">Home</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/journal/">Journal</a>
     </nav>
 </div></header>
 
+<main id="main">
 {hero_html}
 
 {index_nav}
 
 {sections_html}
+</main>
 
 {footer_chrome}
 
@@ -2326,8 +2340,9 @@ footer{{background:#0a0a0a;color:#888;padding:40px 0;text-align:center;border-to
 footer a{{color:#aaa;text-decoration:none}}
 </style></head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header><div class="header-inner"><a href="{b}/"><img src="{b}/logo.svg" alt="Abvorn" class="logo-img"></a></div></header>
-<main class="main"><h1>{title}</h1>{content}</main>
+<main class="main" id="main"><h1>{title}</h1>{content}</main>
 <footer><img src="{b}/logo.svg" alt="Abvorn" style="max-height:24px;width:auto;filter:brightness(0.8);margin-bottom:8px"><p>&copy; {year} Abvorn</p></footer>
 </body></html>'''
             page_path.write_text(full_page, encoding="utf-8")
@@ -2820,8 +2835,10 @@ finish review, the verdict, and DESIGN.md
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 {header_html}
 
+<main id="main">
 <section class="journal-hero">
     <div class="journal-hero__bg" aria-hidden="true"></div>
     <div class="container journal-hero__grid">
@@ -2880,6 +2897,7 @@ finish review, the verdict, and DESIGN.md
         </ul>
     </div>
 </section>
+</main>
 
 {footer_html}
 
@@ -3175,7 +3193,8 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
     </style>
 </head>
-<body>
+ <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header><div class="container navbar">
     <a href="__SITE_BASE__/" class="logo"><img src="__SITE_BASE__/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
@@ -3190,7 +3209,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
 </div></header>
 <div class="trending-ticker"><div class="container"><div class="trending-ticker__track"><div class="trending-ticker__inner"><span class="trending-ticker__label">Latest updates:</span><span id="trending-items">LATEST_UPDATES_PLACEHOLDER</span></div><div class="trending-ticker__inner" aria-hidden="true"><span class="trending-ticker__label">Latest updates:</span><span>LATEST_UPDATES_PLACEHOLDER</span></div></div></div></div>
 
-<section class="hero"><div class="container hero-grid">
+<main id="main"><section class="hero"><div class="container hero-grid">
     <div>
         <span class="hero-eyebrow"><span class="hero-dot" aria-hidden="true"></span>Reviews scored on 5 criteria</span>
         <h1>Clear, honest guidance on what's actually worth your money.</h1>
@@ -3256,7 +3275,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <div class="footer-grid">
         <div class="footer-col">
             <img src="__SITE_BASE__/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px">
-            <p>Independent product research and buying guides, built to help you decide faster.</p>
+            <p>Independent product reviews and buying guides, based on real testing.</p>
             <div class="footer-social">FOOTER_SOCIAL_PLACEHOLDER</div>
         </div>
         <div class="footer-col"><h4>Categories</h4>FOOTER_CATEGORY_LINKS_PLACEHOLDER</div>
@@ -3267,6 +3286,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     </div>
     <div class="footer-bottom"><img src="__SITE_BASE__/logo.svg" alt="Abvorn" style="max-height:20px;width:auto;filter:brightness(0.6)"><span>&copy; YEAR_PLACEHOLDER Abvorn. All rights reserved.</span><span>Reviews updated weekly</span></div>
 </div></footer>
+</main>
 
 <script>
 const APPS_SCRIPT_URL = "__APPS_SCRIPT_URL__";
