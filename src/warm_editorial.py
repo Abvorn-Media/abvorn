@@ -544,7 +544,7 @@ def build_review_rail(post_title, article_url, niche_slug, niche_name, toc_items
     </aside>"""
 
 
-WARM_NICHE_SUBSCRIBE_JS = """
+WARM_NICHE_SUBSCRIBE_JS = """<script>
 async function submitNicheSubscribe(e) {
     e.preventDefault();
     const f = e.target;
@@ -567,4 +567,4 @@ async function submitNicheSubscribe(e) {
     }
     btn.disabled = false;
 }
-"""
+</script>"""
