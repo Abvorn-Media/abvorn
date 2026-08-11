@@ -99,7 +99,7 @@ LABELS = [
     (0.0, "Poor"),
 ]
 
-VERDICT_HTML = """<div class="abvorn-verdict">
+VERDICT_HTML = """<section class="abvorn-verdict" id="verdict">
 <div class="av-badge">Abvorn Verdict</div>
 <div class="av-score-row">
   <div class="av-score">
@@ -116,9 +116,10 @@ VERDICT_HTML = """<div class="abvorn-verdict">
 </div>
 <div class="av-summary">{summary}</div>
 <div class="av-cta">
-  <a class="buy-btn" href="{affiliate_url}" target="_blank" rel="sponsored">Check Price on Amazon →</a>
+  <a class="btn btn--accent" href="{affiliate_url}" target="_blank" rel="sponsored" data-track="value" data-product-name="{product_name_attr}" data-category="{category}" data-score="{overall}">Check Price on Amazon &rarr;</a>
+  {compare_btn}
 </div>
-</div>"""
+</section>"""
 
 
 class AbvornVerdictEngine:
@@ -318,20 +319,52 @@ def clean_product_name(name: str) -> str:
     return cleaned
 
 
-def render_verdict_card(verdict: dict, product_name: str, affiliate_url: str = "", detail_url: str = "") -> str:
+def render_verdict_card(verdict: dict, product_name: str, affiliate_url: str = "", detail_url: str = "", product: dict = None, category: str = "") -> str:
     """Render verdict dict into the HTML verdict card."""
     bars = ""
     for label, score in verdict["breakdown"].items():
         pct = int(score / 10 * 100)
-        bar_color = "#3a8a5c" if score >= 7.0 else "#d4633e"
+        bar_color = "#8a6d3b" if score >= 7.0 else "#bd5c45"
         bars += f"""<div class="av-bar-row"><span class="av-bar-label">{label}</span><div class="av-bar-track"><div class="av-bar-fill" style="width:{pct}%;background:{bar_color}"></div></div><span class="av-bar-score">{score}</span></div>"""
+
+    compare_btn = ""
+    if product:
+        name_clean = clean_product_name(product.get("name", product_name))
+        asin = _extract_asin(product.get("url", ""))
+        params = {
+            "asin": asin,
+            "name": name_clean,
+            "price": str(product.get("price", "") or ""),
+            "image": product.get("image", "") or "",
+            "url": product.get("url", "") or "",
+            "score": str(verdict.get("overall", "") or ""),
+            "label": str(verdict.get("label", "") or ""),
+        }
+        from urllib.parse import urlencode
+        compare_btn = (
+            f'<a class="btn btn--ghost" href="/abvorn/compare.html?{urlencode(params)}" '
+            f'data-track="compare" data-product-name="{_html.escape(name_clean, quote=True)}" '
+            f'data-category="{_html.escape(category, quote=True)}" data-score="{verdict.get("overall", "")}">'
+            f'Compare &oplus;</a>'
+        )
 
     return VERDICT_HTML.format(
         overall=verdict["overall"],
         label=verdict["label"],
         product_name=_html.escape(clean_product_name(product_name), quote=True),
+        product_name_attr=_html.escape(clean_product_name(product_name), quote=True),
+        category=_html.escape(category or "", quote=True),
         summary=verdict["summary"],
         breakdown_bars=bars,
         affiliate_url=affiliate_url or "#",
         detail_url=detail_url or "#",
+        compare_btn=compare_btn,
     )
+
+
+def _extract_asin(product_url):
+    """Extract a 10-char Amazon ASIN from a product URL, if present."""
+    if not product_url:
+        return ""
+    m = re.search(r"/dp/([A-Z0-9]{10})", product_url)
+    return (m.group(1) if m else "").upper()
