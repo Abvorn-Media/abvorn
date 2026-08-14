@@ -255,6 +255,12 @@ def sanitize_article_html(html, strip_leading_intro=True):
         if len(opens) > closes:
             text = text.rstrip() + "</p>" * (len(opens) - closes)
 
+    # A draft can also end mid-tag: a bare "<p" (or "<p ") with no ">" and no
+    # content, e.g. a tail like "<h2>Conclusion</h2>\n<p". The open-count above
+    # cannot see it, and it would swallow whatever block the template appends
+    # next (decision matrix / CTA), breaking the layout. Drop it entirely.
+    text = re.sub(r"<p\s*$", "", text)
+
     text = re.sub(r" {2,}", " ", text)
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
     return text

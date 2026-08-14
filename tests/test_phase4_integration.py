@@ -186,6 +186,34 @@ def test_build_article_page_preserves_original_links_without_article_id():
     assert "amazon.com" in html
 
 
+def test_build_article_page_strips_dangling_p_before_decision_matrix():
+    """A bare "<p" at the end of the AI draft must not swallow the decision
+    matrix that the template appends next (it previously broke the container
+    and pushed the CTA/FAQ/footer full-width)."""
+    html = build_article_page(
+        niche_slug="test-niche",
+        niche_name="Test Niche",
+        post_title="Test Post",
+        article_html='<p>Intro copy.</p>\n<h2 id="conclusion">Conclusion</h2>\n<p',
+        intro="<p>Intro</p>",
+        product_name="Product",
+        meta_desc="desc",
+        all_slugs=["test-niche"],
+        products=[
+            {"name": "Prod A", "description": "Desc", "price": "$10", "image": ""},
+        ],
+        article_id=None,
+    )
+    assert '<p</p>' not in html
+    # the decision matrix must sit after a properly closed (or absent)
+    # paragraph, not inside a dangling one
+    matrix = html[html.find('class="table-wrap decision-matrix"'):]
+    assert '<div class="table-wrap decision-matrix">' in html
+    # no raw "<p\n<div" join anywhere in the body
+    import re
+    assert not re.search(r"<p\s*$.*<div", html[html.find('id="main"'):html.find('<footer')], flags=re.S | re.M)
+
+
 # ---------------------------------------------------------------------------
 # change_management.py
 # ---------------------------------------------------------------------------
