@@ -1,0 +1,59 @@
+{
+  "name": "Abvorn Publish Content",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "abvorn-publish",
+        "responseMode": "onReceived"
+      },
+      "id": "trigger",
+      "name": "Publish Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-320, 0],
+      "webhookId": "abvorn-publish"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/publish_content",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "carousel",
+              "value": "={{ $json.body.carousel }}"
+            },
+            {
+              "name": "platform",
+              "value": "={{ $json.body.platform }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "publish",
+      "name": "Debate via Colosseum",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [120, 0]
+    }
+  ],
+  "connections": {
+    "Publish Webhook": {
+      "main": [
+        [
+          {
+            "node": "Debate via Colosseum",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

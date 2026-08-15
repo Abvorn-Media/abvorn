@@ -394,6 +394,124 @@ async def get_reflection_summary():
     return learner.reflection_store.get_summary()
 
 
+@app.get("/api/content/recent")
+async def get_content_recent(limit: int = 10):
+    """Return the most recent deployed content from cycle_state.json."""
+    import json as _json
+
+    try:
+        state_path = PROJECT_DIR / "cycle_state.json"
+        if not state_path.exists():
+            return {"items": []}
+        state = _json.loads(state_path.read_text(encoding="utf-8"))
+        deployed = state.get("deployed", []) or []
+        items = []
+        for item in deployed[-limit:]:
+            if isinstance(item, dict):
+                items.append({
+                    "name": item.get("product", {}).get("name") or item.get("name", ""),
+                    "niche": item.get("niche", ""),
+                    "url": item.get("url", ""),
+                    "verdict": item.get("product", {}).get("verdict") or item.get("verdict", {}),
+                })
+        return {"items": items}
+    except Exception as e:
+        logger.warning("content/recent failed: %s", e)
+        return {"items": [], "error": str(e)}
+
+
+# ── n8n integration ────────────────────────────────────────────────
+@app.get("/api/n8n/status")
+async def n8n_status():
+    """n8n reachability for the dashboard and manual checks."""
+    from abvorn.core.n8n_bridge import _healthz
+
+    return _healthz()
+
+
+@app.post("/api/n8n/trigger/{webhook_path}")
+async def trigger_n8n(webhook_path: str, data: dict = None):
+    """POST to an n8n workflow webhook by path (e.g. abvorn-reflection)."""
+    from abvorn.core.n8n_bridge import get_n8n_bridge
+
+    bridge = get_n8n_bridge()
+    return bridge.trigger_workflow(webhook_path, data or {})
+
+
+@app.post("/webhook/abvorn/{action}")
+async def abvorn_webhook(action: str, request: Request):
+    """Webhook endpoint for n8n to trigger Abvorn actions.
+
+    Actions: generate_reflection, publish_content, gsc_fetch,
+    evolution_check, journal_update.
+    """
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    logger.info("n8n webhook: %s", action)
+
+    if action == "generate_reflection":
+        from abvorn.core.learner import HindsightLearner
+
+        learner = HindsightLearner()
+        reflection = learner.generate_reflection(
+            data.get("content", {}), data.get("performance", {})
+        )
+        return {"success": True, "reflection_id": reflection.id if reflection else None}
+
+    if action == "publish_content":
+        from abvorn.core.colosseum import get_colosseum
+
+        colosseum = get_colosseum()
+        result = colosseum.conduct_debate(
+            data.get("carousel", {}), data.get("platform", "tiktok")
+        )
+        return {"success": True, "result": result}
+
+    if action == "gsc_fetch":
+        from abvorn.core.gsc_client import GSCClient
+
+        client = GSCClient()
+        if not client.enabled:
+            return {"success": False, "error": "GSC Client disabled"}
+        summary = client.get_summary()
+        return {"success": True, **summary}
+
+    if action == "evolution_check":
+        from abvorn.core.genesis_protocol import GenesisProtocol
+
+        genesis = GenesisProtocol()
+        lineage = genesis.get_lineage()
+        generations = lineage.get("generations", [])
+        if not isinstance(generations, (list, tuple)):
+            generations = [generations] if generations else []
+        return {
+            "success": True,
+            "lineage": lineage,
+            "should_evolve": bool(len(generations) > 0),
+        }
+
+    if action == "journal_update":
+        from abvorn.core.cortex_watcher import get_vault_path
+
+        vault = get_vault_path()
+        if vault is None:
+            return {"success": False, "error": "Cortex vault not configured"}
+        journal_dir = vault / "Journal"
+        journal_dir.mkdir(parents=True, exist_ok=True)
+        journal_file = journal_dir / "n8n-summary.md"
+        entry = {
+            "timestamp": datetime.now().isoformat(),
+            "data": data,
+        }
+        with open(journal_file, "a", encoding="utf-8") as f:
+            f.write(f"{json.dumps(entry, ensure_ascii=False)}\n")
+        return {"success": True, "journal": str(journal_file)}
+
+    return {"success": False, "error": f"Unknown action: {action}"}
+
+
 def _call_ai_subprocess(prompt: str) -> str:
     """Call AI in a subprocess with hard timeout. Kills if hung."""
     import subprocess as sp, sys

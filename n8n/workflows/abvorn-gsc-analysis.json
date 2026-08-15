@@ -1,0 +1,104 @@
+{
+  "name": "Abvorn GSC Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule",
+      "name": "Weekly Monday",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [-320, 0]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/gsc_fetch",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "days",
+              "value": 7
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gsc_fetch",
+      "name": "Fetch GSC Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [120, 0]
+    },
+    {
+      "parameters": {
+        "functionCode": "if (typeof $json.clicks === 'undefined') {\n  throw new Error('GSC summary missing clicks field');\n}\nconst clicks = $json.clicks;\nconst impressions = $json.impressions;\nreturn [{\n  json: {\n    clicks: clicks,\n    impressions: impressions,\n    ctr: impressions > 0 ? (clicks / impressions) : 0,\n    avgPosition: $json.avgPosition ?? $json.avg_position ?? null,\n    source: 'gsc',\n  },\n}];"
+      },
+      "id": "transform",
+      "name": "Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 0]
+    },
+    {
+      "parameters": {
+        "id": "={{ $env.ABVORN_GSC_SHEET_ID || '' }}",
+        "sheetName": "GSC Weekly",
+        "operation": "append",
+        "options": {}
+      },
+      "id": "sheets",
+      "name": "Append to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [560, 0]
+    }
+  ],
+  "connections": {
+    "Weekly Monday": {
+      "main": [
+        [
+          {
+            "node": "Fetch GSC Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch GSC Summary": {
+      "main": [
+        [
+          {
+            "node": "Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize": {
+      "main": [
+        [
+          {
+            "node": "Append to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

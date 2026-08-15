@@ -1,0 +1,150 @@
+{
+  "name": "Abvorn Reflection Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "schedule",
+      "name": "Daily at 6 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [-320, 0]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ABVORN_URL }}/api/content/recent",
+        "method": "GET",
+        "options": {}
+      },
+      "id": "get_content",
+      "name": "Get Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-100, 0]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/gsc_fetch",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "options": {}
+      },
+      "id": "gsc_fetch",
+      "name": "Fetch GSC Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [120, 0]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/generate_reflection",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "={{ $json }}"
+            },
+            {
+              "name": "performance",
+              "value": "={{ $('Fetch GSC Data').item.json }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "generate_reflection",
+      "name": "Generate Reflection",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [340, 0]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/journal_update",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "reflection_id",
+              "value": "={{ $json.reflection_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "journal_update",
+      "name": "Update Evolution Journal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [560, 0]
+    }
+  ],
+  "connections": {
+    "Daily at 6 AM": {
+      "main": [
+        [
+          {
+            "node": "Get Content",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch GSC Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Content": {
+      "main": [
+        [
+          {
+            "node": "Generate Reflection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch GSC Data": {
+      "main": [
+        [
+          {
+            "node": "Generate Reflection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Reflection": {
+      "main": [
+        [
+          {
+            "node": "Update Evolution Journal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

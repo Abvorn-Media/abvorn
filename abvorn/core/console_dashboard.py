@@ -244,6 +244,23 @@ def _read_cortex_state() -> Dict[str, Any]:
         return {"enabled": False, "watching": False, "vault": None, "corrections_logged": 0, "recent_entries": []}
 
 
+def _read_n8n_state() -> Dict[str, Any]:
+    """Read n8n reachability for the dashboard (short timeout, never fatal)."""
+    try:
+        from abvorn.core.n8n_bridge import get_n8n_bridge
+
+        bridge = get_n8n_bridge()
+        health = bridge.health()
+        return {
+            "status": health.get("status"),
+            "healthy": bool(health.get("healthy")),
+            "n8n_url": health.get("n8n_url"),
+        }
+    except Exception as e:
+        logger.warning(f"n8n state unavailable: {e}")
+        return {"status": "error", "healthy": False, "n8n_url": None}
+
+
 def get_system_status() -> Dict[str, Any]:
     """Gather all metrics from real data sources."""
     cycle = _read_cycle_state()
@@ -259,6 +276,7 @@ def get_system_status() -> Dict[str, Any]:
     brain = _read_brain_state()
     gsc = _read_gsc_state()
     cortex = _read_cortex_state()
+    n8n = _read_n8n_state()
 
     return {
         "timestamp": datetime.now().isoformat(),
@@ -288,6 +306,7 @@ def get_system_status() -> Dict[str, Any]:
         "brain": brain,
         "gsc": gsc,
         "cortex": cortex,
+        "n8n": n8n,
     }
 
 
@@ -632,6 +651,7 @@ def generate_dashboard_html() -> str:
     brain = status.get("brain", {}) or {}
     gsc = status.get("gsc", {}) or {}
     cortex = status.get("cortex", {}) or {}
+    n8n = status.get("n8n", {}) or {}
 
     organs = [
         dict(tag="WIN", name="win.sh loops",
@@ -653,9 +673,9 @@ def generate_dashboard_html() -> str:
                    ("Insights", memory.get("insights", 0)),
                    ("Ingested", _fmt_utc(memory.get("last_ingestion")))]),
         dict(tag="SPN", name="Core spawning",
-             state=_organ_state(0, len(spawn.get("followers", []) or [])),
+             state=_organ_state(0, int(spawn.get("followers", 0) or 0)),
              rows=[("Role", spawn.get("role", "\u2014")),
-                   ("Followers", len(spawn.get("followers", []) or [])),
+                   ("Followers", int(spawn.get("followers", 0) or 0)),
                    ("Heartbeat", _fmt_utc(spawn.get("last_heartbeat"))),
                    ("Leader", str(spawn.get("leader", "None"))[:22])]),
         dict(tag="GEN", name="Genesis lineage",
@@ -688,6 +708,12 @@ def generate_dashboard_html() -> str:
                    ("Corrections", cortex.get("corrections_logged", 0)),
                    ("Vault", str(cortex.get("vault") or "Not set")[:26]),
                    ("Journals", len(cortex.get("recent_entries", []) or []))]),
+        dict(tag="N8N", name="n8n automation",
+             state="alive" if n8n.get("healthy") else ("armed" if n8n.get("status") == "error" else "idle"),
+             rows=[("Status", "Connected" if n8n.get("healthy") else ("Unreachable" if n8n.get("status") == "error" else "Idle")),
+                   ("Endpoint", str(n8n.get("n8n_url") or "Not set")[:26]),
+                   ("Bridge", "abvorn/core/n8n_bridge.py"),
+                   ("Webhooks", "/webhook/abvorn/{action}")]),
     ]
     organs_html = ""
     for o in organs:
