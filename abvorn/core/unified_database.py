@@ -149,6 +149,28 @@ class UnifiedDatabase:
             )
         """)
 
+        # Hindsight reflections (ReflectionStore records)
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS reflections (
+                id TEXT PRIMARY KEY,
+                generation INTEGER,
+                content_id TEXT,
+                platform TEXT,
+                original_content TEXT,
+                performance_data TEXT,
+                what_worked TEXT,
+                what_failed TEXT,
+                why_worked TEXT,
+                why_failed TEXT,
+                key_learnings TEXT,
+                meta_reflection TEXT,
+                status TEXT,
+                created_at TEXT,
+                updated_at TEXT,
+                generated_by TEXT
+            )
+        """)
+
         conn.commit()
 
         # Indexes on frequently queried columns
@@ -161,6 +183,7 @@ class UnifiedDatabase:
         c.execute("CREATE INDEX IF NOT EXISTS idx_engagement_events_ts ON engagement_events(timestamp)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_economic_records_ts ON economic_records(timestamp)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_metrics_ts ON system_metrics(timestamp)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_reflections_created_at ON reflections(created_at)")
 
         conn.commit()
         conn.close()
@@ -323,6 +346,84 @@ class UnifiedDatabase:
             "total_profit": total_profit,
             "total_campaigns": total_campaigns
         }
+
+    def save_reflection(self, reflection: Dict[str, Any]) -> bool:
+        """Persist a reflection record (INSERT OR REPLACE by id)."""
+        def _dumps(value):
+            return json.dumps(value) if value is not None else None
+
+        try:
+            conn = self._connect()
+            c = conn.cursor()
+            c.execute("""
+                INSERT OR REPLACE INTO reflections (
+                    id, generation, content_id, platform,
+                    original_content, performance_data,
+                    what_worked, what_failed, why_worked, why_failed,
+                    key_learnings, meta_reflection, status,
+                    created_at, updated_at, generated_by
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                reflection.get("id"),
+                reflection.get("generation"),
+                reflection.get("content_id"),
+                reflection.get("platform"),
+                _dumps(reflection.get("original_content")),
+                _dumps(reflection.get("performance_data")),
+                _dumps(reflection.get("what_worked")),
+                _dumps(reflection.get("what_failed")),
+                _dumps(reflection.get("why_worked")),
+                _dumps(reflection.get("why_failed")),
+                _dumps(reflection.get("key_learnings")),
+                _dumps(reflection.get("meta_reflection")),
+                reflection.get("status"),
+                reflection.get("created_at"),
+                reflection.get("updated_at"),
+                reflection.get("generated_by"),
+            ))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            logger.error("Failed to save reflection: %s", e)
+            return False
+
+    def get_recent_reflections(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """Return the most recent reflections as dicts with JSON fields decoded."""
+        def _loads(value):
+            if value is None:
+                return None
+            try:
+                return json.loads(value)
+            except (ValueError, TypeError):
+                return value
+
+        conn = self._connect()
+        c = conn.cursor()
+        c.execute("SELECT * FROM reflections ORDER BY created_at DESC LIMIT ?", (limit,))
+        rows = c.fetchall()
+        columns = [desc[0] for desc in c.description]
+        conn.close()
+        results = []
+        for row in rows:
+            record = dict(zip(columns, row))
+            for field in ("original_content", "performance_data", "what_worked",
+                          "what_failed", "why_worked", "why_failed",
+                          "key_learnings", "meta_reflection"):
+                record[field] = _loads(record.get(field))
+            results.append(record)
+        return results
+
+    def get_reflection_summary(self) -> Dict[str, Any]:
+        """Aggregate reflection counts by platform."""
+        conn = self._connect()
+        c = conn.cursor()
+        c.execute("SELECT COUNT(*) FROM reflections")
+        total = c.fetchone()[0]
+        c.execute("SELECT platform, COUNT(*) FROM reflections GROUP BY platform")
+        platforms = dict(c.fetchall())
+        conn.close()
+        return {"total": total, "platforms": platforms}
 
 
 _instance = None

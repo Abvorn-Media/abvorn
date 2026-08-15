@@ -7,7 +7,13 @@ Closes the NDC 2.0 loop: Question → Experiment → Learn → Question again.
 """
 
 import json
+import logging
 from datetime import datetime
+from typing import Dict, List, Optional
+
+from abvorn.core.reflection import Reflection, ReflectionStore, generate_reflection_id
+
+logger = logging.getLogger(__name__)
 
 
 def learner_agent(experiment_results: list, formula_configs: dict = None,
@@ -190,3 +196,100 @@ Return JSON:
     except Exception:
         pass
     return {}
+
+
+class HindsightLearner:
+    """Hindsight Learner — turns content + performance data into reflections.
+
+    Analyzes why content performed the way it did and records the learnings
+    via ReflectionStore (unified SQLite DB + JSONL + optional Obsidian).
+    Accepts an optional `model_ask` callable (mirroring `learner_agent`); when
+    absent or failing, falls back to a deterministic heuristic reflection so
+    the core cycle never crashes.
+    """
+
+    def __init__(self, model_ask=None, store: Optional[ReflectionStore] = None):
+        self.reflection_store = store if store is not None else ReflectionStore()
+        self.model_ask = model_ask or self._default_model_ask
+        self.reflection_count = 0
+
+    @staticmethod
+    def _default_model_ask(prompt: str, json_mode: bool = False) -> Optional[str]:
+        """Route through the real ModelRouter; returns None on any failure."""
+        try:
+            from abvorn.core.secrets import load_secrets
+            from abvorn.core.models import ModelRouter
+
+            router = ModelRouter(load_secrets(), timeout=25)
+            return router.ask(
+                prompt,
+                system="You are the Hindsight Learner for Abvorn. Analyze content performance and return JSON.",
+                json_mode=json_mode,
+            )
+        except Exception as e:
+            logger.warning("HindsightLearner model ask failed: %s", e)
+            return None
+
+    def generate_reflection(
+        self, content_data: Dict, performance_data: Dict
+    ) -> Optional[Reflection]:
+        """Generate a reflection from content and performance data."""
+        try:
+            prompt = self._build_reflection_prompt(content_data, performance_data)
+            response = self.model_ask(prompt, json_mode=True)
+            reflection_data = self._parse_reflection_response(response)
+
+            reflection = Reflection(
+                id=generate_reflection_id(),
+                generation=content_data.get("generation", 1),
+                content_id=content_data.get("id", "unknown"),
+                platform=content_data.get("platform", "unknown"),
+                original_content=content_data,
+                performance_data=performance_data,
+                what_worked=reflection_data.get("what_worked", []),
+                what_failed=reflection_data.get("what_failed", []),
+                why_worked=reflection_data.get("why_worked", []),
+                why_failed=reflection_data.get("why_failed", []),
+                key_learnings=reflection_data.get("key_learnings", []),
+                status="complete",
+                generated_by="hindsight_learner",
+            )
+            self.reflection_store.save(reflection)
+            self.reflection_count += 1
+            return reflection
+        except Exception as e:
+            logger.error("Reflection generation failed: %s", e)
+            return None
+
+    @staticmethod
+    def _build_reflection_prompt(
+        content_data: Dict, performance_data: Dict
+    ) -> str:
+        return (
+            "Analyze why this content performed the way it did.\n"
+            f"Content: {json.dumps(content_data, default=str)}\n"
+            f"Performance: {json.dumps(performance_data, default=str)}\n"
+            'Return JSON with keys: what_worked, what_failed, why_worked, '
+            'why_failed, key_learnings (all lists of strings).'
+        )
+
+    @staticmethod
+    def _parse_reflection_response(response) -> Dict:
+        """Parse the model response; fall back to a heuristic reflection."""
+        expected = {"what_worked", "what_failed", "why_worked", "why_failed", "key_learnings"}
+        if isinstance(response, dict) and expected.issubset(response):
+            return response
+        if isinstance(response, str):
+            try:
+                parsed = json.loads(response)
+                if isinstance(parsed, dict) and expected.issubset(parsed):
+                    return parsed
+            except (ValueError, TypeError):
+                pass
+        return {
+            "what_worked": ["Content generated successfully"],
+            "what_failed": ["No performance data available"],
+            "why_worked": ["Content followed the brief"],
+            "why_failed": ["Unknown"],
+            "key_learnings": ["Improve performance tracking"],
+        }

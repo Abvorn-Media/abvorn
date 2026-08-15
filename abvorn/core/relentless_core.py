@@ -52,6 +52,16 @@ class RelentlessCore:
         except Exception as e:
             logger.warning(f"Fable integration unavailable: {e}")
 
+        # Optional Hindsight Learner (never fatal if unavailable)
+        self.hindsight_learner = None
+        self.reflection_interval = 10
+        try:
+            from abvorn.core.learner import HindsightLearner
+
+            self.hindsight_learner = HindsightLearner()
+        except Exception as e:
+            logger.warning(f"Hindsight learner unavailable: {e}")
+
         # ── Evolution Stack integrations (never fatal if unavailable) ──
         self.memory = None
         self.memory_state = {}
@@ -77,6 +87,7 @@ class RelentlessCore:
         self.version = 1
         self.genesis = None
         self.evolution_counter = 0
+        self.cycle_count = 0
         try:
             import os as _os
 
@@ -582,6 +593,7 @@ class RelentlessCore:
 
     def cycle(self) -> Dict[str, Any]:
         """Run one drive cycle (Think → Act → Prove → Grow when Fable is available)."""
+        self.cycle_count += 1
         # 0. Evolution trigger: after enough cycles, evolve to a child core
         self.evolution_counter += 1
         if self.evolution_counter >= 10 and self.genesis is not None:
@@ -672,6 +684,25 @@ class RelentlessCore:
             "fable_verification": verification,
             "fable_learning": learning,
         }
+
+        # 5b. Reflection trigger: every reflection_interval cycles, analyze the
+        # latest content + performance and persist a hindsight reflection.
+        if self.hindsight_learner is not None and self.cycle_count % self.reflection_interval == 0:
+            content_data = {
+                "id": action,
+                "generation": self.version,
+                "platform": "web",
+                "drive_score": drive_score,
+                "ambition_level": self.ambition_level,
+                "action": action,
+            }
+            performance_data = {
+                "win_metrics": self._read_win_metrics(),
+                "state": self._read_cycle_state(),
+            }
+            reflection = self.hindsight_learner.generate_reflection(content_data, performance_data)
+            if reflection:
+                cycle_result["reflection_id"] = reflection.id
 
         # 6. Write the journal entry to the Symbiotic Cortex vault
         self._write_to_cortex(cycle_result)

@@ -375,6 +375,25 @@ async def get_brain_state():
         return {"status": "unavailable", "categories": {}, "error": str(e)}
 
 
+# ── Hindsight Reflection API endpoints ──────────────────────────────
+@app.get("/api/reflections")
+async def get_reflections(limit: int = 10):
+    """Return the most recent hindsight reflections from the unified DB."""
+    from abvorn.core.learner import HindsightLearner
+
+    learner = HindsightLearner()
+    return {"reflections": learner.reflection_store.get_recent(limit)}
+
+
+@app.get("/api/reflections/summary")
+async def get_reflection_summary():
+    """Return a platform breakdown of hindsight reflections."""
+    from abvorn.core.learner import HindsightLearner
+
+    learner = HindsightLearner()
+    return learner.reflection_store.get_summary()
+
+
 def _call_ai_subprocess(prompt: str) -> str:
     """Call AI in a subprocess with hard timeout. Kills if hung."""
     import subprocess as sp, sys
