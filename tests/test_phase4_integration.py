@@ -255,6 +255,38 @@ def test_build_article_page_closes_unclosed_list_before_decision_matrix():
     )
 
 
+def test_build_article_page_strips_truncated_closing_tag_before_decision_matrix():
+    """An AI draft truncated mid-closing-tag (e.g. a tail ending in "</h2" with
+    no ">") must not swallow the decision matrix the template appends next —
+    otherwise the matrix/chart/products/FAQ stop being direct children of the
+    article body and vanish from the rendered layout."""
+    html = build_article_page(
+        niche_slug="test-niche",
+        niche_name="Test Niche",
+        post_title="Test Post",
+        article_html='<p>Intro copy.</p>\n<h2 id="what">What to Look For</h2',
+        intro="<p>Intro</p>",
+        product_name="Product",
+        meta_desc="desc",
+        all_slugs=["test-niche"],
+        products=[
+            {"name": "Prod A", "description": "Desc", "price": "$10", "image": ""},
+        ],
+        article_id=None,
+    )
+    body = html[html.find('id="main"'):html.find('<footer')]
+    # the dangling "</h2" fragment must be gone, not left as an unterminated tag
+    assert not re.search(r"</h2\s*$", body, flags=re.M)
+    # the decision matrix is still present and a direct child of article-body
+    assert 'class="table-wrap decision-matrix"' in body
+    matrix_ctx = body[body.find('class="table-wrap decision-matrix"') - 120:]
+    assert not re.search(
+        r"<h2[^>]*>\s*<div class=\"table-wrap decision-matrix\"",
+        matrix_ctx,
+        flags=re.S,
+    )
+
+
 # ---------------------------------------------------------------------------
 # change_management.py
 # ---------------------------------------------------------------------------

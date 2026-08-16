@@ -318,6 +318,12 @@ def sanitize_article_html(html, strip_leading_intro=True):
     # the decision matrix / chart / product grid the template appends next.
     # Drop the fragment, then close any trailing list tags that stayed open.
     text = re.sub(r"<div\s*$", "", text)
+
+    # A draft can also end mid-closing-tag — e.g. a tail like "…fidelity.</p>
+    # <h2>What to Look For</h2" (truncated at the token limit). The dangling
+    # "</h2" opens a heading region the template never closes, which swallows
+    # the sections appended next. Drop the incomplete closing tag entirely.
+    text = re.sub(r"</[a-z][a-z0-9]*\s*$", "", text)
     text = _close_unclosed_lists(text)
 
     text = re.sub(r" {2,}", " ", text)
