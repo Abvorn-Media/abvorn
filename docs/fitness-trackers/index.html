@@ -54,6 +54,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 @media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.skip-link { position: absolute; top: -100px; left: 8px; z-index: 200; background: var(--clr-accent); color: var(--clr-black); padding: 10px 18px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: top var(--duration-fast) var(--ease-out); }
+.skip-link:focus { top: 0; color: var(--clr-black); }
 :focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
 
 /* ── Footer category columns ──────────────────────────────────── */
@@ -79,7 +81,19 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 .product-shot--hero .product-shot__badge{box-shadow:none}
 .product-shot--card{aspect-ratio:1/1;width:100%;padding:var(--space-md)}
 .product-shot--sm{width:100%;height:100%;padding:var(--space-sm);border-radius:var(--radius-sm)}
-.product-shot--body{max-width:420px;margin:var(--space-md) auto;padding:var(--space-lg)}
+.product-shot--body{max-width:360px;margin:var(--space-lg) auto;padding:0;aspect-ratio:auto;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  background:transparent;border:0;box-shadow:none;overflow:visible}
+.product-shot--body .product-shot__img{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;
+  padding:clamp(20px,5%,36px);background:#ffffff;
+  border:1px solid rgba(226,216,196,.9);border-radius:calc(var(--radius-lg) + 4px);
+  box-shadow:0 18px 44px -20px rgba(43,36,25,.16), inset 0 0 0 1px rgba(255,255,255,.7);
+  filter:saturate(1.08) contrast(1.03) brightness(1.02);
+  transition:transform var(--duration-slow) var(--ease-out)}
+.product-shot--body:hover .product-shot__img{transform:translateY(-3px);box-shadow:0 24px 54px -22px rgba(43,36,25,.3), inset 0 0 0 1px rgba(255,255,255,.7)}
+.product-shot--body figcaption{position:static;width:100%;text-align:center;padding:0 8px;
+  font-family:var(--font-display);font-size:.7rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--clr-mid-gray)}
 .niche-card__image-wrapper .product-shot{width:100%;height:100%;aspect-ratio:auto;
   border:0;border-radius:0;box-shadow:none;padding:var(--space-sm);margin:0}
 @media (max-width:600px){.product-shot--body{max-width:100%}}
@@ -270,9 +284,9 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
             <h1 class="cat-hero__title">Best Fitness Trackers Reviews</h1>
             <p class="cat-hero__tagline">Most trackers count steps and little else. We check which ones measure what matters — heart, sleep, and recovery.</p>
             <div class="cat-hero__chips">
-                <div class="cat-hero__chip"><span class="cat-hero__chip-num">3</span><span class="cat-hero__chip-label">reviews published</span></div>
+                <div class="cat-hero__chip"><span class="cat-hero__chip-num">4</span><span class="cat-hero__chip-label">reviews published</span></div>
                 <div class="cat-hero__chip"><span class="cat-hero__chip-num"><em>7.0</em>/10</span><span class="cat-hero__chip-label">best verdict</span></div>
-                <div class="cat-hero__chip"><span class="cat-hero__chip-num"></span><span class="cat-hero__chip-label">latest update</span></div>
+                <div class="cat-hero__chip"><span class="cat-hero__chip-num">Aug 2026</span><span class="cat-hero__chip-label">latest update</span></div>
             </div>
             <div class="cat-hero__cta"><a class="cat-hero__btn" href="#latest">Browse the reviews<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></a><span class="cat-hero__hint">Independent · Tested · Updated weekly</span></div>
         </div>
@@ -290,7 +304,25 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     </div>
 </nav>
 
-<section class="category-section container" id="latest" style="--cat:#b7ddc0"><span class="section-eyebrow">Fresh this week</span><div class="category-section__header"><h2>Latest Fitness Trackers reviews</h2><span class="category-section__count">3 guides published</span></div><div class="niche-grid"><div class="niche-card review-card niche-card--featured" style="--cat:#b7ddc0">
+<section class="category-section container" id="latest" style="--cat:#b7ddc0"><span class="section-eyebrow">Fresh this week</span><div class="category-section__header"><h2>Latest Fitness Trackers reviews</h2><span class="category-section__count">4 guides published</span></div><div class="niche-grid"><div class="niche-card review-card niche-card--featured" style="--cat:#b7ddc0">
+    <div class="review-card__media">
+        <a href="/abvorn/reviews/fitness-trackers/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/618Y6apfa0L._AC_SL1500_.jpg" alt="Ultimate Fitness Tracker Comparison: Heart Rate, Sleep, and More" loading="lazy"></figure></div></a>
+        <span class="review-card__score" aria-label="Abvorn Verdict 7.0 out of 10"><span class="review-card__score-num">7.0</span><span class="review-card__score-out">/10</span></span>
+    </div>
+    <div class="review-card__body">
+        <span class="review-card__banner" style="background:#b7ddc0">Fitness &amp; Health · Fitness Trackers</span>
+        <span class="review-card__updated">Updated Aug 2026</span>
+        <h2><a href="/abvorn/reviews/fitness-trackers/">Ultimate Fitness Tracker Comparison: Heart Rate, Sleep, and More</a></h2>
+        <p class="review-card__snippet">&lt;p&gt;Looking for a fitness tracker that actually delivers on heart‑rate monitoring, sleep analysis, and all the extra health metrics you crave? The market is floo</p>
+        <div class="review-card__footer">
+            <div class="review-card__reactions" data-review="fitness-trackers">
+                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
+            </div>
+            <a href="/abvorn/reviews/fitness-trackers/" class="read-link">Read review →</a>
+        </div>
+    </div>
+</div><div class="niche-card review-card" style="--cat:#b7ddc0">
     <div class="review-card__media">
         <a href="/abvorn/reviews/fitness-trackers/best-fitness-trackers-of-2024-a-comprehensive-buying-guide-to-help-you-reach-your-goals-2026-08-13.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><img src="/abvorn/assets/fitness-trackers.png" alt="Best Fitness Trackers of 2024: A Comprehensive Buying Guide to Help You Reach Your Goals" loading="lazy"></div></a>
         <span class="review-card__score" aria-label="Abvorn Verdict 7.0 out of 10"><span class="review-card__score-num">7.0</span><span class="review-card__score-out">/10</span></span>
@@ -344,7 +376,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
             <a href="/abvorn/reviews/fitness-trackers/the-ultimate-fitness-tracker-buying-guide-expert-reviews-2024-s-best-picks-2026-08-08.html" class="read-link">Read review →</a>
         </div>
     </div>
-</div></div></section><section class="subscribe-band"><div class="container subscribe-inner"><div class="subscribe-copy"><h2>Get alerted when we publish a new Fitness Trackers review</h2><p>One email whenever we publish a new guide in this niche. No spam, unsubscribe anytime.</p></div><form class="subscribe-form" id="category-subscribe-form" onsubmit="submitCategorySubscribe(event)"><input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off"><label for="category-subscribe-email" class="sr-only">Email address</label><input type="email" class="input" id="category-subscribe-email" placeholder="you@example.com" required><button type="submit" class="btn">Notify Me</button><p class="subscribe-msg" id="category-subscribe-msg" aria-live="polite"></p></form></div></section><section class="category-section container" id="archive" style="--cat:#b7ddc0"><span class="section-eyebrow">The full record</span><div class="category-section__header"><h2>Fitness Trackers review archive</h2><span class="category-section__count">3 guides</span></div><div class="archive-list"><a class="archive-row" style="--cat:#b7ddc0" href="/abvorn/reviews/fitness-trackers/best-fitness-trackers-of-2024-a-comprehensive-buying-guide-to-help-you-reach-your-goals-2026-08-13.html"><span class="archive-row__date"></span><span class="archive-row__title">Best Fitness Trackers of 2024: A Comprehensive Buying Guide to Help You Reach Your Goals</span><span class="archive-row__score">7.0<span class="archive-row__score-out">/10</span></span><span class="archive-row__arrow" aria-hidden="true">→</span></a><a class="archive-row" style="--cat:#b7ddc0" href="/abvorn/reviews/fitness-trackers/the-ultimate-buying-guide-to-fitness-trackers-find-the-best-one-for-your-needs-2026-07-27.html"><span class="archive-row__date"></span><span class="archive-row__title">The Ultimate Buying Guide to Fitness Trackers: Find the Best One for Your Needs</span><span class="archive-row__score">7.0<span class="archive-row__score-out">/10</span></span><span class="archive-row__arrow" aria-hidden="true">→</span></a><a class="archive-row" style="--cat:#b7ddc0" href="/abvorn/reviews/fitness-trackers/the-ultimate-fitness-tracker-buying-guide-expert-reviews-2024-s-best-picks-2026-08-08.html"><span class="archive-row__date"></span><span class="archive-row__title">The Ultimate Fitness Tracker Buying Guide: Expert Reviews &amp; 2024&#x27;s Best Picks</span><span class="archive-row__score">7.0<span class="archive-row__score-out">/10</span></span><span class="archive-row__arrow" aria-hidden="true">→</span></a></div></section>
+</div></div></section><section class="subscribe-band"><div class="container subscribe-inner"><div class="subscribe-copy"><h2>Get alerted when we publish a new Fitness Trackers review</h2><p>One email whenever we publish a new guide in this niche. No spam, unsubscribe anytime.</p></div><form class="subscribe-form" id="category-subscribe-form" onsubmit="submitCategorySubscribe(event)"><input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off"><label for="category-subscribe-email" class="sr-only">Email address</label><input type="email" class="input" id="category-subscribe-email" placeholder="you@example.com" required><button type="submit" class="btn">Notify Me</button><p class="subscribe-msg" id="category-subscribe-msg" aria-live="polite"></p></form></div></section><section class="category-section container" id="archive" style="--cat:#b7ddc0"><span class="section-eyebrow">The full record</span><div class="category-section__header"><h2>Fitness Trackers review archive</h2><span class="category-section__count">4 guides</span></div><div class="archive-list"><a class="archive-row" style="--cat:#b7ddc0" href="/abvorn/reviews/fitness-trackers/"><span class="archive-row__date">Aug 16, 2026</span><span class="archive-row__title">Ultimate Fitness Tracker Comparison: Heart Rate, Sleep, and More</span><span class="archive-row__score">7.0<span class="archive-row__score-out">/10</span></span><span class="archive-row__arrow" aria-hidden="true">→</span></a><a class="archive-row" style="--cat:#b7ddc0" href="/abvorn/reviews/fitness-trackers/best-fitness-trackers-of-2024-a-comprehensive-buying-guide-to-help-you-reach-your-goals-2026-08-13.html"><span class="archive-row__date"></span><span class="archive-row__title">Best Fitness Trackers of 2024: A Comprehensive Buying Guide to Help You Reach Your Goals</span><span class="archive-row__score">7.0<span class="archive-row__score-out">/10</span></span><span class="archive-row__arrow" aria-hidden="true">→</span></a><a class="archive-row" style="--cat:#b7ddc0" href="/abvorn/reviews/fitness-trackers/the-ultimate-buying-guide-to-fitness-trackers-find-the-best-one-for-your-needs-2026-07-27.html"><span class="archive-row__date"></span><span class="archive-row__title">The Ultimate Buying Guide to Fitness Trackers: Find the Best One for Your Needs</span><span class="archive-row__score">7.0<span class="archive-row__score-out">/10</span></span><span class="archive-row__arrow" aria-hidden="true">→</span></a><a class="archive-row" style="--cat:#b7ddc0" href="/abvorn/reviews/fitness-trackers/the-ultimate-fitness-tracker-buying-guide-expert-reviews-2024-s-best-picks-2026-08-08.html"><span class="archive-row__date"></span><span class="archive-row__title">The Ultimate Fitness Tracker Buying Guide: Expert Reviews &amp; 2024&#x27;s Best Picks</span><span class="archive-row__score">7.0<span class="archive-row__score-out">/10</span></span><span class="archive-row__arrow" aria-hidden="true">→</span></a></div></section>
 </main>
 
 <footer class="footer"><div class="container">
