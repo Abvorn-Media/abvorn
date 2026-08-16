@@ -39,7 +39,7 @@ WARM_EDITORIAL_CSS = """
 }
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior: smooth; font-size: 16px; }
-body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: #3f382f; background: #faf7f2; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: #3f382f; background: #ffffff; -webkit-font-smoothing: antialiased; }
 ::selection { background:#e6c98f; color:#241e17; }
 h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.15; font-weight: 600; letter-spacing: -0.02em; color: var(--clr-black); }
 h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 600; }
@@ -53,7 +53,7 @@ a:hover { color: #7a4c10; }
 @media (max-width: 768px) { .container { padding: 0 var(--space-md); } h1 { font-size: var(--text-2xl); } h2 { font-size: var(--text-xl); } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 :focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
-.skip-link { position: absolute; top: -40px; left: 8px; z-index: 200; background: var(--clr-accent); color: var(--clr-black); padding: 10px 18px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: top var(--duration-fast) var(--ease-out); }
+.skip-link { position: absolute; top: -100px; left: 8px; z-index: 200; background: var(--clr-accent); color: var(--clr-black); padding: 10px 18px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: top var(--duration-fast) var(--ease-out); }
 .skip-link:focus { top: 0; color: var(--clr-black); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 @media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
@@ -155,12 +155,14 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 /* -- Article body -- */
 .article-body { max-width: 72ch; min-width:0; }
 .disclosure { background:#f1e9d7; border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg); font-size:0.85rem; color:#6b6252; margin-bottom: var(--space-lg); }
-.article-body p { color:#4a4236; margin-bottom: var(--space-md); }
-.article-body h2 { font-size: var(--text-xl); margin: var(--space-xl) 0 var(--space-md); color:#2b2419; scroll-margin-top:110px; }
-.article-body h3 { font-size: var(--text-lg); margin: var(--space-lg) 0 var(--space-sm); color:#2b2419; scroll-margin-top:110px; }
-.article-body ul, .article-body ol { margin:0 0 var(--space-md); padding-left:1.4em; color:#4a4236; }
-.article-body li { margin-bottom: var(--space-sm); }
-.article-body strong { color:#2b2419; }
+.article-body p { color:#40382f; margin-bottom: 1.75rem; line-height:1.85; }
+.article-body > p:first-of-type { font-size:1.09rem; line-height:1.75; color:#2b2419; }
+.article-body h2 { font-size: var(--text-2xl); margin: 3.25rem 0 1.1rem; color:#221c13; letter-spacing:-0.02em; scroll-margin-top:110px; }
+.article-body h3 { font-size: var(--text-xl); margin: 2.75rem 0 0.9rem; color:#2b2419; scroll-margin-top:110px; }
+.article-body h4 { font-size: var(--text-lg); margin: 2rem 0 0.7rem; color:#2b2419; scroll-margin-top:110px; }
+.article-body ul, .article-body ol { margin:0 0 1.75rem; padding-left:1.4em; color:#40382f; }
+.article-body li { margin-bottom: 0.65rem; }
+.article-body strong { color:#2b2419; font-weight:700; }
 .article-body a { color:#996015; text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1px; }
 .article-body a:hover { color:#7a4c10; }
 .article-body a.btn { text-decoration:none; }
@@ -217,7 +219,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 /* -- Chart -- */
 .chart-section { margin: var(--space-lg) 0; padding: var(--space-lg); background:#ffffff; border-radius:var(--radius-lg); border:1px solid #e2d8c4; }
 .chart-wrapper { width:100%; max-width:500px; height:400px; margin:0 auto; }
-.chart-note { text-align:center; font-size:0.8rem; color:#6b6252; margin-top: var(--space-sm); margin-bottom:0; }
+.chart-note { text-align:center; max-width:none; font-size:0.8rem; color:#6b6252; margin-top: var(--space-sm); margin-bottom:0; }
 @media (max-width:600px) { .chart-wrapper { height:300px; } }
 
 /* -- CTA banner -- */
@@ -349,13 +351,18 @@ WARM_PRODUCT_GRID_CSS = """
 .warm-product-section{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-lg)}
 .warm-grid-heading{font-family:var(--font-display);font-weight:600;letter-spacing:-0.01em;font-size:var(--text-2xl);color:var(--clr-black);margin:var(--space-xl) 0 var(--space-md);scroll-margin-top:110px}
 .warm-grid-heading + .warm-product-section{margin-top:0}
-.warm-product-card{display:flex;flex-direction:column;gap:var(--space-md);background:#ffffff;border:1px solid #e2d8c4;border-radius:var(--radius-lg);padding:var(--space-lg);box-shadow:var(--shadow-sm)}
-.warm-product-card .warm-product-card__media{aspect-ratio:1/1;width:100%;background:#ffffff;border:1px solid #e2d8c4;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.warm-product-card .warm-product-card__media img{width:100%;height:100%;object-fit:contain;padding:var(--space-md)}
-.warm-product-card__name{font-size:var(--text-base);color:#2b2419;margin-bottom:2px;font-family:var(--font-display)}
-.warm-product-card__price{color:#996015;font-weight:700;font-size:0.9rem;margin-bottom:4px}
-.warm-product-card__summary{font-size:0.85rem;color:#5a5146;margin-bottom:6px}
-.warm-product-card .cta-row{flex-wrap:wrap}
+.warm-product-card{display:flex;flex-direction:column;gap:var(--space-md);background:#ffffff;border:1px solid #e2d8c4;border-radius:var(--radius-lg);padding:var(--space-lg);box-shadow:var(--shadow-sm);transition:transform var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out)}
+.warm-product-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.warm-product-card .warm-product-card__media{aspect-ratio:1/1;width:100%;
+  background:#ffffff;
+  border:1px solid #e2d8c4;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;overflow:hidden;
+  position:relative}
+.warm-product-card .warm-product-card__media img{width:100%;height:100%;object-fit:contain;padding:var(--space-lg);max-width:100%;max-height:100%;
+  filter:saturate(1.05) contrast(1.02) brightness(1.01);transition:transform var(--duration-slow) var(--ease-out)}
+.warm-product-card:hover .warm-product-card__media img{transform:scale(1.04)}
+.warm-product-card__name{font-size:var(--text-base);line-height:1.35;color:#2b2419;margin-bottom:2px;font-family:var(--font-display);font-weight:600}
+.warm-product-card__price{color:#996015;font-weight:800;font-size:1.05rem;margin-bottom:0}
+.warm-product-card .cta-row{margin-top:auto;flex-wrap:wrap}
 .warm-product-card .cta-row .btn{flex:1 1 auto;justify-content:center;white-space:nowrap;padding:0.6em 0.9em;font-size:0.8rem}
 """
 
@@ -399,7 +406,7 @@ def warm_hero_pick_html(product, overall, label, affiliate_url, base="", niche_s
     if not product:
         return ""
     name = clean_product_name(product.get("name", "Our Choice"))
-    price = product.get("price", "Check price")
+    price = product.get("price") or "Check price"
     image = upgrade_product_image(product.get("image", ""))
     if image:
         shot = (
@@ -437,7 +444,7 @@ def warm_product_card_html(product, affiliate_url="", base="", overall="", label
     if not product:
         return ""
     name = clean_product_name(product.get("name", "Product"))
-    price = product.get("price", "Check price")
+    price = product.get("price") or "Check price"
     summary = product.get("description", "") or ""
     image = upgrade_product_image(product.get("image", ""))
     if image:
@@ -451,11 +458,10 @@ def warm_product_card_html(product, affiliate_url="", base="", overall="", label
             'font-size:.8rem;text-align:center;padding:20px">Product</span></div>'
         )
     compare_href = f"{base}/compare.html?{_compare_qs(product, overall, label)}"
-    return f"""<div class="warm-product-card">
+    return f"""<div class="warm-product-card" data-description="{html_mod.escape(summary)}">
 {media}
 <h3 class="warm-product-card__name">{html_mod.escape(name)}</h3>
 <div class="warm-product-card__price">{html_mod.escape(str(price))}</div>
-<p class="warm-product-card__summary">{html_mod.escape(summary)}</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="{affiliate_url}" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="{compare_href}" data-track="compare">Compare &oplus;</a>
@@ -488,6 +494,7 @@ def warm_heading_ids(article_html):
 
     def _repl(m):
         tag = m.group(1) or ""
+        tag = re.sub(r"\sid\s*=\s*\"[^\"]*\"", "", tag)
         inner = m.group(2)
         text = re.sub(r"<[^>]+>", "", inner).strip()
         base = _slugify(text)

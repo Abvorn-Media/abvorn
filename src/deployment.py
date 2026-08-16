@@ -70,7 +70,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 @media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 :focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
-.skip-link { position: absolute; top: -40px; left: 8px; z-index: 200; background: var(--clr-accent); color: var(--clr-black); padding: 10px 18px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: top var(--duration-fast) var(--ease-out); }
+.skip-link { position: absolute; top: -100px; left: 8px; z-index: 200; background: var(--clr-accent); color: var(--clr-black); padding: 10px 18px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: top var(--duration-fast) var(--ease-out); }
 .skip-link:focus { top: 0; color: var(--clr-black); }
 
 /* ── Compare & Watchlist ──────────────────────────────────────── */
@@ -2332,6 +2332,8 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
 <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{{box-sizing:border-box;margin:0;padding:0}}body{{font-family:'Inter',sans-serif;color:#333;line-height:1.6}}
+.skip-link{{position:absolute;top:-100px;left:8px;background:var(--clr-accent,#c98a2c);color:#fff;padding:8px 16px;z-index:200;border-radius:0 0 4px;font-size:.9rem;text-decoration:none;transition:top .15s}}
+.skip-link:focus{{top:0;color:#fff}}
 header{{background:#0a0a0a;padding:18px 0;border-bottom:1px solid #2a2a2a;position:sticky;top:0;z-index:100}}
 .header-inner{{display:flex;justify-content:space-between;align-items:center;max-width:1200px;margin:0 auto;padding:0 20px}}
 .logo-img{{max-height:44px;width:auto}}

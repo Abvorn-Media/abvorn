@@ -34,7 +34,19 @@ PROD_SHOT_CSS = """
 .product-shot--hero .product-shot__badge{box-shadow:none}
 .product-shot--card{aspect-ratio:1/1;width:100%;padding:var(--space-md)}
 .product-shot--sm{width:100%;height:100%;padding:var(--space-sm);border-radius:var(--radius-sm)}
-.product-shot--body{max-width:420px;margin:var(--space-md) auto;padding:var(--space-lg)}
+.product-shot--body{max-width:360px;margin:var(--space-lg) auto;padding:0;aspect-ratio:auto;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  background:transparent;border:0;box-shadow:none;overflow:visible}
+.product-shot--body .product-shot__img{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;
+  padding:clamp(20px,5%,36px);background:#ffffff;
+  border:1px solid rgba(226,216,196,.9);border-radius:calc(var(--radius-lg) + 4px);
+  box-shadow:0 18px 44px -20px rgba(43,36,25,.16), inset 0 0 0 1px rgba(255,255,255,.7);
+  filter:saturate(1.08) contrast(1.03) brightness(1.02);
+  transition:transform var(--duration-slow) var(--ease-out)}
+.product-shot--body:hover .product-shot__img{transform:translateY(-3px);box-shadow:0 24px 54px -22px rgba(43,36,25,.3), inset 0 0 0 1px rgba(255,255,255,.7)}
+.product-shot--body figcaption{position:static;width:100%;text-align:center;padding:0 8px;
+  font-family:var(--font-display);font-size:.7rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--clr-mid-gray)}
 .niche-card__image-wrapper .product-shot{width:100%;height:100%;aspect-ratio:auto;
   border:0;border-radius:0;box-shadow:none;padding:var(--space-sm);margin:0}
 @media (max-width:600px){.product-shot--body{max-width:100%}}
@@ -168,7 +180,8 @@ def product_shot_html(url, name, size="card", badge=None, eager=False):
         f'alt="{html_mod.escape(name)}" loading="{"eager" if eager else "lazy"}">'
     )
     badge_html = f'<span class="product-shot__badge">{html_mod.escape(badge)}</span>' if badge else ""
-    return f'<figure class="product-shot product-shot--{size}">{badge_html}{img}</figure>'
+    caption = f'<figcaption>{html_mod.escape(name)}</figcaption>' if size == "body" else ""
+    return f'<figure class="product-shot product-shot--{size}">{badge_html}{img}{caption}</figure>'
 
 
 def info_dot(text):
@@ -209,6 +222,44 @@ _CHART_SECTION_RE = re.compile(
 _EMBEDDED_BODY_RE = re.compile(r"(?is)<body[^>]*>(.*?)</body>")
 _EMBEDDED_DOC_RE = re.compile(r"(?is)<!DOCTYPE html>.*?</head>\s*(.*?)\s*(?:</body>\s*)?</html>")
 _LEADING_INTRO_RE = re.compile(r"(?is)^\s*<h2>\s*Introduction\s*</h2>\s*")
+
+
+def _close_unclosed_lists(html):
+    """Close list tags left open at the end of a content fragment.
+
+    AI drafts occasionally truncate a bullet list (a missing ``</li>`` or
+    ``</ul>``). Left open, the tags swallow whatever block the template appends
+    next (decision matrix / chart / product grid / FAQ), nesting those sections
+    inside a list item. Balance only the trailing stack so the surrounding
+    prose is untouched.
+
+    Models HTML auto-close semantics: a new ``<li>`` closes the previous
+    sibling ``<li>``, and ``</ul>``/``</ol>`` closes the trailing ``<li>`` too.
+    """
+    if not html:
+        return html
+    stack = []
+    for m in re.finditer(r"<(/?)\s*(li|ul|ol)\b[^>]*>", html, re.I):
+        closing, tag = m.group(1), m.group(2).lower()
+        if closing:
+            if tag == "li":
+                if stack and stack[-1] == "li":
+                    stack.pop()
+            else:  # </ul> / </ol>
+                if stack and stack[-1] == "li":
+                    stack.pop()
+                if stack and stack[-1] == tag:
+                    stack.pop()
+        else:
+            if tag == "li":
+                if stack and stack[-1] == "li":
+                    stack.pop()
+            stack.append(tag)
+    # li is a terminal child: a stray open <li> is closed before its <ul>.
+    closes = "".join(f"</{t}>" for t in reversed(stack))
+    if not closes:
+        return html
+    return html.rstrip() + "\n" + closes
 
 
 def sanitize_article_html(html, strip_leading_intro=True):
@@ -261,6 +312,14 @@ def sanitize_article_html(html, strip_leading_intro=True):
     # next (decision matrix / CTA), breaking the layout. Drop it entirely.
     text = re.sub(r"<p\s*$", "", text)
 
+    # A draft can end with a stray container fragment too — a bare "<div" (or
+    # "<div ") with no ">", e.g. "<li>…\n<div". Left in place it opens a div
+    # the template never closes, and the unclosed <li>/<ul> around it swallow
+    # the decision matrix / chart / product grid the template appends next.
+    # Drop the fragment, then close any trailing list tags that stayed open.
+    text = re.sub(r"<div\s*$", "", text)
+    text = _close_unclosed_lists(text)
+
     text = re.sub(r" {2,}", " ", text)
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
     return text
@@ -303,7 +362,38 @@ def inject_product_photos(article_html, products):
         result, n = pattern.subn(_replace, result, count=1)
         if n == 0:
             result, n = pattern_esc.subn(_replace, result, count=1)
-    return result
+    return ensure_body_captions(result)
+
+
+_BODY_SHOT_FIG = re.compile(
+    r"<figure class=\"product-shot product-shot--body\"[^>]*>"
+    r"(?P<inner>.*?)</figure>",
+    re.S,
+)
+
+
+def ensure_body_captions(article_html):
+    """Give every inline body product shot an editorial caption.
+
+    Fresh injections already carry a <figcaption>; existing figures rebuilt
+    from a rendered page do not. This backfills the caption from the image's
+    alt text so the studio treatment reads consistently on every page.
+    """
+    if not article_html:
+        return article_html
+
+    def _cap(m):
+        inner = m.group("inner")
+        if "<figcaption" in inner:
+            return m.group(0)
+        alt = re.search(r'alt="([^"]*)"', inner)
+        name = html_mod.unescape(alt.group(1)) if alt else ""
+        if not name:
+            return m.group(0)
+        caption = f"<figcaption>{html_mod.escape(name)}</figcaption>"
+        return f'<figure class="product-shot product-shot--body">{inner}{caption}</figure>'
+
+    return _BODY_SHOT_FIG.sub(_cap, article_html)
 
 
 # ── Guaranteed FAQ ──────────────────────────────────────────────────────

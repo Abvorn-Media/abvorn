@@ -8,6 +8,7 @@ Tests:
 - src/meta_evolution.py: evolution cycle, convergence, persistence
 """
 import json
+import re
 import time
 import os
 import pytest
@@ -212,6 +213,46 @@ def test_build_article_page_strips_dangling_p_before_decision_matrix():
     # no raw "<p\n<div" join anywhere in the body
     import re
     assert not re.search(r"<p\s*$.*<div", html[html.find('id="main"'):html.find('<footer')], flags=re.S | re.M)
+
+
+def test_build_article_page_closes_unclosed_list_before_decision_matrix():
+    """An AI draft ending with an unclosed <ul>/<li> and a stray bare <div>
+    must not swallow the decision matrix the template appends next — the
+    sections must stay direct children of the article body, not nested in a
+    list item (which indented + bullet-marked the page's bottom half)."""
+    html = build_article_page(
+        niche_slug="test-niche",
+        niche_name="Test Niche",
+        post_title="Test Post",
+        article_html=(
+            '<h2 id="pros">Pros</h2>\n'
+            "<ul>\n"
+            " <li>Open-ear comfort, hear surroundings naturally</li>\n"
+            " <li>Top-tier voice isolation for calls\n<div\n"
+        ),
+        intro="<p>Intro</p>",
+        product_name="Product",
+        meta_desc="desc",
+        all_slugs=["test-niche"],
+        products=[
+            {"name": "Prod A", "description": "Desc", "price": "$10", "image": ""},
+        ],
+        article_id=None,
+    )
+    body = html[html.find('id="main"'):html.find('<footer')]
+    # the stray "<div" fragment is gone, not a bare opening tag
+    assert not re.search(r"<div\s*$", body, flags=re.M)
+    # the list is closed before the appended sections
+    pre_matrix = body[: body.find('class="table-wrap decision-matrix"')]
+    assert "</ul>" in pre_matrix
+    # the decision matrix is a direct child of article-body, not inside a list
+    matrix_ctx = body[body.find('class="table-wrap decision-matrix"') - 120:]
+    assert "</li>\n</ul>" in matrix_ctx or "</ul>" in matrix_ctx
+    assert not re.search(
+        r"<li[^>]*>\s*<div class=\"table-wrap decision-matrix\"",
+        matrix_ctx,
+        flags=re.S,
+    )
 
 
 # ---------------------------------------------------------------------------

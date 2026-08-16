@@ -37,7 +37,7 @@
 }
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior: smooth; font-size: 16px; }
-body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: #3f382f; background: #faf7f2; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: #3f382f; background: #ffffff; -webkit-font-smoothing: antialiased; }
 ::selection { background:#e6c98f; color:#241e17; }
 h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.15; font-weight: 600; letter-spacing: -0.02em; color: var(--clr-black); }
 h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 600; }
@@ -153,12 +153,14 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 /* -- Article body -- */
 .article-body { max-width: 72ch; min-width:0; }
 .disclosure { background:#f1e9d7; border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg); font-size:0.85rem; color:#6b6252; margin-bottom: var(--space-lg); }
-.article-body p { color:#4a4236; margin-bottom: var(--space-md); }
-.article-body h2 { font-size: var(--text-xl); margin: var(--space-xl) 0 var(--space-md); color:#2b2419; scroll-margin-top:110px; }
-.article-body h3 { font-size: var(--text-lg); margin: var(--space-lg) 0 var(--space-sm); color:#2b2419; scroll-margin-top:110px; }
-.article-body ul, .article-body ol { margin:0 0 var(--space-md); padding-left:1.4em; color:#4a4236; }
-.article-body li { margin-bottom: var(--space-sm); }
-.article-body strong { color:#2b2419; }
+.article-body p { color:#40382f; margin-bottom: 1.75rem; line-height:1.85; }
+.article-body > p:first-of-type { font-size:1.09rem; line-height:1.75; color:#2b2419; }
+.article-body h2 { font-size: var(--text-2xl); margin: 3.25rem 0 1.1rem; color:#221c13; letter-spacing:-0.02em; scroll-margin-top:110px; }
+.article-body h3 { font-size: var(--text-xl); margin: 2.75rem 0 0.9rem; color:#2b2419; scroll-margin-top:110px; }
+.article-body h4 { font-size: var(--text-lg); margin: 2rem 0 0.7rem; color:#2b2419; scroll-margin-top:110px; }
+.article-body ul, .article-body ol { margin:0 0 1.75rem; padding-left:1.4em; color:#40382f; }
+.article-body li { margin-bottom: 0.65rem; }
+.article-body strong { color:#2b2419; font-weight:700; }
 .article-body a { color:#996015; text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1px; }
 .article-body a:hover { color:#7a4c10; }
 .article-body a.btn { text-decoration:none; }
@@ -215,7 +217,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 /* -- Chart -- */
 .chart-section { margin: var(--space-lg) 0; padding: var(--space-lg); background:#ffffff; border-radius:var(--radius-lg); border:1px solid #e2d8c4; }
 .chart-wrapper { width:100%; max-width:500px; height:400px; margin:0 auto; }
-.chart-note { text-align:center; font-size:0.8rem; color:#6b6252; margin-top: var(--space-sm); margin-bottom:0; }
+.chart-note { text-align:center; max-width:none; font-size:0.8rem; color:#6b6252; margin-top: var(--space-sm); margin-bottom:0; }
 @media (max-width:600px) { .chart-wrapper { height:300px; } }
 
 /* -- CTA banner -- */
@@ -336,13 +338,18 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 .warm-product-section{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-lg)}
 .warm-grid-heading{font-family:var(--font-display);font-weight:600;letter-spacing:-0.01em;font-size:var(--text-2xl);color:var(--clr-black);margin:var(--space-xl) 0 var(--space-md);scroll-margin-top:110px}
 .warm-grid-heading + .warm-product-section{margin-top:0}
-.warm-product-card{display:flex;flex-direction:column;gap:var(--space-md);background:#ffffff;border:1px solid #e2d8c4;border-radius:var(--radius-lg);padding:var(--space-lg);box-shadow:var(--shadow-sm)}
-.warm-product-card .warm-product-card__media{aspect-ratio:1/1;width:100%;background:#ffffff;border:1px solid #e2d8c4;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.warm-product-card .warm-product-card__media img{width:100%;height:100%;object-fit:contain;padding:var(--space-md)}
-.warm-product-card__name{font-size:var(--text-base);color:#2b2419;margin-bottom:2px;font-family:var(--font-display)}
-.warm-product-card__price{color:#996015;font-weight:700;font-size:0.9rem;margin-bottom:4px}
-.warm-product-card__summary{font-size:0.85rem;color:#5a5146;margin-bottom:6px}
-.warm-product-card .cta-row{flex-wrap:wrap}
+.warm-product-card{display:flex;flex-direction:column;gap:var(--space-md);background:#ffffff;border:1px solid #e2d8c4;border-radius:var(--radius-lg);padding:var(--space-lg);box-shadow:var(--shadow-sm);transition:transform var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out)}
+.warm-product-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.warm-product-card .warm-product-card__media{aspect-ratio:1/1;width:100%;
+  background:#ffffff;
+  border:1px solid #e2d8c4;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;overflow:hidden;
+  position:relative}
+.warm-product-card .warm-product-card__media img{width:100%;height:100%;object-fit:contain;padding:var(--space-lg);max-width:100%;max-height:100%;
+  filter:saturate(1.05) contrast(1.02) brightness(1.01);transition:transform var(--duration-slow) var(--ease-out)}
+.warm-product-card:hover .warm-product-card__media img{transform:scale(1.04)}
+.warm-product-card__name{font-size:var(--text-base);line-height:1.35;color:#2b2419;margin-bottom:2px;font-family:var(--font-display);font-weight:600}
+.warm-product-card__price{color:#996015;font-weight:800;font-size:1.05rem;margin-bottom:0}
+.warm-product-card .cta-row{margin-top:auto;flex-wrap:wrap}
 .warm-product-card .cta-row .btn{flex:1 1 auto;justify-content:center;white-space:nowrap;padding:0.6em 0.9em;font-size:0.8rem}
 
         
@@ -363,12 +370,24 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 .product-shot--hero .product-shot__badge{box-shadow:none}
 .product-shot--card{aspect-ratio:1/1;width:100%;padding:var(--space-md)}
 .product-shot--sm{width:100%;height:100%;padding:var(--space-sm);border-radius:var(--radius-sm)}
-.product-shot--body{max-width:420px;margin:var(--space-md) auto;padding:var(--space-lg)}
+.product-shot--body{max-width:360px;margin:var(--space-lg) auto;padding:0;aspect-ratio:auto;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  background:transparent;border:0;box-shadow:none;overflow:visible}
+.product-shot--body .product-shot__img{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;
+  padding:clamp(20px,5%,36px);background:#ffffff;
+  border:1px solid rgba(226,216,196,.9);border-radius:calc(var(--radius-lg) + 4px);
+  box-shadow:0 18px 44px -20px rgba(43,36,25,.16), inset 0 0 0 1px rgba(255,255,255,.7);
+  filter:saturate(1.08) contrast(1.03) brightness(1.02);
+  transition:transform var(--duration-slow) var(--ease-out)}
+.product-shot--body:hover .product-shot__img{transform:translateY(-3px);box-shadow:0 24px 54px -22px rgba(43,36,25,.3), inset 0 0 0 1px rgba(255,255,255,.7)}
+.product-shot--body figcaption{position:static;width:100%;text-align:center;padding:0 8px;
+  font-family:var(--font-display);font-size:.7rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--clr-mid-gray)}
 .niche-card__image-wrapper .product-shot{width:100%;height:100%;aspect-ratio:auto;
   border:0;border-radius:0;box-shadow:none;padding:var(--space-sm);margin:0}
 @media (max-width:600px){.product-shot--body{max-width:100%}}
 
-        .article-body img { max-width:100%; height:auto; border-radius:var(--radius-sm); margin:20px 0; }
+        .article-body img:not(.product-shot__img):not(.warm-product-card__media img) { max-width:100%; height:auto; border-radius:var(--radius-sm); margin:20px 0; }
         .article-body table { display:block; max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
         .article-body blockquote { border-left:4px solid var(--clr-accent); padding-left:var(--space-lg); margin:var(--space-lg) 0; color:var(--clr-mid-gray); font-style:italic; }
         .av-price-chart { margin-top:10px; }
@@ -476,7 +495,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h2 id="product-comparison-lenovo-vs-hp-vs-jumper">Product Comparison: Lenovo vs. HP vs. Jumper</h2>
 
 <h3>Lenovo 15.6" Business Laptop</h3>
-<figure class="product-shot product-shot--body"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/81wWGYF+tUL._AC_SL1500_.jpg" alt="Lenovo 15.6&quot; Business Laptop" loading="lazy"></figure>
+<figure class="product-shot product-shot--body"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/81wWGYF+tUL._AC_SL1500_.jpg" alt="Lenovo 15.6&quot; Business Laptop" loading="lazy"><figcaption>Lenovo 15.6&quot; Business Laptop</figcaption></figure>
 <p><strong>Intro:</strong> The Lenovo 15.6" Business Laptop (2026 Edition) is positioned as a versatile workhorse for small businesses, students, and daily office tasks. Priced at <strong>$459.99</strong> (down from <strong>$1,149.00</strong>), it offers a solid blend of performance and features.</p>
 <ul>
  <li><strong>Key Features:</strong>
@@ -539,7 +558,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <p><strong>Bottom‑Line Recommendation:</strong> The HP is a solid pick if portability and battery life are top priorities. Its lightweight build, 5‑in‑1 hub, and Microsoft 365 trial make it a great all‑around laptop for students and mobile professionals, especially at its current price.</p>
 
 <h3>jumper 15.6" FHD Laptop</h3>
-<figure class="product-shot product-shot--body"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/71pzfgiLZ4L._AC_SL1500_.jpg" alt="jumper 15.6&quot; FHD Laptop" loading="lazy"></figure>
+<figure class="product-shot product-shot--body"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/71pzfgiLZ4L._AC_SL1500_.jpg" alt="jumper 15.6&quot; FHD Laptop" loading="lazy"><figcaption>jumper 15.6&quot; FHD Laptop</figcaption></figure>
 <p><strong>Intro:</strong> The jumper 15.6" FHD Laptop is the budget champion, currently selling for <strong>$326.99</strong> (down from <strong>$539.99</strong>). It offers 12 GB RAM, expandable storage, and a numeric keypad—features you’d expect at a higher price point.</p>
 <ul>
  <li><strong>Key Features:</strong>
@@ -583,50 +602,45 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h2 id="conclusion">Conclusion</h2>
 <div class="table-wrap decision-matrix"><h3 class="rail-card__title">At a glance</h3><table class="doc-table"><thead><tr><th scope="col">Use Case</th><th scope="col">Product</th><th scope="col">Why</th></tr></thead><tbody><tr><td>Best Overall</td><td>Lenovo 15.6&quot; Business Laptop</td><td>Lenovo 15.6&quot; Business Laptop, 2026 Edition, 8GB DDR5 256GB SSD, Win 11 | Intel 4-Core CPU, Copilot AI PC, WiFi 6, Fast DDR5 RAM, for Small Business, Students, Daily Office</td></tr><tr><td>Best Value</td><td>HP 15.6&quot; FHD Laptop 2026 Edition</td><td>HP 15.6&quot; FHD Laptop 2026 Edition, Intel Processor, 8GB RAM, 256GB SSD | Copilot AI, Long Battery Life, Lightweight 3.64 lbs, Microsoft 365, Windows 11 for Students &amp; Office, with 5 in 1 hub</td></tr><tr><td>Premium Pick</td><td>jumper 15.6&quot; FHD Laptop</td><td>jumper 15.6&quot; FHD Laptop, 12GB RAM 256GB Storage Expandable to 512GB,1 Year Office 365, Numeric Keyboard, HDMI, WiFi5, BT4.2,38Wh Battery, Windows 11 Laptop for Business and Student</td></tr><tr><td>Also Great</td><td>ASUS ROG Strix G16 (2025) Gaming Laptop</td><td>ASUS ROG Strix G16 (2025) Gaming Laptop, 16” FHD+ 16:10 165Hz/3ms, NVIDIA® GeForce RTX™ 5060, Intel® Core™ i7 Processor 14650HX, 16GB DDR5, 1TB Gen 4 SSD, Wi-Fi 7, Windows 11 Home, G615JMR-AS74</td></tr><tr><td>Also Great</td><td>Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI</td><td>Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI, 13.6-inch Liquid Retina Display, 16GB Unified Memory, 512GB SSD, 12MP Center Stage Camera, Touch ID, Wi-Fi 7; Sky Blue</td></tr></tbody></table></div>
 <div class="chart-section"><h3 class="rail-card__title">Performance Breakdown</h3><div class="chart-wrapper"><canvas id="verdictChart"></canvas></div><p class="chart-note">Scores out of 10. Based on the Abvorn Verdict Engine.</p></div>
-<h2 class="warm-grid-heading">Products Mentioned</h2><div class="warm-product-section"><div class="warm-product-card">
+<h2 class="warm-grid-heading">Products Mentioned</h2><div class="warm-product-section"><div class="warm-product-card" data-description="Lenovo 15.6&quot; Business Laptop, 2026 Edition, 8GB DDR5 256GB SSD, Win 11 | Intel 4-Core CPU, Copilot AI PC, WiFi 6, Fast DDR5 RAM, for Small Business, Students, Daily Office">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/81wWGYF+tUL._AC_SL1500_.jpg" alt="Lenovo 15.6&quot; Business Laptop" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">Lenovo 15.6&quot; Business Laptop</h3>
 <div class="warm-product-card__price">$459.99</div>
-<p class="warm-product-card__summary">Lenovo 15.6&quot; Business Laptop, 2026 Edition, 8GB DDR5 256GB SSD, Win 11 | Intel 4-Core CPU, Copilot AI PC, WiFi 6, Fast DDR5 RAM, for Small Business, Students, Daily Office</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/laptops-0/0?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=&name=Lenovo+15.6%22+Business+Laptop&price=%24459.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F81wWGYF%2BtUL._AC_SL1500_.jpg&url=https%3A%2F%2Fabvorn.com%2Fclick%2Flaptops-0%2F0&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
-</div><div class="warm-product-card">
+</div><div class="warm-product-card" data-description="HP 15.6&quot; FHD Laptop 2026 Edition, Intel Processor, 8GB RAM, 256GB SSD | Copilot AI, Long Battery Life, Lightweight 3.64 lbs, Microsoft 365, Windows 11 for Students &amp; Office, with 5 in 1 hub">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/71sTXs4lkqL._AC_SL1500_.jpg" alt="HP 15.6&quot; FHD Laptop 2026 Edition" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">HP 15.6&quot; FHD Laptop 2026 Edition</h3>
 <div class="warm-product-card__price">$414.99</div>
-<p class="warm-product-card__summary">HP 15.6&quot; FHD Laptop 2026 Edition, Intel Processor, 8GB RAM, 256GB SSD | Copilot AI, Long Battery Life, Lightweight 3.64 lbs, Microsoft 365, Windows 11 for Students &amp; Office, with 5 in 1 hub</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/laptops-0/1?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=&name=HP+15.6%22+FHD+Laptop+2026+Edition&price=%24414.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71sTXs4lkqL._AC_SL1500_.jpg&url=https%3A%2F%2Fabvorn.com%2Fclick%2Flaptops-0%2F1&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
-</div><div class="warm-product-card">
+</div><div class="warm-product-card" data-description="jumper 15.6&quot; FHD Laptop, 12GB RAM 256GB Storage Expandable to 512GB,1 Year Office 365, Numeric Keyboard, HDMI, WiFi5, BT4.2,38Wh Battery, Windows 11 Laptop for Business and Student">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/71pzfgiLZ4L._AC_SL1500_.jpg" alt="jumper 15.6&quot; FHD Laptop" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">jumper 15.6&quot; FHD Laptop</h3>
 <div class="warm-product-card__price">$326.99</div>
-<p class="warm-product-card__summary">jumper 15.6&quot; FHD Laptop, 12GB RAM 256GB Storage Expandable to 512GB,1 Year Office 365, Numeric Keyboard, HDMI, WiFi5, BT4.2,38Wh Battery, Windows 11 Laptop for Business and Student</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/laptops-0/2?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=&name=jumper+15.6%22+FHD+Laptop&price=%24326.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71pzfgiLZ4L._AC_SL1500_.jpg&url=https%3A%2F%2Fabvorn.com%2Fclick%2Flaptops-0%2F2&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
-</div><div class="warm-product-card">
+</div><div class="warm-product-card" data-description="ASUS ROG Strix G16 (2025) Gaming Laptop, 16” FHD+ 16:10 165Hz/3ms, NVIDIA® GeForce RTX™ 5060, Intel® Core™ i7 Processor 14650HX, 16GB DDR5, 1TB Gen 4 SSD, Wi-Fi 7, Windows 11 Home, G615JMR-AS74">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/81n1T4CYfmL._AC_SL1500_.jpg" alt="ASUS ROG Strix G16 (2025) Gaming Laptop" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">ASUS ROG Strix G16 (2025) Gaming Laptop</h3>
 <div class="warm-product-card__price">$1,393.65</div>
-<p class="warm-product-card__summary">ASUS ROG Strix G16 (2025) Gaming Laptop, 16” FHD+ 16:10 165Hz/3ms, NVIDIA® GeForce RTX™ 5060, Intel® Core™ i7 Processor 14650HX, 16GB DDR5, 1TB Gen 4 SSD, Wi-Fi 7, Windows 11 Home, G615JMR-AS74</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/laptops-0/3?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=&name=ASUS+ROG+Strix+G16+%282025%29+Gaming+Laptop&price=%241%2C393.65&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F81n1T4CYfmL._AC_SL1500_.jpg&url=https%3A%2F%2Fabvorn.com%2Fclick%2Flaptops-0%2F3&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
-</div><div class="warm-product-card">
+</div><div class="warm-product-card" data-description="Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI, 13.6-inch Liquid Retina Display, 16GB Unified Memory, 512GB SSD, 12MP Center Stage Camera, Touch ID, Wi-Fi 7; Sky Blue">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/71igu9e9hFL._AC_SL1500_.jpg" alt="Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI</h3>
 <div class="warm-product-card__price">$1,199.00</div>
-<p class="warm-product-card__summary">Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI, 13.6-inch Liquid Retina Display, 16GB Unified Memory, 512GB SSD, 12MP Center Stage Camera, Touch ID, Wi-Fi 7; Sky Blue</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/laptops-0/4?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
-<a class="btn btn--ghost" href="/abvorn/compare.html?asin=&name=Apple+2026+MacBook+Air+13-inch+Laptop+with+M5+chip%3A+Built+for+AI&price=%241%2C199.00&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71igu9e9hFL._AC_SL1500_.jpg&url=https%3A%2F%2Fabvorn.com%2Fclick%2Flaptops-0%2F4&score=&label=" data-track="compare">Compare &oplus;</a>
+<a class="btn btn--ghost" href="/abvorn/compare.html?asin=B0GR1JTFP8&name=Apple+2026+MacBook+Air+13-inch+Laptop+with+M5+chip%3A+Built+for+AI&price=%241%2C199.00&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71igu9e9hFL._AC_SL1500_.jpg&url=https%3A%2F%2Fabvorn.com%2Fclick%2Flaptops-0%2F4&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div></div>
 <div class="cta-banner">
@@ -652,7 +666,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
             <p class="rail-card__title">In this guide</p>
             <ol>
                 <li><a href="#verdict">Abvorn Verdict</a></li>
-                <li><a href="#what-to-look-for-in-a-business-laptop">What to Look For in a Business Laptop</a></li><li><a href="#product-comparison-lenovo-vs-hp-vs-jumper">Product Comparison: Lenovo vs. HP vs. Jumper</a></li><li><a href="#buying-guide-matching-your-needs-to-the-right-specs">Buying Guide: Matching Your Needs to the Right Specs</a></li><li><a href="#faq">FAQ</a></li><li><a href="#conclusion">Conclusion</a></li>
+                <li><a href="#what-to-look-for-in-a-business-laptop">What to Look For in a Business Laptop</a></li><li><a href="#product-comparison-lenovo-vs-hp-vs-jumper">Product Comparison: Lenovo vs. HP vs. Jumper</a></li><li><a href="#buying-guide-matching-your-needs-to-the-right-specs">Buying Guide: Matching Your Needs to the Right Specs</a></li><li><a href="#conclusion">Conclusion</a></li>
                 <li><a href="#faq">FAQ</a></li>
             </ol>
         </nav>

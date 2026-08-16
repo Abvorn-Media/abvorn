@@ -583,6 +583,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 @media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.skip-link { position: absolute; top: -100px; left: 8px; z-index: 200; background: var(--clr-accent); color: var(--clr-black); padding: 10px 18px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: top var(--duration-fast) var(--ease-out); }
+.skip-link:focus { top: 0; color: var(--clr-black); }
 :focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
 
 /* ── Footer category columns ──────────────────────────────────── */
@@ -737,7 +739,7 @@ article .content li{margin:6px 0;color:var(--text)}
 .cta-banner .buy-btn{background:#fff;color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .cta-banner .buy-btn:hover{background:#f1f5f9;color:var(--text);box-shadow:0 4px 16px rgba(0,0,0,.2);transform:translateY(-2px)}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
-.skip-link{position:absolute;top:-40px;left:8px;background:var(--primary);color:#fff;padding:8px 16px;z-index:100;border-radius:0 0 4px;font-size:.9rem;text-decoration:none;transition:top .15s}
+.skip-link{position:absolute;top:-100px;left:8px;background:var(--primary);color:#fff;padding:8px 16px;z-index:100;border-radius:0 0 4px;font-size:.9rem;text-decoration:none;transition:top .15s}
 .skip-link:focus{top:0;color:#fff}
 @media(max-width:640px){.pick-card{flex-direction:column;gap:16px}.grid-3{grid-template-columns:1fr}.product-card{flex-direction:column}.product-card img{width:100%;height:auto}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
@@ -2060,7 +2062,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         {WARM_TOKEN_SHIM_CSS}
         {WARM_PRODUCT_GRID_CSS}
         {PROD_SHOT_CSS}
-        .article-body img {{ max-width:100%; height:auto; border-radius:var(--radius-sm); margin:20px 0; }}
+        .article-body img:not(.product-shot__img):not(.warm-product-card__media img) {{ max-width:100%; height:auto; border-radius:var(--radius-sm); margin:20px 0; }}
         .article-body table {{ display:block; max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }}
         .article-body blockquote {{ border-left:4px solid var(--clr-accent); padding-left:var(--space-lg); margin:var(--space-lg) 0; color:var(--clr-mid-gray); font-style:italic; }}
         .av-price-chart {{ margin-top:10px; }}

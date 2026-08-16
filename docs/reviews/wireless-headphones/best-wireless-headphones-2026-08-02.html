@@ -37,7 +37,7 @@
 }
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior: smooth; font-size: 16px; }
-body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: #3f382f; background: #faf7f2; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: #3f382f; background: #ffffff; -webkit-font-smoothing: antialiased; }
 ::selection { background:#e6c98f; color:#241e17; }
 h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.15; font-weight: 600; letter-spacing: -0.02em; color: var(--clr-black); }
 h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 600; }
@@ -51,6 +51,8 @@ a:hover { color: #7a4c10; }
 @media (max-width: 768px) { .container { padding: 0 var(--space-md); } h1 { font-size: var(--text-2xl); } h2 { font-size: var(--text-xl); } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 :focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
+.skip-link { position: absolute; top: -100px; left: 8px; z-index: 200; background: var(--clr-accent); color: var(--clr-black); padding: 10px 18px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: top var(--duration-fast) var(--ease-out); }
+.skip-link:focus { top: 0; color: var(--clr-black); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 @media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
 
@@ -151,12 +153,14 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 /* -- Article body -- */
 .article-body { max-width: 72ch; min-width:0; }
 .disclosure { background:#f1e9d7; border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg); font-size:0.85rem; color:#6b6252; margin-bottom: var(--space-lg); }
-.article-body p { color:#4a4236; margin-bottom: var(--space-md); }
-.article-body h2 { font-size: var(--text-xl); margin: var(--space-xl) 0 var(--space-md); color:#2b2419; scroll-margin-top:110px; }
-.article-body h3 { font-size: var(--text-lg); margin: var(--space-lg) 0 var(--space-sm); color:#2b2419; scroll-margin-top:110px; }
-.article-body ul, .article-body ol { margin:0 0 var(--space-md); padding-left:1.4em; color:#4a4236; }
-.article-body li { margin-bottom: var(--space-sm); }
-.article-body strong { color:#2b2419; }
+.article-body p { color:#40382f; margin-bottom: 1.75rem; line-height:1.85; }
+.article-body > p:first-of-type { font-size:1.09rem; line-height:1.75; color:#2b2419; }
+.article-body h2 { font-size: var(--text-2xl); margin: 3.25rem 0 1.1rem; color:#221c13; letter-spacing:-0.02em; scroll-margin-top:110px; }
+.article-body h3 { font-size: var(--text-xl); margin: 2.75rem 0 0.9rem; color:#2b2419; scroll-margin-top:110px; }
+.article-body h4 { font-size: var(--text-lg); margin: 2rem 0 0.7rem; color:#2b2419; scroll-margin-top:110px; }
+.article-body ul, .article-body ol { margin:0 0 1.75rem; padding-left:1.4em; color:#40382f; }
+.article-body li { margin-bottom: 0.65rem; }
+.article-body strong { color:#2b2419; font-weight:700; }
 .article-body a { color:#996015; text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1px; }
 .article-body a:hover { color:#7a4c10; }
 .article-body a.btn { text-decoration:none; }
@@ -213,7 +217,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 /* -- Chart -- */
 .chart-section { margin: var(--space-lg) 0; padding: var(--space-lg); background:#ffffff; border-radius:var(--radius-lg); border:1px solid #e2d8c4; }
 .chart-wrapper { width:100%; max-width:500px; height:400px; margin:0 auto; }
-.chart-note { text-align:center; font-size:0.8rem; color:#6b6252; margin-top: var(--space-sm); margin-bottom:0; }
+.chart-note { text-align:center; max-width:none; font-size:0.8rem; color:#6b6252; margin-top: var(--space-sm); margin-bottom:0; }
 @media (max-width:600px) { .chart-wrapper { height:300px; } }
 
 /* -- CTA banner -- */
@@ -334,13 +338,18 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 .warm-product-section{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-lg)}
 .warm-grid-heading{font-family:var(--font-display);font-weight:600;letter-spacing:-0.01em;font-size:var(--text-2xl);color:var(--clr-black);margin:var(--space-xl) 0 var(--space-md);scroll-margin-top:110px}
 .warm-grid-heading + .warm-product-section{margin-top:0}
-.warm-product-card{display:flex;flex-direction:column;gap:var(--space-md);background:#ffffff;border:1px solid #e2d8c4;border-radius:var(--radius-lg);padding:var(--space-lg);box-shadow:var(--shadow-sm)}
-.warm-product-card .warm-product-card__media{aspect-ratio:1/1;width:100%;background:#ffffff;border:1px solid #e2d8c4;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.warm-product-card .warm-product-card__media img{width:100%;height:100%;object-fit:contain;padding:var(--space-md)}
-.warm-product-card__name{font-size:var(--text-base);color:#2b2419;margin-bottom:2px;font-family:var(--font-display)}
-.warm-product-card__price{color:#996015;font-weight:700;font-size:0.9rem;margin-bottom:4px}
-.warm-product-card__summary{font-size:0.85rem;color:#5a5146;margin-bottom:6px}
-.warm-product-card .cta-row{flex-wrap:wrap}
+.warm-product-card{display:flex;flex-direction:column;gap:var(--space-md);background:#ffffff;border:1px solid #e2d8c4;border-radius:var(--radius-lg);padding:var(--space-lg);box-shadow:var(--shadow-sm);transition:transform var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out)}
+.warm-product-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.warm-product-card .warm-product-card__media{aspect-ratio:1/1;width:100%;
+  background:#ffffff;
+  border:1px solid #e2d8c4;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;overflow:hidden;
+  position:relative}
+.warm-product-card .warm-product-card__media img{width:100%;height:100%;object-fit:contain;padding:var(--space-lg);max-width:100%;max-height:100%;
+  filter:saturate(1.05) contrast(1.02) brightness(1.01);transition:transform var(--duration-slow) var(--ease-out)}
+.warm-product-card:hover .warm-product-card__media img{transform:scale(1.04)}
+.warm-product-card__name{font-size:var(--text-base);line-height:1.35;color:#2b2419;margin-bottom:2px;font-family:var(--font-display);font-weight:600}
+.warm-product-card__price{color:#996015;font-weight:800;font-size:1.05rem;margin-bottom:0}
+.warm-product-card .cta-row{margin-top:auto;flex-wrap:wrap}
 .warm-product-card .cta-row .btn{flex:1 1 auto;justify-content:center;white-space:nowrap;padding:0.6em 0.9em;font-size:0.8rem}
 
         
@@ -361,12 +370,24 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 .product-shot--hero .product-shot__badge{box-shadow:none}
 .product-shot--card{aspect-ratio:1/1;width:100%;padding:var(--space-md)}
 .product-shot--sm{width:100%;height:100%;padding:var(--space-sm);border-radius:var(--radius-sm)}
-.product-shot--body{max-width:420px;margin:var(--space-md) auto;padding:var(--space-lg)}
+.product-shot--body{max-width:360px;margin:var(--space-lg) auto;padding:0;aspect-ratio:auto;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  background:transparent;border:0;box-shadow:none;overflow:visible}
+.product-shot--body .product-shot__img{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;
+  padding:clamp(20px,5%,36px);background:#ffffff;
+  border:1px solid rgba(226,216,196,.9);border-radius:calc(var(--radius-lg) + 4px);
+  box-shadow:0 18px 44px -20px rgba(43,36,25,.16), inset 0 0 0 1px rgba(255,255,255,.7);
+  filter:saturate(1.08) contrast(1.03) brightness(1.02);
+  transition:transform var(--duration-slow) var(--ease-out)}
+.product-shot--body:hover .product-shot__img{transform:translateY(-3px);box-shadow:0 24px 54px -22px rgba(43,36,25,.3), inset 0 0 0 1px rgba(255,255,255,.7)}
+.product-shot--body figcaption{position:static;width:100%;text-align:center;padding:0 8px;
+  font-family:var(--font-display);font-size:.7rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--clr-mid-gray)}
 .niche-card__image-wrapper .product-shot{width:100%;height:100%;aspect-ratio:auto;
   border:0;border-radius:0;box-shadow:none;padding:var(--space-sm);margin:0}
 @media (max-width:600px){.product-shot--body{max-width:100%}}
 
-        .article-body img { max-width:100%; height:auto; border-radius:var(--radius-sm); margin:20px 0; }
+        .article-body img:not(.product-shot__img):not(.warm-product-card__media img) { max-width:100%; height:auto; border-radius:var(--radius-sm); margin:20px 0; }
         .article-body table { display:block; max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
         .article-body blockquote { border-left:4px solid var(--clr-accent); padding-left:var(--space-lg); margin:var(--space-lg) 0; color:var(--clr-mid-gray); font-style:italic; }
         .av-price-chart { margin-top:10px; }
@@ -396,13 +417,14 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 </script>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header><div class="container navbar">
     <a href="/abvorn/" class="logo"><img src="/abvorn/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="/abvorn/">Categories</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><a class="category-label" href="/abvorn/categories/audio/">Audio</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/gaming/">Gaming</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a><a href="/abvorn/webcams/">Webcams</a></div></div></div>
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><a class="category-label" href="/abvorn/categories/audio/">Audio</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/gaming/">Gaming</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a><a href="/abvorn/webcams/">Webcams</a></div></div></div>
         <a href="/abvorn/">Home</a>
         <a href="/abvorn/about.html">About</a>
         <a href="/abvorn/journal/">Journal</a>
@@ -462,49 +484,45 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
   <a class="btn btn--ghost" href="/abvorn/compare.html?asin=B0H69PVMKC&name=Hybrid+Active+Noise+Cancelling+Bluetooth+Headphones+Wireless+Headphones+%7C+Over+Ear&price=%2429.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F61eQgGlycYL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0H69PVMKC&score=7.0&label=Good" data-track="compare" data-product-name="Hybrid Active Noise Cancelling Bluetooth Headphones Wireless Headphones | Over Ear" data-category="wireless-headphones" data-score="7.0">Compare &oplus;</a>
 </div>
 </section>
+
 <div class="table-wrap decision-matrix"><h3 class="rail-card__title">At a glance</h3><table class="doc-table"><thead><tr><th scope="col">Use Case</th><th scope="col">Product</th><th scope="col">Why</th></tr></thead><tbody><tr><td>Best Overall</td><td>Hybrid Active Noise Cancelling Bluetooth Headphones Wireless Headphones | Over Ear</td><td>Hybrid Active Noise Cancelling Bluetooth Headphones Wireless Headphones | Over Ear, 120H Playtime, Hi-Res Audio, Deep Bass, Memory Foam Ear Cups for Home Office Travel Black</td></tr><tr><td>Best Value</td><td>JBL Tune 510BT - Bluetooth headphones with up to 40 hours battery</td><td>JBL Tune 510BT - Bluetooth headphones with up to 40 hours battery, microphone for call, foldable and comfortable, Android and iOs compatible (Black)</td></tr><tr><td>Premium Pick</td><td>Soundcore by Anker Q20i Hybrid Active Noise Cancelling Headphones</td><td>Soundcore by Anker Q20i Hybrid Active Noise Cancelling Headphones, Black | Over-Ear, Bluetooth, 40H ANC Playtime, Hi-Res, Big Bass, Transparency Mode, Customize via App, Travel, Home, Office TCO Certified</td></tr><tr><td>Also Great</td><td>Apple AirPods Pro 3 Wireless Earbuds</td><td>Apple AirPods Pro 3 Wireless Earbuds, Active Noise Cancellation, Live Translation, Heart Rate Sensing, Hearing Aid Feature, Bluetooth Headphones, Spatial Audio, High-Fidelity Sound, USB-C Charging</td></tr><tr><td>Also Great</td><td>HAOYUYAN Wireless Earbuds</td><td>HAOYUYAN Wireless Earbuds, Sports Bluetooth Headphones, LED Power Display Ear Buds with 80Hrs Playtime, Noise Canceling Headset, IPX7 Waterproof Earphones for Workout/Running</td></tr></tbody></table></div>
 <div class="chart-section"><h3 class="rail-card__title">Performance Breakdown</h3><div class="chart-wrapper"><canvas id="verdictChart"></canvas></div><p class="chart-note">Scores out of 10. Based on the Abvorn Verdict Engine.</p></div>
-<h2 class="warm-grid-heading">Products Mentioned</h2><div class="warm-product-section"><div class="warm-product-card">
+<h2 class="warm-grid-heading">Products Mentioned</h2><div class="warm-product-section"><div class="warm-product-card" data-description="Hybrid Active Noise Cancelling Bluetooth Headphones Wireless Headphones | Over Ear, 120H Playtime, Hi-Res Audio, Deep Bass, Memory Foam Ear Cups for Home Office Travel Black">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Hybrid Active Noise Cancelling Bluetooth Headphones Wireless Headphones | Over Ear" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">Hybrid Active Noise Cancelling Bluetooth Headphones Wireless Headphones | Over Ear</h3>
 <div class="warm-product-card__price">$29.99</div>
-<p class="warm-product-card__summary">Hybrid Active Noise Cancelling Bluetooth Headphones Wireless Headphones | Over Ear, 120H Playtime, Hi-Res Audio, Deep Bass, Memory Foam Ear Cups for Home Office Travel Black</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/wireless-headphones-39/0" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=B0H69PVMKC&name=Hybrid+Active+Noise+Cancelling+Bluetooth+Headphones+Wireless+Headphones+%7C+Over+Ear&price=%2429.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F61eQgGlycYL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0H69PVMKC&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
-</div><div class="warm-product-card">
+</div><div class="warm-product-card" data-description="JBL Tune 510BT - Bluetooth headphones with up to 40 hours battery, microphone for call, foldable and comfortable, Android and iOs compatible (Black)">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/61kFL7ywsZS._AC_SL1500_.jpg" alt="JBL Tune 510BT - Bluetooth headphones with up to 40 hours battery" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">JBL Tune 510BT - Bluetooth headphones with up to 40 hours battery</h3>
 <div class="warm-product-card__price">$29.95</div>
-<p class="warm-product-card__summary">JBL Tune 510BT - Bluetooth headphones with up to 40 hours battery, microphone for call, foldable and comfortable, Android and iOs compatible (Black)</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/wireless-headphones-39/1" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=B08WM3LMJF&name=JBL+Tune+510BT+-+Bluetooth+headphones+with+up+to+40+hours+battery&price=%2429.95&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F61kFL7ywsZS._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB08WM3LMJF&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
-</div><div class="warm-product-card">
+</div><div class="warm-product-card" data-description="Soundcore by Anker Q20i Hybrid Active Noise Cancelling Headphones, Black | Over-Ear, Bluetooth, 40H ANC Playtime, Hi-Res, Big Bass, Transparency Mode, Customize via App, Travel, Home, Office TCO Certified">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/51CnDMbXZzL._AC_SL1500_.jpg" alt="Soundcore by Anker Q20i Hybrid Active Noise Cancelling Headphones" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">Soundcore by Anker Q20i Hybrid Active Noise Cancelling Headphones</h3>
 <div class="warm-product-card__price">$39.98</div>
-<p class="warm-product-card__summary">Soundcore by Anker Q20i Hybrid Active Noise Cancelling Headphones, Black | Over-Ear, Bluetooth, 40H ANC Playtime, Hi-Res, Big Bass, Transparency Mode, Customize via App, Travel, Home, Office TCO Certified</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/wireless-headphones-39/2" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=B0C3HCD34R&name=Soundcore+by+Anker+Q20i+Hybrid+Active+Noise+Cancelling+Headphones&price=%2439.98&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F51CnDMbXZzL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0C3HCD34R&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
-</div><div class="warm-product-card">
+</div><div class="warm-product-card" data-description="Apple AirPods Pro 3 Wireless Earbuds, Active Noise Cancellation, Live Translation, Heart Rate Sensing, Hearing Aid Feature, Bluetooth Headphones, Spatial Audio, High-Fidelity Sound, USB-C Charging">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/61solmQSSlL._AC_SL1500_.jpg" alt="Apple AirPods Pro 3 Wireless Earbuds" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">Apple AirPods Pro 3 Wireless Earbuds</h3>
 <div class="warm-product-card__price">$199.99</div>
-<p class="warm-product-card__summary">Apple AirPods Pro 3 Wireless Earbuds, Active Noise Cancellation, Live Translation, Heart Rate Sensing, Hearing Aid Feature, Bluetooth Headphones, Spatial Audio, High-Fidelity Sound, USB-C Charging</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/wireless-headphones-39/3" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=B0FQFB8FMG&name=Apple+AirPods+Pro+3+Wireless+Earbuds&price=%24199.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F61solmQSSlL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0FQFB8FMG&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
-</div><div class="warm-product-card">
+</div><div class="warm-product-card" data-description="HAOYUYAN Wireless Earbuds, Sports Bluetooth Headphones, LED Power Display Ear Buds with 80Hrs Playtime, Noise Canceling Headset, IPX7 Waterproof Earphones for Workout/Running">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/61DzAvRWJlL._AC_SL1500_.jpg" alt="HAOYUYAN Wireless Earbuds" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">HAOYUYAN Wireless Earbuds</h3>
 <div class="warm-product-card__price">$23.98</div>
-<p class="warm-product-card__summary">HAOYUYAN Wireless Earbuds, Sports Bluetooth Headphones, LED Power Display Ear Buds with 80Hrs Playtime, Noise Canceling Headset, IPX7 Waterproof Earphones for Workout/Running</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/wireless-headphones-39/4" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=B0H5VN7MDL&name=HAOYUYAN+Wireless+Earbuds&price=%2423.98&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F61DzAvRWJlL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0H5VN7MDL&score=&label=" data-track="compare">Compare &oplus;</a>
@@ -586,7 +604,6 @@ const CATEGORY_SLUG = "wireless-headphones";
 })();
 </script>
 <script>
-
 async function submitNicheSubscribe(e) {
     e.preventDefault();
     const f = e.target;
@@ -610,7 +627,6 @@ async function submitNicheSubscribe(e) {
     btn.disabled = false;
 }
 </script>
-
 <script>
 (function(){
 // ── Abvorn Regret Probability Score (client-side) ──────────────

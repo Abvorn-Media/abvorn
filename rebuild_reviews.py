@@ -14,6 +14,7 @@ import re
 import sys
 import json
 import html as html_lib
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote, parse_qs, urlparse
@@ -124,6 +125,12 @@ def extract_article(path):
     elif 'class="product-review"' in body:
         products = _extract_review_blocks(body)
 
+    # Normalize bogus price values ("None" leaked from a present-but-null key)
+    # so the cache enrich and the "Check price" fallback can take over.
+    for prod in products:
+        if str(prod.get("price", "")).strip().lower() in ("", "none", "check price"):
+            prod["price"] = ""
+
     published_date = _parse_published(c)
     m = re.search(r"Updated[^0-9]{0,12}([0-9]{4}-[0-9]{2}-[0-9]{2})", c)
     updated_date = m.group(1) if m else ""
@@ -154,18 +161,21 @@ def _clip_prose(body, start):
     """Return body[start:end] where end is the first structural marker."""
     if start is None or start < 0:
         return ""
+    # Match full opening tags (including the leading `<div`/`<section`/`<h2`)
+    # so the clip lands at the tag start, never mid-tag — matching mid-tag
+    # would swallow a partial element into the extracted prose.
     hits = [body.find(mk, start) for mk in [
         'decision-matrix-wrap',
-        'class="table-wrap decision-matrix"',
-        'class="chart-section"',
-        'class="product-section"',
-        'class="warm-product-section"',
-        'class="product-review"',
-        'class="cta-banner"',
-        'class="faq-section"',
-        'class="reactions-bar"',
-        'class="related-cats"',
-        'class="further-reading"',
+        '<div class="table-wrap decision-matrix">',
+        '<div class="chart-section">',
+        '<div class="product-section">',
+        '<div class="warm-product-section">',
+        '<section class="product-review">',
+        '<div class="cta-banner">',
+        '<div class="faq-section">',
+        '<div class="reactions-bar">',
+        '<div class="related-cats">',
+        '<div class="further-reading">',
     ]]
     hits = [h for h in hits if h >= 0]
     end = min(hits) if hits else len(body)
@@ -179,13 +189,15 @@ def _clip_prose(body, start):
 
 def _extract_warm_cards(body):
     products = []
-    card_re = re.compile(r'<div class="warm-product-card">(.*?)(?=<div class="warm-product-card">|</div>\s*</div>\s*<h2|$)', re.S)
+    card_re = re.compile(r'(<div class="warm-product-card"[^>]*>)(.*?)(?=<div class="warm-product-card"[^>]*>|</div>\s*</div>\s*<h2|$)', re.S)
     for card in card_re.finditer(body):
-        seg = card.group(1)
+        seg = card.group(1) + card.group(2)
         nm = re.search(r'<h3 class="warm-product-card__name">(.*?)</h3>', seg, re.S)
         price = re.search(r'class="warm-product-card__price">(.*?)</div>', seg, re.S)
         img = re.search(r'<img src="([^"]+)"', seg)
-        desc = re.search(r'class="warm-product-card__summary">(.*?)</p>', seg, re.S)
+        desc = re.search(r'data-description="([^"]*)"', seg, re.S)
+        if not desc:
+            desc = re.search(r'class="warm-product-card__summary">(.*?)</p>', seg, re.S)
         url, asin = "", ""
         clk = re.search(r'href="([^"]+)"[^>]*data-track="value"', seg)
         if not clk:
@@ -286,11 +298,40 @@ def enrich_from_cache(products, cache_products):
                     cache = cp
                     break
         if cache:
-            for key in ("asin", "features", "original_price", "rating", "ratings_count", "is_best_seller", "is_amazon_choice"):
+            for key in ("asin", "features", "original_price", "price", "rating", "ratings_count", "is_best_seller", "is_amazon_choice"):
                 if key in cache and not p.get(key):
                     p[key] = cache[key]
         enriched.append(p)
     return enriched
+
+
+def extract_article_id(page_html, fallback):
+    """Return the dominant article_id already present in a rendered page's click URLs.
+
+    Keeping a page's existing article_id preserves affiliate click tracking, so a
+    design-only rebuild never orphans recorded clicks. Falls back to the given
+    fallback when the page has no click URLs yet.
+    """
+    ids = re.findall(r"abvorn\.com/click/([^/\"]+)/", page_html)
+    if not ids:
+        return fallback
+    return Counter(ids).most_common(1)[0][0]
+
+
+def normalize_click_ids(html_out, article_id):
+    """Rewrite every click URL in a rebuilt page to a single article_id.
+
+    rewrite_affiliate_urls skips URLs that are already click URLs, so legacy
+    body links keep their historical article_id while regenerated product
+    cards take the new one — leaving a page internally split. Normalizing every
+    click URL to the page's dominant article_id mirrors the approved template,
+    which ships a single article_id across all of its links.
+    """
+    return re.sub(
+        r"(https://abvorn\.com/click/)[^/\"]+(/)",
+        rf"\g<1>{article_id}\g<2>",
+        html_out,
+    )
 
 
 def main():
@@ -311,6 +352,7 @@ def main():
         if slug not in by_slug:
             print(f"  SKIP (unknown niche): {page}")
             continue
+        page_html = page.read_text(encoding="utf-8")
         a = extract_article(page)
         if not a:
             print(f"  SKIP (no article body): {page}")
@@ -319,6 +361,7 @@ def main():
         niche_name = by_slug[slug]["name"]
         rel_slugs = a.get("related_niches") or [n["slug"] for n in _sorted_niches if n["slug"] != slug][:4]
         related = [by_slug[s] for s in rel_slugs if s in by_slug]
+        article_id = extract_article_id(page_html, f"{slug}-0")
         html_out = run_cycle.build_article_page(
             slug,
             niche_name,
@@ -337,13 +380,29 @@ def main():
             related_niches=related,
             published_date=a.get("published_date"),
             updated_date=a.get("updated_date"),
-            article_id=f"{slug}-{i}",
+            article_id=article_id,
         )
+        html_out = normalize_click_ids(html_out, article_id)
         page.write_text(html_out, encoding="utf-8")
         built += 1
         print(f"  Rebuilt: {page}  ({a['post_title'][:50]})".encode("ascii", "replace").decode("ascii"))
 
-    print(f"Done. Rebuilt {built} review pages.")
+    # index.html must mirror the newest dated article byte-for-byte (same
+    # article_id), matching the content cycle's write_files behavior.
+    mirrored = 0
+    for slug in sorted(by_slug):
+        niche_dir = DOCS / "reviews" / slug
+        dated = [p for p in niche_dir.glob("*.html") if p.name != "index.html"]
+        if not dated:
+            continue
+        newest = max(dated, key=lambda p: extract_article(p)["published_date"] or "")
+        idx = niche_dir / "index.html"
+        if idx.read_text(encoding="utf-8") != newest.read_text(encoding="utf-8"):
+            idx.write_text(newest.read_text(encoding="utf-8"), encoding="utf-8")
+            mirrored += 1
+            print(f"  Mirror: {idx} -> {newest.name}")
+
+    print(f"Done. Rebuilt {built} review pages, mirrored {mirrored} indexes.")
 
 
 NICHES = [

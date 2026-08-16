@@ -37,7 +37,7 @@
 }
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior: smooth; font-size: 16px; }
-body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: #3f382f; background: #faf7f2; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: #3f382f; background: #ffffff; -webkit-font-smoothing: antialiased; }
 ::selection { background:#e6c98f; color:#241e17; }
 h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.15; font-weight: 600; letter-spacing: -0.02em; color: var(--clr-black); }
 h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 600; }
@@ -51,6 +51,8 @@ a:hover { color: #7a4c10; }
 @media (max-width: 768px) { .container { padding: 0 var(--space-md); } h1 { font-size: var(--text-2xl); } h2 { font-size: var(--text-xl); } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 :focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
+.skip-link { position: absolute; top: -100px; left: 8px; z-index: 200; background: var(--clr-accent); color: var(--clr-black); padding: 10px 18px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: top var(--duration-fast) var(--ease-out); }
+.skip-link:focus { top: 0; color: var(--clr-black); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 @media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
 
@@ -151,12 +153,14 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 /* -- Article body -- */
 .article-body { max-width: 72ch; min-width:0; }
 .disclosure { background:#f1e9d7; border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg); font-size:0.85rem; color:#6b6252; margin-bottom: var(--space-lg); }
-.article-body p { color:#4a4236; margin-bottom: var(--space-md); }
-.article-body h2 { font-size: var(--text-xl); margin: var(--space-xl) 0 var(--space-md); color:#2b2419; scroll-margin-top:110px; }
-.article-body h3 { font-size: var(--text-lg); margin: var(--space-lg) 0 var(--space-sm); color:#2b2419; scroll-margin-top:110px; }
-.article-body ul, .article-body ol { margin:0 0 var(--space-md); padding-left:1.4em; color:#4a4236; }
-.article-body li { margin-bottom: var(--space-sm); }
-.article-body strong { color:#2b2419; }
+.article-body p { color:#40382f; margin-bottom: 1.75rem; line-height:1.85; }
+.article-body > p:first-of-type { font-size:1.09rem; line-height:1.75; color:#2b2419; }
+.article-body h2 { font-size: var(--text-2xl); margin: 3.25rem 0 1.1rem; color:#221c13; letter-spacing:-0.02em; scroll-margin-top:110px; }
+.article-body h3 { font-size: var(--text-xl); margin: 2.75rem 0 0.9rem; color:#2b2419; scroll-margin-top:110px; }
+.article-body h4 { font-size: var(--text-lg); margin: 2rem 0 0.7rem; color:#2b2419; scroll-margin-top:110px; }
+.article-body ul, .article-body ol { margin:0 0 1.75rem; padding-left:1.4em; color:#40382f; }
+.article-body li { margin-bottom: 0.65rem; }
+.article-body strong { color:#2b2419; font-weight:700; }
 .article-body a { color:#996015; text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1px; }
 .article-body a:hover { color:#7a4c10; }
 .article-body a.btn { text-decoration:none; }
@@ -213,7 +217,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 /* -- Chart -- */
 .chart-section { margin: var(--space-lg) 0; padding: var(--space-lg); background:#ffffff; border-radius:var(--radius-lg); border:1px solid #e2d8c4; }
 .chart-wrapper { width:100%; max-width:500px; height:400px; margin:0 auto; }
-.chart-note { text-align:center; font-size:0.8rem; color:#6b6252; margin-top: var(--space-sm); margin-bottom:0; }
+.chart-note { text-align:center; max-width:none; font-size:0.8rem; color:#6b6252; margin-top: var(--space-sm); margin-bottom:0; }
 @media (max-width:600px) { .chart-wrapper { height:300px; } }
 
 /* -- CTA banner -- */
@@ -334,13 +338,18 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 .warm-product-section{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-lg)}
 .warm-grid-heading{font-family:var(--font-display);font-weight:600;letter-spacing:-0.01em;font-size:var(--text-2xl);color:var(--clr-black);margin:var(--space-xl) 0 var(--space-md);scroll-margin-top:110px}
 .warm-grid-heading + .warm-product-section{margin-top:0}
-.warm-product-card{display:flex;flex-direction:column;gap:var(--space-md);background:#ffffff;border:1px solid #e2d8c4;border-radius:var(--radius-lg);padding:var(--space-lg);box-shadow:var(--shadow-sm)}
-.warm-product-card .warm-product-card__media{aspect-ratio:1/1;width:100%;background:#ffffff;border:1px solid #e2d8c4;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.warm-product-card .warm-product-card__media img{width:100%;height:100%;object-fit:contain;padding:var(--space-md)}
-.warm-product-card__name{font-size:var(--text-base);color:#2b2419;margin-bottom:2px;font-family:var(--font-display)}
-.warm-product-card__price{color:#996015;font-weight:700;font-size:0.9rem;margin-bottom:4px}
-.warm-product-card__summary{font-size:0.85rem;color:#5a5146;margin-bottom:6px}
-.warm-product-card .cta-row{flex-wrap:wrap}
+.warm-product-card{display:flex;flex-direction:column;gap:var(--space-md);background:#ffffff;border:1px solid #e2d8c4;border-radius:var(--radius-lg);padding:var(--space-lg);box-shadow:var(--shadow-sm);transition:transform var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out)}
+.warm-product-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.warm-product-card .warm-product-card__media{aspect-ratio:1/1;width:100%;
+  background:#ffffff;
+  border:1px solid #e2d8c4;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;overflow:hidden;
+  position:relative}
+.warm-product-card .warm-product-card__media img{width:100%;height:100%;object-fit:contain;padding:var(--space-lg);max-width:100%;max-height:100%;
+  filter:saturate(1.05) contrast(1.02) brightness(1.01);transition:transform var(--duration-slow) var(--ease-out)}
+.warm-product-card:hover .warm-product-card__media img{transform:scale(1.04)}
+.warm-product-card__name{font-size:var(--text-base);line-height:1.35;color:#2b2419;margin-bottom:2px;font-family:var(--font-display);font-weight:600}
+.warm-product-card__price{color:#996015;font-weight:800;font-size:1.05rem;margin-bottom:0}
+.warm-product-card .cta-row{margin-top:auto;flex-wrap:wrap}
 .warm-product-card .cta-row .btn{flex:1 1 auto;justify-content:center;white-space:nowrap;padding:0.6em 0.9em;font-size:0.8rem}
 
         
@@ -361,12 +370,24 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 .product-shot--hero .product-shot__badge{box-shadow:none}
 .product-shot--card{aspect-ratio:1/1;width:100%;padding:var(--space-md)}
 .product-shot--sm{width:100%;height:100%;padding:var(--space-sm);border-radius:var(--radius-sm)}
-.product-shot--body{max-width:420px;margin:var(--space-md) auto;padding:var(--space-lg)}
+.product-shot--body{max-width:360px;margin:var(--space-lg) auto;padding:0;aspect-ratio:auto;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  background:transparent;border:0;box-shadow:none;overflow:visible}
+.product-shot--body .product-shot__img{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;
+  padding:clamp(20px,5%,36px);background:#ffffff;
+  border:1px solid rgba(226,216,196,.9);border-radius:calc(var(--radius-lg) + 4px);
+  box-shadow:0 18px 44px -20px rgba(43,36,25,.16), inset 0 0 0 1px rgba(255,255,255,.7);
+  filter:saturate(1.08) contrast(1.03) brightness(1.02);
+  transition:transform var(--duration-slow) var(--ease-out)}
+.product-shot--body:hover .product-shot__img{transform:translateY(-3px);box-shadow:0 24px 54px -22px rgba(43,36,25,.3), inset 0 0 0 1px rgba(255,255,255,.7)}
+.product-shot--body figcaption{position:static;width:100%;text-align:center;padding:0 8px;
+  font-family:var(--font-display);font-size:.7rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--clr-mid-gray)}
 .niche-card__image-wrapper .product-shot{width:100%;height:100%;aspect-ratio:auto;
   border:0;border-radius:0;box-shadow:none;padding:var(--space-sm);margin:0}
 @media (max-width:600px){.product-shot--body{max-width:100%}}
 
-        .article-body img { max-width:100%; height:auto; border-radius:var(--radius-sm); margin:20px 0; }
+        .article-body img:not(.product-shot__img):not(.warm-product-card__media img) { max-width:100%; height:auto; border-radius:var(--radius-sm); margin:20px 0; }
         .article-body table { display:block; max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
         .article-body blockquote { border-left:4px solid var(--clr-accent); padding-left:var(--space-lg); margin:var(--space-lg) 0; color:var(--clr-mid-gray); font-style:italic; }
         .av-price-chart { margin-top:10px; }
@@ -396,13 +417,14 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 </script>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header><div class="container navbar">
     <a href="/abvorn/" class="logo"><img src="/abvorn/logo.svg" alt="Abvorn"></a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="/abvorn/">Categories</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><a class="category-label" href="/abvorn/categories/audio/">Audio</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/gaming/">Gaming</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a><a href="/abvorn/webcams/">Webcams</a></div></div></div>
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega"><div class="category-group"><a class="category-label" href="/abvorn/categories/audio/">Audio</a><a href="/abvorn/wireless-earbuds/">Wireless Earbuds</a><a href="/abvorn/wireless-headphones/">Wireless Headphones</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/computing-and-monitors/">Computing &amp; Monitors</a><a href="/abvorn/4k-monitors/">4K Monitors</a><a href="/abvorn/laptops/">Laptops</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/fitness-and-health/">Fitness &amp; Health</a><a href="/abvorn/fitness-trackers/">Fitness Trackers</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/gaming/">Gaming</a><a href="/abvorn/gaming-mice/">Gaming Mice</a><a href="/abvorn/mechanical-keyboards/">Mechanical Keyboards</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/home-and-lifestyle/">Home &amp; Lifestyle</a><a href="/abvorn/smart-home/">Smart Home</a><a href="/abvorn/streaming-devices/">Streaming Devices</a></div><div class="category-group"><a class="category-label" href="/abvorn/categories/webcams-and-accessories/">Webcams &amp; Accessories</a><a href="/abvorn/webcams/">Webcams</a></div></div></div>
         <a href="/abvorn/">Home</a>
         <a href="/abvorn/about.html">About</a>
         <a href="/abvorn/journal/">Journal</a>
@@ -461,10 +483,10 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
   <a class="btn btn--ghost" href="/abvorn/compare.html?asin=B0CF3VGQFL&name=Redragon+Mechanical+Gaming+Keyboard+Wired&price=%2429.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71Bk2A2WmOL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0CF3VGQFL&score=6.7&label=Solid" data-track="compare" data-product-name="Redragon Mechanical Gaming Keyboard Wired" data-category="mechanical-keyboards" data-score="6.7">Compare &oplus;</a>
 </div>
 </section>
-<h2 id="introduction-to-mechanical-keyboards" id="introduction-to-mechanical-keyboards">Introduction to Mechanical Keyboards</h2>
+<h2 id="introduction-to-mechanical-keyboards">Introduction to Mechanical Keyboards</h2>
 <p>If you are still using a standard membrane keyboard, you are missing out on the tactile satisfaction and precision that defines modern gaming. Whether you are a competitive FPS player needing instant actuation or a writer looking for that perfect "thocky" sound, finding the <strong>best mechanical gaming keyboard 2024</strong> can be a daunting task. The market is currently split between budget-friendly entry-level options and enthusiast-grade customizers. In this showdown, we are pitting two heavyweights of the budget and mid-range space against each other: <strong>Redragon</strong> and <strong>AULA</strong>.</p>
 
-<h2 id="what-to-look-for-in-a-mechanical-gaming-keyboard" id="what-to-look-for-in-a-mechanical-gaming-keyboard">What to Look for in a Mechanical Gaming Keyboard</h2>
+<h2 id="what-to-look-for-in-a-mechanical-gaming-keyboard">What to Look for in a Mechanical Gaming Keyboard</h2>
 <p>Before diving into our specific reviews, it is important to understand the terminology you will encounter:
 <ul>
  <li><strong>Hot-Swappable:</strong> This allows you to pull out the switches and replace them with different ones (linear, tactile, or clicky) without soldering.</li>
@@ -474,8 +496,8 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 </ul>
 </p>
 
-<h2 id="redragon-mechanical-gaming-keyboard-wired-review" id="redragon-mechanical-gaming-keyboard-wired-review">Redragon Mechanical Gaming Keyboard Wired Review</h2>
-<figure class="product-shot product-shot--body"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/71Bk2A2WmOL._AC_SL1500_.jpg" alt="Redragon Mechanical Gaming Keyboard Wired" loading="lazy"></figure>
+<h2 id="redragon-mechanical-gaming-keyboard-wired-review">Redragon Mechanical Gaming Keyboard Wired Review</h2>
+<figure class="product-shot product-shot--body"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/71Bk2A2WmOL._AC_SL1500_.jpg" alt="Redragon Mechanical Gaming Keyboard Wired" loading="lazy"><figcaption>Redragon Mechanical Gaming Keyboard Wired</figcaption></figure>
 <p>For the gamer on a strict budget, the standard <strong>Redragon Mechanical Gaming Keyboard Wired</strong> is a classic entry point. Priced at just <strong>$29.99</strong>, it offers a solid introduction to the mechanical feel without breaking the bank.</p>
 <p><strong>Key Features:</strong>
 <ul>
@@ -498,7 +520,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 </ul>
 <p><strong>Bottom-Line Recommendation:</strong> If you are a student or a casual gamer looking to upgrade from a membrane keyboard for the lowest possible price, this is your winner.</p>
 
-<h2 id="redragon-k668-108-key-hot-swap-rgb-keyboard-review" id="redragon-k668-108-key-hot-swap-rgb-keyboard-review">Redragon K668 108-Key Hot-Swap RGB Keyboard Review</h2>
+<h2 id="redragon-k668-108-key-hot-swap-rgb-keyboard-review">Redragon K668 108-Key Hot-Swap RGB Keyboard Review</h2>
 <p>Stepping up the ladder, the <strong>Redragon K668</strong> is designed for users who want more functionality and a specific acoustic profile. Currently priced at <strong>$36.99</strong> (down from $49.99), it targets the "creamy" sound enthusiast.</p>
 <p><strong>Key Features:</strong>
 <ul>
@@ -521,8 +543,8 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 </ul>
 <p><strong>Bottom-Line Recommendation:</strong> This is the best choice for gamers who also use their PC for work and want a keyboard that sounds as good as it looks.</p>
 
-<h2 id="aula-f75-pro-wireless-mechanical-keyboard-review" id="aula-f75-pro-wireless-mechanical-keyboard-review">AULA F75 Pro Wireless Mechanical Keyboard Review</h2>
-<figure class="product-shot product-shot--body"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61MC8BK0w0L._AC_SL1500_.jpg" alt="AULA F75 Pro Wireless Mechanical Keyboard" loading="lazy"></figure>
+<h2 id="aula-f75-pro-wireless-mechanical-keyboard-review">AULA F75 Pro Wireless Mechanical Keyboard Review</h2>
+<figure class="product-shot product-shot--body"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61MC8BK0w0L._AC_SL1500_.jpg" alt="AULA F75 Pro Wireless Mechanical Keyboard" loading="lazy"><figcaption>AULA F75 Pro Wireless Mechanical Keyboard</figcaption></figure>
 <p>Now we enter the enthusiast territory. The <strong>AULA F75 Pro</strong> is a powerhouse, retailing for <strong>$69.99</strong>. This is a 75% layout keyboard, which is the "sweet spot" for many gamers because it saves space while keeping essential keys.</p>
 <p><strong>Key Features:</strong>
 <ul>
@@ -545,7 +567,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 </ul>
 <p><strong>Bottom-Line Recommendation:</strong> If you want a premium, "custom-feel" keyboard without spending $150+, the F75 Pro is the gold standard for mid-range enthusiasts.</p>
 
-<h2 id="feature-comparison-wired-vs-wireless-vs-hot-swap" id="feature-comparison-wired-vs-wireless-vs-hot-swap">Feature Comparison: Wired vs Wireless vs Hot-Swap</h2>
+<h2 id="feature-comparison-wired-vs-wireless-vs-hot-swap">Feature Comparison: Wired vs Wireless vs Hot-Swap</h2>
 <p>When deciding between these brands, your choice depends on your priority:
 <ul>
  <li><strong>Redragon (Budget/Wired):</strong> Best for those who want <strong>reliability and low cost</strong>. You get a direct connection and don't have to worry about batteries.</li>
@@ -554,7 +576,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 </ul>
 </p>
 
-<h2 id="how-to-choose-the-right-keyboard-for-your-needs" id="how-to-choose-the-right-keyboard-for-your-needs">How to Choose the Right Keyboard for Your Needs</h2>
+<h2 id="how-to-choose-the-right-keyboard-for-your-needs">How to Choose the Right Keyboard for Your Needs</h2>
 <p>To find your perfect match, ask yourself these three questions:
 <ol>
  <li><strong>What is my budget?</strong> If it's under $40, go with <strong>Redragon</strong>. If it's around $70, <strong>AULA</strong> offers significantly more tech.</li>
@@ -563,7 +585,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 </ol>
 </p>
 
-<h2 id="frequently-asked-questions" id="frequently-asked-questions">Frequently Asked Questions</h2>
+<h2 id="frequently-asked-questions">Frequently Asked Questions</h2>
 <p><strong>Q: Is "Hot-Swappable" worth it?</strong><br>
 A: Yes. It allows you to fix a single broken switch or change the "feel" of your keyboard without buying a whole new device.</p>
 <p><strong>Q: What is the difference between Red and Brown switches?</strong><br>
@@ -571,7 +593,7 @@ A: Red switches are smooth and quiet (linear), ideal for gaming. Brown switches 
 <p><strong>Q: Can I use the AULA keyboards with my console?</strong><br>
 A: Yes, the AULA models are compatible with PS5 and Xbox via their USB connections.</p>
 
-<h2 id="final-recommendations" id="final-recommendations">Final Recommendations</h2>
+<h2 id="final-recommendations">Final Recommendations</h2>
 <p>After comparing the lineups, here is our verdict:
 <ul>
  <li><strong>The Budget King:</strong> <strong>Redragon Mechanical Wired ($29.99)</strong>. It's unbeatable for the price.</li>
@@ -581,47 +603,42 @@ A: Yes, the AULA models are compatible with PS5 and Xbox via their USB connectio
 </p></p></p></p>
 <div class="table-wrap decision-matrix"><h3 class="rail-card__title">At a glance</h3><table class="doc-table"><thead><tr><th scope="col">Use Case</th><th scope="col">Product</th><th scope="col">Why</th></tr></thead><tbody><tr><td>Best Overall</td><td>Redragon Mechanical Gaming Keyboard Wired</td><td>Redragon Mechanical Gaming Keyboard Wired, 11 Programmable Backlit Modes, Hot-Swappable Red Switch, Anti-Ghosting, Double-Shot PBT Keycaps, Light Up Keyboard for PC Mac</td></tr><tr><td>Best Value</td><td>Redragon K668 108-Key Hot-Swap Wired RGB Gaming Keyboard</td><td>Redragon K668 108-Key Hot-Swap Wired RGB Gaming Keyboard, Extra 4 Hotkeys | Dedicated Shortcut Keys for Mute, Calc &amp; Desktop, Cushioned Noise Dampening for Creamy Thocky Sound, Swap-Ready, PRO Software</td></tr><tr><td>Premium Pick</td><td>AULA F75 Pro Wireless Mechanical Keyboard</td><td>AULA F75 Pro Wireless Mechanical Keyboard,75% Hot Swappable Custom Keyboard with Knob,RGB Backlit,Pre-lubed Reaper Switches,Side Printed PBT Keycaps,2.4GHz/USB-C/BT5.0 Mechanical Gaming Keyboards Global Recycled Standard</td></tr><tr><td>Also Great</td><td>AULA F99 Wireless Mechanical Keyboard</td><td>AULA F99 Wireless Mechanical Keyboard,Tri-Mode BT5.0/2.4GHz/USB-C Hot Swappable Custom Keyboard,Pre-lubed Linear Switches,RGB Backlit Computer Gaming Keyboards for PC/Tablet/PS/Xbox Global Recycled Standard</td></tr><tr><td>Also Great</td><td>Logitech MX Mechanical Wireless Illuminated Keyboard Tactile - Graphite | Illuminated performance</td><td>Logitech MX Mechanical Wireless Illuminated Keyboard Tactile - Graphite | Illuminated performance, backlit keys, Bluetooth, USB-C, macOS, Windows, Linux, iOS, Android, metal construction</td></tr></tbody></table></div>
 <div class="chart-section"><h3 class="rail-card__title">Performance Breakdown</h3><div class="chart-wrapper"><canvas id="verdictChart"></canvas></div><p class="chart-note">Scores out of 10. Based on the Abvorn Verdict Engine.</p></div>
-<h2 class="warm-grid-heading">Products Mentioned</h2><div class="warm-product-section"><div class="warm-product-card">
+<h2 class="warm-grid-heading">Products Mentioned</h2><div class="warm-product-section"><div class="warm-product-card" data-description="Redragon Mechanical Gaming Keyboard Wired, 11 Programmable Backlit Modes, Hot-Swappable Red Switch, Anti-Ghosting, Double-Shot PBT Keycaps, Light Up Keyboard for PC Mac">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/71Bk2A2WmOL._AC_SL1500_.jpg" alt="Redragon Mechanical Gaming Keyboard Wired" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">Redragon Mechanical Gaming Keyboard Wired</h3>
 <div class="warm-product-card__price">$29.99</div>
-<p class="warm-product-card__summary">Redragon Mechanical Gaming Keyboard Wired, 11 Programmable Backlit Modes, Hot-Swappable Red Switch, Anti-Ghosting, Double-Shot PBT Keycaps, Light Up Keyboard for PC Mac</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/mechanical-keyboards-15/0" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=B0CF3VGQFL&name=Redragon+Mechanical+Gaming+Keyboard+Wired&price=%2429.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71Bk2A2WmOL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0CF3VGQFL&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
-</div><div class="warm-product-card">
+</div><div class="warm-product-card" data-description="Redragon K668 108-Key Hot-Swap Wired RGB Gaming Keyboard, Extra 4 Hotkeys | Dedicated Shortcut Keys for Mute, Calc &amp; Desktop, Cushioned Noise Dampening for Creamy Thocky Sound, Swap-Ready, PRO Software">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/618A+B25MKL._AC_SL1500_.jpg" alt="Redragon K668 108-Key Hot-Swap Wired RGB Gaming Keyboard" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">Redragon K668 108-Key Hot-Swap Wired RGB Gaming Keyboard</h3>
 <div class="warm-product-card__price">$36.99</div>
-<p class="warm-product-card__summary">Redragon K668 108-Key Hot-Swap Wired RGB Gaming Keyboard, Extra 4 Hotkeys | Dedicated Shortcut Keys for Mute, Calc &amp; Desktop, Cushioned Noise Dampening for Creamy Thocky Sound, Swap-Ready, PRO Software</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/mechanical-keyboards-15/1" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=B0CDWP1D58&name=Redragon+K668+108-Key+Hot-Swap+Wired+RGB+Gaming+Keyboard&price=%2436.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F618A%2BB25MKL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0CDWP1D58&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
-</div><div class="warm-product-card">
+</div><div class="warm-product-card" data-description="AULA F75 Pro Wireless Mechanical Keyboard,75% Hot Swappable Custom Keyboard with Knob,RGB Backlit,Pre-lubed Reaper Switches,Side Printed PBT Keycaps,2.4GHz/USB-C/BT5.0 Mechanical Gaming Keyboards Global Recycled Standard">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/61MC8BK0w0L._AC_SL1500_.jpg" alt="AULA F75 Pro Wireless Mechanical Keyboard" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">AULA F75 Pro Wireless Mechanical Keyboard</h3>
 <div class="warm-product-card__price">$69.99</div>
-<p class="warm-product-card__summary">AULA F75 Pro Wireless Mechanical Keyboard,75% Hot Swappable Custom Keyboard with Knob,RGB Backlit,Pre-lubed Reaper Switches,Side Printed PBT Keycaps,2.4GHz/USB-C/BT5.0 Mechanical Gaming Keyboards Global Recycled Standard</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/mechanical-keyboards-15/2" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=B0D14N2QZF&name=AULA+F75+Pro+Wireless+Mechanical+Keyboard&price=%2469.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F61MC8BK0w0L._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0D14N2QZF&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
-</div><div class="warm-product-card">
+</div><div class="warm-product-card" data-description="AULA F99 Wireless Mechanical Keyboard,Tri-Mode BT5.0/2.4GHz/USB-C Hot Swappable Custom Keyboard,Pre-lubed Linear Switches,RGB Backlit Computer Gaming Keyboards for PC/Tablet/PS/Xbox Global Recycled Standard">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/61mB8mL33pL._AC_SL1500_.jpg" alt="AULA F99 Wireless Mechanical Keyboard" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">AULA F99 Wireless Mechanical Keyboard</h3>
 <div class="warm-product-card__price">$68.99</div>
-<p class="warm-product-card__summary">AULA F99 Wireless Mechanical Keyboard,Tri-Mode BT5.0/2.4GHz/USB-C Hot Swappable Custom Keyboard,Pre-lubed Linear Switches,RGB Backlit Computer Gaming Keyboards for PC/Tablet/PS/Xbox Global Recycled Standard</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/mechanical-keyboards-15/3" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=B0CLLHSWRL&name=AULA+F99+Wireless+Mechanical+Keyboard&price=%2468.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F61mB8mL33pL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0CLLHSWRL&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
-</div><div class="warm-product-card">
+</div><div class="warm-product-card" data-description="Logitech MX Mechanical Wireless Illuminated Keyboard Tactile - Graphite | Illuminated performance, backlit keys, Bluetooth, USB-C, macOS, Windows, Linux, iOS, Android, metal construction">
 <div class="warm-product-card__media"><img src="https://m.media-amazon.com/images/I/61++ok6AqtL._AC_SL1500_.jpg" alt="Logitech MX Mechanical Wireless Illuminated Keyboard Tactile - Graphite | Illuminated performance" loading="lazy" width="400" height="400"></div>
 <h3 class="warm-product-card__name">Logitech MX Mechanical Wireless Illuminated Keyboard Tactile - Graphite | Illuminated performance</h3>
 <div class="warm-product-card__price">$157.00</div>
-<p class="warm-product-card__summary">Logitech MX Mechanical Wireless Illuminated Keyboard Tactile - Graphite | Illuminated performance, backlit keys, Bluetooth, USB-C, macOS, Windows, Linux, iOS, Android, metal construction</p>
 <div class="cta-row">
 <a class="btn btn--accent" href="https://abvorn.com/click/mechanical-keyboards-15/4" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/abvorn/compare.html?asin=B09LK1P1RD&name=Logitech+MX+Mechanical+Wireless+Illuminated+Keyboard+Tactile+-+Graphite+%7C+Illuminated+performance&price=%24157.00&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F61%2B%2Bok6AqtL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB09LK1P1RD&score=&label=" data-track="compare">Compare &oplus;</a>
@@ -703,7 +720,6 @@ const CATEGORY_SLUG = "mechanical-keyboards";
 })();
 </script>
 <script>
-
 async function submitNicheSubscribe(e) {
     e.preventDefault();
     const f = e.target;
@@ -727,7 +743,6 @@ async function submitNicheSubscribe(e) {
     btn.disabled = false;
 }
 </script>
-
 <script>
 (function(){
 // ── Abvorn Regret Probability Score (client-side) ──────────────
