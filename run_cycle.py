@@ -1061,7 +1061,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <nav class="nav-links" id="nav-links">
-        <div class="nav-item"><a href="#niches">Categories ▾</a><div class="nav-dropdown">CATEGORY_DROPDOWN_PLACEHOLDER</div></div>
+        <div class="nav-item"><a href="#niches">Categories</a><div class="nav-dropdown">CATEGORY_DROPDOWN_PLACEHOLDER</div></div>
         <a href="__SITE_BASE__/">Home</a>
         <a href="__SITE_BASE__/about.html">About</a>
         <a href="__SITE_BASE__/journal/">Journal</a>

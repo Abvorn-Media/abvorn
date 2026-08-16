@@ -127,6 +127,9 @@ def transform_dropdown_page(html):
         if n == 0:
             print("  !! no nav-item dropdown markup found")
 
+    # 1b) Drop a literal ▾ caret from the trigger text (CSS ::after draws it).
+    html = re.sub(r'(<div class="nav-item"><a[^>]*>)[^<]*▾([^<]*</a>)', r'\1\2', html, count=1)
+
     # 2) Base .nav-dropdown rule -> white (spaced or minified). Idempotent.
     html, n = re.subn(r'\.nav-dropdown\s*\{[^}]*\}', (
         '.nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; '
