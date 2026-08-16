@@ -81,7 +81,7 @@ Products: {names}
 Current year: {datetime.now().year} — write the post_title with the current year (e.g. "Best {niche} {datetime.now().year}"), never a past year.{knowledge_context}{social_context}
 
 Return a JSON object with:
-- outline: array of H2 section headings (e.g. ["Introduction", "What to Look For", "Product Reviews", "Buying Guide", "FAQ", "Conclusion"])
+- outline: array of H2 section headings (e.g. ["Introduction", "What to Look For", "Product Reviews", "Buying Guide", "Conclusion"])
 - selected_angle: one of: problem_solution, comparison, how_to, listicle, deep_dive, objection_buster
 - primary_keyword: the main SEO keyword for this guide
 - post_title: compelling title for the buying guide

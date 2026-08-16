@@ -222,6 +222,18 @@ _CHART_SECTION_RE = re.compile(
 _EMBEDDED_BODY_RE = re.compile(r"(?is)<body[^>]*>(.*?)</body>")
 _EMBEDDED_DOC_RE = re.compile(r"(?is)<!DOCTYPE html>.*?</head>\s*(.*?)\s*(?:</body>\s*)?</html>")
 _LEADING_INTRO_RE = re.compile(r"(?is)^\s*<h2>\s*Introduction\s*</h2>\s*")
+# LLM drafts often include their own FAQ Q&A block (either an <h2>FAQ</h2> or
+# <h2 id="frequently-asked-questions">Frequently Asked Questions</h2>), but the
+# template owns a guaranteed branded FAQ section (build_faq) with matching
+# JSON-LD. Strip the in-body duplicate from the FAQ heading through the next
+# <h2> (or EOF). The template's own heading is a plain <h2> with no id, so it
+# never matches.
+_LLM_FAQ_SECTION_RE = re.compile(
+    r"(?is)(?:"
+    r"<h2[^>]*>\s*(?:FAQ|FAQs)\s*</h2>"
+    r"|<h2[^>]*id=[\"']frequently-asked-questions[\"'][^>]*>\s*Frequently Asked Questions\s*</h2>"
+    r").*?(?=<h2[^>]*>|$)"
+)
 
 
 def _close_unclosed_lists(html):
@@ -287,6 +299,9 @@ def sanitize_article_html(html, strip_leading_intro=True):
     # Drop duplicated chart fragments — the template owns its own.
     text = _CHART_SECTION_RE.sub("", text)
     text = _CHART_NOTE_RE.sub("", text)
+
+    # Drop an in-body LLM FAQ block — the template owns the branded FAQ section.
+    text = _LLM_FAQ_SECTION_RE.sub("", text)
 
     # Remove stray replacement characters / broken entities.
     text = re.sub(r"\ufffd", "", text)
