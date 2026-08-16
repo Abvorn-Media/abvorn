@@ -77,7 +77,8 @@ def generate_outline(niche, products, knowledge_core=None, workflow_engine=None,
             social_context = "\n\n💬 Real-Time Social Sentiment:\n" + "\n\n".join(parts)
 
     prompt = f"""You are a content strategist planning a buying guide for '{niche}'.
-Products: {names}{knowledge_context}{social_context}
+Products: {names}
+Current year: {datetime.now().year} — write the post_title with the current year (e.g. "Best {niche} {datetime.now().year}"), never a past year.{knowledge_context}{social_context}
 
 Return a JSON object with:
 - outline: array of H2 section headings (e.g. ["Introduction", "What to Look For", "Product Reviews", "Buying Guide", "FAQ", "Conclusion"])
@@ -160,9 +161,11 @@ def write_draft(niche, products, outline, knowledge_core=None, workflow_engine=N
             ai_max_tokens_intro = wf.max_tokens
             ai_max_tokens_article = wf.max_tokens
 
+    current_year = datetime.now().year
     intro_prompt = f"""Write the introduction for a buying guide titled '{post_title}' about {niche}.
 Angle: {angle}
 Keyword: {keyword}
+Current year: {current_year} — always reference the current year ({current_year}), never a past year.
 Products: {products_text}{knowledge_context}{social_context}
 
 Write 2-3 short paragraphs (as HTML) that hook the reader, state the problem, and introduce the solution.
@@ -183,7 +186,8 @@ Return ONLY the HTML paragraphs, wrapped in <p> tags."""
 Products: {products_text}
 Outline sections: {outline_sections}
 Angle: {angle}
-Keyword: {keyword}{knowledge_context}{social_context}
+Keyword: {keyword}
+Current year: {current_year} — always reference the current year ({current_year}), never a past year.{knowledge_context}{social_context}
 
 Write the COMPLETE article body as HTML. Follow the outline sections as <h2> headings.
 For each product, include: a brief intro, key features, pros/cons, and a bottom-line recommendation.
