@@ -404,10 +404,10 @@ _UPDATED_RE = re.compile(r"^Updated:\s*\d{4}-\d{2}-\d{2}", re.I)
 _SHARE_RE = re.compile(r"facebook|pinterest|related categories|share on|tweet", re.I)
 _WIDGET_RE = re.compile(r"alert me|\$\d+\.\d{2}|price drop|track price", re.I)
 # The "Our Choice" hero pick product photo rendered into the article hero.
-_HERO_PICK_IMG_RE = re.compile(r'<div class="hero-pick".*?<img class="product-shot__img" src="([^"]+)"', re.S)
-# Fallback: the niche page's hero product photo (hero-image-wrapper > img),
+_HERO_PICK_IMG_RE = re.compile(r'<aside class="hero-pick".*?hero-pick__media"><img src="([^"]+)"', re.S)
+# Fallback: the article body's studio product shot (product-shot figure),
 # which carries the reviewed product itself rather than a category illustration.
-_NICHE_HERO_IMG_RE = re.compile(r'<div class="hero-image-wrapper">\s*<img src="([^"]+)"', re.S)
+_NICHE_HERO_IMG_RE = re.compile(r'<figure class="product-shot[^"]*">\s*<img class="product-shot__img" src="([^"]+)"', re.S)
 # Abvorn Verdict overall score embedded on published review pages (either plain
 # JSON or the HTML-entity-escaped variant), e.g. '"overall": 7.0'.
 _VERDICT_OVERALL_RE = re.compile(r'overall.{0,40}?([0-9]+(?:\.[0-9]+)?)')
