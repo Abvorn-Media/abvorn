@@ -15,8 +15,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Abvorn – Reviews Based on Real Testing, Not Spec Sheets">
     <meta name="twitter:description" content="Independent product reviews and buying guides. We test before we recommend.">
-    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root { --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }
         
@@ -43,7 +42,7 @@
 html { scroll-behavior: smooth; font-size: 16px; }
 body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: var(--clr-off-black); background: var(--clr-white); -webkit-font-smoothing: antialiased; }
 h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; color: var(--clr-black); }
-h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 500; }
+h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 800; }
 h2 { font-size: var(--text-2xl); letter-spacing: -0.01em; }
 h3 { font-size: var(--text-xl); }
 h4 { font-size: var(--text-lg); }
@@ -135,11 +134,11 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
   background:transparent;border:0;box-shadow:none;overflow:visible}
 .product-shot--body .product-shot__img{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;
   padding:clamp(20px,5%,36px);background:#ffffff;
-  border:1px solid rgba(226,216,196,.9);border-radius:calc(var(--radius-lg) + 4px);
-  box-shadow:0 18px 44px -20px rgba(43,36,25,.16), inset 0 0 0 1px rgba(255,255,255,.7);
+  border:1px solid rgba(232,232,232,.9);border-radius:calc(var(--radius-lg) + 4px);
+  box-shadow:0 18px 44px -20px rgba(0,0,0,.16), inset 0 0 0 1px rgba(255,255,255,.7);
   filter:saturate(1.08) contrast(1.03) brightness(1.02);
   transition:transform var(--duration-slow) var(--ease-out)}
-.product-shot--body:hover .product-shot__img{transform:translateY(-3px);box-shadow:0 24px 54px -22px rgba(43,36,25,.3), inset 0 0 0 1px rgba(255,255,255,.7)}
+.product-shot--body:hover .product-shot__img{transform:translateY(-3px);box-shadow:0 24px 54px -22px rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,255,255,.7)}
 .product-shot--body figcaption{position:static;width:100%;text-align:center;padding:0 8px;
   font-family:var(--font-display);font-size:.7rem;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;color:var(--clr-mid-gray)}
@@ -161,7 +160,8 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .nav-links > a, .nav-item > a { color:#fff; text-decoration:none; margin-left:28px; font-weight:600; font-size:0.9rem; }
         .nav-links > a:hover, .nav-item > a:hover { color: var(--clr-accent); }
         .nav-item { position:relative; margin-left:28px; }
-        .nav-item > a { margin-left:0; }
+        .nav-item > a { margin-left:0; display:flex; align-items:center; gap:4px; }
+        .nav-item > a::after { content:'▾'; font-size:0.6rem; opacity:0.5; }
         .nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:14px}
         .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#fff; min-width:240px; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding:8px 0; z-index:30; }
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
@@ -191,6 +191,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
             .nav-links.open { display:flex; }
             .nav-links > a, .nav-item { margin-left:0; width:100%; }
             .nav-links > a, .nav-item > a { padding:10px 0; }
+            .nav-item > a::after { display:none; }
             .nav-dropdown { position:static; box-shadow:none; margin-top:0; padding-left:12px; display:block; background:transparent; }
             .nav-dropdown a { color:#ccc; padding:7px 0; }
             .nav-dropdown a:hover { background:transparent; }
@@ -209,7 +210,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .hero-grid { display:grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(24px,4vw,56px); align-items:center; position:relative; width:100%; }
         .hero-eyebrow { display:inline-flex; align-items:center; gap:10px; margin:0 0 18px; font-family:var(--font-mono); font-size:0.72rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--clr-accent); }
         .hero-dot { width:8px; height:8px; border-radius:2px; background:var(--clr-accent); box-shadow:0 0 14px var(--clr-accent); flex-shrink:0; }
-        .hero h1 { font-family:var(--font-display); font-weight:800; font-size:clamp(1.9rem,4vw,3rem); line-height:1.08; letter-spacing:-0.02em; color:#fff; margin:0 0 14px; }
+        .hero h1 { font-family:var(--font-display); font-weight:800; font-size:clamp(var(--text-3xl),4vw,var(--text-4xl)); line-height:1.08; letter-spacing:-0.02em; color:#fff; margin:0 0 14px; }
         .hero-tagline { font-size:clamp(0.95rem,1.3vw,1.08rem); color:#b9b9b4; max-width:50ch; margin:0 0 22px; line-height:1.6; }
         .hero-trust { display:flex; flex-wrap:wrap; gap:8px 24px; }
         .hero-trust span { display:inline-flex; align-items:center; gap:7px; font-size:0.78rem; font-weight:600; color:#b9b9b4; }
@@ -441,9 +442,9 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 </div></section>
 
 <section class="stats-band"><div class="container stats-grid">
-    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="42">0</div><div class="stat-label">Guides published</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="89">0</div><div class="stat-label">Guides published</div></div>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="stat-number" data-target="10">0</div><div class="stat-label">Categories covered</div></div>
-    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="126">0</div><div class="stat-label">Products compared</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="267">0</div><div class="stat-label">Products compared</div></div>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3.5-7.1"/><path d="M21 3v6h-6"/></svg></div><div class="stat-number">Weekly</div><div class="stat-label">Review cycle</div></div>
 </div></section>
 
@@ -451,24 +452,6 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <span class="section-eyebrow">Fresh this week</span>
     <div class="category-section__header"><h2>Latest reviews</h2></div>
     <div class="niche-grid"><div class="niche-card review-card niche-card--featured" style="--cat:#a7c3e8">
-    <div class="review-card__media">
-        <a href="/abvorn/reviews/4k-monitors/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61pF09VcRPL._AC_SL1500_.jpg" alt="Best 4K Monitors 2026: Dell S2725QS vs S2725QC vs LG 27UP650K-W Review" loading="lazy"></figure></div></a>
-        <span class="review-card__score" aria-label="Abvorn Verdict 6.4 out of 10"><span class="review-card__score-num">6.4</span><span class="review-card__score-out">/10</span></span>
-    </div>
-    <div class="review-card__body">
-        <span class="review-card__banner" style="background:#a7c3e8">Computing &amp; Monitors · 4K Monitors</span>
-        <span class="review-card__updated">Updated Aug 2026</span>
-        <h2><a href="/abvorn/reviews/4k-monitors/">Best 4K Monitors 2026: Dell S2725QS vs S2725QC vs LG 27UP650K-W Review</a></h2>
-        <p class="review-card__snippet">&lt;p&gt;Finding the best 4k monitor 2026 shouldn&#x27;t require a spreadsheet, but with nearly identical spec sheets across the mid-range, that&#x27;s exactly where most buyer</p>
-        <div class="review-card__footer">
-            <div class="review-card__reactions" data-review="4k-monitors">
-                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
-                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
-            </div>
-            <a href="/abvorn/reviews/4k-monitors/" class="read-link">Read review →</a>
-        </div>
-    </div>
-</div><div class="niche-card review-card" style="--cat:#a7c3e8">
     <div class="review-card__media">
         <a href="/abvorn/reviews/4k-monitors/best-4k-monitors-2024-dell-s2725qs-s2725qc-and-lg-27up650k-w-compared-2026-08-07.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61pF09VcRPL._AC_SL1500_.jpg" alt="Best 4K Monitors 2026: Dell S2725QS, S2725QC, and LG 27UP650K-W Compared" loading="lazy"></figure></div></a>
         <span class="review-card__score" aria-label="Abvorn Verdict 6.4 out of 10"><span class="review-card__score-num">6.4</span><span class="review-card__score-out">/10</span></span>
@@ -502,6 +485,24 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
                 <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
             </div>
             <a href="/abvorn/reviews/4k-monitors/best-4k-monitors-2026-07-30.html" class="read-link">Read review →</a>
+        </div>
+    </div>
+</div><div class="niche-card review-card" style="--cat:#a7c3e8">
+    <div class="review-card__media">
+        <a href="/abvorn/reviews/4k-monitors/best-4k-monitors-2026-dell-s2725qs-vs-s2725qc-vs-lg-27up650k-w-review-2026-08-17.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61pF09VcRPL._AC_SL1500_.jpg" alt="Best 4K Monitors 2026: Dell S2725QS vs S2725QC vs LG 27UP650K-W Review" loading="lazy"></figure></div></a>
+        <span class="review-card__score" aria-label="Abvorn Verdict 6.4 out of 10"><span class="review-card__score-num">6.4</span><span class="review-card__score-out">/10</span></span>
+    </div>
+    <div class="review-card__body">
+        <span class="review-card__banner" style="background:#a7c3e8">Computing &amp; Monitors · 4K Monitors</span>
+        
+        <h2><a href="/abvorn/reviews/4k-monitors/best-4k-monitors-2026-dell-s2725qs-vs-s2725qc-vs-lg-27up650k-w-review-2026-08-17.html">Best 4K Monitors 2026: Dell S2725QS vs S2725QC vs LG 27UP650K-W Review</a></h2>
+        <p class="review-card__snippet">In 2026, the demand for crisp, vibrant 4K displays continues to rise, whether you&#x27;re a creative professional, a competitive gamer, or a casual user seeking sharper visuals. This…</p>
+        <div class="review-card__footer">
+            <div class="review-card__reactions" data-review="4k-monitors">
+                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
+            </div>
+            <a href="/abvorn/reviews/4k-monitors/best-4k-monitors-2026-dell-s2725qs-vs-s2725qc-vs-lg-27up650k-w-review-2026-08-17.html" class="read-link">Read review →</a>
         </div>
     </div>
 </div></div>
@@ -583,24 +584,6 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <div class="category-section__header"><h2><span class="cat-tick" aria-hidden="true"></span>Computing & Monitors</h2><a href="/abvorn/categories/computing-and-monitors/">View all in Computing & Monitors →</a></div>
     <div class="niche-grid"><div class="niche-card review-card" style="--cat:#a7c3e8">
     <div class="review-card__media">
-        <a href="/abvorn/reviews/4k-monitors/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61pF09VcRPL._AC_SL1500_.jpg" alt="Best 4K Monitors 2026: Dell S2725QS vs S2725QC vs LG 27UP650K-W Review" loading="lazy"></figure></div></a>
-        <span class="review-card__score" aria-label="Abvorn Verdict 6.4 out of 10"><span class="review-card__score-num">6.4</span><span class="review-card__score-out">/10</span></span>
-    </div>
-    <div class="review-card__body">
-        <span class="review-card__banner" style="background:#a7c3e8">Computing &amp; Monitors · 4K Monitors</span>
-        <span class="review-card__updated">Updated Aug 2026</span>
-        <h2><a href="/abvorn/reviews/4k-monitors/">Best 4K Monitors 2026: Dell S2725QS vs S2725QC vs LG 27UP650K-W Review</a></h2>
-        <p class="review-card__snippet">&lt;p&gt;Finding the best 4k monitor 2026 shouldn&#x27;t require a spreadsheet, but with nearly identical spec sheets across the mid-range, that&#x27;s exactly where most buyer</p>
-        <div class="review-card__footer">
-            <div class="review-card__reactions" data-review="4k-monitors">
-                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
-                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
-            </div>
-            <a href="/abvorn/reviews/4k-monitors/" class="read-link">Read review →</a>
-        </div>
-    </div>
-</div><div class="niche-card review-card" style="--cat:#a7c3e8">
-    <div class="review-card__media">
         <a href="/abvorn/reviews/4k-monitors/best-4k-monitors-2024-dell-s2725qs-s2725qc-and-lg-27up650k-w-compared-2026-08-07.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61pF09VcRPL._AC_SL1500_.jpg" alt="Best 4K Monitors 2026: Dell S2725QS, S2725QC, and LG 27UP650K-W Compared" loading="lazy"></figure></div></a>
         <span class="review-card__score" aria-label="Abvorn Verdict 6.4 out of 10"><span class="review-card__score-num">6.4</span><span class="review-card__score-out">/10</span></span>
     </div>
@@ -633,6 +616,24 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
                 <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
             </div>
             <a href="/abvorn/reviews/4k-monitors/best-4k-monitors-2026-07-30.html" class="read-link">Read review →</a>
+        </div>
+    </div>
+</div><div class="niche-card review-card" style="--cat:#a7c3e8">
+    <div class="review-card__media">
+        <a href="/abvorn/reviews/4k-monitors/best-4k-monitors-2026-dell-s2725qs-vs-s2725qc-vs-lg-27up650k-w-review-2026-08-17.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61pF09VcRPL._AC_SL1500_.jpg" alt="Best 4K Monitors 2026: Dell S2725QS vs S2725QC vs LG 27UP650K-W Review" loading="lazy"></figure></div></a>
+        <span class="review-card__score" aria-label="Abvorn Verdict 6.4 out of 10"><span class="review-card__score-num">6.4</span><span class="review-card__score-out">/10</span></span>
+    </div>
+    <div class="review-card__body">
+        <span class="review-card__banner" style="background:#a7c3e8">Computing &amp; Monitors · 4K Monitors</span>
+        
+        <h2><a href="/abvorn/reviews/4k-monitors/best-4k-monitors-2026-dell-s2725qs-vs-s2725qc-vs-lg-27up650k-w-review-2026-08-17.html">Best 4K Monitors 2026: Dell S2725QS vs S2725QC vs LG 27UP650K-W Review</a></h2>
+        <p class="review-card__snippet">In 2026, the demand for crisp, vibrant 4K displays continues to rise, whether you&#x27;re a creative professional, a competitive gamer, or a casual user seeking sharper visuals. This…</p>
+        <div class="review-card__footer">
+            <div class="review-card__reactions" data-review="4k-monitors">
+                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
+            </div>
+            <a href="/abvorn/reviews/4k-monitors/best-4k-monitors-2026-dell-s2725qs-vs-s2725qc-vs-lg-27up650k-w-review-2026-08-17.html" class="read-link">Read review →</a>
         </div>
     </div>
 </div></div>
