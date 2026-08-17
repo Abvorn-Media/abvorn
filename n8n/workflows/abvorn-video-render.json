@@ -1,0 +1,83 @@
+{
+  "name": "Abvorn Video Render",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "abvorn-video-render",
+        "responseMode": "onReceived"
+      },
+      "id": "trigger",
+      "name": "Render Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-320, 0],
+      "webhookId": "abvorn-video-render"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.MPT_URL }}/videos",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "video_subject",
+              "value": "={{ $json.body.video.video_subject }}"
+            },
+            {
+              "name": "video_script",
+              "value": "={{ $json.body.video.video_script }}"
+            },
+            {
+              "name": "video_terms",
+              "value": "={{ $json.body.video.video_terms }}"
+            },
+            {
+              "name": "video_aspect",
+              "value": "={{ $json.body.video.video_aspect }}"
+            },
+            {
+              "name": "video_source",
+              "value": "={{ $json.body.video.video_source }}"
+            },
+            {
+              "name": "voice_name",
+              "value": "={{ $json.body.video.voice_name }}"
+            },
+            {
+              "name": "subtitle_enabled",
+              "value": "={{ $json.body.video.subtitle_enabled }}"
+            },
+            {
+              "name": "video_count",
+              "value": "={{ $json.body.video.video_count }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "render",
+      "name": "Render Video via MPT",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [120, 0]
+    }
+  ],
+  "connections": {
+    "Render Webhook": {
+      "main": [
+        [
+          {
+            "node": "Render Video via MPT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

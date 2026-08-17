@@ -438,6 +438,36 @@ async def trigger_n8n(webhook_path: str, data: dict = None):
     return bridge.trigger_workflow(webhook_path, data or {})
 
 
+# ── MoneyPrinterTurbo video render ─────────────────────────────────
+@app.get("/api/video/render/health")
+async def video_render_health():
+    """MPT reachability for the dashboard."""
+    from abvorn.core.video_render import get_video_renderer
+
+    return get_video_renderer().health()
+
+
+@app.post("/api/video/render")
+async def video_render(data: dict = None):
+    """Submit a script/carousel to MoneyPrinterTurbo and wait for the video.
+
+    Body: any source accepted by build_video_payload (Colosseum carousel,
+    domination script, or a raw TaskVideoRequest). Returns the task_id and
+    the finished video URLs, or an error dict when MPT is unreachable.
+    """
+    from abvorn.core.video_render import get_video_renderer
+
+    return get_video_renderer().render(data or {})
+
+
+@app.get("/api/video/render/tasks/{task_id}")
+async def video_render_task(task_id: str):
+    """Query MPT task status by task_id."""
+    from abvorn.core.video_render import get_video_renderer
+
+    return get_video_renderer().status(task_id)
+
+
 @app.post("/webhook/abvorn/{action}")
 async def abvorn_webhook(action: str, request: Request):
     """Webhook endpoint for n8n to trigger Abvorn actions.
@@ -508,6 +538,13 @@ async def abvorn_webhook(action: str, request: Request):
         with open(journal_file, "a", encoding="utf-8") as f:
             f.write(f"{json.dumps(entry, ensure_ascii=False)}\n")
         return {"success": True, "journal": str(journal_file)}
+
+    if action == "render_video":
+        from abvorn.core.video_render import VideoRenderer
+
+        renderer = VideoRenderer()
+        result = renderer.submit(data.get("video", {}))
+        return {"success": result["success"], **result}
 
     return {"success": False, "error": f"Unknown action: {action}"}
 

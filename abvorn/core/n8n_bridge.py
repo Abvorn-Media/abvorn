@@ -29,6 +29,7 @@ REFLECTION_WEBHOOK_PATH = "abvorn-reflection"
 PUBLISH_WEBHOOK_PATH = "abvorn-publish"
 GSC_ANALYSIS_WEBHOOK_PATH = "abvorn-gsc-analysis"
 EVOLUTION_WEBHOOK_PATH = "abvorn-evolution"
+VIDEO_RENDER_WEBHOOK_PATH = "abvorn-video-render"
 
 
 class N8NBridge:
@@ -95,6 +96,17 @@ class N8NBridge:
         """Trigger the evolution check in n8n."""
         return self.trigger_workflow(EVOLUTION_WEBHOOK_PATH, {
             "generation": generation,
+            "timestamp": datetime.now().isoformat(),
+        })
+
+    def render_video_workflow(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Trigger the MoneyPrinterTurbo render pipeline in n8n.
+
+        The payload is a TaskVideoRequest-shaped dict (see
+        abvorn.core.video_render.build_video_payload).
+        """
+        return self.trigger_workflow(VIDEO_RENDER_WEBHOOK_PATH, {
+            "video": payload,
             "timestamp": datetime.now().isoformat(),
         })
 

@@ -11,6 +11,7 @@ from abvorn.core.n8n_bridge import (
     PUBLISH_WEBHOOK_PATH,
     GSC_ANALYSIS_WEBHOOK_PATH,
     EVOLUTION_WEBHOOK_PATH,
+    VIDEO_RENDER_WEBHOOK_PATH,
 )
 
 
@@ -42,6 +43,7 @@ def test_workflow_paths_are_constant():
     assert PUBLISH_WEBHOOK_PATH == "abvorn-publish"
     assert GSC_ANALYSIS_WEBHOOK_PATH == "abvorn-gsc-analysis"
     assert EVOLUTION_WEBHOOK_PATH == "abvorn-evolution"
+    assert VIDEO_RENDER_WEBHOOK_PATH == "abvorn-video-render"
 
 
 def test_trigger_workflow_never_raises(monkeypatch):
@@ -154,6 +156,33 @@ def test_evolution_workflow_payload(monkeypatch):
     assert captured["generation"] == 3
 
 
+def test_render_video_workflow_payload(monkeypatch):
+    import requests
+
+    captured = {}
+
+    class FakeResponse:
+        status_code = 200
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {}
+
+    def fake_post(url, json=None, headers=None, timeout=None):
+        assert url == "http://localhost:5678/webhook/abvorn-video-render"
+        captured.update(json)
+        return FakeResponse()
+
+    monkeypatch.setattr(requests, "post", fake_post)
+    bridge = N8NBridge()
+    payload = {"video_subject": "Test", "video_script": "Hi"}
+    bridge.render_video_workflow(payload)
+    assert captured["video"] == payload
+    assert "timestamp" in captured
+
+
 def test_workflow_json_files_are_valid_and_reference_real_endpoints():
     from pathlib import Path
 
@@ -165,9 +194,9 @@ def test_workflow_json_files_are_valid_and_reference_real_endpoints():
         data = json.loads(json_path.read_text(encoding="utf-8"))
         assert "name" in data
         assert "nodes" in data
-        # Every HTTP call goes through $env.ABVORN_URL, never a hardcoded bad port
+        # Every HTTP call goes through an env-var base URL, never a hardcoded bad port
         text = json_path.read_text(encoding="utf-8")
-        assert "$env.ABVORN_URL" in text
+        assert "$env.ABVORN_URL" in text or "$env.MPT_URL" in text
         assert "localhost:8000" not in text
 
 
