@@ -23,6 +23,12 @@ logger = logging.getLogger(__name__)
 
 # Helpers shared with run_cycle.py
 SITE_BASE = "https://abvorn-media.github.io/abvorn"
+
+# Canonical font link — every page type must use this exact string so the site
+# loads one consistent type system (Libre Franklin display, Inter body,
+# JetBrains Mono for data labels).
+FONT_LINK = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">'
+
 DESIGN_SYSTEM_CSS = """
 :root {
   --clr-black: #0a0a0a; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
@@ -47,7 +53,7 @@ DESIGN_SYSTEM_CSS = """
 html { scroll-behavior: smooth; font-size: 16px; }
 body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: var(--clr-off-black); background: var(--clr-white); -webkit-font-smoothing: antialiased; }
 h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; color: var(--clr-black); }
-h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 500; }
+h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 800; }
 h2 { font-size: var(--text-2xl); letter-spacing: -0.01em; }
 h3 { font-size: var(--text-xl); }
 h4 { font-size: var(--text-lg); }
@@ -126,7 +132,8 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
 .nav-links > a, .nav-item > a { color:#fff; text-decoration:none; margin-left:28px; font-weight:600; font-size:0.9rem; }
 .nav-links > a:hover, .nav-item > a:hover { color: var(--clr-accent); }
 .nav-item { position:relative; margin-left:28px; }
-.nav-item > a { margin-left:0; }
+.nav-item > a { margin-left:0; display:flex; align-items:center; gap:4px; }
+.nav-item > a::after { content:'▾'; font-size:0.6rem; opacity:0.5; }
 .nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:14px}
 .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#fff; min-width:240px; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding:8px 0; z-index:30; }
 .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
@@ -140,6 +147,7 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
     .nav-links.open { display:flex; }
     .nav-links > a, .nav-item { margin-left:0; width:100%; }
     .nav-links > a, .nav-item > a { padding:10px 0; }
+    .nav-item > a::after { display:none; }
     .nav-dropdown { position:static; box-shadow:none; margin-top:0; padding-left:12px; display:block; background:transparent; }
     .nav-dropdown a { color:#ccc; padding:7px 0; }
     .nav-dropdown a:hover { background:transparent; }
@@ -164,11 +172,11 @@ VERDICT_CARD_CSS = """
 .av-badge::before{content:'\\01F525';font-size:.8rem}
 .av-score-row{display:flex;align-items:center;gap:20px;margin-bottom:20px}
 .av-score{display:flex;align-items:baseline;gap:2px}
-.av-number{font-size:3rem;font-weight:700;font-family:'Libre Franklin',Georgia,sans-serif;color:#1a1a1a;line-height:1;letter-spacing:-.03em}
+.av-number{font-size:3rem;font-weight:700;font-family:var(--font-display);color:#1a1a1a;line-height:1;letter-spacing:-.03em}
 .av-outof{font-size:1.2rem;color:#666;font-weight:600}
 .av-label-row{display:flex;flex-direction:column;gap:2px}
-.av-label{font-size:1.1rem;font-weight:700;color:var(--clr-accent-text,#996015);font-family:'Libre Franklin',Georgia,sans-serif}
-.av-product{font-size:1.2rem;font-weight:800;color:#1a1a1a;font-family:'Libre Franklin',Georgia,sans-serif;line-height:1.3;margin:0 0 4px}
+.av-label{font-size:1.1rem;font-weight:700;color:var(--clr-accent-text,#996015);font-family:var(--font-display)}
+.av-product{font-size:1.2rem;font-weight:800;color:#1a1a1a;font-family:var(--font-display);line-height:1.3;margin:0 0 4px}
 .av-breakdown{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
 .av-bar-row{display:flex;align-items:center;gap:12px}
 .av-bar-label{flex:0 0 140px;font-size:.82rem;font-weight:600;color:#666;text-align:right}
@@ -1188,10 +1196,9 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{blog_title} | Abvorn">
     <meta name="twitter:description" content="{meta_desc}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    {FONT_LINK}
     <style>
-        :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }}
+        :root {{ --niche-primary: #1a1a1a; --niche-accent: #c98a2c; --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }}
         {DESIGN_SYSTEM_CSS}
         {PROD_SHOT_CSS}
         
@@ -1756,10 +1763,9 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{blog_title} | Abvorn">
     <meta name="twitter:description" content="{meta_desc}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    {FONT_LINK}
     <style>
-        :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }}
+        :root {{ --niche-primary: #1a1a1a; --niche-accent: #c98a2c; --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }}
         {DESIGN_SYSTEM_CSS}
         {PROD_SHOT_CSS}
         
@@ -1799,7 +1805,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         .cat-hero__grid {{ position:relative; display:grid; grid-template-columns:1.15fr 0.85fr; gap:clamp(24px,4vw,56px); align-items:center; }}
         .cat-hero__eyebrow {{ display:flex; align-items:center; gap:10px; margin:0 0 18px; font-family:var(--font-mono); font-size:0.74rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--cat); }}
         .cat-hero__dot {{ width:8px; height:8px; border-radius:2px; background:var(--cat); box-shadow:0 0 14px var(--cat); flex-shrink:0; }}
-        .cat-hero__title {{ font-family:var(--font-display); font-weight:800; font-size:clamp(2rem,4.5vw,3.4rem); line-height:1.06; letter-spacing:-0.02em; color:#fff; margin:0 0 16px; }}
+        .cat-hero__title {{ font-family:var(--font-display); font-weight:800; font-size:clamp(var(--text-3xl),4vw,var(--text-4xl)); line-height:1.06; letter-spacing:-0.02em; color:#fff; margin:0 0 16px; }}
         .cat-hero__tagline {{ font-family:var(--font-body); font-size:clamp(1rem,1.5vw,1.15rem); line-height:1.6; color:#b9b9b4; max-width:52ch; margin:0 0 26px; }}
         .cat-hero__chips {{ display:flex; flex-wrap:wrap; gap:12px; margin:0 0 28px; }}
         .cat-hero__chip {{ display:flex; flex-direction:column; gap:3px; min-width:104px; padding:12px 16px; border:1px solid rgba(255,255,255,0.12); border-radius:14px; background:rgba(255,255,255,0.03); }}
@@ -2259,6 +2265,18 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     )
 
 
+def build_comparison_page(niche_slug, niche_name, post_title, products, all_slugs, amazon_tag=""):
+    """Delegates to run_cycle.build_comparison_page (single source of truth)."""
+    from run_cycle import build_comparison_page as _canonical
+    return _canonical(niche_slug, niche_name, post_title, products, all_slugs, amazon_tag)
+
+
+def build_methodology_page(all_slugs, form_url=""):
+    """Delegates to run_cycle.build_methodology_page (single source of truth)."""
+    from run_cycle import build_methodology_page as _canonical
+    return _canonical(all_slugs, form_url)
+
+
 def _overlay_review(a, slug, niche_name, today):
     """Build a full review entry for a freshly-written article so its card shows
     the real product photo and verdict instead of the blank generated fallback.
@@ -2359,8 +2377,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
             full_page = f'''<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="{b}/assets/favicon-32x32.png"><title>{title} | Abvorn</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{FONT_LINK}
 <style>
 *{{box-sizing:border-box;margin:0;padding:0}}body{{font-family:'Inter',sans-serif;color:#333;line-height:1.6}}
 .skip-link{{position:absolute;top:-100px;left:8px;background:var(--clr-accent,#c98a2c);color:#fff;padding:8px 16px;z-index:200;border-radius:0 0 4px;font-size:.9rem;text-decoration:none;transition:top .15s}}
@@ -2825,8 +2842,7 @@ finish review, the verdict, and DESIGN.md
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Ab's Evolution Journal | Abvorn">
 <meta name="twitter:description" content="Watch Ab — Abvorn's AI — evolve, generation by generation. A live journal of the system writing itself smarter.">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+{FONT_LINK}
 <style>
 :root {{ --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }}
 {DESIGN_SYSTEM_CSS}
@@ -2843,7 +2859,7 @@ finish review, the verdict, and DESIGN.md
 .journal-live__dot {{ width:7px; height:7px; border-radius:50%; background:#7fbf7f; box-shadow:0 0 10px rgba(127,191,127,0.9); }}
 .journal-live.is-polling .journal-live__dot {{ animation: live-pulse 2s ease-in-out infinite; }}
 @keyframes live-pulse {{ 0%,100% {{ opacity:1; box-shadow:0 0 10px rgba(127,191,127,0.9); }} 50% {{ opacity:0.45; box-shadow:0 0 4px rgba(127,191,127,0.4); }} }}
-.journal-hero__title {{ font-family:var(--font-display); font-weight:800; font-size:clamp(2.1rem,4.8vw,3.6rem); line-height:1.04; letter-spacing:-0.02em; color:#fff; margin:0 0 18px; }}
+.journal-hero__title {{ font-family:var(--font-display); font-weight:800; font-size:clamp(var(--text-3xl),4vw,var(--text-4xl)); line-height:1.04; letter-spacing:-0.02em; color:#fff; margin:0 0 18px; }}
 .journal-hero__tagline {{ font-family:var(--font-body); font-size:clamp(1rem,1.5vw,1.15rem); line-height:1.65; color:#b9b9b4; max-width:50ch; margin:0 0 30px; }}
 .journal-stats {{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; margin-bottom:34px; }}
 .journal-stat {{ position:relative; padding:16px 18px; border:1px solid rgba(255,255,255,0.12); border-radius:14px; background:rgba(255,255,255,0.03); }}
@@ -3052,8 +3068,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Abvorn – Reviews Based on Real Testing, Not Spec Sheets">
     <meta name="twitter:description" content="Independent product reviews and buying guides. We test before we recommend.">
-    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    ''' + FONT_LINK + '''
     <style>
         :root { --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }
         ''' + DESIGN_SYSTEM_CSS + '''
@@ -3072,7 +3087,8 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .nav-links > a, .nav-item > a { color:#fff; text-decoration:none; margin-left:28px; font-weight:600; font-size:0.9rem; }
         .nav-links > a:hover, .nav-item > a:hover { color: var(--clr-accent); }
         .nav-item { position:relative; margin-left:28px; }
-        .nav-item > a { margin-left:0; }
+        .nav-item > a { margin-left:0; display:flex; align-items:center; gap:4px; }
+        .nav-item > a::after { content:'▾'; font-size:0.6rem; opacity:0.5; }
         .nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:14px}
         .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#fff; min-width:240px; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding:8px 0; z-index:30; }
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
@@ -3087,6 +3103,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
             .nav-links.open { display:flex; }
             .nav-links > a, .nav-item { margin-left:0; width:100%; }
             .nav-links > a, .nav-item > a { padding:10px 0; }
+            .nav-item > a::after { display:none; }
             .nav-dropdown { position:static; box-shadow:none; margin-top:0; padding-left:12px; display:block; background:transparent; }
             .nav-dropdown a { color:#ccc; padding:7px 0; }
             .nav-dropdown a:hover { background:transparent; }
@@ -3105,7 +3122,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .hero-grid { display:grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(24px,4vw,56px); align-items:center; position:relative; width:100%; }
         .hero-eyebrow { display:inline-flex; align-items:center; gap:10px; margin:0 0 18px; font-family:var(--font-mono); font-size:0.72rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--clr-accent); }
         .hero-dot { width:8px; height:8px; border-radius:2px; background:var(--clr-accent); box-shadow:0 0 14px var(--clr-accent); flex-shrink:0; }
-        .hero h1 { font-family:var(--font-display); font-weight:800; font-size:clamp(1.9rem,4vw,3rem); line-height:1.08; letter-spacing:-0.02em; color:#fff; margin:0 0 14px; }
+        .hero h1 { font-family:var(--font-display); font-weight:800; font-size:clamp(var(--text-3xl),4vw,var(--text-4xl)); line-height:1.08; letter-spacing:-0.02em; color:#fff; margin:0 0 14px; }
         .hero-tagline { font-size:clamp(0.95rem,1.3vw,1.08rem); color:#b9b9b4; max-width:50ch; margin:0 0 22px; line-height:1.6; }
         .hero-trust { display:flex; flex-wrap:wrap; gap:8px 24px; }
         .hero-trust span { display:inline-flex; align-items:center; gap:7px; font-size:0.78rem; font-weight:600; color:#b9b9b4; }

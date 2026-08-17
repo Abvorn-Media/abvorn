@@ -13,10 +13,9 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Gaming Reviews | Abvorn">
     <meta name="twitter:description" content="Independent gaming reviews and buying guides. We test before we recommend.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --niche-primary: #0a0a0a; --niche-accent: #c98a2c; --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }
+        :root { --niche-primary: #1a1a1a; --niche-accent: #c98a2c; --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }
         
 :root {
   --clr-black: #0a0a0a; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
@@ -41,7 +40,7 @@
 html { scroll-behavior: smooth; font-size: 16px; }
 body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: var(--clr-off-black); background: var(--clr-white); -webkit-font-smoothing: antialiased; }
 h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; color: var(--clr-black); }
-h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 500; }
+h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 800; }
 h2 { font-size: var(--text-2xl); letter-spacing: -0.01em; }
 h3 { font-size: var(--text-xl); }
 h4 { font-size: var(--text-lg); }
@@ -133,11 +132,11 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
   background:transparent;border:0;box-shadow:none;overflow:visible}
 .product-shot--body .product-shot__img{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;
   padding:clamp(20px,5%,36px);background:#ffffff;
-  border:1px solid rgba(226,216,196,.9);border-radius:calc(var(--radius-lg) + 4px);
-  box-shadow:0 18px 44px -20px rgba(43,36,25,.16), inset 0 0 0 1px rgba(255,255,255,.7);
+  border:1px solid rgba(232,232,232,.9);border-radius:calc(var(--radius-lg) + 4px);
+  box-shadow:0 18px 44px -20px rgba(0,0,0,.16), inset 0 0 0 1px rgba(255,255,255,.7);
   filter:saturate(1.08) contrast(1.03) brightness(1.02);
   transition:transform var(--duration-slow) var(--ease-out)}
-.product-shot--body:hover .product-shot__img{transform:translateY(-3px);box-shadow:0 24px 54px -22px rgba(43,36,25,.3), inset 0 0 0 1px rgba(255,255,255,.7)}
+.product-shot--body:hover .product-shot__img{transform:translateY(-3px);box-shadow:0 24px 54px -22px rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,255,255,.7)}
 .product-shot--body figcaption{position:static;width:100%;text-align:center;padding:0 8px;
   font-family:var(--font-display);font-size:.7rem;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;color:var(--clr-mid-gray)}
@@ -197,7 +196,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .cat-hero__grid { position:relative; display:grid; grid-template-columns:1.15fr 0.85fr; gap:clamp(24px,4vw,56px); align-items:center; }
         .cat-hero__eyebrow { display:flex; align-items:center; gap:10px; margin:0 0 18px; font-family:var(--font-mono); font-size:0.74rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--cat); }
         .cat-hero__dot { width:8px; height:8px; border-radius:2px; background:var(--cat); box-shadow:0 0 14px var(--cat); flex-shrink:0; }
-        .cat-hero__title { font-family:var(--font-display); font-weight:800; font-size:clamp(2rem,4.5vw,3.4rem); line-height:1.06; letter-spacing:-0.02em; color:#fff; margin:0 0 16px; }
+        .cat-hero__title { font-family:var(--font-display); font-weight:800; font-size:clamp(var(--text-3xl),4vw,var(--text-4xl)); line-height:1.06; letter-spacing:-0.02em; color:#fff; margin:0 0 16px; }
         .cat-hero__tagline { font-family:var(--font-body); font-size:clamp(1rem,1.5vw,1.15rem); line-height:1.6; color:#b9b9b4; max-width:52ch; margin:0 0 26px; }
         .cat-hero__chips { display:flex; flex-wrap:wrap; gap:12px; margin:0 0 28px; }
         .cat-hero__chip { display:flex; flex-direction:column; gap:3px; min-width:104px; padding:12px 16px; border:1px solid rgba(255,255,255,0.12); border-radius:14px; background:rgba(255,255,255,0.03); }

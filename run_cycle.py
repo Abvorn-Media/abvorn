@@ -36,7 +36,7 @@ from src.social_permission import SocialPermissionFramework, create_social_permi
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
-from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, scan_published_reviews, _overlay_review, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS, review_card, CATEGORY_TAGLINES
+from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, scan_published_reviews, _overlay_review, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS, review_card, CATEGORY_TAGLINES, DESIGN_SYSTEM_CSS, FONT_LINK
 from src.click_tracker import get_clicks, register_articles_batch
 from src.article_design import (ARTICLE_DESIGN_CSS, PROD_SHOT_CSS, upgrade_product_image, product_shot_html,
                                 info_dot, sanitize_article_html, inject_product_photos,
@@ -374,6 +374,49 @@ def lead_form_html(form_url=""):
 </div>
 </section>"""
 
+# ── Modern utility-page CSS (comparison + methodology) ───────────────
+# These two page types were the last warm-editorial holdouts. They now use
+# the same design system + site chrome as every other page type. Legacy
+# --text-secondary/--bg-alt/--border aliases are kept for inline styles.
+UTILITY_PAGE_CSS = """
+""" + DESIGN_SYSTEM_CSS + """
+""" + SITE_CHROME_CSS + """
+""" + MEGA_MENU_CSS + """
+:root {
+  --text-secondary: #555; --text-muted: #666; --bg-alt: #f6f5f2;
+  --border: #e8e8e8; --bg: #ffffff; --text: #0a0a0a; --primary: var(--clr-primary);
+  --primary-dark: #0a0a0a; --accent: var(--clr-accent); --accent-dark: #996015;
+}
+.hero { background:#0d0d0d; color:#fff; padding:clamp(40px,6vw,72px) 0 56px; position:relative; overflow:hidden; }
+.hero::before { content:''; position:absolute; inset:0; background:radial-gradient(900px 420px at 80% 12%, rgba(201,138,44,.14), transparent 65%); pointer-events:none; }
+.hero .container { position:relative; }
+.hero h1 { color:#fff; margin:0 0 14px; }
+.hero p { color:#b9b9b4; max-width:56ch; line-height:1.6; margin:0; font-size:1.05rem; }
+.section { padding:clamp(40px,6vw,64px) 0; }
+.affiliate-banner { background:#f6f5f2; border:1px solid #e8e8e8; border-radius:var(--radius-sm); padding:14px 20px; font-size:.85rem; color:#666; margin:28px 0; text-align:center; }
+.comparison-table { width:100%; border-collapse:collapse; font-size:.92rem; background:#fff; border:1px solid #e8e8e8; border-radius:var(--radius-md); overflow:hidden; }
+.comparison-table th { text-align:left; font-family:var(--font-display); font-weight:700; font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:#0a0a0a; background:#f6f5f2; padding:12px 14px; border-bottom:1px solid #e8e8e8; }
+.comparison-table td { padding:12px 14px; border-top:1px solid #e8e8e8; color:#1a1a1a; vertical-align:top; }
+.comparison-table tr:first-child td { border-top:none; }
+.comparison-table td small { color:#666; }
+.av-score-cell { text-align:center; min-width:84px; }
+.av-compact-score { display:block; font-size:1.3rem; font-weight:800; font-family:var(--font-display); color:#0a0a0a; line-height:1; }
+.av-compact-label { display:block; font-size:.65rem; color:var(--clr-accent); font-weight:600; text-transform:uppercase; letter-spacing:.04em; margin-top:2px; }
+.buy-btn { display:inline-block; padding:8px 16px; background:var(--clr-primary); color:#fff; border-radius:var(--radius-sm); font-weight:700; font-size:.8rem; text-decoration:none; box-shadow:var(--shadow-sm); transition:background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-spring); border:none; cursor:pointer; }
+.buy-btn:hover { background:var(--clr-accent); transform:translateY(-1px); text-decoration:none; color:#fff; }
+.trust-list { list-style:none; display:flex; flex-direction:column; gap:20px; margin:24px 0; }
+.trust-item { display:flex; flex-direction:column; gap:2px; padding:18px 20px; background:#f6f5f2; border:1px solid #e8e8e8; border-left:3px solid var(--clr-accent); border-radius:var(--radius-md); }
+.trust-item strong { font-family:var(--font-display); color:#0a0a0a; font-size:1rem; }
+.trust-item span { color:#555; font-size:.92rem; line-height:1.6; }
+.lead-capture { background:#0a0a0a; color:#fff; padding:clamp(40px,6vw,64px) 0; text-align:center; }
+.lead-capture h2 { color:#fff; margin:0 0 10px; }
+.lead-capture p { color:#b9b9b4; margin:0 0 20px; }
+.lead-capture form { display:flex; gap:12px; max-width:480px; margin:0 auto; flex-wrap:wrap; justify-content:center; }
+.lead-capture input { padding:12px 16px; border-radius:var(--radius-sm); border:none; font-size:1rem; flex:1; min-width:220px; box-shadow:var(--shadow-sm); color:#0a0a0a; }
+.lead-capture button { padding:12px 28px; background:var(--clr-accent); color:#0a0a0a; border:none; border-radius:var(--radius-sm); font-size:1rem; font-weight:700; cursor:pointer; }
+.lead-capture button:hover { filter:brightness(1.1); }
+"""
+
 def build_comparison_page(niche_slug, niche_name, post_title, products, all_slugs, amazon_tag=""):
     b = SITE_BASE
     t = amazon_tag or os.environ.get("AMAZON_TAG", "viraltestco-20")
@@ -415,7 +458,7 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
 <link rel="canonical" href="{b}/comparisons/{niche_slug}/">
 {bread}
 {ANALYTICS_HTML}
-<style>{CSS_SHARED}</style>
+<style>{UTILITY_PAGE_CSS}</style>
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
 {nav_html(all_slugs)}
@@ -535,63 +578,8 @@ def _get_price_floor(niche_slug: str) -> str:
     }
     return floors.get(niche_slug, "50")
 
-FONT_LINK = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">'
-
-DESIGN_SYSTEM_CSS = """
-:root {
-  --clr-black: #0a0a0a; --clr-off-black: #1a1a1a; --clr-dark-gray: #2a2a2a;
-  --clr-mid-gray: #666; --clr-light-gray: #e8e8e8; --clr-off-white: #f6f5f2; --clr-white: #ffffff;
-  --clr-primary: var(--niche-primary, #1a1a1a); --clr-accent: var(--niche-accent, #c98a2c);
-  --clr-accent-text: var(--niche-accent-text, #996015);
-  --font-display: 'Libre Franklin', -apple-system, sans-serif; --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --scale-ratio: 1.25;
-  --text-xs: calc(1rem / var(--scale-ratio) / var(--scale-ratio)); --text-sm: calc(1rem / var(--scale-ratio));
-  --text-base: 1rem; --text-lg: calc(1rem * var(--scale-ratio)); --text-xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio));
-  --text-2xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
-  --text-3xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
-  --text-4xl: calc(1rem * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio) * var(--scale-ratio));
-  --space-xs: 0.25rem; --space-sm: 0.5rem; --space-md: 1rem; --space-lg: 2rem; --space-xl: 4rem; --space-2xl: 8rem;
-  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08); --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12); --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --duration-fast: 150ms; --duration-base: 300ms; --duration-slow: 500ms;
-}
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior: smooth; font-size: 16px; }
-body { font-family: var(--font-body); font-size: var(--text-base); line-height: 1.7; color: var(--clr-off-black); background: var(--clr-white); -webkit-font-smoothing: antialiased; }
-h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; color: var(--clr-black); }
-h1 { font-size: var(--text-4xl); letter-spacing: -0.02em; font-weight: 500; }
-h2 { font-size: var(--text-2xl); letter-spacing: -0.01em; }
-h3 { font-size: var(--text-xl); }
-h4 { font-size: var(--text-lg); }
-p { margin-bottom: var(--space-lg); max-width: 65ch; }
-.container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 var(--space-lg); }
-@media (max-width: 768px) { .container { padding: 0 var(--space-md); } h1 { font-size: var(--text-2xl); } h2 { font-size: var(--text-xl); } }
-.card { background: var(--clr-white); border: 1px solid var(--clr-light-gray); border-radius: var(--radius-md); padding: var(--space-lg); transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); }
-.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.btn { display: inline-flex; align-items: center; gap: var(--space-sm); padding: 0.75em 1.5em; font-family: var(--font-body); font-weight: 600; font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; color: var(--clr-white); background: var(--clr-primary); border: none; border-radius: var(--radius-sm); cursor: pointer; transition: background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-out); }
-.btn:hover { background: var(--clr-accent); transform: scale(1.03); box-shadow: var(--shadow-md); }
-.btn:active { transform: scale(0.97); }
-.input { width: 100%; padding: 0.75em 1em; font-family: var(--font-body); font-size: var(--text-base); color: var(--clr-off-black); background: var(--clr-off-white); border: 2px solid transparent; border-radius: var(--radius-sm); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
-.input:focus { outline: none; border-color: var(--clr-accent); box-shadow: 0 0 0 3px rgba(90,125,154,0.15); }
-.header--scrolled { padding: 10px 0 !important; background: rgba(0,0,0,0.95) !important; box-shadow: 0 2px 20px rgba(0,0,0,0.3); backdrop-filter: blur(10px); }
-.signal-tag { position: relative; display: inline-flex; align-items: center; gap: 6px; background: var(--clr-accent); color: var(--clr-black); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
-.signal-tag--tag { padding: 6px 14px; border-radius: var(--radius-sm); font-size: 0.75rem; }
-.signal-tag--badge { position: absolute; top: 12px; left: 12px; padding: 5px 12px; border-radius: var(--radius-sm); font-size: 0.68rem; box-shadow: var(--shadow-sm); z-index: 2; }
-.rank-chip { display: inline-block; background: var(--clr-off-white); color: var(--clr-mid-gray); border: 1px solid var(--clr-light-gray); padding: 4px 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: var(--radius-sm); position: absolute; top: 12px; left: 12px; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
-@media (forced-colors: active) { .btn { border: 2px solid ButtonText; } .card { border: 1px solid ButtonText; } }
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-.skip-link { position: absolute; top: -100px; left: 8px; z-index: 200; background: var(--clr-accent); color: var(--clr-black); padding: 10px 18px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: top var(--duration-fast) var(--ease-out); }
-.skip-link:focus { top: 0; color: var(--clr-black); }
-:focus-visible { outline: 2px solid var(--clr-accent); outline-offset: 2px; }
-
-/* ── Footer category columns ──────────────────────────────────── */
-.footer-cat-cols { display: flex; gap: var(--space-xl); }
-.footer-cat-col { display: flex; flex-direction: column; }
-.footer-col h4 + a + h4 { margin-top: var(--space-lg); }
-"""
+# FONT_LINK and DESIGN_SYSTEM_CSS are imported from src.deployment above —
+# single source of truth lives there (run_cycle.py must not carry a duplicate).
 
 VERDICT_CARD_CSS = """
 .abvorn-verdict{padding:28px 32px;margin:32px 0;border-top:1px solid #e8e8e8;border-bottom:1px solid #e8e8e8;background:transparent;position:relative}
@@ -599,11 +587,11 @@ VERDICT_CARD_CSS = """
 .av-badge::before{content:'\\01F525';font-size:.8rem}
 .av-score-row{display:flex;align-items:center;gap:20px;margin-bottom:20px}
 .av-score{display:flex;align-items:baseline;gap:2px}
-.av-number{font-size:3rem;font-weight:700;font-family:'Libre Franklin',Georgia,sans-serif;color:#1a1a1a;line-height:1;letter-spacing:-.03em}
+.av-number{font-size:3rem;font-weight:700;font-family:var(--font-display);color:#1a1a1a;line-height:1;letter-spacing:-.03em}
 .av-outof{font-size:1.2rem;color:#666;font-weight:600}
 .av-label-row{display:flex;flex-direction:column;gap:2px}
-.av-label{font-size:1.1rem;font-weight:700;color:var(--clr-accent-text,#996015);font-family:'Libre Franklin',Georgia,sans-serif}
-.av-product{font-size:1.2rem;font-weight:800;color:#1a1a1a;font-family:'Libre Franklin',Georgia,sans-serif;line-height:1.3;margin:0 0 4px}
+.av-label{font-size:1.1rem;font-weight:700;color:var(--clr-accent-text,#996015);font-family:var(--font-display)}
+.av-product{font-size:1.2rem;font-weight:800;color:#1a1a1a;font-family:var(--font-display);line-height:1.3;margin:0 0 4px}
 .av-breakdown{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
 .av-bar-row{display:flex;align-items:center;gap:12px}
 .av-bar-label{flex:0 0 140px;font-size:.82rem;font-weight:600;color:#666;text-align:right}
@@ -924,8 +912,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <link rel="icon" type="image/png" href="__SITE_BASE__/assets/favicon-32x32.png">
     <title>Abvorn – Reviews Based on Real Testing, Not Spec Sheets</title>
     <meta name="description" content="Independent product reviews and buying guides. We test before we recommend.">
-    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    ''' + FONT_LINK + '''
     <style>
         ''' + DESIGN_SYSTEM_CSS + '''
         /* FIX: header/hero/footer are fixed brand chrome, always black-on-white —
@@ -942,7 +929,8 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .nav-links > a, .nav-item > a { color:#fff; text-decoration:none; margin-left:28px; font-weight:600; font-size:0.9rem; }
         .nav-links > a:hover, .nav-item > a:hover { color: var(--clr-accent); }
         .nav-item { position:relative; margin-left:28px; }
-        .nav-item > a { margin-left:0; }
+        .nav-item > a { margin-left:0; display:flex; align-items:center; gap:4px; }
+        .nav-item > a::after { content:'▾'; font-size:0.6rem; opacity:0.5; }
         .nav-item::after{content:'';position:absolute;top:100%;left:0;right:0;height:14px}
         .nav-dropdown { display:none; position:absolute; top:100%; left:0; margin-top:14px; background:#fff; min-width:240px; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding:8px 0; z-index:30; }
         .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown { display:block; }
@@ -956,6 +944,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
             .nav-links.open { display:flex; }
             .nav-links > a, .nav-item { margin-left:0; width:100%; }
             .nav-links > a, .nav-item > a { padding:10px 0; }
+            .nav-item > a::after { display:none; }
             .nav-dropdown { position:static; box-shadow:none; margin-top:0; padding-left:12px; display:block; background:transparent; }
             .nav-dropdown a { color:#ccc; padding:7px 0; }
             .nav-dropdown a:hover { background:transparent; }
@@ -1426,10 +1415,9 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{blog_title} | Abvorn">
     <meta name="twitter:description" content="{meta_desc}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    {FONT_LINK}
     <style>
-        :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }}
+        :root {{ --niche-primary: #1a1a1a; --niche-accent: #c98a2c; --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }}
         {DESIGN_SYSTEM_CSS}
         {PROD_SHOT_CSS}
         
@@ -1469,7 +1457,7 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
         .cat-hero__grid {{ position:relative; display:grid; grid-template-columns:1.15fr 0.85fr; gap:clamp(24px,4vw,56px); align-items:center; }}
         .cat-hero__eyebrow {{ display:flex; align-items:center; gap:10px; margin:0 0 18px; font-family:var(--font-mono); font-size:0.74rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--cat); }}
         .cat-hero__dot {{ width:8px; height:8px; border-radius:2px; background:var(--cat); box-shadow:0 0 14px var(--cat); flex-shrink:0; }}
-        .cat-hero__title {{ font-family:var(--font-display); font-weight:800; font-size:clamp(2rem,4.5vw,3.4rem); line-height:1.06; letter-spacing:-0.02em; color:#fff; margin:0 0 16px; }}
+        .cat-hero__title {{ font-family:var(--font-display); font-weight:800; font-size:clamp(var(--text-3xl),4vw,var(--text-4xl)); line-height:1.06; letter-spacing:-0.02em; color:#fff; margin:0 0 16px; }}
         .cat-hero__tagline {{ font-family:var(--font-body); font-size:clamp(1rem,1.5vw,1.15rem); line-height:1.6; color:#b9b9b4; max-width:52ch; margin:0 0 26px; }}
         .cat-hero__chips {{ display:flex; flex-wrap:wrap; gap:12px; margin:0 0 28px; }}
         .cat-hero__chip {{ display:flex; flex-direction:column; gap:3px; min-width:104px; padding:12px 16px; border:1px solid rgba(255,255,255,0.12); border-radius:14px; background:rgba(255,255,255,0.03); }}
@@ -2058,16 +2046,15 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     <meta name="description" content="{meta_escaped}">
     <link rel="canonical" href="{article_url}">
     {OG_META(title_escaped + ' | Abvorn', meta_escaped, article_url, f'{b}/assets/logo.png', og_type='article')}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    {FONT_LINK}
     <link rel="preconnect" href="https://m.media-amazon.com">
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {bread}
     {faq_jsonld}
     <script id="abvorn-rps-data" type="application/json">{rps_json}</script>
     <style>
-        :root {{ --niche-primary: #0a0a0a; --niche-accent: #c98a2c; }}
+        :root {{ --niche-primary: #1a1a1a; --niche-accent: #c98a2c; }}
         {WARM_EDITORIAL_CSS}
         {WARM_TOKEN_SHIM_CSS}
         {WARM_PRODUCT_GRID_CSS}
@@ -2314,7 +2301,7 @@ def build_methodology_page(all_slugs, form_url=""):
 {OG_META('How We Test — Abvorn', 'Our rigorous, independent testing methodology. Every recommendation is earned through real-world evaluation.', f'{_SITE_URL}/how-we-test/', f'{b}/assets/logo.png')}
 <link rel="canonical" href="{f'{_SITE_URL}/how-we-test/'}">
 {ANALYTICS_HTML}
-<style>{CSS_SHARED}</style>
+<style>{UTILITY_PAGE_CSS}</style>
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
 {nav_html(all_slugs)}
@@ -2729,8 +2716,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title} | Abvorn">
 <meta name="twitter:description" content="{title} - Abvorn">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{FONT_LINK}
 <style>
 {DESIGN_SYSTEM_CSS}
 {SITE_CHROME_CSS}

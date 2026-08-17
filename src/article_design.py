@@ -39,11 +39,11 @@ PROD_SHOT_CSS = """
   background:transparent;border:0;box-shadow:none;overflow:visible}
 .product-shot--body .product-shot__img{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;
   padding:clamp(20px,5%,36px);background:#ffffff;
-  border:1px solid rgba(226,216,196,.9);border-radius:calc(var(--radius-lg) + 4px);
-  box-shadow:0 18px 44px -20px rgba(43,36,25,.16), inset 0 0 0 1px rgba(255,255,255,.7);
+  border:1px solid rgba(232,232,232,.9);border-radius:calc(var(--radius-lg) + 4px);
+  box-shadow:0 18px 44px -20px rgba(0,0,0,.16), inset 0 0 0 1px rgba(255,255,255,.7);
   filter:saturate(1.08) contrast(1.03) brightness(1.02);
   transition:transform var(--duration-slow) var(--ease-out)}
-.product-shot--body:hover .product-shot__img{transform:translateY(-3px);box-shadow:0 24px 54px -22px rgba(43,36,25,.3), inset 0 0 0 1px rgba(255,255,255,.7)}
+.product-shot--body:hover .product-shot__img{transform:translateY(-3px);box-shadow:0 24px 54px -22px rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,255,255,.7)}
 .product-shot--body figcaption{position:static;width:100%;text-align:center;padding:0 8px;
   font-family:var(--font-display);font-size:.7rem;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;color:var(--clr-mid-gray)}

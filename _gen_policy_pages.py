@@ -6,19 +6,21 @@ BASE = "https://Abvorn-Media.github.io/abvorn"
 YEAR = "2026"
 PUBLISHER = "Abvorn Media"
 
-CSS = """body{font-family:'Inter',-apple-system,sans-serif;color:#2a2724;background:#faf6f1;line-height:1.7;margin:0;padding:0}
+FONT_LINK = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">'
+
+CSS = """body{font-family:'Inter',-apple-system,sans-serif;color:#0a0a0a;background:#ffffff;line-height:1.7;margin:0;padding:0}
 .container{max-width:720px;margin:0 auto;padding:48px 24px}
-h1{font-family:Georgia,'Times New Roman',serif;font-size:2rem;font-weight:700;color:#2a2724;margin-bottom:4px;letter-spacing:-.02em}
-.updated{font-size:.85rem;color:#9e9690;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid #e3dbd4}
-h2{font-family:Georgia,'Times New Roman',serif;font-size:1.3rem;font-weight:700;color:#2a2724;margin:28px 0 12px}
-p{margin:12px 0;font-size:.95rem;color:#6b6560}
+h1{font-family:'Libre Franklin',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;color:#0a0a0a;margin-bottom:4px;letter-spacing:-.02em}
+.updated{font-size:.85rem;color:#666;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid #e8e8e8}
+h2{font-family:'Libre Franklin',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:1.3rem;font-weight:700;color:#0a0a0a;margin:28px 0 12px}
+p{margin:12px 0;font-size:.95rem;color:#555}
 ul{padding-left:20px;margin:12px 0}
-li{margin:6px 0;font-size:.95rem;color:#6b6560}
-a{color:#d4633e;text-decoration:none}
-a:hover{color:#b84d2a;text-decoration:underline}
-.back{display:inline-block;margin-bottom:24px;font-size:.9rem;color:#d4633e}
+li{margin:6px 0;font-size:.95rem;color:#555}
+a{color:#c98a2c;text-decoration:none}
+a:hover{color:#996015;text-decoration:underline}
+.back{display:inline-block;margin-bottom:24px;font-size:.9rem;color:#c98a2c}
 .back:hover{text-decoration:underline}
-footer{text-align:center;padding:32px 0;border-top:1px solid #e3dbd4;font-size:.85rem;color:#9e9690}"""
+footer{text-align:center;padding:32px 0;border-top:1px solid #e8e8e8;font-size:.85rem;color:#666}"""
 
 # ─── Privacy Policy ────────────────────────────────────────────────
 PRIVACY = f"""<!DOCTYPE html>
@@ -26,6 +28,7 @@ PRIVACY = f"""<!DOCTYPE html>
 <title>Privacy Policy — Abvorn</title>
 <meta name="description" content="Abvorn privacy policy — how we collect, use, and protect your personal data.">
 <link rel="icon" type="image/svg+xml" href="{BASE}/assets/favicon.svg">
+{FONT_LINK}
 <link rel="canonical" href="{BASE}/privacy/">
 <meta property="og:title" content="Privacy Policy — Abvorn">
 <meta property="og:description" content="Abvorn privacy policy — how we collect, use, and protect your personal data.">
@@ -96,6 +99,7 @@ TERMS = f"""<!DOCTYPE html>
 <title>Terms of Service — Abvorn</title>
 <meta name="description" content="Abvorn terms of service — rules and guidelines for using our site.">
 <link rel="icon" type="image/svg+xml" href="{BASE}/assets/favicon.svg">
+{FONT_LINK}
 <link rel="canonical" href="{BASE}/terms/">
 <meta property="og:title" content="Terms of Service — Abvorn">
 <meta property="og:description" content="Abvorn terms of service — rules and guidelines for using our site.">
@@ -152,6 +156,7 @@ DISCLAIMER = f"""<!DOCTYPE html>
 <title>Disclaimer — Abvorn</title>
 <meta name="description" content="Abvorn disclaimer — affiliate relationships, review methodology, and editorial independence.">
 <link rel="icon" type="image/svg+xml" href="{BASE}/assets/favicon.svg">
+{FONT_LINK}
 <link rel="canonical" href="{BASE}/disclaimer/">
 <meta property="og:title" content="Disclaimer — Abvorn">
 <meta property="og:description" content="Abvorn disclaimer — affiliate relationships, review methodology, and editorial independence.">
@@ -204,6 +209,7 @@ ABOUT = f"""<!DOCTYPE html>
 <title>About Abvorn — Independent Product Reviews</title>
 <meta name="description" content="About Abvorn — our mission, review methodology, and how we help you buy with confidence.">
 <link rel="icon" type="image/svg+xml" href="{BASE}/assets/favicon.svg">
+{FONT_LINK}
 <link rel="canonical" href="{BASE}/about/">
 <meta property="og:title" content="About Abvorn — Independent Product Reviews">
 <meta property="og:description" content="About Abvorn — our mission, review methodology, and how we help you buy with confidence.">
