@@ -703,14 +703,27 @@ def check_encoding(text: str, label: str = "page") -> bool:
     return True
 
 
-def write_checked(path: Path, text: str, label: str) -> None:
+def write_checked(path: Path, text: str, label: str, state=None) -> None:
     """Write a page after validating its encoding.
 
     Blocks mojibake from reaching the published docs/ tree: raises ValueError
     if the content carries double-encoded UTF-8 signatures.
+
+    When the content review gate is ON, the page is staged under
+    data/review_queue/ instead of being written to docs/ so a human can approve
+    it before it goes live.
     """
     check_encoding(text, label=label)
-    path.write_text(text, encoding="utf-8")
+    try:
+        from abvorn.core.review_gate import write_gated
+    except Exception:
+        write_gated = None
+    if write_gated is not None:
+        actual = write_gated(path, text, state=state)
+        if Path(actual) != Path(path):
+            logger.info(f"REVIEW GATE: staged {label} -> {actual}")
+    else:
+        path.write_text(text, encoding="utf-8")
 
 
 def verify_page(html_content: str) -> bool:

@@ -124,6 +124,7 @@ class Colosseum:
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
                 params={"temperature": 0.8, "max_tokens": 600},
+                task="brain",
             ))
             return result.content or ""
         except Exception as e:

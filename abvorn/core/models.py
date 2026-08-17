@@ -4,9 +4,24 @@ from openai import OpenAI
 
 logger = logging.getLogger("abvorn.models")
 
+# Capability tiers for task-aware routing. TASK_MODELS still maps a task to its
+# model hint (kept for back-compat); TIER_FOR_TASK maps the same tasks to a
+# capability tier so the router can prefer the right class of provider.
+TIER_FOR_TASK = {
+    "research": "fast",
+    "social": "fast",
+    "brain": "fast",
+    "outline": "strong",
+    "draft": "strong",
+    "fact_check": "strong",
+    "polish": "strong",
+}
+
 class AIProvider:
-    def __init__(self, name: str, api_key: str, base_url: str = None, model: str = None, timeout: float = None):
+    def __init__(self, name: str, api_key: str, base_url: str = None, model: str = None, timeout: float = None,
+                 tier: str = "standard"):
         self.name = name
+        self.tier = tier
         self.model = model or "gpt-4o"
         import httpx
         to = httpx.Timeout(timeout if timeout else 60.0, connect=timeout if timeout else 10.0)
@@ -86,17 +101,17 @@ class ModelRouter:
     def __init__(self, secrets: dict, timeout: float = None):
         self.providers = []
         configs = [
-            ("cerebras", secrets.get("CEREBRAS_KEY"), "https://api.cerebras.ai/v1", "gpt-oss-120b"),
-            ("deepseek", secrets.get("DEEPSEEK_KEY"), "https://api.deepseek.com/v1", "deepseek-chat"),
-            ("qwen", secrets.get("QWEN_KEY"), "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", "qwen3.5-flash"),
-            ("groq", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile"),
-            ("glm", secrets.get("GLM_KEYS"), "https://open.bigmodel.cn/api/paas/v4/", "glm-4-flash"),
-            ("gemini", secrets.get("GEMINI_KEY"), "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-2.0-flash"),
-            ("openai", secrets.get("OPENAI_KEY"), None, "gpt-4o"),
+            ("cerebras", secrets.get("CEREBRAS_KEY"), "https://api.cerebras.ai/v1", "gpt-oss-120b", "strong"),
+            ("deepseek", secrets.get("DEEPSEEK_KEY"), "https://api.deepseek.com/v1", "deepseek-chat", "strong"),
+            ("qwen", secrets.get("QWEN_KEY"), "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", "qwen3.5-flash", "fast"),
+            ("groq", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile", "strong"),
+            ("glm", secrets.get("GLM_KEYS"), "https://open.bigmodel.cn/api/paas/v4/", "glm-4-flash", "fast"),
+            ("gemini", secrets.get("GEMINI_KEY"), "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-2.0-flash", "fast"),
+            ("openai", secrets.get("OPENAI_KEY"), None, "gpt-4o", "strong"),
         ]
-        for name, key, url, model in configs:
+        for name, key, url, model, tier in configs:
             if key and "YOUR_" not in key:
-                self.providers.append(AIProvider(name, key, url, model, timeout=timeout))
+                self.providers.append(AIProvider(name, key, url, model, timeout=timeout, tier=tier))
 
     def ask(self, prompt: str, system: str = None, json_mode: bool = False,
             model_hint: str = None, task: str = None) -> str:
@@ -111,11 +126,13 @@ class ModelRouter:
                         return p.call(messages, json_mode)
                     except Exception:
                         p.ban()
-        # If task is specified, try to match by TASK_MODELS hint
-        if task and task in TASK_MODELS:
-            hint = TASK_MODELS[task]
+        # If task is specified, prefer providers whose capability tier matches
+        # the task (fast for research/social/brain, strong for drafting and
+        # verification), then fall back to the remaining providers.
+        if task and task in TIER_FOR_TASK:
+            tier = TIER_FOR_TASK[task]
             for p in self.providers:
-                if hint in p.name and p.available:
+                if p.tier == tier and p.available:
                     try:
                         return p.call(messages, json_mode)
                     except Exception:

@@ -27,6 +27,7 @@ class QueryPlan:
     params: Dict[str, Any]
     fallback: Optional[Dict[str, Any]] = None
     provider_hint: Optional[str] = None
+    task: Optional[str] = None
 
 
 @dataclass
@@ -38,10 +39,26 @@ class QueryResult:
     cost_estimate: float
 
 
+# Task -> capability tier. Cheap/fast models handle short-horizon work
+# (research, social, brain); strong models handle long-horizon work
+# (outlines, drafts, fact-checking, polishing).
+TASK_CAPABILITY = {
+    "research": "fast",
+    "social": "fast",
+    "brain": "fast",
+    "outline": "strong",
+    "draft": "strong",
+    "fact_check": "strong",
+    "polish": "strong",
+}
+
+
 class ProviderAdapter:
-    def __init__(self, name: str, priority: int = 5, cost_per_1k_tokens: float = 0.0):
+    def __init__(self, name: str, priority: int = 5, cost_per_1k_tokens: float = 0.0,
+                 capability: str = "standard"):
         self.name = name
         self.priority = priority
+        self.capability = capability
         self.available = True
         self.last_error = None
         self.cost_per_1k_tokens = cost_per_1k_tokens
@@ -512,11 +529,40 @@ class AISQL:
             "nvidia": NvidiaProvider(),
             "local": LocalProvider(),
         }
+        # Capability tiers per provider so task-aware routing can pick the
+        # right class of model instead of always defaulting to the cheapest.
+        self.capabilities = {
+            "kilogateway": "fast",
+            "openai": "strong",
+            "anthropic": "fast",
+            "gemini": "fast",
+            "kimi": "strong",
+            "deepseek": "strong",
+            "huggingface": "fast",
+            "nvidia": "strong",
+            "local": "fast",
+        }
+        for name, cap in self.capabilities.items():
+            p = self.providers.get(name)
+            if p is not None:
+                p.capability = cap
         self.primary_provider = "kilogateway"
         self.fallback_chain = ["kilogateway", "nvidia", "huggingface", "kimi", "deepseek", "anthropic", "gemini", "local"]
         self.provider_scores: Dict[str, float] = {}
         self.provider_usage: Dict[str, int] = {}
         self.prompt_variants: Dict[str, Dict[str, Any]] = {}
+
+    def apply_capabilities(self) -> None:
+        """Re-apply capability tiers after provider instances are swapped in.
+
+        create_ai_sql() replaces providers with keyed instances after __init__,
+        which would otherwise reset their capability to 'standard' and break
+        task-aware routing.
+        """
+        for name, cap in self.capabilities.items():
+            p = self.providers.get(name)
+            if p is not None:
+                p.capability = cap
 
     def update_provider_score(self, provider_name: str, engagement_score: float):
         current = self.provider_scores.get(provider_name, 0.5)
@@ -545,6 +591,13 @@ class AISQL:
             p = self.providers.get(name)
             if p and p is not chain[0]:
                 chain.append(p)
+        # Task-aware ordering: when a task needs a specific capability tier,
+        # pull matching providers to the front of the chain (highest combined
+        # score first), so the right class of model is preferred, not the
+        # cheapest one.
+        if query_plan.task and query_plan.task in TASK_CAPABILITY:
+            needed = TASK_CAPABILITY[query_plan.task]
+            chain = self._order_by_capability(chain, needed)
         for provider in chain:
             if provider is None or provider.name in tried:
                 continue
@@ -560,6 +613,14 @@ class AISQL:
             except Exception as e:
                 logger.warning(f"Provider {provider.name} failed: {e}")
         return QueryResult(content="", provider_used="none", confidence=0.0, tokens_used=0, cost_estimate=0.0)
+
+    def _order_by_capability(self, chain: List[ProviderAdapter], needed: str) -> List[ProviderAdapter]:
+        """Reorder a provider chain so matching-capability providers come first,
+        preserving relative order within each group."""
+        matching = [p for p in chain if p is not None and p.capability == needed]
+        rest = [p for p in chain if p is not None and p.capability != needed]
+        matching.sort(key=lambda p: (1.0 / (p.priority + 1)) * 0.5 + self.provider_scores.get(p.name, 0.5) * 0.5, reverse=True)
+        return matching + rest + [p for p in chain if p is None]
 
     def _select_provider(self, query_plan: QueryPlan) -> Optional[ProviderAdapter]:
         if query_plan.provider_hint and query_plan.provider_hint in self.providers:
@@ -620,6 +681,7 @@ def create_ai_sql() -> AISQL:
         ai.providers["gemini"] = GeminiProvider(api_key=gemini_key)
     if hf_key and "huggingface" in ai.providers:
         ai.providers["huggingface"] = HuggingFaceProvider(api_key=hf_key)
+    ai.apply_capabilities()
     # Auto-select first healthy provider as primary
     for name in ai.fallback_chain:
         p = ai.providers.get(name)

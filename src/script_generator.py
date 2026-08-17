@@ -93,6 +93,7 @@ def generate_viral_script(verdict: Dict[str, Any], platform: str) -> Dict[str, A
             system_prompt="You are an expert content optimizer. Optimize this script for engagement.",
             user_prompt=body,
             params={"temperature": 0.7, "max_tokens": len(body.split()) * 2, "format": "json"},
+            task="polish",
         )
         ai_result = _ai_sql.query(query)
         if ai_result.content:

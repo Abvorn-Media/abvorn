@@ -2508,6 +2508,7 @@ Return JSON:
         system_prompt="You are an expert content writer for Abvorn, an independent product review platform.",
         user_prompt=prompt,
         params={"temperature": 0.9, "max_tokens": 1500, "format": "json"},
+        task="draft",
     )).content
     if not result:
         plan["mode"] = "fallback"
@@ -2685,7 +2686,8 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     all_posts = [{"title": r["title"], "slug": r["rel"].lstrip("/")} for r in reviews]
 
     # Write root index (premium homepage)
-    (docs / "index.html").write_text(build_homepage(state, form_url, reviews=reviews, base=SITE_BASE), encoding="utf-8")
+    from src.deployment import write_checked as _wc
+    _wc(docs / "index.html", build_homepage(state, form_url, reviews=reviews, base=SITE_BASE), "homepage")
     print(f"  Written: docs/index.html")
 
     # Write category listing pages (one per category, e.g. /categories/audio/)
@@ -2695,10 +2697,9 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
         cat_items.sort(key=lambda r: r["updated"], reverse=True)
         cat_dir = docs / "categories" / cat_slug
         cat_dir.mkdir(parents=True, exist_ok=True)
-        (cat_dir / "index.html").write_text(
+        _wc(cat_dir / "index.html",
             build_category_listing_page(cat_name, cat_slug, cat_items, all_slugs, base=SITE_BASE, affiliate_tag=amazon_tag),
-            encoding="utf-8",
-        )
+            f"category page {cat_slug}")
         print(f"  Written: docs/categories/{cat_slug}/index.html")
 
     # Generate static pages (always rewrite so header/footer stays in sync)
@@ -2746,7 +2747,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
 <main class="main" id="main"><div class="container"><h1>{title}</h1>{content}</div></main>
 {build_site_footer(b)}
 </body></html>'''
-        page_path.write_text(full_page, encoding="utf-8")
+        _wc(page_path, full_page, f"static page {page_name}")
         print(f"  Written: docs/{page_name}")
 
     # Write the Evolution Journal page (docs/journal/index.html) — always
@@ -2767,7 +2768,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
         niche_reviews = [r for r in reviews if r["slug"] == n["slug"]]
         cat_dir = docs / n["slug"]
         cat_dir.mkdir(exist_ok=True)
-        (cat_dir / "index.html").write_text(build_category_page(n["slug"], n["name"], niche_reviews, all_slugs, amazon_tag), encoding="utf-8")
+        _wc(cat_dir / "index.html", build_category_page(n["slug"], n["name"], niche_reviews, all_slugs, amazon_tag), f"niche page {n['slug']}")
 
     # Write comparison pages
     comp_dir = docs / "comparisons"
@@ -2778,9 +2779,10 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
             prods.extend(a.get("products", []))
         if prods:
             title = f"Best {n['name']} Compared"
-            (comp_dir / f"{n['slug']}.html").write_text(
+            _wc(
+                comp_dir / f"{n['slug']}.html",
                 build_comparison_page(n["slug"], n["name"], title, prods, all_slugs, amazon_tag),
-                encoding="utf-8"
+                f"comparison page {n['slug']}",
             )
             print(f"  Written: comparisons/{n['slug']}.html")
 
@@ -2801,10 +2803,10 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
             date_str = datetime.now().strftime("%Y-%m-%d")
             suffix = "" if i == 0 else f"-{i}"
             fname = f"{_title_slug(a['post_title'])}-{date_str}{suffix}.html"
-            (post_dir / fname).write_text(article_html, encoding="utf-8")
+            _wc(post_dir / fname, article_html, f"article {slug}/{fname}")
             print(f"  Written: docs/reviews/{slug}/{fname} (article)")
             if i == len(post_list) - 1:
-                (post_dir / "index.html").write_text(article_html, encoding="utf-8")
+                _wc(post_dir / "index.html", article_html, f"article index {slug}")
                 print(f"  Written: docs/reviews/{slug}/index.html (latest)")
             # Update the post slug in all_posts for root index links
             for p in all_posts:
@@ -2814,7 +2816,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     # Write methodology page
     method_dir = docs / "how-we-test"
     method_dir.mkdir(exist_ok=True)
-    (method_dir / "index.html").write_text(build_methodology_page(all_slugs, form_url), encoding="utf-8")
+    _wc(method_dir / "index.html", build_methodology_page(all_slugs, form_url), "methodology page")
     print(f"  Written: docs/how-we-test/index.html")
 
     # Write RSS feed and sitemap

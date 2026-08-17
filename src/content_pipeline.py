@@ -244,6 +244,7 @@ class ContentPipeline:
                 system_prompt="You are an expert content optimizer.",
                 user_prompt=f"Optimize this content for {product_name}: {verdict.get('summary', '')}",
                 params={"temperature": 0.7, "max_tokens": 500, "format": "json"},
+                task="polish",
             )
             task = Task(
                 id=f"ai_optimize_{product_id}",

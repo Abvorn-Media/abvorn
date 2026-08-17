@@ -99,6 +99,7 @@ Return a JSON object with:
         system_prompt="You are an expert content strategist returning structured JSON data.",
         user_prompt=prompt,
         params={"temperature": ai_temp, "max_tokens": ai_max_tokens, "format": "json"},
+        task="outline",
     ))
     result_text = result.content
     _track_call(niche, result.provider_used, result.tokens_used, (time.time() - t0) * 1000)
@@ -175,6 +176,7 @@ Return ONLY the HTML paragraphs, wrapped in <p> tags."""
         system_prompt="You write concise, honest product review copy.",
         user_prompt=intro_prompt,
         params={"temperature": ai_temp, "max_tokens": ai_max_tokens_intro},
+        task="draft",
     ))
     intro_html = intro_result.content
     _track_call(niche, intro_result.provider_used, intro_result.tokens_used, (time.time() - t0) * 1000)
@@ -199,6 +201,7 @@ Return ONLY the HTML."""
         system_prompt="You write thorough, honest product reviews with specific details and real prices.",
         user_prompt=article_prompt,
         params={"temperature": ai_temp, "max_tokens": ai_max_tokens_article},
+        task="draft",
     ))
     article_html = article_result.content
     _track_call(niche, article_result.provider_used, article_result.tokens_used, (time.time() - t0) * 1000)
@@ -374,6 +377,7 @@ Return JSON:
         system_prompt="You are an expert content writer for Abvorn, an independent product review platform.",
         user_prompt=prompt,
         params={"temperature": 0.9, "max_tokens": 1500, "format": "json"},
+        task="draft",
     )).content
     if not result:
         plan["mode"] = "fallback"
