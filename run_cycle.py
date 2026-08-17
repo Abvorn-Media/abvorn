@@ -411,7 +411,7 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {HEAD_HTML(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}. Compare specs, prices, and Abvorn Verdict scores.')}
-{OG_META(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}.', f'{_SITE_URL}/comparisons/{niche_slug}/')}
+{OG_META(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}.', f'{_SITE_URL}/comparisons/{niche_slug}/', f'{b}/assets/logo.png')}
 <link rel="canonical" href="{b}/comparisons/{niche_slug}/">
 {bread}
 {ANALYTICS_HTML}
@@ -1417,6 +1417,15 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
     <link rel="icon" type="image/png" href="{b}/assets/favicon-32x32.png">
     <title>{blog_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
+    <link rel="canonical" href="{b}/{niche_slug}/">
+    <meta property="og:title" content="{blog_title} | Abvorn">
+    <meta property="og:description" content="{meta_desc}">
+    <meta property="og:url" content="{b}/{niche_slug}/">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="{b}/assets/logo.png"><meta name="twitter:image" content="{b}/assets/logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{blog_title} | Abvorn">
+    <meta name="twitter:description" content="{meta_desc}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
@@ -2048,6 +2057,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     <title>{title_escaped} | Abvorn</title>
     <meta name="description" content="{meta_escaped}">
     <link rel="canonical" href="{article_url}">
+    {OG_META(title_escaped + ' | Abvorn', meta_escaped, article_url, f'{b}/assets/logo.png', og_type='article')}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://m.media-amazon.com">
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
@@ -2301,7 +2311,8 @@ def build_methodology_page(all_slugs, form_url=""):
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {HEAD_HTML('How We Test — Abvorn', 'Our rigorous, independent testing methodology. Every recommendation is earned through real-world evaluation.')}
-{OG_META('How We Test — Abvorn', 'Our rigorous, independent testing methodology. Every recommendation is earned through real-world evaluation.', f'{_SITE_URL}/how-we-test/')}
+{OG_META('How We Test — Abvorn', 'Our rigorous, independent testing methodology. Every recommendation is earned through real-world evaluation.', f'{_SITE_URL}/how-we-test/', f'{b}/assets/logo.png')}
+<link rel="canonical" href="{f'{_SITE_URL}/how-we-test/'}">
 {ANALYTICS_HTML}
 <style>{CSS_SHARED}</style>
 </head><body>
@@ -2708,6 +2719,15 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="{b}/assets/favicon-32x32.png"><title>{title} | Abvorn</title>
 <meta name="description" content="{title} - Abvorn">
+<link rel="canonical" href="{b}/{page_name}">
+<meta property="og:title" content="{title} | Abvorn">
+<meta property="og:description" content="{title} - Abvorn">
+<meta property="og:url" content="{b}/{page_name}">
+<meta property="og:type" content="website">
+<meta property="og:image" content="{b}/assets/logo.png"><meta name="twitter:image" content="{b}/assets/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{title} | Abvorn">
+<meta name="twitter:description" content="{title} - Abvorn">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>

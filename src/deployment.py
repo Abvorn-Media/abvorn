@@ -1166,6 +1166,15 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     <link rel="icon" type="image/png" href="{b}/assets/favicon-32x32.png">
     <title>{blog_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
+    <link rel="canonical" href="{b}/{niche_slug}/">
+    <meta property="og:title" content="{blog_title} | Abvorn">
+    <meta property="og:description" content="{meta_desc}">
+    <meta property="og:url" content="{b}/{niche_slug}/">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="{b}/assets/logo.png"><meta name="twitter:image" content="{b}/assets/logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{blog_title} | Abvorn">
+    <meta name="twitter:description" content="{meta_desc}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
@@ -1725,6 +1734,15 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     <link rel="icon" type="image/png" href="{b}/assets/favicon-32x32.png">
     <title>{blog_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
+    <link rel="canonical" href="{b}/categories/{category_slug}/">
+    <meta property="og:title" content="{blog_title} | Abvorn">
+    <meta property="og:description" content="{meta_desc}">
+    <meta property="og:url" content="{b}/categories/{category_slug}/">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="{b}/assets/logo.png"><meta name="twitter:image" content="{b}/assets/logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{blog_title} | Abvorn">
+    <meta name="twitter:description" content="{meta_desc}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
@@ -2785,6 +2803,15 @@ finish review, the verdict, and DESIGN.md
 <link rel="icon" type="image/png" href="{b}/assets/favicon-32x32.png">
 <title>Ab's Evolution Journal | Abvorn</title>
 <meta name="description" content="Watch Ab — Abvorn's AI — evolve, generation by generation. A live journal of the system writing itself smarter.">
+<link rel="canonical" href="{b}/journal/">
+<meta property="og:title" content="Ab's Evolution Journal | Abvorn">
+<meta property="og:description" content="Watch Ab — Abvorn's AI — evolve, generation by generation. A live journal of the system writing itself smarter.">
+<meta property="og:url" content="{b}/journal/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="{b}/assets/logo.png"><meta name="twitter:image" content="{b}/assets/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ab's Evolution Journal | Abvorn">
+<meta name="twitter:description" content="Watch Ab — Abvorn's AI — evolve, generation by generation. A live journal of the system writing itself smarter.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -3003,6 +3030,15 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <link rel="icon" type="image/png" href="__SITE_BASE__/assets/favicon-32x32.png">
     <title>Abvorn – Reviews Based on Real Testing, Not Spec Sheets</title>
     <meta name="description" content="Independent product reviews and buying guides. We test before we recommend.">
+    <link rel="canonical" href="__SITE_BASE__/">
+    <meta property="og:title" content="Abvorn – Reviews Based on Real Testing, Not Spec Sheets">
+    <meta property="og:description" content="Independent product reviews and buying guides. We test before we recommend.">
+    <meta property="og:url" content="__SITE_BASE__/">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="__SITE_BASE__/assets/logo.png"><meta name="twitter:image" content="__SITE_BASE__/assets/logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Abvorn – Reviews Based on Real Testing, Not Spec Sheets">
+    <meta name="twitter:description" content="Independent product reviews and buying guides. We test before we recommend.">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>

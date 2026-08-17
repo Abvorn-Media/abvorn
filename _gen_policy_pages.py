@@ -26,6 +26,15 @@ PRIVACY = f"""<!DOCTYPE html>
 <title>Privacy Policy — Abvorn</title>
 <meta name="description" content="Abvorn privacy policy — how we collect, use, and protect your personal data.">
 <link rel="icon" type="image/svg+xml" href="{BASE}/assets/favicon.svg">
+<link rel="canonical" href="{BASE}/privacy/">
+<meta property="og:title" content="Privacy Policy — Abvorn">
+<meta property="og:description" content="Abvorn privacy policy — how we collect, use, and protect your personal data.">
+<meta property="og:url" content="{BASE}/privacy/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="{BASE}/assets/logo.png"><meta name="twitter:image" content="{BASE}/assets/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Privacy Policy — Abvorn">
+<meta name="twitter:description" content="Abvorn privacy policy — how we collect, use, and protect your personal data.">
 <style>{CSS}</style>
 </head><body>
 <div class="container">
@@ -87,6 +96,15 @@ TERMS = f"""<!DOCTYPE html>
 <title>Terms of Service — Abvorn</title>
 <meta name="description" content="Abvorn terms of service — rules and guidelines for using our site.">
 <link rel="icon" type="image/svg+xml" href="{BASE}/assets/favicon.svg">
+<link rel="canonical" href="{BASE}/terms/">
+<meta property="og:title" content="Terms of Service — Abvorn">
+<meta property="og:description" content="Abvorn terms of service — rules and guidelines for using our site.">
+<meta property="og:url" content="{BASE}/terms/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="{BASE}/assets/logo.png"><meta name="twitter:image" content="{BASE}/assets/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Terms of Service — Abvorn">
+<meta name="twitter:description" content="Abvorn terms of service — rules and guidelines for using our site.">
 <style>{CSS}</style>
 </head><body>
 <div class="container">
@@ -134,6 +152,15 @@ DISCLAIMER = f"""<!DOCTYPE html>
 <title>Disclaimer — Abvorn</title>
 <meta name="description" content="Abvorn disclaimer — affiliate relationships, review methodology, and editorial independence.">
 <link rel="icon" type="image/svg+xml" href="{BASE}/assets/favicon.svg">
+<link rel="canonical" href="{BASE}/disclaimer/">
+<meta property="og:title" content="Disclaimer — Abvorn">
+<meta property="og:description" content="Abvorn disclaimer — affiliate relationships, review methodology, and editorial independence.">
+<meta property="og:url" content="{BASE}/disclaimer/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="{BASE}/assets/logo.png"><meta name="twitter:image" content="{BASE}/assets/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Disclaimer — Abvorn">
+<meta name="twitter:description" content="Abvorn disclaimer — affiliate relationships, review methodology, and editorial independence.">
 <style>{CSS}</style>
 </head><body>
 <div class="container">
@@ -177,6 +204,15 @@ ABOUT = f"""<!DOCTYPE html>
 <title>About Abvorn — Independent Product Reviews</title>
 <meta name="description" content="About Abvorn — our mission, review methodology, and how we help you buy with confidence.">
 <link rel="icon" type="image/svg+xml" href="{BASE}/assets/favicon.svg">
+<link rel="canonical" href="{BASE}/about/">
+<meta property="og:title" content="About Abvorn — Independent Product Reviews">
+<meta property="og:description" content="About Abvorn — our mission, review methodology, and how we help you buy with confidence.">
+<meta property="og:url" content="{BASE}/about/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="{BASE}/assets/logo.png"><meta name="twitter:image" content="{BASE}/assets/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="About Abvorn — Independent Product Reviews">
+<meta name="twitter:description" content="About Abvorn — our mission, review methodology, and how we help you buy with confidence.">
 <style>{CSS}</style>
 </head><body>
 <div class="container">
