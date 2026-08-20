@@ -115,7 +115,7 @@ def test_submit_posts_to_videos_endpoint(monkeypatch):
     result = renderer.submit({"video_subject": "Test"})
     assert result["success"] is True
     assert result["task_id"] == "abc-123"
-    assert captured["url"] == "http://mpt.example.com:8080/videos"
+    assert captured["url"] == "http://mpt.example.com:8080/api/v1/videos"
     assert captured["json"]["video_subject"] == "Test"
 
 
@@ -156,7 +156,7 @@ def test_status_returns_public_urls(monkeypatch):
     assert result["success"] is True
     assert result["state"] == 1
     assert result["task"]["videos"] == [
-        "http://mpt.example.com:8080/download/tasks/abc-123/final-1.mp4"
+        "http://mpt.example.com:8080/tasks/abc-123/final-1.mp4"
     ]
 
 

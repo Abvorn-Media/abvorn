@@ -5,12 +5,12 @@ MoneyPrinterTurbo instance and poll for the rendered video. Mirrors the
 n8n_bridge conventions: all calls are optional and never fatal — a missing
 or unreachable MPT returns a failed result dict instead of raising.
 
-MPT API (2026, FastAPI, harry0703/MoneyPrinterTurbo):
-    POST /videos              submit a TaskVideoRequest
-    GET  /tasks               list tasks
-    GET  /tasks/{task_id}     query status (state: 1=complete, 4=processing, -1=failed)
-    GET  /download/{path}     download a finished video
-    GET  /stream/{path}       range streaming
+MPT API (2026, FastAPI, harry0703/MoneyPrinterTurbo v1.3+):
+    POST /api/v1/videos             submit a TaskVideoRequest
+    GET  /api/v1/tasks              list tasks
+    GET  /api/v1/tasks/{task_id}    query status (state: 1=complete, 4=processing, -1=failed)
+    GET  /api/v1/download/{path}    download a finished video
+    GET  /api/v1/stream/{path}      range streaming
 
 Config (env):
     ABVORN_MPT_URL       base URL of the MPT instance (default http://localhost:8080)
@@ -28,6 +28,9 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_MPT_URL = "http://localhost:8080"
 DEFAULT_VOICE = "en-US-AriaNeural-Female"
+
+# MoneyPrinterTurbo v1.3+ places all API routes under /api/v1.
+MPT_API_PREFIX = "/api/v1"
 
 # MPT task states (app/models/const.py)
 TASK_STATE_FAILED = -1
@@ -171,7 +174,11 @@ def _video_url(path_or_url: str, base_url: str) -> str:
         return path_or_url
     if path_or_url.startswith(("http://", "https://")):
         return path_or_url
-    return f"{base_url.rstrip('/')}/download/{path_or_url.lstrip('/')}"
+    path = path_or_url.lstrip("/")
+    # MPT serves finished videos from its static /tasks mount (task dir).
+    if path.startswith("tasks/"):
+        return f"{base_url.rstrip('/')}/{path}"
+    return f"{base_url.rstrip('/')}{MPT_API_PREFIX}/download/{path}"
 
 
 class VideoRenderer:
@@ -187,7 +194,7 @@ class VideoRenderer:
         """POST /videos. Returns {success, task_id, data} or error dict."""
         try:
             response = requests.post(
-                f"{self.base_url}/videos",
+                f"{self.base_url}{MPT_API_PREFIX}/videos",
                 json=payload,
                 headers=self.headers,
                 timeout=30,
@@ -207,7 +214,7 @@ class VideoRenderer:
         """GET /tasks/{task_id}. Returns {success, task, state} or error dict."""
         try:
             response = requests.get(
-                f"{self.base_url}/tasks/{task_id}",
+                f"{self.base_url}{MPT_API_PREFIX}/tasks/{task_id}",
                 headers=self.headers,
                 timeout=30,
             )
@@ -260,7 +267,7 @@ class VideoRenderer:
         """Reachability probe (GET /tasks with page_size=1)."""
         try:
             response = requests.get(
-                f"{self.base_url}/tasks?page=1&page_size=1",
+                f"{self.base_url}{MPT_API_PREFIX}/tasks?page=1&page_size=1",
                 headers=self.headers,
                 timeout=5,
             )
