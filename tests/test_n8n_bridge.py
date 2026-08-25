@@ -16,9 +16,11 @@ from abvorn.core.n8n_bridge import (
 
 
 @pytest.fixture(autouse=True)
-def _reset_singletons():
+def _reset_singletons(monkeypatch):
     import abvorn.core.n8n_bridge as n8n
 
+    monkeypatch.delenv("N8N_HOST", raising=False)
+    monkeypatch.delenv("N8N_PORT", raising=False)
     n8n._n8n = None
     yield
     n8n._n8n = None
@@ -194,10 +196,19 @@ def test_workflow_json_files_are_valid_and_reference_real_endpoints():
         data = json.loads(json_path.read_text(encoding="utf-8"))
         assert "name" in data
         assert "nodes" in data
-        # Every HTTP call goes through an env-var base URL, never a hardcoded bad port
+        # Every HTTP call uses a real base: env-var indirection (self-hosted
+        # n8n) or the pinned Oracle instance (works on n8n Cloud, where $env
+        # access is blocked). Never a stale local port.
         text = json_path.read_text(encoding="utf-8")
-        assert "$env.ABVORN_URL" in text or "$env.MPT_URL" in text
+        allowed_bases = ("$env.ABVORN_URL", "$env.MPT_URL", "http://92.4.157.87:8080")
+        assert any(base in text for base in allowed_bases), (
+            f"{json_path.name} references no valid MPT/Abvorn base URL"
+        )
         assert "localhost:8000" not in text
+        # The render workflow must use the v1.3+ /api/v1 prefix.
+        if json_path.name == "abvorn-video-render.json":
+            assert "/api/v1/videos" in text
+            assert '"/videos"' not in text and "}}/videos" not in text
 
 
 def test_evolution_check_webhook_returns_should_evolve():

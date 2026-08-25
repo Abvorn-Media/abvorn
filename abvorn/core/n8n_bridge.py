@@ -35,10 +35,12 @@ VIDEO_RENDER_WEBHOOK_PATH = "abvorn-video-render"
 class N8NBridge:
     """Trigger n8n workflows and report n8n health."""
 
-    def __init__(self, host: str = DEFAULT_N8N_HOST, port: int = DEFAULT_N8N_PORT):
-        self.host = host
-        self.port = port
-        self.base_url = f"http://{host}:{port}"
+    def __init__(self, host: Optional[str] = None, port: Optional[int] = None):
+        self.host = host or os.getenv("N8N_HOST", DEFAULT_N8N_HOST)
+        self.port = port if port is not None else int(
+            os.getenv("N8N_PORT", str(DEFAULT_N8N_PORT))
+        )
+        self.base_url = f"http://{self.host}:{self.port}"
         self.api_key = os.getenv("N8N_API_KEY", "")
         self.webhook_base = os.getenv(
             "ABVORN_WEBHOOK_BASE", DEFAULT_ABVORN_WEBHOOK_BASE

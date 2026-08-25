@@ -32,7 +32,7 @@ app = FastAPI(title="Abvorn Mobile Server", version="1.0.0")
 
 # Optional auth: set ABVORN_API_TOKEN (env or secrets) to protect /api/*.
 # Public (unauthenticated) API routes — must be safe to expose.
-PUBLIC_API_PATHS = {"/api/health", "/api/newsletter/subscribe"}
+PUBLIC_API_PATHS = {"/api/health", "/api/newsletter/subscribe", "/api/content/recent"}
 
 _API_TOKEN = os.environ.get("ABVORN_API_TOKEN", "") or secrets.get("ABVORN_API_TOKEN", "")
 
@@ -760,13 +760,14 @@ if __name__ == "__main__":
     import socket
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
+    port = int(os.getenv("ABVORN_SERVER_PORT", "8080"))
     print(f"\n  Abvorn Mobile Server running!")
-    print(f"  Local:   http://localhost:8080")
-    print(f"  Network: http://{local_ip}:8080")
+    print(f"  Local:   http://localhost:{port}")
+    print(f"  Network: http://{local_ip}:{port}")
     print(f"  Open on your phone browser to access the PWA.\n")
     if _API_TOKEN:
         print(f"  Auth:    Bearer {_API_TOKEN} (set ABVORN_API_TOKEN in env or secrets)")
     else:
         print("  Auth:    DISABLED — set ABVORN_API_TOKEN in secrets.json to protect /api/*")
     print()
-    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")

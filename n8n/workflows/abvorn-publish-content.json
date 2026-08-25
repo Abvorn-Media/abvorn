@@ -11,33 +11,29 @@
       "name": "Publish Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [-320, 0],
+      "position": [
+        -320,
+        0
+      ],
       "webhookId": "abvorn-publish"
     },
     {
       "parameters": {
-        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/publish_content",
         "method": "POST",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/publish_content",
+        "options": {},
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "carousel",
-              "value": "={{ $json.body.carousel }}"
-            },
-            {
-              "name": "platform",
-              "value": "={{ $json.body.platform }}"
-            }
-          ]
-        },
-        "options": {}
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ carousel: $json.body.carousel, platform: $json.body.platform }) }}"
       },
       "id": "publish",
       "name": "Debate via Colosseum",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [120, 0]
+      "position": [
+        120,
+        0
+      ]
     }
   ],
   "connections": {

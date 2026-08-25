@@ -3,107 +3,97 @@
   "nodes": [
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "hours",
-              "hoursInterval": 24
-            }
-          ]
-        }
+        "httpMethod": "POST",
+        "path": "abvorn-reflection",
+        "responseMode": "onReceived",
+        "options": {}
       },
-      "id": "schedule",
-      "name": "Daily at 6 AM",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.1,
-      "position": [-320, 0]
+      "id": "trigger",
+      "name": "Reflection Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        0
+      ],
+      "webhookId": "abvorn-reflection"
     },
     {
       "parameters": {
-        "url": "={{ $env.ABVORN_URL }}/api/content/recent",
         "method": "GET",
+        "url": "={{ $env.ABVORN_URL }}/api/content/recent",
         "options": {}
       },
       "id": "get_content",
       "name": "Get Content",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-100, 0]
+      "position": [
+        -100,
+        0
+      ]
     },
     {
       "parameters": {
-        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/gsc_fetch",
         "method": "POST",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/gsc_fetch",
+        "options": {},
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": []
-        },
-        "options": {}
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({}) }}"
       },
       "id": "gsc_fetch",
       "name": "Fetch GSC Data",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [120, 0]
+      "position": [
+        120,
+        0
+      ]
     },
     {
       "parameters": {
-        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/generate_reflection",
         "method": "POST",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/generate_reflection",
+        "options": {},
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "content",
-              "value": "={{ $json }}"
-            },
-            {
-              "name": "performance",
-              "value": "={{ $('Fetch GSC Data').item.json }}"
-            }
-          ]
-        },
-        "options": {}
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $('Get Content').item.json, performance: $json }) }}"
       },
       "id": "generate_reflection",
       "name": "Generate Reflection",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [340, 0]
+      "position": [
+        340,
+        0
+      ]
     },
     {
       "parameters": {
-        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/journal_update",
         "method": "POST",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/journal_update",
+        "options": {},
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "reflection_id",
-              "value": "={{ $json.reflection_id }}"
-            }
-          ]
-        },
-        "options": {}
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ reflection_id: $json.reflection_id }) }}"
       },
       "id": "journal_update",
       "name": "Update Evolution Journal",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [560, 0]
+      "position": [
+        560,
+        0
+      ]
     }
   ],
   "connections": {
-    "Daily at 6 AM": {
+    "Reflection Webhook": {
       "main": [
         [
           {
             "node": "Get Content",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Fetch GSC Data",
             "type": "main",
             "index": 0
           }
@@ -114,7 +104,7 @@
       "main": [
         [
           {
-            "node": "Generate Reflection",
+            "node": "Fetch GSC Data",
             "type": "main",
             "index": 0
           }

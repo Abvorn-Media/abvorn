@@ -3,68 +3,96 @@
   "nodes": [
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "weeks",
-              "weeksInterval": 1
-            }
-          ]
-        }
+        "httpMethod": "POST",
+        "path": "abvorn-gsc-analysis",
+        "options": {}
       },
-      "id": "schedule",
-      "name": "Weekly Monday",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.1,
-      "position": [-320, 0]
+      "id": "trigger",
+      "name": "GSC Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        0
+      ],
+      "webhookId": "abvorn-gsc-analysis"
     },
     {
       "parameters": {
-        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/gsc_fetch",
         "method": "POST",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/gsc_fetch",
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "days",
-              "value": 7
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({}) }}",
         "options": {}
       },
       "id": "gsc_fetch",
       "name": "Fetch GSC Summary",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [120, 0]
+      "position": [
+        128,
+        0
+      ]
     },
     {
       "parameters": {
-        "functionCode": "if (typeof $json.clicks === 'undefined') {\n  throw new Error('GSC summary missing clicks field');\n}\nconst clicks = $json.clicks;\nconst impressions = $json.impressions;\nreturn [{\n  json: {\n    clicks: clicks,\n    impressions: impressions,\n    ctr: impressions > 0 ? (clicks / impressions) : 0,\n    avgPosition: $json.avgPosition ?? $json.avg_position ?? null,\n    source: 'gsc',\n  },\n}];"
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $input.first().json;\nconst clicks = d.clicks ?? d.total_clicks ?? 0;\nconst impressions = d.impressions ?? d.total_impressions ?? 0;\nif (clicks === 0 && impressions === 0) {\n  throw new Error('GSC summary missing click data');\n}\nreturn [{\n  json: {\n    date: new Date().toISOString().slice(0, 10),\n    clicks: clicks,\n    impressions: impressions,\n    ctr: typeof d.avg_ctr === 'number' ? d.avg_ctr : (impressions > 0 ? clicks / impressions : 0),\n    avgPosition: d.avg_position ?? d.avgPosition ?? null,\n    property: d.property ?? null,\n    source: 'gsc',\n  },\n}];"
       },
       "id": "transform",
       "name": "Normalize",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [340, 0]
+      "position": [
+        352,
+        0
+      ]
     },
     {
       "parameters": {
-        "id": "={{ $env.ABVORN_GSC_SHEET_ID || '' }}",
-        "sheetName": "GSC Weekly",
         "operation": "append",
-        "options": {}
+        "documentId": {
+          "__rl": true,
+          "value": "1bNNoYcFFIUe0ZCdj9iAwvFbvgTLc5fRcgD26mZLzmdM",
+          "mode": "list",
+          "cachedResultName": "GSC Weekly",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bNNoYcFFIUe0ZCdj9iAwvFbvgTLc5fRcgD26mZLzmdM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {},
+        "resource": "sheet"
       },
       "id": "sheets",
       "name": "Append to Sheet",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [560, 0]
+      "position": [
+        560,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "IUdYYk9fxMf3Ajgo",
+          "name": "Google Sheets account"
+        }
+      }
     }
   ],
   "connections": {
-    "Weekly Monday": {
+    "GSC Webhook": {
       "main": [
         [
           {
@@ -98,7 +126,7 @@
       ]
     }
   },
-  "settings": {
-    "executionOrder": "v1"
-  }
+  "active": true,
+  "settings": {},
+  "versionId": "6c8889ea-5d07-40eb-8782-779062941c9d"
 }

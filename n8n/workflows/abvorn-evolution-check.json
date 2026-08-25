@@ -3,36 +3,38 @@
   "nodes": [
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "days",
-              "daysInterval": 14
-            }
-          ]
-        }
+        "httpMethod": "POST",
+        "path": "abvorn-evolution",
+        "responseMode": "onReceived",
+        "options": {}
       },
-      "id": "schedule",
-      "name": "Biweekly Monday",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.1,
-      "position": [-320, 0]
+      "id": "trigger",
+      "name": "Evolution Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        0
+      ],
+      "webhookId": "abvorn-evolution"
     },
     {
       "parameters": {
-        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/evolution_check",
         "method": "POST",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/evolution_check",
+        "options": {},
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": []
-        },
-        "options": {}
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({}) }}"
       },
       "id": "evolution_check",
       "name": "Check Evolution",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [120, 0]
+      "position": [
+        120,
+        0
+      ]
     },
     {
       "parameters": {
@@ -61,7 +63,10 @@
       "name": "Should Evolve?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [340, 0]
+      "position": [
+        340,
+        0
+      ]
     },
     {
       "parameters": {
@@ -71,7 +76,10 @@
       "name": "Trigger Evolution",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [560, 0]
+      "position": [
+        560,
+        0
+      ]
     },
     {
       "parameters": {
@@ -81,11 +89,14 @@
       "name": "Skip",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [560, 240]
+      "position": [
+        560,
+        240
+      ]
     }
   ],
   "connections": {
-    "Biweekly Monday": {
+    "Evolution Webhook": {
       "main": [
         [
           {

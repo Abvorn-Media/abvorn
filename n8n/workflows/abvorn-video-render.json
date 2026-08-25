@@ -3,9 +3,22 @@
   "nodes": [
     {
       "parameters": {
+        "content": "## Abvorn Video Render\n\nPOST to `/webhook-test/abvorn-video-render` (dev) or `/webhook/abvorn-video-render` (prod).\n\nBody shape:\n```json\n{\n  \"video\": {\n    \"video_subject\": \"...\",\n    \"video_script\": \"...\",\n    \"video_terms\": [\"a\", \"b\"],\n    \"video_aspect\": \"9:16\",\n    \"voice_name\": \"en-US-AriaNeural-Female\",\n    \"subtitle_enabled\": true\n  }\n}\n```\n\nAll fields optional except one of video_subject/video_script.\nThe workflow polls the Oracle MPT task every 20s (max ~15 min)\nand responds with absolute video URLs.",
+        "height": 340,
+        "width": 380
+      },
+      "id": "note-usage",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-560, -320]
+    },
+    {
+      "parameters": {
         "httpMethod": "POST",
         "path": "abvorn-video-render",
-        "responseMode": "onReceived"
+        "responseMode": "responseNode",
+        "options": {}
       },
       "id": "trigger",
       "name": "Render Webhook",
@@ -16,52 +29,176 @@
     },
     {
       "parameters": {
-        "url": "={{ $env.MPT_URL }}/videos",
+        "jsCode": "const env = $json.body || {};\nconst b = env.video || env;\nconst rawTerms = b.video_terms ?? b.terms;\nconst terms = Array.isArray(rawTerms)\n  ? rawTerms.map(String).slice(0, 10)\n  : String(rawTerms || '').split(',').map(s => s.trim()).filter(Boolean);\nif (!terms.length && (b.video_subject || b.title)) {\n  terms.push(String(b.video_subject || b.title).slice(0, 50));\n}\nreturn [{ json: {\n  video_subject: b.video_subject || b.title || 'Abvorn clip',\n  video_script: b.video_script || b.hook || '',\n  video_terms: terms,\n  video_aspect: b.video_aspect || '9:16',\n  voice_name: b.voice_name || 'en-US-AriaNeural-Female',\n  subtitle_enabled: b.subtitle_enabled !== false,\n}}];"
+      },
+      "id": "normalize",
+      "name": "Normalize Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-100, 0]
+    },
+    {
+      "parameters": {
         "method": "POST",
+        "url": "http://92.4.157.87:8080/api/v1/videos",
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "video_subject",
-              "value": "={{ $json.body.video.video_subject }}"
-            },
-            {
-              "name": "video_script",
-              "value": "={{ $json.body.video.video_script }}"
-            },
-            {
-              "name": "video_terms",
-              "value": "={{ $json.body.video.video_terms }}"
-            },
-            {
-              "name": "video_aspect",
-              "value": "={{ $json.body.video.video_aspect }}"
-            },
-            {
-              "name": "video_source",
-              "value": "={{ $json.body.video.video_source }}"
-            },
-            {
-              "name": "voice_name",
-              "value": "={{ $json.body.video.voice_name }}"
-            },
-            {
-              "name": "subtitle_enabled",
-              "value": "={{ $json.body.video.subtitle_enabled }}"
-            },
-            {
-              "name": "video_count",
-              "value": "={{ $json.body.video.video_count }}"
-            }
-          ]
-        },
-        "options": {}
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ video_subject: $('Normalize Request').first().json.video_subject, video_script: $('Normalize Request').first().json.video_script, video_terms: $('Normalize Request').first().json.video_terms, video_aspect: $('Normalize Request').first().json.video_aspect, video_concat_mode: 'random', video_clip_duration: 5, video_count: 1, video_source: 'pexels', voice_name: $('Normalize Request').first().json.voice_name, voice_rate: 1.0, bgm_type: 'random', bgm_volume: 0.2, subtitle_enabled: $('Normalize Request').first().json.subtitle_enabled, paragraph_number: 1 }) }}",
+        "options": {
+          "timeout": 30000
+        }
       },
       "id": "render",
-      "name": "Render Video via MPT",
+      "name": "Submit Render",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [120, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const task_id = ($json.data && $json.data.task_id) || $json.task_id;\nif (!task_id) {\n  throw new Error('MPT did not return a task_id: ' + JSON.stringify($json).slice(0, 300));\n}\nreturn [{ json: { task_id, mpt_base: 'http://92.4.157.87:8080' } }];"
+      },
+      "id": "extract-task",
+      "name": "Extract Task ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 0]
+    },
+    {
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 20,
+        "unit": "seconds",
+        "options": {}
+      },
+      "id": "wait-poll",
+      "name": "Poll Interval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [560, 0],
+      "webhookId": "abvorn-wait"
+    },
+    {
+      "parameters": {
+        "url": "=http://92.4.157.87:8080/api/v1/tasks/{{ $('Extract Task ID').first().json.task_id }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "check-status",
+      "name": "Check Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [780, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-done",
+              "leftValue": "={{ Number($json.data.state) }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-done",
+      "name": "Completed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1000, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const t = $json.data || {};\nconst base = 'http://92.4.157.87:8080';\nconst abs = p => typeof p === 'string'\n  ? (p.startsWith('http') ? p : base + '/' + String(p).replace(/^\\//, ''))\n  : p;\nreturn [{ json: {\n  status: 'completed',\n  task_id: t.task_id || t.id || $('Extract Task ID').first().json.task_id,\n  videos: (t.videos || []).map(abs),\n  combined_videos: (t.combined_videos || []).map(abs),\n}}];"
+      },
+      "id": "format-result",
+      "name": "Format Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1220, -120]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      },
+      "id": "respond-ok",
+      "name": "Respond Completed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1440, -120]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-failed",
+              "leftValue": "={{ Number($json.data.state) }}",
+              "rightValue": -1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-timeout",
+              "leftValue": "={{ $runIndex }}",
+              "rightValue": 45,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "if-failed",
+      "name": "Failed or Timed Out?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1220, 120]
+    },
+    {
+      "parameters": {
+        "jsCode": "const t = $json.data || {};\nconst state = t.state;\nlet reason;\nif (Number(state) === -1) {\n  reason = t.error || t.failed_stage || 'render failed on MPT';\n} else {\n  reason = 'timed out waiting for MPT render (45 polls x 20s)';\n}\nreturn [{ json: {\n  status: 'failed',\n  task_id: $('Extract Task ID').first().json.task_id,\n  state,\n  error: reason,\n}}];"
+      },
+      "id": "format-error",
+      "name": "Format Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1440, 120]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      },
+      "id": "respond-error",
+      "name": "Respond Failed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1660, 120]
     }
   ],
   "connections": {
@@ -69,7 +206,120 @@
       "main": [
         [
           {
-            "node": "Render Video via MPT",
+            "node": "Normalize Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Request": {
+      "main": [
+        [
+          {
+            "node": "Submit Render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Render": {
+      "main": [
+        [
+          {
+            "node": "Extract Task ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Task ID": {
+      "main": [
+        [
+          {
+            "node": "Poll Interval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Interval": {
+      "main": [
+        [
+          {
+            "node": "Check Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Status": {
+      "main": [
+        [
+          {
+            "node": "Completed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Completed?": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failed or Timed Out?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Result": {
+      "main": [
+        [
+          {
+            "node": "Respond Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failed or Timed Out?": {
+      "main": [
+        [
+          {
+            "node": "Format Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Poll Interval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error": {
+      "main": [
+        [
+          {
+            "node": "Respond Failed",
             "type": "main",
             "index": 0
           }
