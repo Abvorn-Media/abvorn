@@ -206,6 +206,16 @@ python run_cycle.py --genesis-version {self.version + 1}
             os._exit(0)
 
     def spawn_child(self, exit_parent: bool = True) -> str:
+        from abvorn.core.entitlements import get_entitlements
+
+        gate = get_entitlements().check("spawn_child", agent="genesis_protocol")
+        if not gate["allowed"]:
+            logger.warning(
+                "GENESIS BLOCKED: spawn_child requires operator approval (%s)",
+                gate["reason"],
+            )
+            return ""
+
         logger.info("EVOLUTION TRIGGERED: V%s -> V%s", self.version, self.version + 1)
         child_path = self.transfer_genome()
         startup = Path(child_path) / "start.sh"

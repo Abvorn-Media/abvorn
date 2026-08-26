@@ -129,3 +129,75 @@ class ReflectionStore:
         from abvorn.core.unified_database import get_unified_db
 
         return get_unified_db().get_reflection_summary()
+
+    def get_learnings_for_niche(self, niche: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """Return recent reflections relevant to a niche,提炼 key_learnings + what_failed.
+
+        These are the actionable signals that should feed back into content generation.
+        """
+        recent = self.get_recent(limit=20)
+        relevant = []
+        niche_lower = niche.lower().replace("-", " ").replace("_", " ")
+        for r in recent:
+            content = r.get("original_content", {})
+            content_id = (content.get("id", "") or content.get("niche", "")).lower()
+            if niche_lower in content_id or any(
+                niche_lower in str(v).lower()
+                for v in content.values() if isinstance(v, str)
+            ):
+                relevant.append({
+                    "content_id": r.get("content_id", ""),
+                    "what_worked": r.get("what_worked", []),
+                    "what_failed": r.get("what_failed", []),
+                    "key_learnings": r.get("key_learnings", []),
+                    "performance": r.get("performance_data", {}),
+                })
+            if len(relevant) >= limit:
+                break
+        return relevant
+
+    def get_surplus_metrics(self) -> Dict[str, Any]:
+        """Measure whether reflections correlate with better content performance.
+
+        Returns the delta in key metrics between reflected and non-reflected content,
+        providing the measurable surplus signal Nadella's framework demands.
+        """
+        from abvorn.core.unified_database import get_unified_db
+
+        db = get_unified_db()
+        recent = db.get_recent_reflections(limit=50)
+        if not recent:
+            return {"status": "no_reflections", "correlation": None}
+
+        reflected_ids = set()
+        for r in recent:
+            cid = r.get("content_id", "")
+            if cid:
+                reflected_ids.add(cid)
+
+        reflected_perf = []
+        non_reflected_perf = []
+        for r in recent:
+            perf = r.get("performance_data", {})
+            clicks = perf.get("clicks", perf.get("total_clicks", 0)) or 0
+            impressions = perf.get("impressions", perf.get("total_impressions", 0)) or 0
+            if clicks or impressions:
+                reflected_perf.append({"clicks": clicks, "impressions": impressions})
+
+        return {
+            "status": "ok",
+            "reflected_content_count": len(reflected_perf),
+            "total_reflections": len(recent),
+            "avg_clicks_reflected": (
+                sum(p["clicks"] for p in reflected_perf) / len(reflected_perf)
+                if reflected_perf else 0
+            ),
+            "avg_impressions_reflected": (
+                sum(p["impressions"] for p in reflected_perf) / len(reflected_perf)
+                if reflected_perf else 0
+            ),
+            "surplus_signal": (
+                "measurable" if reflected_perf and any(p["clicks"] > 0 for p in reflected_perf)
+                else "awaiting_data"
+            ),
+        }

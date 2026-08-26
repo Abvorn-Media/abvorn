@@ -20,7 +20,7 @@ CONTENT_ANGLES = {
 }
 
 def generate_outline(niche: str, products: list, persona: dict, router,
-                     knowledge_chunks: list = None) -> dict:
+                     knowledge_chunks: list = None, reflection_learnings: list = None) -> dict:
     """OUTLINE stage: produce structured outline + angle selection."""
     product_names = [p.get("name", "") for p in products[:3]]
     persona_context = ""
@@ -38,10 +38,18 @@ Tone: {persona.get('tone_of_voice', 'conversational')}"""
         if top:
             expert_guidance = f"\n\nEXPERT GUIDANCE:\n{top}\n\nApply this principle when selecting your angle and outline."
 
+    reflection_guidance = ""
+    if reflection_learnings:
+        items = "\n".join(f"- {l}" for l in reflection_learnings[:6])
+        reflection_guidance = (
+            f"\n\nLESSONS FROM PAST CONTENT (apply these to avoid repeating failures):\n{items}"
+        )
+
     prompt = f"""You are a content strategist planning a buying guide for '{niche}'.
 Products: {json.dumps(product_names)}
 {persona_context}
 {expert_guidance}
+{reflection_guidance}
 
 Available content angles and when to use them:
 {json.dumps(CONTENT_ANGLES, indent=2)}
@@ -85,6 +93,7 @@ Objections: {json.dumps(persona.get('objections', []))}"""
     copywriting_guidance = ""
     psych_guidance = ""
     seo_guidance = ""
+    reflection_guidance = ""
     amazon_tag = _amazon_tag()
     if brain_context:
         copy_principles = brain_context.get("copywriting_principles", [])
@@ -99,6 +108,12 @@ Objections: {json.dumps(persona.get('objections', []))}"""
         if seo_tactics:
             texts = [c["text"][:300] for c in seo_tactics[:2]]
             seo_guidance = "\nSEO TACTICS:\n" + "\n---\n".join(texts)
+        refl_learnings = brain_context.get("reflection_learnings", [])
+        if refl_learnings:
+            items = "\n".join(f"- {l}" for l in refl_learnings[:6])
+            reflection_guidance = (
+                f"\n\nLESSONS FROM PAST CONTENT (mandatory — avoid these patterns):\n{items}"
+            )
 
     prompt = f"""Write a comprehensive buying guide for '{niche}'.
 
@@ -107,6 +122,7 @@ PRODUCTS TO FEATURE:
 {copywriting_guidance}
 {psych_guidance}
 {seo_guidance}
+{reflection_guidance}
 
 OUTLINE TO FOLLOW:
 {outline_sections}

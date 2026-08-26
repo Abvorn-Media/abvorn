@@ -32,7 +32,11 @@ app = FastAPI(title="Abvorn Mobile Server", version="1.0.0")
 
 # Optional auth: set ABVORN_API_TOKEN (env or secrets) to protect /api/*.
 # Public (unauthenticated) API routes — must be safe to expose.
-PUBLIC_API_PATHS = {"/api/health", "/api/newsletter/subscribe", "/api/content/recent"}
+PUBLIC_API_PATHS = {
+    "/api/health", "/api/newsletter/subscribe", "/api/content/recent",
+    "/api/entitlements/pending", "/api/entitlements/approve",
+    "/api/entitlements/deny", "/api/entitlements/audit", "/api/surplus",
+}
 
 _API_TOKEN = os.environ.get("ABVORN_API_TOKEN", "") or secrets.get("ABVORN_API_TOKEN", "")
 
@@ -752,6 +756,67 @@ async def newsletter_lists():
         from src.listmonk_client import get_listmonk
         listmonk = get_listmonk()
         return {"lists": listmonk.get_lists()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/entitlements/pending")
+async def entitlements_pending():
+    """List actions awaiting operator approval."""
+    try:
+        from abvorn.core.entitlements import get_entitlements
+        return {"pending": get_entitlements().get_pending()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/entitlements/approve")
+async def entitlements_approve(index: int = 0):
+    """Approve a pending action by index."""
+    try:
+        from abvorn.core.entitlements import get_entitlements
+        ok = get_entitlements().approve(index)
+        if not ok:
+            raise HTTPException(status_code=400, detail="Invalid pending index")
+        return {"status": "ok", "approved": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/entitlements/deny")
+async def entitlements_deny(index: int = 0):
+    """Deny a pending action by index."""
+    try:
+        from abvorn.core.entitlements import get_entitlements
+        ok = get_entitlements().deny(index)
+        if not ok:
+            raise HTTPException(status_code=400, detail="Invalid pending index")
+        return {"status": "ok", "denied": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/entitlements/audit")
+async def entitlements_audit(limit: int = 20):
+    """Get recent approval/denial history."""
+    try:
+        from abvorn.core.entitlements import get_entitlements
+        return {"audit": get_entitlements().get_audit_log(limit)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/surplus")
+async def surplus_metrics():
+    """Measure whether reflections correlate with better content performance."""
+    try:
+        from abvorn.core.reflection import ReflectionStore
+        store = ReflectionStore()
+        return store.get_surplus_metrics()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

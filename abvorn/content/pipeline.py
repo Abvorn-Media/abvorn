@@ -6,6 +6,26 @@ from abvorn.agents.editor import fact_check, polish, build_schema
 
 logger = logging.getLogger("abvorn.pipeline")
 
+
+def _load_reflection_learnings(niche: str) -> list:
+    """Load recent reflection learnings relevant to this niche."""
+    try:
+        from abvorn.core.reflection import ReflectionStore
+        store = ReflectionStore()
+        learnings = store.get_learnings_for_niche(niche, limit=3)
+        if learnings:
+            merged = []
+            for entry in learnings:
+                for l in entry.get("key_learnings", []):
+                    merged.append(l)
+                for f in entry.get("what_failed", []):
+                    merged.append(f"AVOID: {f}")
+            logger.info("[PIPELINE] Loaded %d reflection learnings for %s", len(merged), niche)
+            return merged[:8]
+    except Exception as e:
+        logger.debug("[PIPELINE] Reflection load skipped: %s", e)
+    return []
+
 class ContentPipeline:
 
     def __init__(self, state=None):
@@ -27,10 +47,16 @@ class ContentPipeline:
         if self.brain:
             brain_context = self.brain.query_for_pipeline(niche, "", persona)
 
+        # Reflection learnings: feed back past performance signals
+        reflection_learnings = _load_reflection_learnings(niche)
+        if reflection_learnings:
+            brain_context["reflection_learnings"] = reflection_learnings
+
         # Stage 2: OUTLINE
         logger.info(f"[PIPELINE] OUTLINE: {niche}")
         outline = generate_outline(niche, products, persona or {}, router,
-                                   knowledge_chunks=brain_context.get("chunks", []))
+                                   knowledge_chunks=brain_context.get("chunks", []),
+                                   reflection_learnings=reflection_learnings)
         if not outline or not outline.get("outline"):
             logger.warning(f"[PIPELINE] OUTLINE empty for {niche}, using default")
             outline = {"outline": ["H2: Introduction", "H2: Product Reviews", "H2: Buying Guide", "H2: FAQ", "H2: Conclusion"],

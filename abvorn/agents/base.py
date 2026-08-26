@@ -18,12 +18,26 @@ class AgentBase(ABC):
         self._last_heartbeat = 0.0
 
     def soul_check(self, action: str, context: dict = None) -> bool:
-        """Check action against the Abvorn mission. Logs violations."""
+        """Check action against the Abvorn mission and entitlements. Logs violations."""
+        # Mission check (Will)
         if self.will:
             ok = self.will.mission_check(action, context or {})
             if not ok:
                 logger.warning(f"[{self.name}] Soul blocked: {action}")
-            return ok
+                return ok
+
+        # Entitlements check (permission gate)
+        try:
+            from abvorn.core.entitlements import get_entitlements
+            gate = get_entitlements().check(action, agent=self.name, context=context)
+            if not gate["allowed"]:
+                logger.warning(
+                    f"[{self.name}] Entitlements blocked: {action} — {gate['reason']}"
+                )
+                return False
+        except Exception:
+            pass  # entitlements module unavailable — fall through
+
         return True
 
     @abstractmethod
