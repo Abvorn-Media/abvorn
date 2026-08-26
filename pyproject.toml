@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "abvorn"
+version = "14.0.0"
+description = "Autonomous AI-powered affiliate content network"
+readme = "docs/SETUP.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [{name = "Abvorn"}]
+keywords = ["affiliate", "ai", "content-generation", "autonomous"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+]
+
+dependencies = [
+    "pypdf",
+    "chromadb",
+    "openai",
+    "anthropic",
+    "google-generativeai",
+    "duckduckgo-search",
+    "pytrends",
+    "requests",
+    "beautifulsoup4",
+    "PyGithub",
+    "google-auth",
+    "google-api-python-client",
+    "gspread",
+    "Pillow",
+    "textstat",
+    "jinja2",
+    "composio-core",
+    "pdfplumber",
+    "feedparser",
+    "networkx>=3.1",
+    "python-louvain",
+    "watchdog>=3.0.0",
+    "python-frontmatter>=1.0.0",
+    "markdown2>=2.4.0",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[project.scripts]
+abvorn = "abvorn.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["abvorn*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

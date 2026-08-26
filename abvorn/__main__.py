@@ -1,8 +1,8 @@
 """CLI entry point: python -m abvorn <command>"""
 
-import asyncio, logging, sys, os
+import argparse, asyncio, logging, sys, os
 
-from .brain.orchestrator import refresh_brain
+from . import __version__
 
 _DAEMON = None
 
@@ -13,25 +13,48 @@ def _get_daemon():
         _DAEMON = AbvornDaemon
     return _DAEMON
 
-def main():
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
-    logger = logging.getLogger("abvorn")
+COMMANDS = {
+    "daemon":       "Run all agents continuously",
+    "cycle":        "Run one full discovery -> content -> deploy cycle",
+    "brain-refresh":"Scan and index the knowledge brain",
+    "once":         "Run one cycle of the content pipeline for a niche",
+    "pause":        "Pause the autonomous system (kill switch)",
+    "resume":       "Resume the autonomous system",
+    "status":       "Show system status and kill switch state",
+    "health":       "Run health check and report stats",
+    "migrate":      "Bootstrap initial site from existing content",
+}
 
-    if len(sys.argv) < 2:
-        print("Usage: python -m abvorn <command>")
-        print("Commands:")
-        print("  daemon         Run all agents continuously")
-        print("  cycle          Run one full discovery → content → deploy cycle")
-        print("  brain-refresh  Scan and index the knowledge brain")
-        print("  once           Run one cycle of the pipeline")
-        print("  pause          Pause the autonomous system (kill switch)")
-        print("  resume         Resume the autonomous system")
-        print("  status         Show system status and kill switch state")
-        print("  health         Run health check and report stats")
-        print("  migrate        Bootstrap initial site from existing content")
+def _build_parser():
+    p = argparse.ArgumentParser(
+        prog="abvorn",
+        description="Abvorn — autonomous AI-powered affiliate content network",
+    )
+    p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    p.add_argument("--dry-run", action="store_true", help="Show what would run without executing")
+    sub = p.add_subparsers(dest="command")
+    for name, help_text in COMMANDS.items():
+        sub.add_parser(name, help=help_text)
+    return p
+
+def main():
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+    parser = _build_parser()
+    args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
         sys.exit(1)
 
-    cmd = sys.argv[1]
+    cmd = args.command
+
+    if args.dry_run:
+        print(f"[DRY RUN] Would run: {cmd}")
+        if cmd == "once":
+            niche = sys.argv[2] if len(sys.argv) > 2 else "wireless headphones"
+            print(f"  Niche: {niche}")
+        return
 
     if cmd == "daemon":
         DaemonCls = _get_daemon()
@@ -51,11 +74,12 @@ def main():
             d = DaemonCls()
             result = await d.run_full_cycle()
             print(f"Cycle result: {result.get('status')}")
-            if result.get('niche'):
+            if result.get("niche"):
                 print(f"  Niche: {result['niche']}")
         asyncio.run(run_cycle())
 
     elif cmd == "brain-refresh":
+        from .brain.orchestrator import refresh_brain
         result = refresh_brain()
         summary = result.get("summary", {})
         domains = summary.get("domains", [])
@@ -81,12 +105,12 @@ def main():
     elif cmd == "pause":
         d = _get_daemon()()
         d.state.set_meta("kill_switch", True)
-        print("[PAUSED] System paused - kill switch engaged")
+        print("[PAUSED] System paused — kill switch engaged")
 
     elif cmd == "resume":
         d = _get_daemon()()
         d.state.set_meta("kill_switch", False)
-        print("[ACTIVE] System resumed - kill switch disengaged")
+        print("[ACTIVE] System resumed — kill switch disengaged")
 
     elif cmd == "status":
         d = _get_daemon()()
@@ -126,7 +150,7 @@ def main():
             print(f"  {r}")
 
     else:
-        print(f"Unknown command: {cmd}")
+        parser.print_help()
         sys.exit(1)
 
 if __name__ == "__main__":
