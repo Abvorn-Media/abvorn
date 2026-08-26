@@ -55,6 +55,10 @@ class SubscriberDB:
                     created_at TEXT NOT NULL
                 );
             """)
+            try:
+                c.execute("ALTER TABLE subscribers ADD COLUMN tracking_consent INT DEFAULT 0")
+            except sqlite3.OperationalError:
+                pass  # column already exists
 
     def add_subscriber(self, email: str, persona_id: str, niche: str, tracking_consent: bool = False):
         with self._cursor() as c:

@@ -61,7 +61,7 @@ class CTATracker:
     def get_stats(self, post_id: int = None, niche: str = None) -> dict:
         if not self.state:
             return {"total_ctas": 0}
-        return self.state.get_cta_summary(niche=niche)
+        return self.state.get_cta_summary()
 
     def generate_cta_id(self, post_id: int, cta_type: str, location: str, index: int = 0) -> str:
         return f"cta_{post_id}_{cta_type}_{location}_{index}"

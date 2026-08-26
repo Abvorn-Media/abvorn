@@ -104,7 +104,8 @@ class AbvornState:
                     sequence_step INT DEFAULT 0,
                     total_conversions INT DEFAULT 0,
                     total_revenue REAL DEFAULT 0.0,
-                    status TEXT DEFAULT 'active'
+                    status TEXT DEFAULT 'active',
+                    tracking_consent INT DEFAULT 0
                 );
                 CREATE TABLE IF NOT EXISTS email_sequences (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -120,6 +121,10 @@ class AbvornState:
                     created_at TEXT NOT NULL
                 );
             """)
+            try:
+                c.execute("ALTER TABLE subscribers ADD COLUMN tracking_consent INT DEFAULT 0")
+            except sqlite3.OperationalError:
+                pass  # column already exists
 
     def close(self):
         if hasattr(self._local, 'conn') and self._local.conn:
@@ -311,16 +316,16 @@ class AbvornState:
                        tracking_consent: bool = False):
         with self._cursor() as c:
             c.execute("""
-                INSERT OR IGNORE INTO subscribers (email, persona_id, niche, subscribed_at)
-                VALUES (?, ?, ?, ?)
-            """, (email, persona_id, niche, datetime.now().isoformat()))
+                INSERT OR IGNORE INTO subscribers (email, persona_id, niche, subscribed_at, tracking_consent)
+                VALUES (?, ?, ?, ?, ?)
+            """, (email, persona_id, niche, datetime.now().isoformat(), 1 if tracking_consent else 0))
 
     def get_subscribers_for_niche(self, niche: str) -> list:
         with self._cursor() as c:
             c.execute("SELECT * FROM subscribers WHERE niche=? AND status='active'", (niche,))
             keys = ["email", "persona_id", "niche", "subscribed_at", "last_open_at",
                     "last_click_at", "sequence_step", "total_conversions",
-                    "total_revenue", "status"]
+                    "total_revenue", "status", "tracking_consent"]
             return [dict(zip(keys, row)) for row in c.fetchall()]
 
     def delete_subscriber(self, email: str) -> bool:
@@ -350,31 +355,57 @@ class AbvornState:
                     "lead_magnet", "sent_count", "open_count", "click_count", "created_at"]
             return [dict(zip(keys, row)) for row in c.fetchall()]
 
-    def get_cta_stats(self) -> list:
+    def log_cta_event(self, post_id: int, cta_id: str, cta_type: str = "affiliate_link",
+                       event_type: str = "impression", cta_text: str = "",
+                       cta_location: str = "", visitor_hash: str = "",
+                       niche: str = "", platform: str = ""):
+        payload = {
+            "post_id": post_id, "cta_id": cta_id, "cta_type": cta_type,
+            "event_type": event_type, "cta_text": cta_text,
+            "cta_location": cta_location, "visitor_hash": visitor_hash,
+            "niche": niche, "platform": platform,
+            "impressions": 1 if event_type == "impression" else 0,
+            "clicks": 1 if event_type == "click" else 0,
+            "conversions": 1 if event_type == "conversion" else 0,
+        }
+        self.enqueue(niche or "unknown", "cta_tracked", payload=payload)
+
+    def get_cta_stats(self, niche: str = None, post_id: int = None) -> list:
         with self._cursor() as c:
-            c.execute("""
+            query = """
                 SELECT json_extract(payload, '$.cta_id') as cta_id,
                        json_extract(payload, '$.niche') as niche,
                        json_extract(payload, '$.cta_text') as cta_text,
                        json_extract(payload, '$.cta_type') as cta_type,
-                       json_extract(payload, '$.impressions') as impressions,
-                       json_extract(payload, '$.clicks') as clicks,
-                       json_extract(payload, '$.conversions') as conversions
+                       json_extract(payload, '$.cta_location') as cta_location,
+                       SUM(json_extract(payload, '$.impressions')) as impressions,
+                       SUM(json_extract(payload, '$.clicks')) as clicks,
+                       SUM(json_extract(payload, '$.conversions')) as conversions
                 FROM queue
                 WHERE stage='cta_tracked'
-            """)
+            """
+            params = []
+            if niche:
+                query += " AND json_extract(payload, '$.niche') = ?"
+                params.append(niche)
+            if post_id is not None:
+                query += " AND json_extract(payload, '$.post_id') = ?"
+                params.append(post_id)
+            query += " GROUP BY json_extract(payload, '$.cta_id')"
+            c.execute(query, params)
             rows = []
             for row in c.fetchall():
-                impressions = int(row[4] or 0)
-                clicks = int(row[5] or 0)
+                impressions = int(row[5] or 0)
+                clicks = int(row[6] or 0)
                 rows.append({
                     "cta_id": row[0],
                     "niche": row[1],
                     "cta_text": row[2],
                     "cta_type": row[3],
+                    "cta_location": row[4],
                     "impressions": impressions,
                     "clicks": clicks,
-                    "conversions": int(row[6] or 0),
+                    "conversions": int(row[7] or 0),
                     "click_rate": clicks / impressions if impressions > 0 else 0,
                 })
             return rows
