@@ -840,10 +840,94 @@ def generate_dashboard_html() -> str:
     </section>
   </div>
 
-  <footer class="foot mono">auto-refresh \u00b7 60s \u00a0\u00b7\u00a0 abvorn.com</footer>
+  <footer class="foot mono">live \u00b7 auto-refresh 30s \u00a0\u00b7\u00a0 abvorn.com</footer>
 </div>
 <script>
-  setTimeout(function () {{ location.reload(); }}, 60000);
+(function () {{
+  const API = '/api/dashboard/metrics';
+  const INTERVAL = 30000;
+
+  function $(sel) {{ return document.querySelector(sel); }}
+
+  function updateClock() {{
+    var el = $('.clock');
+    if (el) el.textContent = new Date().toISOString().replace('T',' ').slice(0,19) + ' UTC';
+  }}
+
+  function updateVitals(d) {{
+    var profit = parseFloat(d.total_profit || 0);
+    var revenue = parseFloat(d.total_revenue || 0);
+    var roi = parseFloat(d.roi || 0);
+    var niches = parseInt(d.total_niches || 0);
+    var articles = parseInt(d.total_articles || 0);
+    var apw = parseFloat(d.articles_per_week || 0);
+    var clicks = parseInt(d.total_clicks || 0);
+    var aff = parseInt(d.affiliate_clicks || 0);
+    var queue = parseInt(d.queue_size || 0);
+    var days = parseInt(d.days_flat || 0);
+    var last = d.last_action || 'None';
+    var vitals = document.querySelectorAll('.vital');
+    if (vitals.length >= 4) {{
+      vitals[0].querySelector('.vital-value').textContent = '$' + profit.toLocaleString(undefined, {{minimumFractionDigits:2, maximumFractionDigits:2}});
+      vitals[0].querySelector('.vital-sub').textContent = '$' + revenue.toLocaleString(undefined, {{minimumFractionDigits:2, maximumFractionDigits:2}}) + ' revenue \u00b7 ' + roi.toFixed(2) + 'x ROI';
+      vitals[1].querySelector('.vital-value').textContent = niches;
+      vitals[1].querySelector('.vital-sub').textContent = articles + ' articles \u00b7 ' + apw.toFixed(1) + '/wk';
+      vitals[2].querySelector('.vital-value').textContent = clicks;
+      vitals[2].querySelector('.vital-sub').textContent = aff + ' affiliate clicks';
+      vitals[3].querySelector('.vital-value').textContent = queue;
+      vitals[3].querySelector('.vital-sub').textContent = days + ' days flat \u00b7 ' + last;
+    }}
+  }}
+
+  function updateOrgans(d) {{
+    var organs = document.querySelectorAll('.organ');
+    var sources = [d.win, d.fable, d.memory, d.spawn, d.lineage, d.unified, d.brain, d.gsc, d.cortex, d.n8n];
+    organs.forEach(function (org, i) {{
+      if (i >= sources.length) return;
+      var s = sources[i] || {{}};
+      var rows = org.querySelectorAll('.row');
+      var keys = Object.keys(s).filter(function(k) {{ return typeof s[k] !== 'object'; }});
+      rows.forEach(function (row, j) {{
+        if (j < keys.length) {{
+          var val = s[keys[j]];
+          var rv = row.querySelector('.row-value');
+          if (rv) rv.textContent = typeof val === 'number' ? val.toLocaleString() : (val || '\u2014');
+        }}
+      }});
+    }});
+  }}
+
+  function updateGauge(d) {{
+    var drive = parseFloat(d.drive_score || 0);
+    var gap = parseFloat(d.gap || 0);
+    var ambition = parseFloat(d.ambition_level || 0.5);
+    var readouts = document.querySelectorAll('.readout-value');
+    if (readouts.length >= 2) {{
+      readouts[0].textContent = drive.toFixed(3);
+      readouts[1].textContent = gap.toFixed(3);
+    }}
+    var ab = document.querySelector('.ambition-label');
+    if (ab) ab.textContent = 'ambition ' + ambition.toFixed(2);
+    var af = document.querySelector('.ambition-fill');
+    if (af) af.style.width = (ambition * 100) + '%';
+    var label = document.querySelector('.lamp');
+    if (label) {{
+      label.className = 'lamp ' + (d.status === 'active' ? 'alive' : (d.status === 'armed' ? 'armed' : 'idle'));
+    }}
+  }}
+
+  function refresh() {{
+    fetch(API).then(function(r) {{ return r.json(); }}).then(function(d) {{
+      updateVitals(d);
+      updateOrgans(d);
+      updateGauge(d);
+      updateClock();
+    }}).catch(function() {{}});
+  }}
+
+  setInterval(refresh, INTERVAL);
+  setInterval(updateClock, 1000);
+}})();
 </script>
 </body>
 </html>
