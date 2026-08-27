@@ -1,0 +1,11 @@
+[Unit]
+Description=Abvorn Content Cycle
+After=network.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/opt/abvorn-core
+ExecStart=/usr/bin/python3 /opt/abvorn-core/run_oracle_cycle.py
+StandardOutput=journal
+StandardError=journal
