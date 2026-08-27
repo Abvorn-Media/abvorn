@@ -1,4 +1,4 @@
-import time, logging
+import json, time, logging
 from collections import defaultdict
 from openai import OpenAI
 
@@ -19,10 +19,12 @@ TIER_FOR_TASK = {
 
 class AIProvider:
     def __init__(self, name: str, api_key: str, base_url: str = None, model: str = None, timeout: float = None,
-                 tier: str = "standard"):
+                 tier: str = "standard", native_gemini: bool = False):
         self.name = name
         self.tier = tier
         self.model = model or "gpt-4o"
+        self.native_gemini = native_gemini
+        self.api_key = api_key
         import httpx
         to = httpx.Timeout(timeout if timeout else 60.0, connect=timeout if timeout else 10.0)
         http_client = httpx.Client(timeout=to)
@@ -36,7 +38,7 @@ class AIProvider:
 
     @property
     def available(self) -> bool:
-        return self.client is not None and time.time() > self._banned_until
+        return self.api_key is not None and time.time() > self._banned_until
 
     def ban(self, duration: int = 60):
         self._banned_until = time.time() + duration
@@ -44,6 +46,8 @@ class AIProvider:
 
     def call(self, messages: list, json_mode: bool = False) -> str:
         start = time.time()
+        if self.native_gemini:
+            return self._call_gemini_native(messages, start)
         fmt = {"type": "json_object"} if json_mode else None
         if self.client is None:
             raise RuntimeError(f"{self.name}: no API key configured")
@@ -59,6 +63,40 @@ class AIProvider:
         except Exception as e:
             logger.warning(f"{self.name} failed: {str(e)[:80]}")
             raise
+
+    def _call_gemini_native(self, messages: list, start: float) -> str:
+        """Call Gemini via native REST API (the OpenAI-compat endpoint is broken)."""
+        import urllib.request
+        system_msg = ""
+        contents = []
+        for m in messages:
+            if m["role"] == "system":
+                system_msg = m["content"]
+            else:
+                contents.append(m)
+        if not contents:
+            contents = [{"role": "user", "content": "hi"}]
+        parts = []
+        if system_msg:
+            parts.append({"text": system_msg})
+        for m in contents:
+            parts.append({"text": m["content"]})
+        body = json.dumps({"contents": [{"parts": parts}]})
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+        req = urllib.request.Request(url, data=body.encode(), headers={"Content-Type": "application/json"})
+        try:
+            resp = urllib.request.urlopen(req, timeout=30)
+            data = json.loads(resp.read())
+            text = data["candidates"][0]["content"]["parts"][0]["text"]
+            elapsed = time.time() - start
+            self.total_calls += 1
+            usage = data.get("usageMetadata", {})
+            self.total_tokens += usage.get("totalTokenCount", 0)
+            self.total_time += elapsed
+            return text
+        except urllib.error.HTTPError as e:
+            body = e.read().decode()[:200]
+            raise RuntimeError(f"Gemini native API {e.code}: {body}")
 
     def call_with_metadata(self, messages: list, json_mode: bool = False, max_retries: int = 2) -> dict:
         """Like call() but returns content + metadata dict with retry logic."""
@@ -104,14 +142,16 @@ class ModelRouter:
             ("cerebras", secrets.get("CEREBRAS_KEY"), "https://api.cerebras.ai/v1", "gpt-oss-120b", "strong"),
             ("deepseek", secrets.get("DEEPSEEK_KEY"), "https://api.deepseek.com/v1", "deepseek-chat", "strong"),
             ("qwen", secrets.get("QWEN_KEY"), "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", "qwen3.5-flash", "fast"),
-            ("groq", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile", "strong"),
+            ("groq", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "openai/gpt-oss-120b", "strong"),
             ("glm", secrets.get("GLM_KEYS"), "https://open.bigmodel.cn/api/paas/v4/", "glm-4-flash", "fast"),
-            ("gemini", secrets.get("GEMINI_KEY"), "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-2.0-flash", "fast"),
+            ("gemini", secrets.get("GEMINI_KEY"), "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-3.6-flash", "fast"),
             ("openai", secrets.get("OPENAI_KEY"), None, "gpt-4o", "strong"),
+            ("kimi", secrets.get("KIMI_KEY"), "https://api.moonshot.cn/v1", "moonshot-v1-auto", "fast"),
         ]
         for name, key, url, model, tier in configs:
             if key and "YOUR_" not in key:
-                self.providers.append(AIProvider(name, key, url, model, timeout=timeout, tier=tier))
+                is_gemini = (name == "gemini")
+                self.providers.append(AIProvider(name, key, url, model, timeout=timeout, tier=tier, native_gemini=is_gemini))
 
     def ask(self, prompt: str, system: str = None, json_mode: bool = False,
             model_hint: str = None, task: str = None) -> str:
