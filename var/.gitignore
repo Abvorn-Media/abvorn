@@ -1,0 +1,5 @@
+# Scratch / one-off inspection & test scripts (not deliverables)
+check*.py
+test_*.py
+fix_n8n_ports.py
+x1.txt

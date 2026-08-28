@@ -42,6 +42,9 @@ docs/plans/
 docs/specs/
 docs/superpowers/
 
+# Local dashboard auto-start wrapper
+scripts/start_dashboard.cmd
+
 # win.sh business loops — internal loop strategy, journals, run state
 .win/
 .win/loops/
@@ -90,3 +93,9 @@ LongCat-Video/
 test_new_*.py
 tests/test_tavily.py
 _gen_images.py
+
+# Ad-hoc scratch scripts & screenshots (one-off rebuilds, audits, repairs)
+_*.py
+_shot_*.png
+_*.png
+.impeccable/

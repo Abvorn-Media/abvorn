@@ -1,0 +1,10 @@
+[Unit]
+Description=Trigger Abvorn Evolution Check n8n workflow
+After=network.target n8n.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/usr/bin/curl -s -X POST -H "Content-Type: application/json" -d '{}' http://92.4.157.87:5678/webhook/abvorn-evolution
+StandardOutput=journal
+StandardError=journal
