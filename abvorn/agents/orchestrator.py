@@ -209,7 +209,7 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 .cta-banner .buy-btn:hover{background:#f1f5f9;color:var(--text);box-shadow:0 4px 16px rgba(0,0,0,.2);transform:translateY(-2px)}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .hamburger{display:none;background:none;border:none;cursor:pointer;padding:8px;font-size:1.6rem;line-height:1;color:var(--text);font-family:inherit}
-.skip-link{position:absolute;top:-40px;left:8px;background:var(--primary);color:#fff;padding:8px 16px;z-index:100;border-radius:0 0 4px;font-size:.9rem;text-decoration:none;transition:top .15s}
+.skip-link{position:absolute;top:-100px;left:8px;background:var(--primary);color:#fff;padding:8px 16px;z-index:100;border-radius:0 0 4px;font-size:.9rem;text-decoration:none;transition:top .15s}
 .skip-link:focus{top:0;color:#fff}
 @media(max-width:768px){
 .hamburger{display:block}

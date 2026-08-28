@@ -101,7 +101,7 @@ footer p{font-size:.85rem;color:var(--text-muted);margin-bottom:4px}
 .lead-capture button{padding:12px 28px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);font-size:1rem;font-weight:600;cursor:pointer;transition:background .15s}
 .lead-capture button:hover{background:var(--primary-dark)}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
-.skip-link{position:absolute;top:-40px;left:8px;background:var(--primary);color:#fff;padding:8px 16px;z-index:100;border-radius:0 0 4px;font-size:.9rem;text-decoration:none;transition:top .15s}
+.skip-link{position:absolute;top:-100px;left:8px;background:var(--primary);color:#fff;padding:8px 16px;z-index:100;border-radius:0 0 4px;font-size:.9rem;text-decoration:none;transition:top .15s}
 .skip-link:focus{top:0;color:#fff}
 .hamburger{display:none;background:none;border:none;cursor:pointer;padding:8px;font-size:1.6rem;line-height:1;color:var(--text);font-family:inherit}
 @media(max-width:768px){

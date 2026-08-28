@@ -88,7 +88,7 @@ footer p{font-size:.85rem;color:var(--text-muted)}
 .cta-banner .buy-btn{background:#fff;color:var(--text)}
 .cta-banner .buy-btn:hover{background:#f1f5f9}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
-.skip-link{position:absolute;top:-40px;left:8px;background:var(--primary);color:#fff;padding:8px 16px;z-index:100;font-size:.9rem;transition:top .15s}
+.skip-link{position:absolute;top:-100px;left:8px;background:var(--primary);color:#fff;padding:8px 16px;z-index:100;font-size:.9rem;transition:top .15s}
 .skip-link:focus{top:0}
 .hamburger{display:none;background:none;border:none;cursor:pointer;padding:8px;font-size:1.6rem;color:var(--text);font-family:inherit}
 @media(max-width:768px){
