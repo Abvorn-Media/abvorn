@@ -5,6 +5,6 @@ After=network.target n8n.service
 [Service]
 Type=oneshot
 User=ubuntu
-ExecStart=/usr/bin/curl -s -X POST -H "Content-Type: application/json" -d '{}' http://92.4.157.87:5678/webhook/abvorn-reflection
+ExecStart=/usr/bin/curl -s -X POST -H "Content-Type: application/json" -d '{}' http://127.0.0.1:5678/webhook/abvorn-reflection
 StandardOutput=journal
 StandardError=journal

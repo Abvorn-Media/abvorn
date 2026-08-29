@@ -40,7 +40,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://92.4.157.87:8080/api/v1/videos",
+        "url": "http://127.0.0.1:8080/api/v1/videos",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ video_subject: $('Normalize Request').first().json.video_subject, video_script: $('Normalize Request').first().json.video_script, video_terms: $('Normalize Request').first().json.video_terms, video_aspect: $('Normalize Request').first().json.video_aspect, video_concat_mode: 'random', video_clip_duration: 5, video_count: 1, video_source: 'pexels', voice_name: $('Normalize Request').first().json.voice_name, voice_rate: 1.0, bgm_type: 'random', bgm_volume: 0.2, subtitle_enabled: $('Normalize Request').first().json.subtitle_enabled, paragraph_number: 1 }) }}",
@@ -56,7 +56,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const task_id = ($json.data && $json.data.task_id) || $json.task_id;\nif (!task_id) {\n  throw new Error('MPT did not return a task_id: ' + JSON.stringify($json).slice(0, 300));\n}\nreturn [{ json: { task_id, mpt_base: 'http://92.4.157.87:8080' } }];"
+        "jsCode": "const task_id = ($json.data && $json.data.task_id) || $json.task_id;\nif (!task_id) {\n  throw new Error('MPT did not return a task_id: ' + JSON.stringify($json).slice(0, 300));\n}\nreturn [{ json: { task_id, mpt_base: 'http://127.0.0.1:8080' } }];"
       },
       "id": "extract-task",
       "name": "Extract Task ID",
@@ -80,7 +80,7 @@
     },
     {
       "parameters": {
-        "url": "=http://92.4.157.87:8080/api/v1/tasks/{{ $('Extract Task ID').first().json.task_id }}",
+        "url": "=http://127.0.0.1:8080/api/v1/tasks/{{ $('Extract Task ID').first().json.task_id }}",
         "options": {
           "timeout": 15000
         }
@@ -122,7 +122,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const t = $json.data || {};\nconst base = 'http://92.4.157.87:8080';\nconst abs = p => typeof p === 'string'\n  ? (p.startsWith('http') ? p : base + '/' + String(p).replace(/^\\//, ''))\n  : p;\nreturn [{ json: {\n  status: 'completed',\n  task_id: t.task_id || t.id || $('Extract Task ID').first().json.task_id,\n  videos: (t.videos || []).map(abs),\n  combined_videos: (t.combined_videos || []).map(abs),\n}}];"
+        "jsCode": "const t = $json.data || {};\nconst base = 'http://127.0.0.1:8080';\nconst abs = p => typeof p === 'string'\n  ? (p.startsWith('http') ? p : base + '/' + String(p).replace(/^\\//, ''))\n  : p;\nreturn [{ json: {\n  status: 'completed',\n  task_id: t.task_id || t.id || $('Extract Task ID').first().json.task_id,\n  videos: (t.videos || []).map(abs),\n  combined_videos: (t.combined_videos || []).map(abs),\n}}];"
       },
       "id": "format-result",
       "name": "Format Result",
