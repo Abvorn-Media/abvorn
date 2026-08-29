@@ -186,7 +186,6 @@ async def click_redirect(article_id: str, product_index: int = 0, request: Reque
         tag = secrets.get("AMAZON_TAG", "viraltestco-20")
         query = re.sub(r"-\d+$", "", article_id).replace("-", "+")
         url = f"https://www.amazon.com/s?k={query}&tag={tag}"
-        used_fallback = False
 
     ua = request.headers.get("User-Agent", "") if request is not None else ""
     salt = hashlib.sha1(uuid.uuid4().hex.encode()).hexdigest()[:8]
