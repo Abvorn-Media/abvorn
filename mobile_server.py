@@ -172,21 +172,36 @@ async def click_redirect(article_id: str, product_index: int = 0, request: Reque
     Articles are rewritten at build time so every Amazon link points at
     /click/<article_id>/<product_index>. The real URL is resolved from the
     click_targets table (populated by rewrite_affiliate_urls) and logged
-    before redirecting. This endpoint is intentionally public (not under
-    /api/), so it is exempt from bearer-token auth.
+    before redirecting. Logging is fire-and-forget so the redirect never
+    waits on the SQLite write. This endpoint is intentionally public (not
+    under /api/), so it is exempt from bearer-token auth.
     """
     from src.click_tracker import log_click, resolve_product_url
 
+    import hashlib, uuid
+
     url = resolve_product_url(article_id, product_index)
+    used_fallback = not url
     if not url:
         tag = secrets.get("AMAZON_TAG", "viraltestco-20")
-        url = f"https://www.amazon.com/s?k={article_id.replace('-', '+')}&tag={tag}"
+        query = re.sub(r"-\d+$", "", article_id).replace("-", "+")
+        url = f"https://www.amazon.com/s?k={query}&tag={tag}"
+        used_fallback = False
 
     ua = request.headers.get("User-Agent", "") if request is not None else ""
-    try:
-        log_click(article_id, url, user_agent=ua)
-    except Exception as e:
-        logger.warning("click log failed for %s: %s", article_id, e)
+    salt = hashlib.sha1(uuid.uuid4().hex.encode()).hexdigest()[:8]
+    ip_hash = ""
+    if request is not None and request.client is not None:
+        ip_hash = hashlib.sha256(f"{salt}:{request.client.host}".encode()).hexdigest()[:32]
+
+    async def _log_in_background():
+        try:
+            log_click(article_id, url, user_agent=ua, ip_hash=ip_hash, used_fallback=used_fallback)
+        except Exception as e:
+            logger.warning("click log failed for %s: %s", article_id, e)
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(_log_in_background())
 
     return RedirectResponse(url, status_code=302)
 
@@ -863,4 +878,4 @@ if __name__ == "__main__":
     else:
         print("  Auth:    DISABLED — set ABVORN_API_TOKEN in secrets.json to protect /api/*")
     print()
-    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
+    uvicorn.run(app, host="127.0.0.1", port=port, log_level="info")

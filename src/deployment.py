@@ -190,6 +190,10 @@ VERDICT_CARD_CSS = """
 
 CLICK_DOMAIN = os.environ.get("CLICK_DOMAIN", "https://abvorn.com")
 _SITE_URL = os.environ.get("SITE_URL", "https://abvorn.com").rstrip("/")
+if "github.io" in _SITE_URL or not _SITE_URL.startswith("http"):
+    # Stale GitHub Pages base leaked into committed canonicals (audit D1).
+    # Never emit anything but the real domain, regardless of env.
+    _SITE_URL = "https://abvorn.com"
 
 CTA_BANNER = """
 <div class="cta-banner">
@@ -1107,6 +1111,7 @@ def build_homepage(state, form_url="", reviews=None, base=None):
 
     html = HOMEPAGE_TEMPLATE
     html = html.replace("__SITE_BASE__", b)
+    html = html.replace("__SITE_URL__", _SITE_URL)
     html = html.replace("CATEGORY_DROPDOWN_PLACEHOLDER", nav_dd)
     html = html.replace("HERO_SLIDES_PLACEHOLDER", hero_slides)
     html = html.replace("HERO_DOTS_PLACEHOLDER", hero_dots)
@@ -1189,12 +1194,12 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     <link rel="icon" type="image/png" href="{b}/assets/favicon-32x32.png">
     <title>{blog_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
-    <link rel="canonical" href="{b}/{niche_slug}/">
+    <link rel="canonical" href="{_SITE_URL}/{niche_slug}/">
     <meta property="og:title" content="{blog_title} | Abvorn">
     <meta property="og:description" content="{meta_desc}">
-    <meta property="og:url" content="{b}/{niche_slug}/">
+    <meta property="og:url" content="{_SITE_URL}/{niche_slug}/">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="{b}/assets/logo.png"><meta name="twitter:image" content="{b}/assets/logo.png">
+    <meta property="og:image" content="{_SITE_URL}/assets/logo.png"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{blog_title} | Abvorn">
     <meta name="twitter:description" content="{meta_desc}">
@@ -1756,12 +1761,12 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     <link rel="icon" type="image/png" href="{b}/assets/favicon-32x32.png">
     <title>{blog_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
-    <link rel="canonical" href="{b}/categories/{category_slug}/">
+    <link rel="canonical" href="{_SITE_URL}/categories/{category_slug}/">
     <meta property="og:title" content="{blog_title} | Abvorn">
     <meta property="og:description" content="{meta_desc}">
-    <meta property="og:url" content="{b}/categories/{category_slug}/">
+    <meta property="og:url" content="{_SITE_URL}/categories/{category_slug}/">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="{b}/assets/logo.png"><meta name="twitter:image" content="{b}/assets/logo.png">
+    <meta property="og:image" content="{_SITE_URL}/assets/logo.png"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{blog_title} | Abvorn">
     <meta name="twitter:description" content="{meta_desc}">
@@ -1832,6 +1837,15 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         .category-index__link:hover {{ color:color-mix(in srgb, var(--cat) 44%, #0a0a0a); border-color:var(--cat); }}
         .category-index__link.is-current {{ color:color-mix(in srgb, var(--cat) 44%, #0a0a0a); border-color:var(--cat); }}
         .category-index__tick {{ width:7px; height:7px; border-radius:1px; background:var(--cat, var(--clr-accent)); flex-shrink:0; }}
+
+        .cat-tiles {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) var(--space-lg); background:var(--clr-off-white); border-bottom:1px solid var(--clr-light-gray); }}
+        .cat-tile {{ display:flex; align-items:center; gap:12px; padding:18px 20px; background:var(--clr-white); border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); color:var(--clr-black); text-decoration:none; transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out); }}
+        .cat-tile:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-lg); border-color:var(--cat, var(--clr-accent)); }}
+        .cat-tile__tick {{ width:9px; height:9px; border-radius:2px; background:var(--cat, var(--clr-accent)); flex-shrink:0; }}
+        .cat-tile__name {{ font-family:var(--font-display); font-weight:700; font-size:1rem; flex:1 1 auto; }}
+        .cat-tile__arrow {{ color:var(--clr-mid-gray); font-size:0.9rem; transition: transform var(--duration-fast) var(--ease-out); }}
+        .cat-tile:hover .cat-tile__arrow {{ transform:translateX(3px); color:var(--cat, var(--clr-accent)); }}
+        @media (max-width:640px) {{ .cat-tiles {{ padding: var(--space-xl) var(--space-md); }} }}
 
         .subscribe-band {{ background:var(--clr-off-white); padding: var(--space-xl) 0; border-top:1px solid var(--clr-light-gray); }}
         .subscribe-inner {{ display:flex; justify-content:space-between; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }}
@@ -2001,6 +2015,51 @@ def _owner_category_for_niche(slug):
     return _niche_name(slug)
 
 
+def _dedupe_reviews(reviews):
+    """Collapse scan_published_reviews entries to one card per niche.
+
+    Dated article files accumulate over time, so a niche yields many review
+    entries that are only different publish dates of the same verdict. Keep
+    one per niche: prefer the canonical /reviews/{slug}/ index entry, else
+    the most recently updated dated file.
+    """
+    by_slug = {}
+    for r in reviews:
+        slug = r.get("slug", "")
+        if not slug:
+            continue
+        if slug not in by_slug:
+            by_slug[slug] = r
+            continue
+        cur = by_slug[slug]
+        r_is_index = r.get("rel", "") == f"/reviews/{slug}/"
+        cur_is_index = cur.get("rel", "") == f"/reviews/{slug}/"
+        if r_is_index and not cur_is_index:
+            by_slug[slug] = r
+        elif r_is_index == cur_is_index and (r.get("updated", "") or "") > (cur.get("updated", "") or ""):
+            by_slug[slug] = r
+    return list(by_slug.values())
+
+
+def _build_category_tiles(b="", accent=None):
+    """Grid of tiles on the /categories/ hub, one per top-level category.
+
+    Each tile links to its category landing page (/categories/<slug>/), so the
+    hub stops being a dead end and routes browsers to the real category pages.
+    """
+    tiles = []
+    for label in sorted(CATEGORY_MAP.keys(), key=lambda c: c.lower()):
+        slug = _category_slug(label)
+        color = category_color(label)
+        tiles.append(
+            f'<a class="cat-tile" href="{b}/categories/{slug}/" style="--cat:{color}">'
+            f'<span class="cat-tile__tick" aria-hidden="true"></span>'
+            f'<span class="cat-tile__name">{html_mod.escape(label)}</span>'
+            f'<span class="cat-tile__arrow" aria-hidden="true">→</span></a>'
+        )
+    return f'<nav class="cat-tiles container" aria-label="All categories">{"".join(tiles)}</nav>'
+
+
 def _hub_subscribe_band(accent, hook_text):
     return (
         '<section class="subscribe-band"><div class="container subscribe-inner">'
@@ -2076,12 +2135,12 @@ def _hub_page(b, meta_title, meta_desc, canonical_path, hero_html, index_nav, se
     <link rel="icon" type="image/png" href="{b}/assets/favicon-32x32.png">
     <title>{meta_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
-    <link rel="canonical" href="{b}{canonical_path}">
+    <link rel="canonical" href="{_SITE_URL}{canonical_path}">
     <meta property="og:title" content="{meta_title} | Abvorn">
     <meta property="og:description" content="{meta_desc}">
-    <meta property="og:url" content="{b}{canonical_path}">
+    <meta property="og:url" content="{_SITE_URL}{canonical_path}">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="{b}/assets/logo.png"><meta name="twitter:image" content="{b}/assets/logo.png">
+    <meta property="og:image" content="{_SITE_URL}/assets/logo.png"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{meta_title} | Abvorn">
     <meta name="twitter:description" content="{meta_desc}">
@@ -2152,6 +2211,15 @@ def _hub_page(b, meta_title, meta_desc, canonical_path, hero_html, index_nav, se
         .category-index__link:hover {{ color:color-mix(in srgb, var(--cat) 44%, #0a0a0a); border-color:var(--cat); }}
         .category-index__link.is-current {{ color:color-mix(in srgb, var(--cat) 44%, #0a0a0a); border-color:var(--cat); }}
         .category-index__tick {{ width:7px; height:7px; border-radius:1px; background:var(--cat, var(--clr-accent)); flex-shrink:0; }}
+
+        .cat-tiles {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap: var(--space-lg); padding: var(--space-2xl) var(--space-lg); background:var(--clr-off-white); border-bottom:1px solid var(--clr-light-gray); }}
+        .cat-tile {{ display:flex; align-items:center; gap:12px; padding:18px 20px; background:var(--clr-white); border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); color:var(--clr-black); text-decoration:none; transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out); }}
+        .cat-tile:hover {{ transform:translateY(-4px); box-shadow:var(--shadow-lg); border-color:var(--cat, var(--clr-accent)); }}
+        .cat-tile__tick {{ width:9px; height:9px; border-radius:2px; background:var(--cat, var(--clr-accent)); flex-shrink:0; }}
+        .cat-tile__name {{ font-family:var(--font-display); font-weight:700; font-size:1rem; flex:1 1 auto; }}
+        .cat-tile__arrow {{ color:var(--clr-mid-gray); font-size:0.9rem; transition: transform var(--duration-fast) var(--ease-out); }}
+        .cat-tile:hover .cat-tile__arrow {{ transform:translateX(3px); color:var(--cat, var(--clr-accent)); }}
+        @media (max-width:640px) {{ .cat-tiles {{ padding: var(--space-xl) var(--space-md); }} }}
 
         .subscribe-band {{ background:var(--clr-off-white); padding: var(--space-xl) 0; border-top:1px solid var(--clr-light-gray); }}
         .subscribe-inner {{ display:flex; justify-content:space-between; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }}
@@ -2316,6 +2384,7 @@ async function submitCategorySubscribe(e) {{
 def build_reviews_hub_page(reviews, all_slugs, base=None, affiliate_tag=""):
     """Full /reviews/ hub page listing every published review, grouped by niche."""
     b = base or SITE_BASE
+    reviews = _dedupe_reviews(reviews)
     accent = CATEGORY_COLOR_FALLBACK
     tagline = ("Every product review and buying guide we've published — tested "
                "by hand, judged on real benchmarks, and free of spec-sheet fiction.")
@@ -2350,6 +2419,7 @@ def build_reviews_hub_page(reviews, all_slugs, base=None, affiliate_tag=""):
 def build_categories_hub_page(reviews, all_slugs, base=None, affiliate_tag=""):
     """Full /categories/ hub page, one section per product category."""
     b = base or SITE_BASE
+    reviews = _dedupe_reviews(reviews)
     accent = CATEGORY_COLOR_FALLBACK
     tagline = ("Whatever you're shopping for, there's a category built around it — "
                "every review filed under what the purchase is actually for.")
@@ -2369,7 +2439,7 @@ def build_categories_hub_page(reviews, all_slugs, base=None, affiliate_tag=""):
         meta_desc="Browse every Abvorn review category. Independent product reviews and buying guides, based on real testing.",
         canonical_path="/categories/",
         hero_html=hero_html,
-        index_nav="",
+        index_nav=_build_category_tiles(b, accent),
         sections_html=sections_html,
         footer_chrome=build_site_footer(b),
         form_url=form_url,
@@ -3238,12 +3308,12 @@ finish review, the verdict, and DESIGN.md
 <link rel="icon" type="image/png" href="{b}/assets/favicon-32x32.png">
 <title>Ab's Evolution Journal | Abvorn</title>
 <meta name="description" content="Watch Ab — Abvorn's AI — evolve, generation by generation. A live journal of the system writing itself smarter.">
-<link rel="canonical" href="{b}/journal/">
+<link rel="canonical" href="{_SITE_URL}/journal/">
 <meta property="og:title" content="Ab's Evolution Journal | Abvorn">
 <meta property="og:description" content="Watch Ab — Abvorn's AI — evolve, generation by generation. A live journal of the system writing itself smarter.">
-<meta property="og:url" content="{b}/journal/">
+<meta property="og:url" content="{_SITE_URL}/journal/">
 <meta property="og:type" content="website">
-<meta property="og:image" content="{b}/assets/logo.png"><meta name="twitter:image" content="{b}/assets/logo.png">
+<meta property="og:image" content="{_SITE_URL}/assets/logo.png"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Ab's Evolution Journal | Abvorn">
 <meta name="twitter:description" content="Watch Ab — Abvorn's AI — evolve, generation by generation. A live journal of the system writing itself smarter.">
@@ -3464,12 +3534,12 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <link rel="icon" type="image/png" href="__SITE_BASE__/assets/favicon-32x32.png">
     <title>Abvorn – Reviews Based on Real Testing, Not Spec Sheets</title>
     <meta name="description" content="Independent product reviews and buying guides. We test before we recommend.">
-    <link rel="canonical" href="__SITE_BASE__/">
+    <link rel="canonical" href="__SITE_URL__/">
     <meta property="og:title" content="Abvorn – Reviews Based on Real Testing, Not Spec Sheets">
     <meta property="og:description" content="Independent product reviews and buying guides. We test before we recommend.">
-    <meta property="og:url" content="__SITE_BASE__/">
+    <meta property="og:url" content="__SITE_URL__/">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="__SITE_BASE__/assets/logo.png"><meta name="twitter:image" content="__SITE_BASE__/assets/logo.png">
+    <meta property="og:image" content="__SITE_URL__/assets/logo.png"><meta name="twitter:image" content="__SITE_URL__/assets/logo.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Abvorn – Reviews Based on Real Testing, Not Spec Sheets">
     <meta name="twitter:description" content="Independent product reviews and buying guides. We test before we recommend.">

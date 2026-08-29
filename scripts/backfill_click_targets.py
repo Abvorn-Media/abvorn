@@ -24,13 +24,14 @@ ASIN_PARAM_RE = re.compile(r'[?&]asin=([^&"\']+)')
 NAME_RE = re.compile(r'(?:warm-product-card|hero-pick)__name">\s*([^<]+?)\s*</')
 
 
-def find_nearby_url(html, pos):
-    """Look before/after pos for the card's compare url, asin, or product name."""
-    window_before = max(0, pos - 2000)
-    window = html[window_before:pos + 500]
+def find_nearby_url(html, prev_pos, pos, next_pos):
+    """Look within the same product card for the compare url, asin, or name.
 
-    # closest compare link that appears AFTER the click button start
-    after = html[pos:pos + 3000]
+    Card boundaries are the previous and next /click/ button, so compare links
+    from another card are never picked up. The old fixed 3000-char window both
+    grabbed the next card's link and missed far links in the same card.
+    """
+    after = html[pos:next_pos]
     for m in COMPARE_RE.finditer(after):
         seg = m.group(0)
         um = URL_PARAM_RE.search(seg)
@@ -44,7 +45,7 @@ def find_nearby_url(html, pos):
         break
 
     # fall back to compare link before the button (rare ordering)
-    before = html[max(0, pos - 3000):pos]
+    before = html[prev_pos:pos]
     for m in reversed(list(COMPARE_RE.finditer(before))):
         seg = m.group(0)
         um = URL_PARAM_RE.search(seg)
@@ -58,7 +59,7 @@ def find_nearby_url(html, pos):
         break
 
     # last resort: product name -> amazon search
-    seg = html[window_before:pos + 500]
+    seg = html[prev_pos:next_pos]
     nm = NAME_RE.findall(seg)
     if nm:
         name = nm[-1].strip()
@@ -94,9 +95,13 @@ def main():
     for f in files:
         html = open(f, encoding="utf-8", errors="replace").read()
         rows = []
-        for m in CLICK_RE.finditer(html):
+        matches = list(CLICK_RE.finditer(html))
+        bounds = [m.start() for m in matches]
+        for i, m in enumerate(matches):
             article_id, idx = m.group(1), int(m.group(2))
-            url = find_nearby_url(html, m.start())
+            prev_pos = bounds[i - 1] if i > 0 else 0
+            next_pos = bounds[i + 1] if i + 1 < len(bounds) else len(html)
+            url = find_nearby_url(html, prev_pos, m.start(), next_pos)
             url = ensure_url(url)
             if url:
                 rows.append((article_id, idx, url))

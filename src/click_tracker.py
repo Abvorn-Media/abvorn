@@ -16,9 +16,25 @@ logger = logging.getLogger(__name__)
 DB_PATH = Path("data/clicks.db")
 
 
+BOT_UA_FRAGMENTS = (
+    "bot", "crawl", "spider", "slurp", "archive.org", "wget", "curl",
+    "python-requests", "go-http-client", "headlesschrome", "petalbot",
+    "bingpreview", "facebookexternalhit", "googlebot", "yandex", "baiduspider",
+    "duckduckbot", "site24x7", "uptimerobot", "pingdom", "newrelic",
+)
+
+
+def _is_bot(user_agent: str) -> bool:
+    """True for obvious crawler/bot user agents we should not count."""
+    ua = (user_agent or "").lower()
+    return any(f in ua for f in BOT_UA_FRAGMENTS)
+
+
 def _get_conn():
-    conn = sqlite3.connect(str(DB_PATH))
+    conn = sqlite3.connect(str(DB_PATH), timeout=10)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=10000")
     return conn
 
 
@@ -32,9 +48,13 @@ def init_db():
             product_url TEXT NOT NULL,
             user_agent TEXT,
             ip_hash TEXT,
+            used_fallback INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL
         )
     """)
+    cols = [r["name"] for r in conn.execute("PRAGMA table_info(clicks)").fetchall()]
+    if "used_fallback" not in cols:
+        conn.execute("ALTER TABLE clicks ADD COLUMN used_fallback INTEGER NOT NULL DEFAULT 0")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS articles (
             article_id TEXT PRIMARY KEY,
@@ -88,18 +108,25 @@ def resolve_product_url(article_id: str, product_index: int, fallback: str = "")
     return row["product_url"] if row and row["product_url"] else fallback
 
 
-def log_click(article_id: str, product_url: str, user_agent: str = "", ip_hash: str = "") -> Dict[str, Any]:
-    """Log a single affiliate link click."""
+def log_click(article_id: str, product_url: str, user_agent: str = "", ip_hash: str = "",
+              used_fallback: bool = False) -> Dict[str, Any]:
+    """Log a single affiliate link click. Bot clicks are filtered out."""
+    if _is_bot(user_agent):
+        logger.info(f"Click ignored (bot UA): {article_id}")
+        return {"ok": False, "filtered": "bot", "article_id": article_id}
     init_db()
     conn = _get_conn()
     conn.execute(
-        "INSERT INTO clicks (article_id, product_url, user_agent, ip_hash, created_at) VALUES (?, ?, ?, ?, ?)",
-        (article_id, product_url, user_agent or "", ip_hash or "", datetime.now().isoformat()),
+        "INSERT INTO clicks (article_id, product_url, user_agent, ip_hash, used_fallback, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (article_id, product_url, user_agent or "", ip_hash or "",
+         int(bool(used_fallback)), datetime.now().isoformat()),
     )
     conn.commit()
     conn.close()
     logger.info(f"Click logged: {article_id} -> {product_url[:80]}")
-    return {"ok": True, "article_id": article_id, "product_url": product_url}
+    return {"ok": True, "article_id": article_id, "product_url": product_url,
+            "used_fallback": bool(used_fallback)}
 
 
 def get_clicks(article_id: str) -> int:

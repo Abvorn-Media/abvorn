@@ -454,8 +454,8 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {HEAD_HTML(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}. Compare specs, prices, and Abvorn Verdict scores.')}
-{OG_META(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}.', f'{_SITE_URL}/comparisons/{niche_slug}/', f'{b}/assets/logo.png')}
-<link rel="canonical" href="{b}/comparisons/{niche_slug}/">
+{OG_META(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}.', f'{_SITE_URL}/comparisons/{niche_slug}/', f'{_SITE_URL}/assets/logo.png')}
+<link rel="canonical" href="{_SITE_URL}/comparisons/{niche_slug}/">
 {bread}
 {ANALYTICS_HTML}
 <style>{UTILITY_PAGE_CSS}</style>
@@ -539,6 +539,10 @@ def pick_niche(state):
 
 # ─── HTML template helpers ──────────────────────────────────────────────
 _SITE_URL = os.environ.get("SITE_URL", "https://abvorn.com").rstrip("/")
+if "github.io" in _SITE_URL or not _SITE_URL.startswith("http"):
+    # Stale GitHub Pages base leaked into committed canonicals (audit D1).
+    # Never emit anything but the real domain, regardless of env.
+    _SITE_URL = "https://abvorn.com"
 _SITE_BASE_PATH = os.environ.get("SITE_BASE_PATH", "").rstrip("/")
 SITE_BASE = _SITE_BASE_PATH or ""
 
@@ -1406,12 +1410,12 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
     <link rel="icon" type="image/png" href="{b}/assets/favicon-32x32.png">
     <title>{blog_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
-    <link rel="canonical" href="{b}/{niche_slug}/">
+    <link rel="canonical" href="{_SITE_URL}/{niche_slug}/">
     <meta property="og:title" content="{blog_title} | Abvorn">
     <meta property="og:description" content="{meta_desc}">
-    <meta property="og:url" content="{b}/{niche_slug}/">
+    <meta property="og:url" content="{_SITE_URL}/{niche_slug}/">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="{b}/assets/logo.png"><meta name="twitter:image" content="{b}/assets/logo.png">
+    <meta property="og:image" content="{_SITE_URL}/assets/logo.png"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{blog_title} | Abvorn">
     <meta name="twitter:description" content="{meta_desc}">
@@ -2045,7 +2049,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     <title>{title_escaped} | Abvorn</title>
     <meta name="description" content="{meta_escaped}">
     <link rel="canonical" href="{article_url}">
-    {OG_META(title_escaped + ' | Abvorn', meta_escaped, article_url, f'{b}/assets/logo.png', og_type='article')}
+    {OG_META(title_escaped + ' | Abvorn', meta_escaped, article_url, f'{_SITE_URL}/assets/logo.png', og_type='article')}
     {FONT_LINK}
     <link rel="preconnect" href="https://m.media-amazon.com">
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
@@ -2298,7 +2302,7 @@ def build_methodology_page(all_slugs, form_url=""):
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {HEAD_HTML('How We Test — Abvorn', 'Our rigorous, independent testing methodology. Every recommendation is earned through real-world evaluation.')}
-{OG_META('How We Test — Abvorn', 'Our rigorous, independent testing methodology. Every recommendation is earned through real-world evaluation.', f'{_SITE_URL}/how-we-test/', f'{b}/assets/logo.png')}
+{OG_META('How We Test — Abvorn', 'Our rigorous, independent testing methodology. Every recommendation is earned through real-world evaluation.', f'{_SITE_URL}/how-we-test/', f'{_SITE_URL}/assets/logo.png')}
 <link rel="canonical" href="{f'{_SITE_URL}/how-we-test/'}">
 {ANALYTICS_HTML}
 <style>{UTILITY_PAGE_CSS}</style>
@@ -2718,12 +2722,12 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="{b}/assets/favicon-32x32.png"><title>{title} | Abvorn</title>
 <meta name="description" content="{title} - Abvorn">
-<link rel="canonical" href="{b}/{page_name}">
+<link rel="canonical" href="{_SITE_URL}/{page_name}">
 <meta property="og:title" content="{title} | Abvorn">
 <meta property="og:description" content="{title} - Abvorn">
-<meta property="og:url" content="{b}/{page_name}">
+<meta property="og:url" content="{_SITE_URL}/{page_name}">
 <meta property="og:type" content="website">
-<meta property="og:image" content="{b}/assets/logo.png"><meta name="twitter:image" content="{b}/assets/logo.png">
+<meta property="og:image" content="{_SITE_URL}/assets/logo.png"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title} | Abvorn">
 <meta name="twitter:description" content="{title} - Abvorn">
@@ -3259,7 +3263,7 @@ def main(forced_niche=None, force=False, batch_mode=False):
         "post_title": draft.get("post_title"),
     }])
 
-    # Track affiliate clicks (real clicks via SQLite + click_server)
+    # Track affiliate clicks (real clicks via SQLite; redirect handled by mobile_server)
     state.setdefault("affiliate_clicks", 0)
     state.setdefault("affiliate_clicks_by_article", {})
     simulated_clicks = max(0, min(5, len(products)))
