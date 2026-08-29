@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function setPriceAlert(asin, currentPrice) {
     var email = prompt('Enter your email for price drop alerts:');
     if (!email) return;
-    fetch('/abvorn/api/price-alerts', {
+    fetch('/api/price-alerts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, asin: asin, target_price: currentPrice, current_price: currentPrice })

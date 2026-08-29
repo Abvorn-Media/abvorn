@@ -20,4 +20,4 @@ Disallow: /
 User-agent: Diffbot
 Disallow: /
 
-Sitemap: https://Abvorn-Media.github.io/abvorn/sitemap.xml
+Sitemap: https://abvorn.com/sitemap.xml
