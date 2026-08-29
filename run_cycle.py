@@ -36,7 +36,7 @@ from src.social_permission import SocialPermissionFramework, create_social_permi
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
-from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, scan_published_reviews, _overlay_review, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS, review_card, CATEGORY_TAGLINES, DESIGN_SYSTEM_CSS, FONT_LINK
+from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, build_reviews_hub_page, build_categories_hub_page, scan_published_reviews, _overlay_review, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS, review_card, CATEGORY_TAGLINES, DESIGN_SYSTEM_CSS, FONT_LINK
 from src.click_tracker import get_clicks, register_articles_batch
 from src.article_design import (ARTICLE_DESIGN_CSS, PROD_SHOT_CSS, upgrade_product_image, product_shot_html,
                                 info_dot, sanitize_article_html, inject_product_photos,
@@ -2688,6 +2688,17 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
             build_category_listing_page(cat_name, cat_slug, cat_items, all_slugs, base=SITE_BASE, affiliate_tag=amazon_tag),
             f"category page {cat_slug}")
         print(f"  Written: docs/categories/{cat_slug}/index.html")
+
+    # Top-level hub pages — /reviews/ and /categories/ aggregate across niches.
+    (docs / "reviews").mkdir(parents=True, exist_ok=True)
+    _wc(docs / "reviews" / "index.html",
+        build_reviews_hub_page(reviews, all_slugs, base=SITE_BASE, affiliate_tag=amazon_tag),
+        "reviews hub page")
+    print("  Written: docs/reviews/index.html")
+    _wc(docs / "categories" / "index.html",
+        build_categories_hub_page(reviews, all_slugs, base=SITE_BASE, affiliate_tag=amazon_tag),
+        "categories hub page")
+    print("  Written: docs/categories/index.html")
 
     # Generate static pages (always rewrite so header/footer stays in sync)
     b = SITE_BASE

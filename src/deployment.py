@@ -850,7 +850,7 @@ def build_footer_categories(b=""):
     return f'<div class="footer-cat-cols">{cols_html}</div>'
 
 
-def build_category_index(category_name, b="", niche_slugs=None):
+def build_category_index(category_name, b="", niche_slugs=None, label=None):
     """Contents rail under the hero; each link scrolls to its section.
 
     "All reviews" jumps to the latest section (#latest); each niche jumps to
@@ -872,7 +872,7 @@ def build_category_index(category_name, b="", niche_slugs=None):
     return (
         '<nav class="category-index" aria-label="Guides in this category" style="--cat:' + color + '">'
         '<div class="container category-index__inner">'
-        f'<span class="category-index__label">In this category</span>'
+        f'<span class="category-index__label">{label or "In this category"}</span>'
         f'<div class="category-index__links">{"".join(links)}</div>'
         '</div></nav>'
     )
@@ -1627,12 +1627,12 @@ def _cat_motif(category_slug, accent, breakdown, top_score):
     return _motif_webcams(accent, top_score)
 
 
-def _build_category_hero(category_name, category_slug, items, accent, tagline):
+def _build_category_hero(category_name, category_slug, items, accent, tagline, heading=None, eyebrow=None):
     """Dark 'showroom' hero: eyebrow, headline, tagline, data chips, CTA, motif stage."""
     count, niches, top_score, breakdown = _hero_numerics(items)
     top_txt = f"{top_score:.1f}" if top_score else "--"
     motif = _cat_motif(category_slug, accent, breakdown, top_score)
-    eyebrow = f"{html_mod.escape(category_name.upper())} · {count} review{'s' if count != 1 else ''} published"
+    eyebrow = eyebrow if eyebrow is not None else f"{html_mod.escape(category_name.upper())} · {count} review{'s' if count != 1 else ''} published"
     if items:
         cta = ('<a class="cat-hero__btn" href="#latest">Browse the reviews'
                '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></a>')
@@ -1643,7 +1643,7 @@ def _build_category_hero(category_name, category_slug, items, accent, tagline):
     <div class="container cat-hero__grid">
         <div class="cat-hero__copy">
             <p class="cat-hero__eyebrow"><span class="cat-hero__dot" aria-hidden="true"></span>{eyebrow}</p>
-            <h1 class="cat-hero__title">{html_mod.escape(category_name)} Reviews</h1>
+            <h1 class="cat-hero__title">{html_mod.escape(heading if heading else category_name + ' Reviews')}</h1>
             <p class="cat-hero__tagline">{html_mod.escape(tagline)}</p>
             <div class="cat-hero__chips">
                 <div class="cat-hero__chip"><span class="cat-hero__chip-num">{count}</span><span class="cat-hero__chip-label">reviews published</span></div>
@@ -1991,6 +1991,392 @@ async function submitCategorySubscribe(e) {{
 </script>
 </body>
 </html>'''
+
+
+def _owner_category_for_niche(slug):
+    """Reverse-lookup the parent category name for a niche slug."""
+    for cat_name, slugs in CATEGORY_MAP.items():
+        if slug in slugs:
+            return cat_name
+    return _niche_name(slug)
+
+
+def _hub_subscribe_band(accent, hook_text):
+    return (
+        '<section class="subscribe-band"><div class="container subscribe-inner">'
+        '<div class="subscribe-copy">'
+        f'<h2>Get alerted when we publish a {hook_text}</h2>'
+        '<p>One email whenever we publish a new guide. No spam, unsubscribe anytime.</p>'
+        '</div>'
+        '<form class="subscribe-form" id="category-subscribe-form" onsubmit="submitCategorySubscribe(event)">'
+        '<input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off">'
+        '<label for="category-subscribe-email" class="sr-only">Email address</label>'
+        '<input type="email" class="input" id="category-subscribe-email" placeholder="you@example.com" required>'
+        '<button type="submit" class="btn">Notify Me</button>'
+        '<p class="subscribe-msg" id="category-subscribe-msg" aria-live="polite"></p>'
+        '</form>'
+        '</div></section>'
+    )
+
+
+def _hub_sections(reviews, b, accent, group_key, group_label, group_id):
+    """Group reviews into category-section blocks (by niche or by category).
+
+    Emits a 'Latest reviews' feature strip, a subscribe band, then one section
+    per group. group_key/reviews map a review to its group; group_label maps a
+    group to its display name; group_id maps a group to its anchor slug.
+    """
+    groups = {}
+    for r in reviews:
+        k = group_key(r)
+        groups.setdefault(k, []).append(r)
+    for k in groups:
+        groups[k].sort(key=lambda r: r.get("updated", ""), reverse=True)
+    order = sorted(groups, key=lambda k: group_label(k).lower())
+    latest_items = sorted(reviews, key=lambda r: r.get("updated", ""), reverse=True)[:4]
+    sections = []
+    if reviews:
+        latest_cards = "".join(
+            review_card(r, _owner_category_for_niche(r.get("slug", "")), b, featured=(i == 0))
+            for i, r in enumerate(latest_items)
+        )
+        sections.append(
+            f'<section class="category-section container" id="latest" style="--cat:{accent}">'
+            '<span class="section-eyebrow">Fresh this week</span>'
+            '<div class="category-section__header"><h2>Latest reviews</h2></div>'
+            f'<div class="niche-grid">{latest_cards}</div></section>'
+        )
+        sections.append(_hub_subscribe_band(accent, "new guide"))
+        for k in order:
+            n = len(groups[k])
+            cards = "".join(
+                review_card(r, _owner_category_for_niche(r.get("slug", "")), b) for r in groups[k]
+            )
+            sections.append(
+                f'<section class="category-section container" id="{html_mod.escape(group_id(k))}" style="--cat:{accent}">'
+                f'<div class="category-section__header"><h2>{html_mod.escape(group_label(k))}</h2>'
+                f'<span class="category-section__count">{n} review{"s" if n != 1 else ""}</span></div>'
+                f'<div class="posts-grid">{cards}</div></section>'
+            )
+    else:
+        sections.append(
+            '<p style="grid-column:1/-1;text-align:center;color:var(--clr-mid-gray);padding:40px 0">Reviews coming soon.</p>'
+        )
+    return "".join(sections)
+
+
+def _hub_page(b, meta_title, meta_desc, canonical_path, hero_html, index_nav, sections_html,
+              footer_chrome, form_url, hub_slug, hub_name, accent):
+    """Assemble a full top-level hub page (/reviews/, /categories/) in the same
+    chrome as a category listing page: shared CSS, mega-menu header, hero, an
+    optional contents rail, grouped review sections, footer and scripts."""
+    return f'''<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{b}/assets/favicon-32x32.png">
+    <title>{meta_title} | Abvorn</title>
+    <meta name="description" content="{meta_desc}">
+    <link rel="canonical" href="{b}{canonical_path}">
+    <meta property="og:title" content="{meta_title} | Abvorn">
+    <meta property="og:description" content="{meta_desc}">
+    <meta property="og:url" content="{b}{canonical_path}">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="{b}/assets/logo.png"><meta name="twitter:image" content="{b}/assets/logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{meta_title} | Abvorn">
+    <meta name="twitter:description" content="{meta_desc}">
+    {FONT_LINK}
+    <style>
+        :root {{ --niche-primary: #1a1a1a; --niche-accent: {accent}; --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }}
+        {DESIGN_SYSTEM_CSS}
+        {PROD_SHOT_CSS}
+        
+                header {{ background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; position:sticky; top:0; z-index:100; }}
+        .navbar {{ display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:0 20px; }}
+        .logo img {{ max-height:44px; width:auto; }}
+        .nav-links {{ display:flex; align-items:center; gap:8px; }}
+        .nav-links > a, .nav-item > a {{ color:#fff; text-decoration:none; padding:8px 16px; font-weight:600; font-size:0.9rem; border-radius:var(--radius-sm); transition: background var(--duration-fast); }}
+        .nav-links > a:hover, .nav-item > a:hover {{ background:rgba(255,255,255,0.08); color: var(--clr-accent); }}
+        .nav-item {{ position:relative; }}
+        .nav-item > a {{ padding:8px 16px; display:flex; align-items:center; gap:4px; }}
+        .nav-item > a::after {{ content:'\\25be'; font-size:0.6rem; opacity:0.5; }}
+        .nav-item::after {{ content:''; position:absolute; top:100%; left:0; right:0; height:4px; }}
+        .nav-dropdown {{ display:none; position:absolute; top:100%; left:0; margin-top:4px; background:#ffffff; min-width:240px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px 0; z-index:30; }}
+        .nav-item:hover .nav-dropdown, .nav-item:focus-within .nav-dropdown {{ display:block; }}
+        .nav-dropdown a {{ display:block; color:#1a1a1a; padding:8px 20px; font-weight:400; font-size:0.85rem; text-decoration:none; }}
+        .nav-dropdown a:hover {{ background:#f6f5f2; color: var(--clr-accent-text); }}
+        {MEGA_MENU_CSS}
+        .nav-toggle {{ display:none; background:none; border:none; color:#fff; padding:6px; cursor:pointer; }}
+        .nav-toggle svg {{ width:24px; height:24px; }}
+        @media (max-width:640px) {{
+            .nav-toggle {{ display:block; }}
+            .nav-links {{ display:none; position:absolute; top:100%; left:0; right:0; background:#0a0a0a; flex-direction:column; padding:8px 20px 20px; border-top:1px solid #2a2a2a; }}
+            .nav-links.open {{ display:flex; }}
+            .nav-links > a, .nav-item {{ margin:0; }}
+            .nav-links > a, .nav-item > a {{ padding:10px 0; }}
+            .nav-item > a::after {{ display:none; }}
+            .nav-dropdown {{ position:static; box-shadow:none; margin-top:0; padding-left:16px; display:block; background:transparent; border:none; }}
+            .nav-dropdown a {{ color:#888; padding:6px 0; font-size:0.8rem; }}
+            .nav-dropdown a:hover {{ background:transparent; color:#fff; }}
+        }}
+
+        .cat-hero {{ position:relative; overflow:hidden; background:#0d0d0d; color:#fff; padding:clamp(44px,5.5vw,84px) 0; border-bottom:1px solid #222; }}
+        .cat-hero__bg {{ position:absolute; inset:0; pointer-events:none; background:
+            radial-gradient(900px 420px at 80% 12%, color-mix(in srgb, var(--cat) 16%, transparent), transparent 65%),
+            radial-gradient(640px 380px at 8% 96%, color-mix(in srgb, var(--cat) 8%, transparent), transparent 60%); }}
+        .cat-hero__grid {{ position:relative; display:grid; grid-template-columns:1.15fr 0.85fr; gap:clamp(24px,4vw,56px); align-items:center; }}
+        .cat-hero__eyebrow {{ display:flex; align-items:center; gap:10px; margin:0 0 18px; font-family:var(--font-mono); font-size:0.74rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--cat); }}
+        .cat-hero__dot {{ width:8px; height:8px; border-radius:2px; background:var(--cat); box-shadow:0 0 14px var(--cat); flex-shrink:0; }}
+        .cat-hero__title {{ font-family:var(--font-display); font-weight:800; font-size:clamp(var(--text-3xl),4vw,var(--text-4xl)); line-height:1.06; letter-spacing:-0.02em; color:#fff; margin:0 0 16px; }}
+        .cat-hero__tagline {{ font-family:var(--font-body); font-size:clamp(1rem,1.5vw,1.15rem); line-height:1.6; color:#b9b9b4; max-width:52ch; margin:0 0 26px; }}
+        .cat-hero__chips {{ display:flex; flex-wrap:wrap; gap:12px; margin:0 0 28px; }}
+        .cat-hero__chip {{ display:flex; flex-direction:column; gap:3px; min-width:104px; padding:12px 16px; border:1px solid rgba(255,255,255,0.12); border-radius:14px; background:rgba(255,255,255,0.03); }}
+        .cat-hero__chip-num {{ font-family:var(--font-mono); font-size:1.5rem; font-weight:700; line-height:1; color:#fff; }}
+        .cat-hero__chip-num em {{ font-style:normal; color:var(--cat); }}
+        .cat-hero__chip-label {{ font-family:var(--font-body); font-size:0.68rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#8a8a86; }}
+        .cat-hero__cta {{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; }}
+        .cat-hero__btn {{ display:inline-flex; align-items:center; gap:10px; background:var(--cat); color:#0a0a0a; font-family:var(--font-display); font-weight:800; font-size:1rem; text-decoration:none; padding:0.95em 1.6em; border-radius:12px; box-shadow:0 10px 34px color-mix(in srgb, var(--cat) 45%, transparent); transition:transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }}
+        .cat-hero__btn:hover {{ transform:translateY(-2px); box-shadow:0 14px 44px color-mix(in srgb, var(--cat) 60%, transparent); }}
+        .cat-hero__btn svg {{ width:18px; height:18px; }}
+        .cat-hero__hint {{ font-family:var(--font-body); font-size:0.8rem; color:#8a8a86; }}
+        .cat-hero__coming {{ font-family:var(--font-body); font-size:0.95rem; color:#b9b9b4; }}
+        .cat-hero__stage {{ position:relative; display:flex; align-items:center; justify-content:center; }}
+        .cat-hero__stage svg {{ width:100%; max-width:440px; height:auto; filter:drop-shadow(0 24px 60px rgba(0,0,0,0.5)); }}
+        @media (max-width:900px) {{ .cat-hero__grid {{ grid-template-columns:1fr; }} .cat-hero__stage {{ order:-1; max-width:340px; margin:0 auto; }} }}
+
+        .category-index {{ background:color-mix(in srgb, var(--cat) 12%, var(--clr-off-white)); border-bottom:1px solid color-mix(in srgb, var(--cat) 34%, var(--clr-light-gray)); padding:10px 0; }}
+        .category-index__inner {{ display:flex; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }}
+        .category-index__label {{ font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:color-mix(in srgb, var(--cat) 44%, #0a0a0a); flex-shrink:0; }}
+        .category-index__links {{ display:flex; flex-wrap:wrap; align-items:center; gap: var(--space-md); row-gap:8px; }}
+        .category-index__link {{ font-family:var(--font-display); font-weight:600; font-size:0.95rem; color:var(--clr-black); text-decoration:none; display:inline-flex; align-items:center; gap:8px; padding:4px 0; border-bottom:2px solid transparent; transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out); }}
+        .category-index__link:hover {{ color:color-mix(in srgb, var(--cat) 44%, #0a0a0a); border-color:var(--cat); }}
+        .category-index__link.is-current {{ color:color-mix(in srgb, var(--cat) 44%, #0a0a0a); border-color:var(--cat); }}
+        .category-index__tick {{ width:7px; height:7px; border-radius:1px; background:var(--cat, var(--clr-accent)); flex-shrink:0; }}
+
+        .subscribe-band {{ background:var(--clr-off-white); padding: var(--space-xl) 0; border-top:1px solid var(--clr-light-gray); }}
+        .subscribe-inner {{ display:flex; justify-content:space-between; align-items:center; gap: var(--space-lg); flex-wrap:wrap; }}
+        .subscribe-copy h2 {{ font-size: var(--text-xl); margin-bottom:4px; }}
+        .subscribe-copy p {{ margin:0; color:var(--clr-mid-gray); max-width:40ch; font-size:0.95rem; }}
+        .subscribe-form {{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }}
+        .subscribe-form .input {{ width:240px; background:#fff; border:2px solid var(--clr-light-gray); }}
+        .subscribe-form .input:focus {{ border-color:var(--clr-accent); }}
+        .subscribe-form .hp-field {{ position:absolute; left:-9999px; }}
+        .subscribe-form .btn {{ background:var(--clr-accent); color:#1a1200; font-size:1rem; font-weight:800; padding:0.85em 1.7em; gap:8px; box-shadow:0 6px 22px rgba(201,138,44,0.4); }}
+        .subscribe-form .btn:hover {{ background:#e0a23f; transform:scale(1.045); box-shadow:0 8px 28px rgba(201,138,44,0.55); }}
+        .subscribe-form .btn svg {{ width:18px; height:18px; }}
+        .subscribe-msg {{ flex-basis:100%; font-size:0.85rem; color:#666; margin-top:6px; }}
+        @media (max-width:700px) {{ .subscribe-inner {{ flex-direction:column; align-items:flex-start; }} .subscribe-form .input {{ width:100%; }} }}
+
+        .posts-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }}
+        .niche-grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap: var(--space-lg); }}
+        .section-eyebrow {{ display:block; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:color-mix(in srgb, var(--cat, var(--clr-accent-text)) 50%, #0a0a0a); margin-bottom:6px; }}
+        .category-section {{ padding-top: var(--space-2xl); scroll-margin-top: 90px; }}
+        .category-section:last-of-type {{ padding-bottom: var(--space-2xl); }}
+        #latest {{ margin-bottom: var(--space-xl); }}
+        .category-section__header {{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: var(--space-lg); border-bottom:2px solid var(--clr-black); padding-bottom: var(--space-sm); flex-wrap:wrap; gap: var(--space-sm); }}
+        .category-section__header h2 {{ font-size: var(--text-2xl); margin:0; flex:1 1 auto; min-width:0; }}
+        .category-section__count {{ font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--clr-mid-gray); }}
+        html {{ scroll-behavior:smooth; }}
+        @media (prefers-reduced-motion: reduce) {{ html {{ scroll-behavior:auto; }} }}
+        .niche-card {{ border:1px solid var(--clr-light-gray); border-radius:var(--radius-lg); overflow:hidden; transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out); background:var(--clr-white); display:flex; flex-direction:column; }}
+        .niche-card:hover {{ transform:translateY(-6px); box-shadow:var(--shadow-lg); }}
+        .niche-card__image-wrapper {{ aspect-ratio: 4/3; overflow:hidden; background:var(--clr-white); padding:20px; }}
+        .niche-card img {{ width:100%; height:100%; object-fit:contain; transition: transform var(--duration-slow) var(--ease-out); }}
+        .niche-card:hover img {{ transform: scale(1.04); }}
+        .review-card__media {{ position:relative; }}
+        .review-card__banner {{ display:inline-block; padding:4px 12px; border-radius:6px; color:#1a1200; font-size:0.64rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:6px; }}
+        .review-card__score {{ position:absolute; right:14px; bottom:14px; z-index:2; display:inline-flex; align-items:baseline; gap:3px; background:rgba(10,10,10,0.92); color:#fff; border-radius:100px; padding:6px 14px; border:1px solid rgba(201,138,44,0.6); backdrop-filter: blur(4px); }}
+        .review-card__score-num {{ font-family: var(--font-display); font-size:1.15rem; font-weight:800; color: var(--clr-accent); letter-spacing:-0.02em; line-height:1; }}
+        .review-card__score-out {{ font-size:0.7rem; color:#aaa; font-weight:600; }}
+        .review-card__body {{ display:flex; flex-direction:column; flex:1; padding: var(--space-md); }}
+        .review-card__body h2 {{ font-size: var(--text-lg); margin:0 0 8px; line-height:1.25; }}
+        .review-card__body h2 a {{ color:inherit; text-decoration:none; }}
+        .review-card__body h2 a:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
+        .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
+        .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top: var(--space-sm); }}
+        .review-card__footer .read-link {{ font-weight:700; font-size:0.82rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); border-bottom-color: color-mix(in srgb, var(--cat, var(--clr-accent)) 55%, #1a1200); padding-bottom:1px; }}
+        .review-card__footer .read-link:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
+        .review-card__reactions {{ display:flex; gap:6px; }}
+        .review-card__reactions .reaction-btn {{ display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border:1px solid var(--clr-light-gray); border-radius:999px; background:#fff; color:var(--clr-mid-gray); font-size:0.78rem; font-weight:600; font-family:var(--font-body); }}
+        .review-card__reactions .reaction-btn.is-counter {{ cursor:default; }}
+        .review-card__reactions .reaction-icon {{ font-size:0.9rem; line-height:1; }}
+        .review-card__reactions .reaction-count {{ font-weight:700; min-width:14px; text-align:center; }}
+        .review-card__updated {{ display:block; font-size:0.72rem; color:#999; margin-bottom: var(--space-xs); }}
+        .niche-card--featured {{ grid-column: 1 / -1; display:grid; grid-template-columns: 1.1fr 1fr; align-items:center; }}
+        .niche-card--featured .niche-card__image-wrapper {{ aspect-ratio: 16/10; height:100%; }}
+        .niche-card--featured .review-card__body {{ padding: var(--space-xl); }}
+        .niche-card--featured h2 {{ font-size: var(--text-2xl); }}
+        .niche-card--featured .review-card__score-num {{ font-size:1.5rem; }}
+        .niche-card--featured .review-card__snippet {{ -webkit-line-clamp:3; }}
+        @media (max-width: 760px) {{ .niche-card--featured {{ grid-template-columns: 1fr; }} .niche-card--featured .review-card__body {{ padding: var(--space-md); }} }}
+
+        .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
+        .footer-grid {{ display:grid; grid-template-columns:1.6fr 2fr 1fr; gap:var(--space-lg); margin-bottom:var(--space-xl); }}
+        .footer-col h4 {{ color:#fff; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; }}
+        .footer-col p {{ color:#999; font-size:0.9rem; max-width:32ch; }}
+        .footer-col a {{ display:block; color:#999; text-decoration:none; padding:4px 0; font-size:0.9rem; }}
+        .footer-col a:hover {{ color:#fff; }}
+        .footer-social {{ display:flex; gap:10px; margin-top:16px; }}
+        .footer-social a {{ width:44px; height:44px; border-radius:50%; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:#ccc; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }}
+        .footer-social a:hover {{ background:var(--clr-accent); color:#0a0a0a; }}
+        .footer-social svg {{ width:16px; height:16px; }}
+        .footer-bottom {{ border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }}
+        @media (max-width:760px) {{ .footer-grid {{ grid-template-columns:1fr 1fr; }} }}
+    </style>
+</head>
+ <body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header><div class="container navbar">
+    <a href="{b}/" class="logo"><img src="{b}/logo.svg" alt="Abvorn"></a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav-links" id="nav-links">
+        <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{build_category_dropdown(b)}</div></div>
+        <a href="{b}/">Home</a>
+        <a href="{b}/about.html">About</a>
+        <a href="{b}/journal/">Journal</a>
+    </nav>
+</div></header>
+
+<main id="main">
+{hero_html}
+
+{index_nav}
+
+{sections_html}
+</main>
+
+{footer_chrome}
+
+<script>
+const APPS_SCRIPT_URL = "{form_url}";
+const CATEGORY_SLUG = "{hub_slug}";
+const CATEGORY_NAME = "{hub_name}";
+
+(function() {{
+    const btn = document.getElementById('nav-toggle');
+    const nav = document.getElementById('nav-links');
+    if (!btn || !nav) return;
+    btn.addEventListener('click', () => {{
+        const open = nav.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }});
+}})();
+
+(function() {{
+    const links = [...document.querySelectorAll('.category-index__link')];
+    if (!links.length || !('IntersectionObserver' in window)) return;
+    const targets = links
+        .map(l => {{
+            const href = l.getAttribute('href') || '';
+            if (!href.startsWith('#')) return null;
+            return document.getElementById(href.slice(1));
+        }})
+        .filter(Boolean);
+    if (!targets.length) return;
+    const io = new IntersectionObserver((entries) => {{
+        for (const e of entries) {{
+            if (!e.isIntersecting) continue;
+            links.forEach(l => {{
+                const active = l.getAttribute('href') === '#' + e.target.id;
+                l.classList.toggle('is-current', active);
+                if (active) l.setAttribute('aria-current', 'true');
+                else l.removeAttribute('aria-current');
+            }});
+            return;
+        }}
+    }}, {{ rootMargin: '-10% 0px -70% 0px', threshold: 0 }});
+    targets.forEach(t => io.observe(t));
+}})();
+
+async function submitCategorySubscribe(e) {{
+    e.preventDefault();
+    const f = e.target;
+    const msg = document.getElementById('category-subscribe-msg');
+    if (f._gotcha.value !== "") {{ msg.innerText = 'Success! Check your inbox.'; return; }}
+    const email = document.getElementById('category-subscribe-email').value.trim();
+    if (!email) return;
+    msg.innerText = 'Sending...';
+    try {{
+        const response = await fetch(APPS_SCRIPT_URL, {{
+            method: 'POST', headers: {{'Content-Type': 'application/json'}},
+            body: JSON.stringify({{ email: email, niche: CATEGORY_SLUG, source: 'hub_page', lead_magnet: `New ${{CATEGORY_NAME}} guides` }})
+        }});
+        const result = await response.json();
+        msg.innerText = result.success ? 'Success! Check your inbox.' : (result.message || 'Oops, try again.');
+    }} catch (err) {{ msg.innerText = 'Connection error. Please try later.'; }}
+}}
+{REACTIONS_JS_BODY}
+</script>
+</body>
+</html>'''
+
+
+def build_reviews_hub_page(reviews, all_slugs, base=None, affiliate_tag=""):
+    """Full /reviews/ hub page listing every published review, grouped by niche."""
+    b = base or SITE_BASE
+    accent = CATEGORY_COLOR_FALLBACK
+    tagline = ("Every product review and buying guide we've published — tested "
+               "by hand, judged on real benchmarks, and free of spec-sheet fiction.")
+    hero_html = _build_category_hero(
+        "Reviews", "reviews", reviews, accent, tagline, heading="All Abvorn Reviews"
+    )
+    form_url = os.environ.get("APPS_SCRIPT_URL", "")
+    sections_html = _hub_sections(
+        reviews, b, accent,
+        group_key=lambda r: r["slug"],
+        group_label=_niche_name,
+        group_id=lambda s: s,
+    )
+    niche_order = sorted({r["slug"] for r in reviews}, key=lambda s: _niche_name(s).lower())
+    index_nav = build_category_index("Reviews", b, niche_slugs=niche_order or None, label="Browse the guides")
+    return _hub_page(
+        b=b,
+        meta_title="All Reviews",
+        meta_desc="Browse every Abvorn product review and buying guide. We test before we recommend.",
+        canonical_path="/reviews/",
+        hero_html=hero_html,
+        index_nav=index_nav,
+        sections_html=sections_html,
+        footer_chrome=build_site_footer(b),
+        form_url=form_url,
+        hub_slug="reviews",
+        hub_name=html_mod.escape("Reviews"),
+        accent=accent,
+    )
+
+
+def build_categories_hub_page(reviews, all_slugs, base=None, affiliate_tag=""):
+    """Full /categories/ hub page, one section per product category."""
+    b = base or SITE_BASE
+    accent = CATEGORY_COLOR_FALLBACK
+    tagline = ("Whatever you're shopping for, there's a category built around it — "
+               "every review filed under what the purchase is actually for.")
+    hero_html = _build_category_hero(
+        "Categories", "categories", reviews, accent, tagline, heading="Browse by Category"
+    )
+    form_url = os.environ.get("APPS_SCRIPT_URL", "")
+    sections_html = _hub_sections(
+        reviews, b, accent,
+        group_key=lambda r: _owner_category_for_niche(r["slug"]),
+        group_label=lambda c: c,
+        group_id=_category_slug,
+    )
+    return _hub_page(
+        b=b,
+        meta_title="All Categories",
+        meta_desc="Browse every Abvorn review category. Independent product reviews and buying guides, based on real testing.",
+        canonical_path="/categories/",
+        hero_html=hero_html,
+        index_nav="",
+        sections_html=sections_html,
+        footer_chrome=build_site_footer(b),
+        form_url=form_url,
+        hub_slug="categories",
+        hub_name=html_mod.escape("Categories"),
+        accent=accent,
+    )
 
 
 SHARE_HTML_T = """<div class="share-buttons" style="display:flex;gap:8px;margin:32px 0;padding-top:24px;border-top:1px solid var(--border);align-items:center;flex-wrap:wrap">
@@ -2365,6 +2751,22 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
             f"category page {cat_slug}",
         )
         print(f"  Written: docs/categories/{cat_slug}/index.html")
+
+    # Top-level hub pages — /reviews/ and /categories/ aggregate across niches.
+    reviews_dir = docs / "reviews"
+    reviews_dir.mkdir(parents=True, exist_ok=True)
+    write_checked(
+        reviews_dir / "index.html",
+        build_reviews_hub_page(reviews, all_slugs, base=SITE_BASE, affiliate_tag=amazon_tag),
+        "reviews hub page",
+    )
+    print("  Written: docs/reviews/index.html")
+    write_checked(
+        docs / "categories" / "index.html",
+        build_categories_hub_page(reviews, all_slugs, base=SITE_BASE, affiliate_tag=amazon_tag),
+        "categories hub page",
+    )
+    print("  Written: docs/categories/index.html")
 
     # Generate static pages if they don't exist
     b = SITE_BASE
