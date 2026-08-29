@@ -150,7 +150,7 @@ function sendWelcomeEmail(email, niche, leadMagnet) {
   var subject = 'Your ' + leadMagnet + ' is ready';
   var body = '<h1>Welcome to Abvorn</h1>'
     + '<p>Thanks for requesting the <strong>' + leadMagnet + '</strong>.</p>'
-    + '<p><a href="https://abvorn-media.github.io/abvorn/' + niche + '/" style="display:inline-block;padding:12px 24px;background:#ec4899;color:#fff;text-decoration:none;">Browse Reviews</a></p>';
+    + '<p><a href="https://abvorn.com/' + niche + '/" style="display:inline-block;padding:12px 24px;background:#ec4899;color:#fff;text-decoration:none;">Browse Reviews</a></p>';
 
   MailApp.sendEmail({
     to: email,

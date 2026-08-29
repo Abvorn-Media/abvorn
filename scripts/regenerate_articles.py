@@ -3,7 +3,7 @@ import re, json, os
 from pathlib import Path
 
 BASE = Path("docs")
-SITE_BASE = "/abvorn"
+SITE_BASE = "https://abvorn.com"
 
 CSS_SHARED = """
 :root{--primary:#1a1a1a;--primary-dark:#0a0a0a;--primary-light:#f6f5f2;--accent:#c98a2c;--accent-dark:#996015;--green:#059669;--green-light:#d1fae5;--purple:#7c3aed;--purple-light:#ede9fe;--bg:#fff;--bg-alt:#f6f5f2;--text:#1a1a1a;--text-secondary:#666;--text-muted:#666;--border:#e8e8e8;--shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.06);--shadow-lg:0 8px 24px rgba(0,0,0,.08);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--font-display:'Libre Franklin',-apple-system,sans-serif;--font-body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif}
@@ -234,8 +234,8 @@ def regenerate_article(niche, existing_html, products=None):
 
     product_cards = make_product_cards(products, niche)
 
-    share = SHARE_HTML.replace("REPLACE_TITLE", title).replace("REPLACE_URL", f"https://Abvorn-Media.github.io/abvorn/reviews/{niche}/")
-    share = share.replace("REPLACE_TITLE_ENC", title).replace("REPLACE_URL_ENC", f"https://Abvorn-Media.github.io/abvorn/reviews/{niche}/")
+    share = SHARE_HTML.replace("REPLACE_TITLE", title).replace("REPLACE_URL", f"{SITE_BASE}/reviews/{niche}/")
+    share = share.replace("REPLACE_TITLE_ENC", title).replace("REPLACE_URL_ENC", f"{SITE_BASE}/reviews/{niche}/")
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -244,7 +244,7 @@ def regenerate_article(niche, existing_html, products=None):
 <meta name="description" content="{meta_desc}">
 <link rel="icon" type="image/png" href="{SITE_BASE}/assets/favicon-32x32.png">
 <!-- apple-touch-icon removed -->
-<link rel="canonical" href="https://Abvorn-Media.github.io/abvorn/reviews/{niche}/">
+<link rel="canonical" href="{SITE_BASE}/reviews/{niche}/">
 {ANALYTICS_SCRIPT}
 <style>{CSS_SHARED}</style>
 </head><body>

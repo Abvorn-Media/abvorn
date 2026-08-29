@@ -22,7 +22,7 @@ from src.article_design import (ARTICLE_DESIGN_CSS, PROD_SHOT_CSS,
 logger = logging.getLogger(__name__)
 
 # Helpers shared with run_cycle.py
-SITE_BASE = "https://abvorn-media.github.io/abvorn"
+SITE_BASE = "https://abvorn.com"
 
 # Canonical font link — every page type must use this exact string so the site
 # loads one consistent type system (Libre Franklin display, Inter body,
@@ -189,7 +189,7 @@ VERDICT_CARD_CSS = """
 """
 
 CLICK_DOMAIN = os.environ.get("CLICK_DOMAIN", "https://abvorn.com")
-_SITE_URL = os.environ.get("SITE_URL", "https://abvorn-media.github.io/abvorn").rstrip("/")
+_SITE_URL = os.environ.get("SITE_URL", "https://abvorn.com").rstrip("/")
 
 CTA_BANNER = """
 <div class="cta-banner">
@@ -295,6 +295,7 @@ def generate_click_url(article_id: str, product_index: int, product_url: str = "
 
 def rewrite_affiliate_urls(html: str, article_id: str) -> str:
     import re, html as html_mod
+    from src.click_tracker import record_product_url
     pattern = re.compile(r'(<a\s[^>]*href=")(https?://[^"]*(?:amazon|amzn)[^"]*?)("[^>]*>)', re.IGNORECASE)
     product_index = 0
     seen_indices = {}
@@ -311,6 +312,7 @@ def rewrite_affiliate_urls(html: str, article_id: str) -> str:
             seen_indices[original_url] = idx
             product_index += 1
         click_url = generate_click_url(article_id, idx)
+        record_product_url(article_id, idx, original_url)
         return f'{prefix}{click_url}{suffix}'
 
     return pattern.sub(replace_match, html)
@@ -953,7 +955,7 @@ def deploy_single_page(page_path: str, content: str) -> Dict[str, Any]:
     """Deploy a single page and return deployment result."""
     try:
         push_single_file(page_path, content)
-        url = f"https://abvorn-media.github.io/abvorn/{page_path}"
+        url = f"{SITE_BASE}/{page_path}"
         logger.info(f"Deployed {page_path} -> {url}")
         return {"status": "deployed", "url": url, "path": page_path}
     except Exception as e:

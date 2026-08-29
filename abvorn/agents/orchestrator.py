@@ -306,7 +306,7 @@ class SiteDeployer:
                 recent += f'<div class="post-card"><div class="post-title"><a href="{SITE_BASE}/reviews/{slug}/">{title}</a></div><div class="post-meta">{slug.replace("-"," ").title()}</div></div>'
 
             jsonld = """<script type="application/ld+json">{
-"@context":"https://schema.org","@type":"Organization","name":"Abvorn","url":"https://Abvorn-Media.github.io/abvorn/","description":"Independent product reviews and buying guides.","sameAs":["https://www.tiktok.com/@abvorn","https://www.instagram.com/abvorn/","https://x.com/Abvorn"]}</script>"""
+"@context":"https://schema.org","@type":"Organization","name":"Abvorn","url":"https://abvorn.com/","description":"Independent product reviews and buying guides.","sameAs":["https://www.tiktok.com/@abvorn","https://www.instagram.com/abvorn/","https://x.com/Abvorn"]}</script>"""
             html = f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -429,7 +429,7 @@ class SiteDeployer:
             meta_desc = content.get("meta_description", "")[:160]
             product_name = content.get("product_name", "")
 
-            article_url = f"https://Abvorn-Media.github.io/abvorn/reviews/{niche}/"
+            article_url = f"https://abvorn.com/reviews/{niche}/"
             share = SHARE_HTML.replace("TITLE_PLACEHOLDER", post_title).replace("URL_PLACEHOLDER", article_url)
 
             b = SITE_BASE

@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
 
 import src.deployment as deployment_mod
-deployment_mod._SITE_URL = os.environ.get("SITE_URL", "https://abvorn-media.github.io/abvorn").rstrip("/")
+deployment_mod._SITE_URL = os.environ.get("SITE_URL", "https://abvorn.com").rstrip("/")
 
 from src.deployment import generate_click_url, rewrite_affiliate_urls, build_article_page
 from src.change_management import (

@@ -44,8 +44,48 @@ def init_db():
         )
     """)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_clicks_article ON clicks(article_id)")
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS click_targets (
+            article_id TEXT NOT NULL,
+            product_index INTEGER NOT NULL,
+            product_url TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            PRIMARY KEY (article_id, product_index)
+        )
+    """)
     conn.commit()
     conn.close()
+
+
+def record_product_url(article_id: str, product_index: int, product_url: str) -> None:
+    """Persist the real affiliate URL for /click/<article_id>/<index> resolution.
+
+    Called at build time while rewriting affiliate links, so the redirect
+    server can resolve a click link back to the actual Amazon URL.
+    """
+    if not article_id or not product_url:
+        return
+    init_db()
+    conn = _get_conn()
+    conn.execute(
+        "INSERT OR REPLACE INTO click_targets (article_id, product_index, product_url, created_at) "
+        "VALUES (?, ?, ?, ?)",
+        (article_id, product_index, product_url or "", datetime.now().isoformat()),
+    )
+    conn.commit()
+    conn.close()
+
+
+def resolve_product_url(article_id: str, product_index: int, fallback: str = "") -> str:
+    """Look up the real affiliate URL for a click link. Returns fallback if unknown."""
+    init_db()
+    conn = _get_conn()
+    row = conn.execute(
+        "SELECT product_url FROM click_targets WHERE article_id = ? AND product_index = ?",
+        (article_id, product_index),
+    ).fetchone()
+    conn.close()
+    return row["product_url"] if row and row["product_url"] else fallback
 
 
 def log_click(article_id: str, product_url: str, user_agent: str = "", ip_hash: str = "") -> Dict[str, Any]:

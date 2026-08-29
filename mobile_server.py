@@ -8,7 +8,7 @@ from typing import Optional
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse, HTMLResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import uvicorn
@@ -162,6 +162,33 @@ async def dashboard_page():
     """Serve the Abvorn Console HTML dashboard."""
     html = generate_dashboard_html()
     return HTMLResponse(content=html, media_type="text/html")
+
+
+@app.get("/click/{article_id}/{product_index}")
+@app.get("/click/{article_id}")
+async def click_redirect(article_id: str, product_index: int = 0, request: Request = None):
+    """Track an affiliate click and 302-redirect to the real Amazon URL.
+
+    Articles are rewritten at build time so every Amazon link points at
+    /click/<article_id>/<product_index>. The real URL is resolved from the
+    click_targets table (populated by rewrite_affiliate_urls) and logged
+    before redirecting. This endpoint is intentionally public (not under
+    /api/), so it is exempt from bearer-token auth.
+    """
+    from src.click_tracker import log_click, resolve_product_url
+
+    url = resolve_product_url(article_id, product_index)
+    if not url:
+        tag = secrets.get("AMAZON_TAG", "viraltestco-20")
+        url = f"https://www.amazon.com/s?k={article_id.replace('-', '+')}&tag={tag}"
+
+    ua = request.headers.get("User-Agent", "") if request is not None else ""
+    try:
+        log_click(article_id, url, user_agent=ua)
+    except Exception as e:
+        logger.warning("click log failed for %s: %s", article_id, e)
+
+    return RedirectResponse(url, status_code=302)
 
 
 # ── Symbiotic Cortex (Obsidian) API endpoints ───────────────────────

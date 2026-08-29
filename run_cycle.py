@@ -538,8 +538,8 @@ def pick_niche(state):
 
 
 # ─── HTML template helpers ──────────────────────────────────────────────
-_SITE_URL = os.environ.get("SITE_URL", "https://Abvorn-Media.github.io/abvorn").rstrip("/")
-_SITE_BASE_PATH = os.environ.get("SITE_BASE_PATH", "/abvorn").rstrip("/")
+_SITE_URL = os.environ.get("SITE_URL", "https://abvorn.com").rstrip("/")
+_SITE_BASE_PATH = os.environ.get("SITE_BASE_PATH", "").rstrip("/")
 SITE_BASE = _SITE_BASE_PATH or ""
 
 # ── Schema generators ───────────────────────────────────────────────────
