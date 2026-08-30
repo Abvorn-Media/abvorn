@@ -374,7 +374,7 @@ def main():
             a.get("products"),
             pexels_key="",
             amazon_tag="",
-            form_url="",
+            form_url=run_cycle.get_secrets().get("APPS_SCRIPT_URL", ""),
             hero_img="",
             google_client_id="",
             related_niches=related,

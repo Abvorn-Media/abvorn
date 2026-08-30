@@ -480,7 +480,7 @@ CTA_BANNER = """
 <div class="cta-banner">
 <h3>Want this guide as a PDF?</h3>
 <p>Enter your email and we'll send this review straight to your inbox as a clean, printable PDF — specs, scores, and buy links included.</p>
-<form id="cta-lead-form" onsubmit="submitLead(event)" data-source="cta_banner">
+<form id="cta-lead-form" onsubmit="submitLead(event)" data-source="cta_banner" data-lead-magnet="__LEAD_MAGNET__">
     <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
     <div class="cta-lead-row">
         <input type="email" id="cta-email" placeholder="your@email.com" class="input" required>
@@ -489,6 +489,32 @@ CTA_BANNER = """
     <p class="lead-msg" style="font-size:0.8rem;margin-top:10px;"></p>
 </form>
 </div>"""
+
+
+PDF_LEAD_CTA_JS = """<script>
+async function submitLead(e) {
+    e.preventDefault();
+    const f = e.target;
+    const msg = f.querySelector('.lead-msg');
+    if (f._gotcha.value !== "") { msg.textContent = 'Thanks! Check your inbox.'; return; }
+    const email = f.querySelector('#cta-email').value.trim();
+    if (!email) return;
+    msg.textContent = 'Sending...';
+    const btn = f.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email: email, niche: CATEGORY_SLUG, source: 'cta_banner', lead_magnet: f.dataset.leadMagnet || document.title })
+        });
+        const result = await response.json();
+        msg.textContent = result.success ? 'You are subscribed! Check your inbox.' : (result.message || 'Something went wrong, please try again.');
+    } catch(err) {
+        msg.textContent = 'Connection error. Please try later.';
+    }
+    btn.disabled = false;
+}
+</script>"""
 
 # ─── State management ───────────────────────────────────────────────────
 STATE_FILE = Path("cycle_state.json")
@@ -1853,7 +1879,8 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             aff_url = _product_aff_url(prod, niche_slug, t)
             product_cards += warm_product_card_html(prod, affiliate_url=aff_url, base=b, overall=prod.get("verdict_score", ""), label=prod.get("verdict_label", ""))
         product_cards += "</div>"
-    cta = warm_shop_cta_banner(niche_slug.replace("-", "+"), t)
+    pdf_cta = CTA_BANNER.replace("__LEAD_MAGNET__", niche_name.replace("\\", "\\\\").replace("'", "\\'"))
+    cta = pdf_cta + warm_shop_cta_banner(niche_slug.replace("-", "+"), t)
     matrix_rows = ""
     if products:
         for i, prod in enumerate(products):
@@ -2040,6 +2067,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     # Pilot hero + rail.
     review_rail = build_review_rail(post_title, article_url, niche_slug, niche_name, toc_items, base=b, form_url=form_url)
     subscribe_js = WARM_NICHE_SUBSCRIBE_JS.replace("{niche_name}", niche_name.replace("\\", "\\\\").replace("'", "\\'"))
+    cta_lead_js = PDF_LEAD_CTA_JS
 
     return f'''<!DOCTYPE html>
 <html lang="en">
@@ -2123,6 +2151,7 @@ const CATEGORY_SLUG = "{niche_slug}";
     }});
 }})();
 </script>
+{cta_lead_js}
 {subscribe_js}
 {RPS_JS}
 {ARTICLE_REACTIONS_JS}
