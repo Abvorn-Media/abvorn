@@ -32,6 +32,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install PDF render system libs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0
+
       - name: Restore content state cache
         uses: actions/cache/restore@v4
         with:

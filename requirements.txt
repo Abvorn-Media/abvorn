@@ -1,4 +1,5 @@
 pypdf
+weasyprint==62.3
 chromadb
 openai
 anthropic

@@ -403,6 +403,10 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
         .av-alert-btn { background:transparent; color:var(--clr-mid-gray); border:1px solid var(--clr-light-gray); border-radius:100px; padding:4px 12px; font-size:.78rem; cursor:pointer; margin-left:8px; font-family:var(--font-body); transition:border-color .15s,color .15s; display:inline-flex; align-items:center; gap:5px; }
         .av-alert-btn svg { flex-shrink:0; }
         .av-alert-btn:hover { border-color:var(--clr-accent); color:var(--clr-accent); }
+        .hero-pdf { margin-top:14px; }
+        .pdf-download-btn { display:inline-flex; align-items:center; gap:7px; background:var(--clr-accent); color:#1a1a1a; font-weight:700; font-size:.85rem; letter-spacing:.01em; padding:9px 16px; border-radius:10px; text-decoration:none; transition:filter .15s,transform .15s; }
+        .pdf-download-btn svg { width:14px; height:14px; }
+        .pdf-download-btn:hover { filter:brightness(1.07); transform:translateY(-1px); }
     </style>
     
 <style>
@@ -443,6 +447,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
     <div class="hero-grid">
         <div>
             <p class="hero-meta">Laptops <span class="dot"></span> <span class="date">By Abvorn</span> <span class="dot"></span> <span class="date">Published Aug 25, 2026</span></p>
+            <p class="hero-pdf"><a class="pdf-download-btn" href="https://abvorn.com/reviews/laptops/top-3-laptops-compared-lenovo-hp-jumper-best-laptops-2026-review-2026-08-25.pdf" download>Download PDF <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></a></p>
             <h1>Top 3 Laptops Compared: Lenovo, HP &amp; Jumper – Best Laptops 2026 Review</h1>
             <p class="hero-excerpt">Discover the 2026 showdown between the Lenovo 15.6″ Business Laptop, HP 15.6″ FHD Laptop 2026 Edition, and Jumper 15.6″ FHD Laptop. Find specs, pros/cons, and o</p>
         </div>
@@ -537,13 +542,13 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 </div></div>
 
 <div class="cta-banner">
-<h3>Want this guide as a PDF?</h3>
-<p>Enter your email and we'll send this review straight to your inbox as a clean, printable PDF — specs, scores, and buy links included.</p>
+<h3>Get more reviews like this</h3>
+<p>New guides, top picks, and price drops for these products &mdash; straight to your inbox. No spam, unsubscribe anytime.</p>
 <form id="cta-lead-form" onsubmit="submitLead(event)" data-source="cta_banner" data-lead-magnet="Laptops">
     <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
     <div class="cta-lead-row">
         <input type="email" id="cta-email" placeholder="your@email.com" class="input" required>
-        <button type="submit" class="btn">Send me the PDF</button>
+        <button type="submit" class="btn">Send me updates</button>
     </div>
     <p class="lead-msg" style="font-size:0.8rem;margin-top:10px;"></p>
 </form>

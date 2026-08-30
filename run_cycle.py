@@ -45,6 +45,7 @@ from src.warm_editorial import (WARM_EDITORIAL_CSS, WARM_TOKEN_SHIM_CSS, WARM_PR
                                 WARM_SHARE_HTML_T, warm_hero_pick_html, warm_product_card_html,
                                 warm_shop_cta_banner, warm_heading_ids, build_review_rail,
                                 WARM_NICHE_SUBSCRIBE_JS)
+from src.review_pdf import build_review_page_pdf
 
 logger = logging.getLogger("run_cycle")
 logging.basicConfig(level=logging.INFO, format="%(name)s | %(message)s")
@@ -478,13 +479,13 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
 
 CTA_BANNER = """
 <div class="cta-banner">
-<h3>Want this guide as a PDF?</h3>
-<p>Enter your email and we'll send this review straight to your inbox as a clean, printable PDF — specs, scores, and buy links included.</p>
+<h3>Get more reviews like this</h3>
+<p>New guides, top picks, and price drops for these products &mdash; straight to your inbox. No spam, unsubscribe anytime.</p>
 <form id="cta-lead-form" onsubmit="submitLead(event)" data-source="cta_banner" data-lead-magnet="__LEAD_MAGNET__">
     <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
     <div class="cta-lead-row">
         <input type="email" id="cta-email" placeholder="your@email.com" class="input" required>
-        <button type="submit" class="btn">Send me the PDF</button>
+        <button type="submit" class="btn">Send me updates</button>
     </div>
     <p class="lead-msg" style="font-size:0.8rem;margin-top:10px;"></p>
 </form>
@@ -1859,7 +1860,7 @@ def _product_aff_url(product, niche_slug, tag):
     return amazon_link(query, tag)
 
 
-def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None, published_date=None, updated_date=None, article_id=None):
+def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None, published_date=None, updated_date=None, article_id=None, pdf_url=""):
     b = SITE_BASE
     t = amazon_tag or os.environ.get("AMAZON_TAG", "viraltestco-20")
     article_url = f"{_SITE_URL}/reviews/{niche_slug}/"
@@ -2068,6 +2069,14 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     review_rail = build_review_rail(post_title, article_url, niche_slug, niche_name, toc_items, base=b, form_url=form_url)
     subscribe_js = WARM_NICHE_SUBSCRIBE_JS.replace("{niche_name}", niche_name.replace("\\", "\\\\").replace("'", "\\'"))
     cta_lead_js = PDF_LEAD_CTA_JS
+    pdf_download = ""
+    if pdf_url:
+        pdf_download = (
+            f'<p class="hero-pdf"><a class="pdf-download-btn" href="{html_mod.escape(pdf_url)}" download>'
+            'Download PDF <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+            'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'
+            '<path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></a></p>'
+        )
 
     return f'''<!DOCTYPE html>
 <html lang="en">
@@ -2099,6 +2108,10 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .av-alert-btn {{ background:transparent; color:var(--clr-mid-gray); border:1px solid var(--clr-light-gray); border-radius:100px; padding:4px 12px; font-size:.78rem; cursor:pointer; margin-left:8px; font-family:var(--font-body); transition:border-color .15s,color .15s; display:inline-flex; align-items:center; gap:5px; }}
         .av-alert-btn svg {{ flex-shrink:0; }}
         .av-alert-btn:hover {{ border-color:var(--clr-accent); color:var(--clr-accent); }}
+        .hero-pdf {{ margin-top:14px; }}
+        .pdf-download-btn {{ display:inline-flex; align-items:center; gap:7px; background:var(--clr-accent); color:#1a1a1a; font-weight:700; font-size:.85rem; letter-spacing:.01em; padding:9px 16px; border-radius:10px; text-decoration:none; transition:filter .15s,transform .15s; }}
+        .pdf-download-btn svg {{ width:14px; height:14px; }}
+        .pdf-download-btn:hover {{ filter:brightness(1.07); transform:translateY(-1px); }}
     </style>
     {COOKIE_CONSENT_SCRIPT}
 </head>
@@ -2121,6 +2134,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     <div class="hero-grid">
         <div>
             <p class="hero-meta">{name_escaped} <span class="dot"></span> <span class="date">By Abvorn</span> <span class="dot"></span> <span class="date">Published {pub_display}</span></p>
+            {pdf_download}
             <h1>{title_escaped}</h1>
             <p class="hero-excerpt">{meta_escaped}</p>
         </div>
@@ -2826,15 +2840,21 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
             hero_img_html = hero_images.get(slug, "")
             _sorted_niches = sorted(state["niches"], key=lambda n: n["name"].lower())
             related = [n for n in _sorted_niches if n["slug"] != slug][:4]
-            article_html = build_article_page(slug, niche_name, a["post_title"], a["article_html"],
-                                              a["intro"], a["product_name"], a["meta_description"],
-                                              all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
-                                              related_niches=related, article_id=f"{slug}-{i}")
             date_str = datetime.now().strftime("%Y-%m-%d")
             suffix = "" if i == 0 else f"-{i}"
             fname = f"{_title_slug(a['post_title'])}-{date_str}{suffix}.html"
+            pdf_url = f"{_SITE_URL}/reviews/{slug}/{fname[:-5]}.pdf"
+            article_html = build_article_page(slug, niche_name, a["post_title"], a["article_html"],
+                                              a["intro"], a["product_name"], a["meta_description"],
+                                              all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
+                                              related_niches=related, article_id=f"{slug}-{i}", pdf_url=pdf_url)
             _wc(post_dir / fname, article_html, f"article {slug}/{fname}")
             print(f"  Written: docs/reviews/{slug}/{fname} (article)")
+            pdf_bytes = build_review_page_pdf(article_html, title=a["post_title"], niche_name=niche_name, base=_SITE_URL)
+            if pdf_bytes:
+                pdf_name = f"{fname[:-5]}.pdf"
+                (post_dir / pdf_name).write_bytes(pdf_bytes)
+                print(f"  Written: docs/reviews/{slug}/{pdf_name} (pdf)")
             if i == len(post_list) - 1:
                 _wc(post_dir / "index.html", article_html, f"article index {slug}")
                 print(f"  Written: docs/reviews/{slug}/index.html (latest)")

@@ -21,6 +21,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Install PDF render system libs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0
+
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:

@@ -21,6 +21,7 @@ from urllib.parse import unquote, parse_qs, urlparse
 
 import run_cycle
 from src.deployment import _title_slug
+from src.review_pdf import build_review_page_pdf
 
 MONTHS = {m: i + 1 for i, m in enumerate(
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -346,6 +347,17 @@ def main():
     by_slug = {n["slug"]: n for n in state["niches"]}
 
     pages = sorted(p for p in (DOCS / "reviews").glob("*/*.html"))
+    # Map each niche to its newest dated article stem (for index.html, whose
+    # Download button must point at the newest PDF even though the page itself
+    # is the byte-for-byte mirror of that article).
+    newest_stem = {}
+    for slug in by_slug:
+        d = DOCS / "reviews" / slug
+        if not d.exists():
+            continue
+        dated = [p for p in d.glob("*.html") if p.name != "index.html"]
+        if dated:
+            newest_stem[slug] = max(dated, key=lambda p: extract_article(p)["published_date"] or "") .stem
     built = 0
     for i, page in enumerate(pages):
         slug = page.parent.name
@@ -362,6 +374,7 @@ def main():
         rel_slugs = a.get("related_niches") or [n["slug"] for n in _sorted_niches if n["slug"] != slug][:4]
         related = [by_slug[s] for s in rel_slugs if s in by_slug]
         article_id = extract_article_id(page_html, f"{slug}-0")
+        pdf_stem = newest_stem.get(slug, page.stem) if page.name == "index.html" else page.stem
         html_out = run_cycle.build_article_page(
             slug,
             niche_name,
@@ -381,11 +394,17 @@ def main():
             published_date=a.get("published_date"),
             updated_date=a.get("updated_date"),
             article_id=article_id,
+            pdf_url=f"{run_cycle._SITE_URL}/reviews/{slug}/{pdf_stem}.pdf",
         )
         html_out = normalize_click_ids(html_out, article_id)
         page.write_text(html_out, encoding="utf-8")
         built += 1
         print(f"  Rebuilt: {page}  ({a['post_title'][:50]})".encode("ascii", "replace").decode("ascii"))
+        if page.name != "index.html":
+            pdf_bytes = build_review_page_pdf(html_out, title=a["post_title"], niche_name=niche_name, base=run_cycle._SITE_URL)
+            if pdf_bytes:
+                page.with_suffix(".pdf").write_bytes(pdf_bytes)
+                print(f"  PDF:    {page.with_suffix('.pdf')}")
 
     # index.html must mirror the newest dated article byte-for-byte (same
     # article_id), matching the content cycle's write_files behavior.

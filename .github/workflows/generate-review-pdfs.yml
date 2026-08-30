@@ -1,0 +1,52 @@
+name: Generate Review PDFs
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: generate-pdfs
+  cancel-in-progress: false
+
+jobs:
+  pdfs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install PDF render system libs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate PDFs
+        run: python scripts/generate_review_pdfs.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "Abvorn Bot"
+          git config user.email "bot@abvorn.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No PDFs to commit"
+          else
+            git commit -m "chore: generate review PDFs"
+            git push
+          fi
+
+      - name: Notify failure on Telegram
+        if: failure()
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            -d "chat_id=${TG_CHAT}" \
+            --data-urlencode "text=🚨 <b>Generate Review PDFs</b> failed on ${GITHUB_REF} (run #${GITHUB_RUN_NUMBER}). Logs: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            -d "parse_mode=HTML"
