@@ -1439,7 +1439,7 @@ async function submitCategorySubscribe(e) {{
     msg.innerText = 'Sending...';
     try {{
         const response = await fetch(APPS_SCRIPT_URL, {{
-            method: 'POST', headers: {{'Content-Type': 'application/json'}},
+            method: 'POST', headers: {{'Content-Type': 'text/plain;charset=utf-8'}},
             body: JSON.stringify({{ email: email, niche: CATEGORY_SLUG, source: 'category_page', lead_magnet: `New ${{CATEGORY_NAME}} reviews` }})
         }});
         const result = await response.json();
@@ -1994,7 +1994,7 @@ async function submitCategorySubscribe(e) {{
     msg.innerText = 'Sending...';
     try {{
         const response = await fetch(APPS_SCRIPT_URL, {{
-            method: 'POST', headers: {{'Content-Type': 'application/json'}},
+            method: 'POST', headers: {{'Content-Type': 'text/plain;charset=utf-8'}},
             body: JSON.stringify({{ email: email, niche: CATEGORY_SLUG, source: 'category_page', lead_magnet: `New ${{CATEGORY_NAME}} reviews` }})
         }});
         const result = await response.json();
@@ -2368,7 +2368,7 @@ async function submitCategorySubscribe(e) {{
     msg.innerText = 'Sending...';
     try {{
         const response = await fetch(APPS_SCRIPT_URL, {{
-            method: 'POST', headers: {{'Content-Type': 'application/json'}},
+            method: 'POST', headers: {{'Content-Type': 'text/plain;charset=utf-8'}},
             body: JSON.stringify({{ email: email, niche: CATEGORY_SLUG, source: 'hub_page', lead_magnet: `New ${{CATEGORY_NAME}} guides` }})
         }});
         const result = await response.json();
@@ -2475,7 +2475,7 @@ if (!boxes.length || !URLS) return;
 var slugs = [];
 boxes.forEach(function(b){ var s = b.getAttribute('data-review'); if (s && slugs.indexOf(s) === -1) slugs.push(s); });
 if (!slugs.length) return;
-fetch(URLS, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'reactions', slugs:slugs})})
+fetch(URLS, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({action:'reactions', slugs:slugs})})
   .then(function(r){ return r.json(); })
   .then(function(data){
     if (!data || !data.success || !data.reactions) return;
@@ -2518,7 +2518,7 @@ function paint(){
 }
 function refresh(){
   if (!URLS) return;
-  fetch(URLS, {method:'POST', headers:{'Content-Type':'application/json'},
+  fetch(URLS, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
     body:JSON.stringify({action:'reactions', slugs:[slug]})})
     .then(function(r){ return r.json(); })
     .then(function(data){
@@ -2539,7 +2539,7 @@ btns.forEach(function(btn){
     var type = btn.getAttribute('data-type');
     var on = !(mine[type]||false);
     btn.disabled = true;
-    fetch(URLS, {method:'POST', headers:{'Content-Type':'application/json'},
+    fetch(URLS, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({action:'reaction', slug:slug, type:type, visitor:vid})})
       .then(function(r){ return r.json(); })
       .then(function(data){
@@ -3881,7 +3881,7 @@ async function submitHomepageSubscribe(e) {
     msg.innerText = 'Sending...';
     try {
         const response = await fetch(APPS_SCRIPT_URL, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'},
             body: JSON.stringify({ email: email, niche: 'general', source: 'homepage_notify', lead_magnet: 'New guide notifications' })
         });
         const result = await response.json();

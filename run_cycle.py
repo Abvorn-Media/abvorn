@@ -505,7 +505,7 @@ async function submitLead(e) {
     btn.disabled = true;
     try {
         const response = await fetch(APPS_SCRIPT_URL, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'},
             body: JSON.stringify({ email: email, niche: CATEGORY_SLUG, source: 'cta_banner', lead_magnet: f.dataset.leadMagnet || document.title })
         });
         const result = await response.json();
@@ -1198,7 +1198,7 @@ async function submitHomepageSubscribe(e) {
     msg.innerText = 'Sending...';
     try {
         const response = await fetch(APPS_SCRIPT_URL, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'},
             body: JSON.stringify({ email: email, niche: 'general', source: 'homepage_notify', lead_magnet: 'New guide notifications' })
         });
         const result = await response.json();
@@ -1674,7 +1674,7 @@ async function submitCategorySubscribe(e) {{
     msg.innerText = 'Sending...';
     try {{
         const response = await fetch(APPS_SCRIPT_URL, {{
-            method: 'POST', headers: {{'Content-Type': 'application/json'}},
+            method: 'POST', headers: {{'Content-Type': 'text/plain;charset=utf-8'}},
             body: JSON.stringify({{ email: email, niche: CATEGORY_SLUG, source: 'category_page', lead_magnet: `New ${{CATEGORY_NAME}} reviews` }})
         }});
         const result = await response.json();

@@ -564,7 +564,7 @@ async function submitNicheSubscribe(e) {
     btn.disabled = true;
     try {
         const response = await fetch(APPS_SCRIPT_URL, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'},
             body: JSON.stringify({ email: email, niche: CATEGORY_SLUG, source: 'review_rail', lead_magnet: '{niche_name} updates' })
         });
         const result = await response.json();
@@ -597,7 +597,7 @@ async function submitEmailGuide(e) {
     btn.disabled = true;
     try {
         const response = await fetch(APPS_SCRIPT_URL, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'},
             body: JSON.stringify(payload)
         });
         const result = await response.json();

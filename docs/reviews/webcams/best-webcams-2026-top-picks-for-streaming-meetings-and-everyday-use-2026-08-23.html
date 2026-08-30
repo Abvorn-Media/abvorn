@@ -643,7 +643,7 @@ async function submitLead(e) {
     btn.disabled = true;
     try {
         const response = await fetch(APPS_SCRIPT_URL, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'},
             body: JSON.stringify({ email: email, niche: CATEGORY_SLUG, source: 'cta_banner', lead_magnet: f.dataset.leadMagnet || document.title })
         });
         const result = await response.json();
@@ -667,7 +667,7 @@ async function submitNicheSubscribe(e) {
     btn.disabled = true;
     try {
         const response = await fetch(APPS_SCRIPT_URL, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'},
             body: JSON.stringify({ email: email, niche: CATEGORY_SLUG, source: 'review_rail', lead_magnet: 'Webcams updates' })
         });
         const result = await response.json();
@@ -847,7 +847,7 @@ function paint(){
 }
 function refresh(){
   if (!URLS) return;
-  fetch(URLS, {method:'POST', headers:{'Content-Type':'application/json'},
+  fetch(URLS, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
     body:JSON.stringify({action:'reactions', slugs:[slug]})})
     .then(function(r){ return r.json(); })
     .then(function(data){
@@ -868,7 +868,7 @@ btns.forEach(function(btn){
     var type = btn.getAttribute('data-type');
     var on = !(mine[type]||false);
     btn.disabled = true;
-    fetch(URLS, {method:'POST', headers:{'Content-Type':'application/json'},
+    fetch(URLS, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({action:'reaction', slug:slug, type:type, visitor:vid})})
       .then(function(r){ return r.json(); })
       .then(function(data){
@@ -983,7 +983,7 @@ async function submitEmailGuide(e) {
     btn.disabled = true;
     try {
         const response = await fetch(APPS_SCRIPT_URL, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'},
             body: JSON.stringify(payload)
         });
         const result = await response.json();
