@@ -26,7 +26,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Generate PDFs
-        run: python scripts/generate_review_pdfs.py
+        run: python scripts/generate_review_pdfs.py --force
 
       - name: Commit and push
         run: |

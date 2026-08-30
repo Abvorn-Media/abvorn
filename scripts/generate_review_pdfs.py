@@ -6,12 +6,14 @@ renders a clean print PDF next to it. index.html is skipped — it mirrors the
 newest dated article, whose PDF is generated from that article's own page.
 
 Used as a one-off backfill (and anytime a PDF is missing):
-    python scripts/generate_review_pdfs.py
+    python scripts/generate_review_pdfs.py            # only missing PDFs
+    python scripts/generate_review_pdfs.py --force    # regenerate everything
 Exit code 0 = all good; 1 = WeasyPrint unavailable (CI/box must install system
 libs) or renderer-side hard failure.
 """
 from __future__ import annotations
 
+import argparse
 import re
 import sys
 from html import unescape
@@ -31,6 +33,13 @@ def _niche_name(slug):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Regenerate PDFs even where one already exists on disk.",
+    )
+    args = parser.parse_args()
     if not review_pdf_available():
         print("ERROR: WeasyPrint/beautifulsoup4 not available (install libpango etc.)")
         return 1
@@ -40,7 +49,7 @@ def main():
         if page.name == "index.html":
             continue
         pdf = page.with_suffix(".pdf")
-        if pdf.exists() and pdf.stat().st_size > 0:
+        if pdf.exists() and pdf.stat().st_size > 0 and not args.force:
             skipped += 1
             continue
         try:
