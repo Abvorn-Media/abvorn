@@ -1,5 +1,6 @@
 pypdf
 weasyprint==62.3
+pydyf==0.10.0   # weasyprint 62.x breaks with pydyf>=0.11 ('super' object has no attribute 'transform')
 chromadb
 openai
 anthropic
