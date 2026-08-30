@@ -355,14 +355,8 @@ img { max-width: 100%; }
 }
 .product-figure img { display: block; max-height: 105pt; width: auto; margin: 0 auto; }
 .hero-pick { display: block; margin: 6pt 0; page-break-inside: avoid; }
-.hero-pick__media img,
-.product-shot__img {
-    display: block; width: auto !important; height: auto !important;
-    max-height: 105pt; margin: 0 auto;
-}
-p img {
-    display: block; width: auto !important; height: auto !important;
-    max-height: 120pt; margin: 3pt auto;
+img:not(.pdf-radar):not(.pdf-logo) {
+    width: auto !important; height: auto !important; max-height: 105pt !important;
 }
 
 .disclosure {
