@@ -1,5 +1,8 @@
 import pytest
-from abvorn.crm.template import render_email, render_lead_magnet_email, render_persona_update
+from abvorn.crm.template import (
+    render_email, render_lead_magnet_email, render_persona_update,
+    render_pdf_guide_email,
+)
 from abvorn.crm.sender import EmailSender
 
 
@@ -57,6 +60,47 @@ def test_email_sender_no_creds():
     sender = EmailSender(email="", password="")
     result = sender.send_email(to_email="test@example.com", subject="Test", html_body="<p>Hi</p>")
     assert result is False
+
+
+def test_render_pdf_guide():
+    """PDF guide email should link the PDF and mention the title."""
+    html = render_pdf_guide_email(
+        to_name="Marcus",
+        guide_title="Best 4K Monitors for Coding",
+        pdf_url="https://abvorn.com/reviews/4k-monitors/best-4k-monitors.pdf",
+        guide_url="https://abvorn.com/reviews/4k-monitors/best-4k-monitors/",
+    )
+    assert "guide is ready" in html.lower()
+    assert "Best 4K Monitors for Coding" in html
+    assert "Download Your Guide (PDF)" in html
+    assert "best-4k-monitors.pdf" in html
+    assert "online" in html
+
+
+def test_email_sender_pdf_guide_no_creds():
+    """Should handle missing credentials gracefully."""
+    sender = EmailSender(email="", password="")
+    ok = sender.send_pdf_guide(
+        email="marcus@example.com", name="Marcus",
+        guide_title="Best 4K Monitors",
+        pdf_url="https://abvorn.com/reviews/4k-monitors/f.pdf",
+    )
+    assert ok is False
+
+
+def test_email_sender_build_with_attachment(tmp_path):
+    """Should build a MIME mixed message with the PDF attached."""
+    pdf = tmp_path / "guide.pdf"
+    pdf.write_bytes(b"%PDF-1.4 fake")
+    sender = EmailSender(email="me@example.com", password="pw")
+    msg = sender._build_message(
+        to_email="you@example.com", subject="S",
+        html_body="<p>hi</p>", attachment_path=str(pdf),
+    )
+    assert msg is not None
+    payloads = [p.get_content_type() for p in msg.walk()]
+    assert "multipart/alternative" in payloads
+    assert "application/pdf" in payloads
 
 
 def test_email_sender_format_persona():

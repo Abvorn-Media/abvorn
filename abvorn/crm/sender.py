@@ -3,8 +3,10 @@
 import logging, smtplib, re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+from pathlib import Path
 from datetime import datetime
-from .template import render_persona_update, render_lead_magnet_email
+from .template import render_persona_update, render_lead_magnet_email, render_pdf_guide_email
 from ..core.secrets import load_secrets
 
 logger = logging.getLogger("abvorn.crm.sender")
@@ -22,18 +24,40 @@ class EmailSender:
             self.email = email
             self.password = password
 
-    def send_email(self, to_email: str, subject: str, html_body: str) -> bool:
-        """Send a single email via Gmail SMTP."""
+    def _build_message(self, to_email: str, subject: str, html_body: str,
+                       attachment_path: str = None):
+        """Build the MIME message; returns None when creds are missing."""
         if not self.email or not self.password:
+            return None
+        if attachment_path:
+            msg = MIMEMultipart("mixed")
+            alt = MIMEMultipart("alternative")
+            alt.attach(MIMEText(html_body, "html"))
+            msg.attach(alt)
+            path = Path(attachment_path)
+            if path.exists():
+                part = MIMEApplication(path.read_bytes(), _subtype="pdf")
+                part.add_header("Content-Disposition", "attachment", filename=path.name)
+                msg.attach(part)
+                logger.info(f"Attached {path.name} to email for {to_email}")
+            else:
+                logger.warning(f"PDF attachment missing: {attachment_path}")
+        else:
+            msg = MIMEMultipart("alternative")
+            msg.attach(MIMEText(html_body, "html"))
+        msg["From"] = f"Abvorn <{self.email}>"
+        msg["To"] = to_email
+        msg["Subject"] = subject
+        return msg
+
+    def send_email(self, to_email: str, subject: str, html_body: str,
+                   attachment_path: str = None) -> bool:
+        """Send a single email via Gmail SMTP."""
+        msg = self._build_message(to_email, subject, html_body, attachment_path)
+        if msg is None:
             logger.warning("Gmail not configured — email skipped")
             return False
         try:
-            msg = MIMEMultipart("alternative")
-            msg["From"] = f"Abvorn <{self.email}>"
-            msg["To"] = to_email
-            msg["Subject"] = subject
-            msg.attach(MIMEText(html_body, "html"))
-
             with smtplib.SMTP("smtp.gmail.com", 587) as server:
                 server.starttls()
                 server.login(self.email, self.password)
@@ -86,3 +110,19 @@ class EmailSender:
             magnet_url=magnet_url, niche=niche,
         )
         return self.send_email(email, f"Your {niche} guide is here", html)
+
+    def send_pdf_guide(self, email: str, name: str,
+                       guide_title: str, pdf_url: str,
+                       niche: str = "products",
+                       guide_url: str = "",
+                       pdf_path: str = None) -> bool:
+        """Send a 'your PDF guide is ready' email, optionally attaching the PDF."""
+        html = render_pdf_guide_email(
+            to_name=name, guide_title=guide_title,
+            pdf_url=pdf_url, niche=niche,
+            guide_url=guide_url,
+        )
+        return self.send_email(
+            email, f"Your guide is ready: {guide_title[:55]}",
+            html, attachment_path=pdf_path,
+        )

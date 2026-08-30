@@ -122,6 +122,33 @@ def render_lead_magnet_email(to_name: str, magnet_title: str,
     )
 
 
+def render_pdf_guide_email(to_name: str, guide_title: str,
+                           pdf_url: str, niche: str = "products",
+                           guide_url: str = "",
+                           tracking_consent: bool = False) -> str:
+    """Render a 'your PDF guide is ready' delivery email."""
+    live_line = ""
+    if guide_url:
+        live_line = (f'<p style="margin:0 0 16px;font-size:16px;color:#333;line-height:1.6">'
+                     f'Prefer the live version? <a href="{guide_url}" style="color:#d4633e">'
+                     f'Read the full guide online</a> instead.</p>')
+    body = (f'<p style="margin:0 0 16px;font-size:16px;color:#333;line-height:1.6">'
+            f'Your copy of <strong>{guide_title}</strong> is ready. Every score, price, '
+            f'and verdict from the guide, in one clean downloadable document.</p>'
+            f'<p style="margin:0 0 16px;font-size:16px;color:#333;line-height:1.6">'
+            f'No sign-up walls and no paywall — just the guide, so you can read it at '
+            f'your own pace.</p>{live_line}')
+    return render_email(
+        to_name=to_name,
+        subject=f"Your guide is ready: {guide_title[:50]}",
+        body_html=body,
+        cta_text="Download Your Guide (PDF)",
+        cta_url=pdf_url,
+        niche=niche,
+        tracking_consent=tracking_consent,
+    )
+
+
 def render_persona_update(to_name: str, persona_name: str,
                            post_title: str, post_url: str,
                            niche: str = "products",
