@@ -350,6 +350,12 @@ img { max-width: 100%; }
     padding: 6pt; margin: 6pt 0; page-break-inside: avoid; background: #fcfcfc;
 }
 .product-figure img { display: block; max-height: 105pt; width: auto; margin: 0 auto; }
+.hero-pick { display: block; margin: 6pt 0; page-break-inside: avoid; }
+.hero-pick__media img,
+.product-shot__img {
+    display: block; width: auto !important; height: auto !important;
+    max-height: 105pt; margin: 0 auto;
+}
 
 .disclosure {
     font-size: 7.5pt; color: #6b6b70; border: .5pt dashed #ccc; border-radius: 3pt;
