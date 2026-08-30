@@ -360,6 +360,10 @@ img { max-width: 100%; }
     display: block; width: auto !important; height: auto !important;
     max-height: 105pt; margin: 0 auto;
 }
+p img {
+    display: block; width: auto !important; height: auto !important;
+    max-height: 120pt; margin: 3pt auto;
+}
 
 .disclosure {
     font-size: 7.5pt; color: #6b6b70; border: .5pt dashed #ccc; border-radius: 3pt;
