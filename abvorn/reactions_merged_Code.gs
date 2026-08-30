@@ -33,6 +33,9 @@ function doRoute_(e) {
   if (action === 'reaction') return handleReaction_(body);   // writes +1
   if (action === 'reactions') return handleRead_(body);       // reads aggregate counts
 
+  // 'Email this review' CTA: email the review's PDF link to the reader.
+  if (action === 'pdf_guide') return handlePdfGuide_(body);
+
   // Manual test: fills Sheet1 with a fake lead without needing live traffic.
   if (action === 'test-lead') return handleLeadForm_({
       email: body.email || (e.parameter && e.parameter.email) || 'test@example.com',
@@ -157,6 +160,68 @@ function sendWelcomeEmail(email, niche, leadMagnet) {
     subject: subject,
     htmlBody: body
   });
+}
+
+/* ---------------------------------------------------------------------------
+   'EMAIL THIS REVIEW' — sends the review's PDF link to the reader's inbox.
+   Payload from the review page rail card:
+     {action:'pdf_guide', email, title, niche, slug, niche_name,
+      source:'review_rail', pdf_url, guide_url}
+ * ------------------------------------------------------------------------- */
+function handlePdfGuide_(data) {
+  var email = String(data.email || '').trim();
+  var title = String(data.title || 'guide').trim();
+  var pdfUrl = String(data.pdf_url || '').trim();
+  var niche = String(data.niche || data.slug || 'products').trim();
+  var guideUrl = String(data.guide_url || '').trim();
+  var source = String(data.source || 'review_rail').trim();
+
+  if (!isEmail_(email)) return json_({ success:false, message:'Please use a valid email address.' });
+  if (!pdfUrl) return json_({ success:false, message:'The PDF is still being prepared. Please try again in a few minutes.' });
+
+  // Log the lead (single row per email).
+  try {
+    var sheet = SpreadsheetApp.openById(REACTIONS_SPREADSHEET_ID).getSheetByName(LEADS_SHEET_NAME)
+      || SpreadsheetApp.openById(REACTIONS_SPREADSHEET_ID).insertSheet(LEADS_SHEET_NAME);
+    if (sheet.getLastRow() === 0) sheet.appendRow(['email', 'niche', 'source', 'subscribed_at', 'status', 'lead_magnet']);
+    var known = sheet.getRange(1, 1, sheet.getLastRow(), 1).getValues()
+      .map(function (r) { return String(r[0]).trim(); });
+    if (known.indexOf(email) === -1) {
+      sheet.appendRow([email, niche, source, new Date().toISOString(), 'active', 'PDF: ' + title]);
+    }
+  } catch (err) {
+    // Lead logging must never block the email.
+  }
+
+  sendPdfGuideEmail_(email, title, pdfUrl, guideUrl, niche);
+  return json_({ success:true });
+}
+
+function sendPdfGuideEmail_(email, title, pdfUrl, guideUrl, niche) {
+  var liveLine = guideUrl
+    ? '<p style="margin:12px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.6">' +
+      'Prefer the live version? <a href="' + guideUrl + '" style="color:#d4633e">Read the full guide online</a> instead.</p>'
+    : '';
+  var subject = 'Your guide is ready: ' + title;
+  var htmlBody =
+    '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.6">' +
+    'Hi there,</p>' +
+    '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.6">' +
+    'Your copy of <strong>' + title + '</strong> is ready. Every score, price, and verdict from the guide, ' +
+    'in one clean downloadable document.</p>' +
+    '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.6">' +
+    'No sign-up walls and no paywall \u2014 just the guide, so you can read it at your own pace.</p>' + liveLine +
+    '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0"><tr><td style="background-color:#d4633e;border-radius:8px;padding:12px 28px">' +
+    '<a href="' + pdfUrl + '" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;display:inline-block">' +
+    'Download Your Guide (PDF) \u2192</a></td></tr></table>' +
+    '<p style="margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#9e9690">' +
+    'As an Amazon Associate we earn from qualifying purchases.</p>';
+
+  MailApp.sendEmail({ to: email, subject: subject, htmlBody: htmlBody });
+}
+
+function isEmail_(email) {
+  return /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(email);
 }
 
 /* ---------------------------------------------------------------------------

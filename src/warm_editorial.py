@@ -13,7 +13,7 @@ run_cycle.build_article_page and src.deployment.build_article_page stay in sync.
 import html as html_mod
 import re
 import os
-from urllib.parse import quote, urlencode
+from urllib.parse import urlencode
 
 from abvorn.core.verdict import clean_product_name
 from src.article_design import upgrade_product_image
@@ -513,12 +513,6 @@ def build_review_rail(post_title, article_url, niche_slug, niche_name, toc_items
     toc_links = "".join(
         f'<li><a href="#{slug}">{html_mod.escape(label)}</a></li>' for slug, label in toc_items
     )
-    mailto_subject = quote(post_title)
-    mailto_body = quote(
-        f"Here's the {niche_name} buying guide I wanted to share:\n\n{article_url}"
-    )
-    mailto_href = f"mailto:?subject={mailto_subject}&amp;body={mailto_body}"
-    mailto_svg = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M4 7.5l8 5.5 8-5.5"/></svg>'
     return f"""
     <aside class="review-rail" aria-label="Page tools">
         <nav class="rail-card rail-toc" aria-label="In this guide">
@@ -532,8 +526,14 @@ def build_review_rail(post_title, article_url, niche_slug, niche_name, toc_items
 
         <div class="rail-card">
             <p class="rail-card__title">Email this review</p>
-            <p>Send yourself a copy of this guide &mdash; specs, scores, and buy links &mdash; straight to your inbox.</p>
-            <a class="mailto-btn" href="{mailto_href}" aria-label="Email this review to me">{mailto_svg}Email this review to me</a>
+            <p>Send yourself the full guide as a PDF &mdash; every score, price, and verdict &mdash; straight to your inbox.</p>
+            <form id="email-guide-form" onsubmit="submitEmailGuide(event)">
+                <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+                <label for="email-guide-email" class="sr-only">Email address</label>
+                <input type="email" id="email-guide-email" class="input" placeholder="you@example.com" required>
+                <button type="submit" class="btn btn--ink">Email Me the PDF</button>
+                <p class="subscribe-msg" id="email-guide-msg" aria-live="polite"></p>
+            </form>
         </div>
 
         <div class="rail-card">
@@ -569,6 +569,39 @@ async function submitNicheSubscribe(e) {
         });
         const result = await response.json();
         msg.textContent = result.success ? 'You are subscribed! Check your inbox to confirm.' : (result.message || 'Something went wrong, please try again.');
+    } catch(err) {
+        msg.textContent = 'Connection error. Please try later.';
+    }
+    btn.disabled = false;
+}
+</script>"""
+
+# "Email this review" rail card: sends the review's PDF link to the reader's
+# inbox. __GUIDE_PAYLOAD__ is replaced by the generator with a JSON dict like:
+#   {"action":"pdf_guide", "title":..., "niche":..., "slug":...,
+#    "source":"review_rail", "pdf_url":..., "guide_url":...}
+WARM_EMAIL_GUIDE_JS = """<script>
+async function submitEmailGuide(e) {
+    e.preventDefault();
+    const f = e.target;
+    const msg = document.getElementById('email-guide-msg');
+    if (f._gotcha && f._gotcha.value !== "") { msg.textContent = 'Thanks! Check your inbox.'; return; }
+    const emailEl = f.querySelector('#email-guide-email');
+    const email = emailEl ? emailEl.value.trim() : '';
+    if (!email || !APPS_SCRIPT_URL) { msg.textContent = 'Something went wrong, please try again.'; return; }
+    const payload = __GUIDE_PAYLOAD__;
+    if (!payload.pdf_url) { msg.textContent = 'The PDF is still being prepared. Please try again in a few minutes.'; return; }
+    payload.email = email;
+    msg.textContent = 'Sending...';
+    const btn = f.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        msg.textContent = result.success ? 'Check your inbox — the PDF is on its way.' : (result.message || 'Something went wrong, please try again.');
     } catch(err) {
         msg.textContent = 'Connection error. Please try later.';
     }

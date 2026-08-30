@@ -622,10 +622,16 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
             </ol>
         </nav>
 
-        <div class="rail-card">
+                <div class="rail-card">
             <p class="rail-card__title">Email this review</p>
-            <p>Send yourself a copy of this guide &mdash; specs, scores, and buy links &mdash; straight to your inbox.</p>
-            <a class="mailto-btn" href="mailto:?subject=Best%204K%20Monitors%202026%3A%20Dell%20S2725QS%2C%20S2725QC%2C%20and%20LG%2027UP650K-W%20Compared&amp;body=Here%27s%20the%204K%20Monitors%20buying%20guide%20I%20wanted%20to%20share%3A%0A%0Ahttps%3A//abvorn.com/reviews/4k-monitors/" aria-label="Email this review to me"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M4 7.5l8 5.5 8-5.5"/></svg>Email this review to me</a>
+            <p>Send yourself the full guide as a PDF &mdash; every score, price, and verdict &mdash; straight to your inbox.</p>
+            <form id="email-guide-form" onsubmit="submitEmailGuide(event)">
+                <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+                <label for="email-guide-email" class="sr-only">Email address</label>
+                <input type="email" id="email-guide-email" class="input" placeholder="you@example.com" required>
+                <button type="submit" class="btn btn--ink">Email Me the PDF</button>
+                <p class="subscribe-msg" id="email-guide-msg" aria-live="polite"></p>
+            </form>
         </div>
 
         <div class="rail-card">
@@ -1005,4 +1011,32 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 </script>
 <script src="/abvorn/js/price-charts.js"></script>
+<script>
+async function submitEmailGuide(e) {
+    e.preventDefault();
+    const f = e.target;
+    const msg = document.getElementById('email-guide-msg');
+    if (f._gotcha && f._gotcha.value !== "") { msg.textContent = 'Thanks! Check your inbox.'; return; }
+    const emailEl = f.querySelector('#email-guide-email');
+    const email = emailEl ? emailEl.value.trim() : '';
+    if (!email || !APPS_SCRIPT_URL) { msg.textContent = 'Something went wrong, please try again.'; return; }
+    const payload = {"action": "pdf_guide", "slug": "4k-monitors", "title": "Best 4K Monitors 2026: Dell S2725QS, S2725QC, and LG 27UP650K-W Compared", "niche": "4k-monitors", "niche_name": "4K Monitors", "source": "review_rail", "pdf_url": "https://abvorn.com/reviews/4k-monitors/best-4k-monitors-2024-dell-s2725qs-s2725qc-and-lg-27up650k-w-compared-2026-08-07.pdf", "guide_url": "https://abvorn.com/reviews/4k-monitors/"};
+    if (!payload.pdf_url) { msg.textContent = 'The PDF is still being prepared. Please try again in a few minutes.'; return; }
+    payload.email = email;
+    msg.textContent = 'Sending...';
+    const btn = f.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        msg.textContent = result.success ? 'Check your inbox — the PDF is on its way.' : (result.message || 'Something went wrong, please try again.');
+    } catch(err) {
+        msg.textContent = 'Connection error. Please try later.';
+    }
+    btn.disabled = false;
+}
+</script>
 </body></html>

@@ -44,7 +44,7 @@ from src.article_design import (ARTICLE_DESIGN_CSS, PROD_SHOT_CSS, upgrade_produ
 from src.warm_editorial import (WARM_EDITORIAL_CSS, WARM_TOKEN_SHIM_CSS, WARM_PRODUCT_GRID_CSS,
                                 WARM_SHARE_HTML_T, warm_hero_pick_html, warm_product_card_html,
                                 warm_shop_cta_banner, warm_heading_ids, build_review_rail,
-                                WARM_NICHE_SUBSCRIBE_JS)
+                                WARM_NICHE_SUBSCRIBE_JS, WARM_EMAIL_GUIDE_JS)
 from src.review_pdf import build_review_page_pdf
 
 logger = logging.getLogger("run_cycle")
@@ -2068,6 +2068,16 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     # Pilot hero + rail.
     review_rail = build_review_rail(post_title, article_url, niche_slug, niche_name, toc_items, base=b, form_url=form_url)
     subscribe_js = WARM_NICHE_SUBSCRIBE_JS.replace("{niche_name}", niche_name.replace("\\", "\\\\").replace("'", "\\'"))
+    guide_js = WARM_EMAIL_GUIDE_JS.replace("__GUIDE_PAYLOAD__", json.dumps({
+        "action": "pdf_guide",
+        "slug": niche_slug,
+        "title": post_title,
+        "niche": niche_slug,
+        "niche_name": niche_name,
+        "source": "review_rail",
+        "pdf_url": pdf_url or "",
+        "guide_url": article_url,
+    }, ensure_ascii=True))
     cta_lead_js = PDF_LEAD_CTA_JS
     pdf_download = ""
     if pdf_url:
@@ -2167,6 +2177,7 @@ const CATEGORY_SLUG = "{niche_slug}";
 </script>
 {cta_lead_js}
 {subscribe_js}
+{guide_js}
 {RPS_JS}
 {ARTICLE_REACTIONS_JS}
 <script id="abvorn-verdict-data" type="application/json">{verdict_json}</script>
