@@ -23,6 +23,10 @@ import json
 import logging
 import math
 from html import escape as html_escape
+
+
+def _esc(value):
+    return html_escape("" if value is None else str(value))
 from pathlib import Path
 
 _log = logging.getLogger("review_pdf")
@@ -153,17 +157,17 @@ def _render_rps(primary, products):
     parts.append(
         '<div class="rps-score">'
         f'<span class="rps-number" style="color:{color}">{reg["regret_prob"]:g}%</span>'
-        f'<span class="rps-sev" style="color:{color}">{html_escape(_SEV_LABELS[sev])}</span>'
+        f'<span class="rps-sev" style="color:{color}">{_esc(_SEV_LABELS[sev])}</span>'
         "</div>"
     )
-    parts.append(f'<div class="rps-product-name">For: {html_escape(primary.get("name", ""))}</div>')
+    parts.append(f'<div class="rps-product-name">For: {_esc(primary.get("name", ""))}</div>')
     parts.append("</div>")
     if reg["reasons"]:
         parts.append('<div class="rps-reasons"><div class="rps-section-title">Why?</div>')
         for reason in reg["reasons"]:
-            parts.append(f'<div class="rps-reason rps-{reason["severity"]}">{html_escape(reason["message"])}</div>')
+            parts.append(f'<div class="rps-reason rps-{reason["severity"]}">{_esc(reason["message"])}</div>')
         parts.append("</div>")
-    parts.append(f'<div class="rps-tip">{html_escape(_SEV_TIPS[sev])}</div>')
+    parts.append(f'<div class="rps-tip">{_esc(_SEV_TIPS[sev])}</div>')
     alts = _rank_alternatives(primary.get("name"), products)
     if alts:
         parts.append('<div class="rps-alt-title">Better alternatives based on your preferences:</div>')
@@ -171,9 +175,9 @@ def _render_rps(primary, products):
             alt_color = _SEV_COLORS["low" if alt["prob"] < 30 else "moderate" if alt["prob"] < 60 else "high"]
             parts.append(
                 '<div class="rps-alt-item">'
-                f'<span class="rps-alt-name">{html_escape(alt["name"])}</span>'
+                f'<span class="rps-alt-name">{_esc(alt["name"])}</span>'
                 f'<span class="rps-alt-prob" style="color:{alt_color}">Regret Risk: {alt["prob"]:g}%</span>'
-                f'<span class="rps-alt-price">{html_escape(alt["price"])}</span>'
+                f'<span class="rps-alt-price">{_esc(alt["price"])}</span>'
                 "</div>"
             )
     parts.append(
