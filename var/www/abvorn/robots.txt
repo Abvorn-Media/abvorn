@@ -1,2 +1,42 @@
-﻿User-agent: *
-Disallow: /admin/
+User-agent: *
+Allow: /
+Disallow: /assets/hero/
+Disallow: /plans/
+Disallow: /specs/
+
+# Prevent scraping of article content by known content scrapers
+User-agent: CCBot
+Disallow: /
+
+User-agent: Imagesiftbot
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+# AI search and citation engines — we want Abvorn cited in AI answers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://abvorn.com/sitemap.xml

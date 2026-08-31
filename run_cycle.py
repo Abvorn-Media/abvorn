@@ -2880,25 +2880,15 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     _wc(method_dir / "index.html", build_methodology_page(all_slugs, form_url), "methodology page")
     print(f"  Written: docs/how-we-test/index.html")
 
-    # Write RSS feed and sitemap
+    # Write robots.txt, llms.txt, RSS feed and sitemap
     items = []
     for p in all_posts:
         title = p.get("title", "")
         slug_path = p.get("slug", "")
         items.append({"title": title, "slug": slug_path,
                       "date": datetime.date.today().isoformat() if 'datetime' in dir() else "2025-01-01"})
-    rss_xml = '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Abvorn Reviews</title><link>https://abvorn.com</link><description>Product reviews you can trust</description>'
-    for it in items:
-        rss_xml += f'<item><title>{it["title"]}</title><link>https://abvorn.com/{it["slug"]}</link><guid>https://abvorn.com/{it["slug"]}</guid><pubDate>{it["date"]}</pubDate></item>'
-    rss_xml += '</channel></rss>'
-    (docs / "feed.xml").write_text(rss_xml, encoding="utf-8")
-    sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    sitemap += '<url><loc>https://abvorn.com/</loc></url>\n'
-    for it in items:
-        sitemap += f'<url><loc>https://abvorn.com/{it["slug"]}</loc></url>\n'
-    sitemap += '</urlset>'
-    (docs / "sitemap.xml").write_text(sitemap, encoding="utf-8")
-    print(f"  Written: docs/feed.xml, docs/sitemap.xml")
+    from src.deployment import write_site_metadata
+    write_site_metadata(docs, items)
 
 
 # ─── Newsletter Automation ──────────────────────────────────────────

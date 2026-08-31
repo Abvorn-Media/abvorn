@@ -94,6 +94,16 @@ Objections: {json.dumps(persona.get('objections', []))}"""
     psych_guidance = ""
     seo_guidance = ""
     reflection_guidance = ""
+    ai_seo_guidance = """
+AI-SEO RULES (make content extractable so AI answers/LLMs can cite it):
+- Open the article with a self-contained 40-60 word direct answer to the primary question
+- Phrase H2/H3 headings as natural questions people actually ask ("What is the best ... under $50?")
+- Include at least one comparison table for key product trade-offs (decision matrix)
+- Give each product a standalone verdict block (Best Overall / Best Value / Premium Pick) with a one-line why
+- Back claims with specific numbers and spec details; add dates to any statistics or price claims
+- Always state when prices were checked (e.g., "Prices checked [today's date]")
+- Include a short FAQ section with natural-language questions and 2-3 sentence answers
+"""
     amazon_tag = _amazon_tag()
     if brain_context:
         copy_principles = brain_context.get("copywriting_principles", [])
@@ -122,6 +132,7 @@ PRODUCTS TO FEATURE:
 {copywriting_guidance}
 {psych_guidance}
 {seo_guidance}
+{ai_seo_guidance}
 {reflection_guidance}
 
 OUTLINE TO FOLLOW:

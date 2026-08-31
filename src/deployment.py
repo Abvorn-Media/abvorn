@@ -2781,6 +2781,98 @@ def _overlay_review(a, slug, niche_name, today):
     }
 
 
+SITE_ROBOTS_TXT = """User-agent: *
+Allow: /
+Disallow: /assets/hero/
+Disallow: /plans/
+Disallow: /specs/
+
+# Prevent scraping of article content by known content scrapers
+User-agent: CCBot
+Disallow: /
+
+User-agent: Imagesiftbot
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+# AI search and citation engines — we want Abvorn cited in AI answers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://abvorn.com/sitemap.xml
+"""
+
+
+def write_site_metadata(docs_dir, items):
+    """Write robots.txt, llms.txt, feed.xml and sitemap.xml into the site root.
+
+    robots.txt deliberately ALLOWS AI search bots (citation) and blocks only
+    training-only crawlers (CCBot) plus known content scrapers.
+    llms.txt is the machine-readable site map for AI agents (llmstxt.org).
+    """
+    docs_dir = Path(docs_dir)
+    docs_dir.mkdir(exist_ok=True)
+
+    write_checked(docs_dir / "robots.txt", SITE_ROBOTS_TXT, "robots.txt")
+
+    latest = "\n".join(
+        f"- {it.get('title', 'Review')} — {SITE_BASE}/{it['slug'].lstrip('/')}"
+        for it in items[:20]
+    )
+    llms_txt = (
+        "# Abvorn\n\n"
+        "> Independent product reviews and buying guides. We test before we recommend "
+        "— verdicts are based on measured specs, real prices, and scored comparisons, not spec sheets.\n\n"
+        "## Core pages\n"
+        f"- Home — {SITE_BASE}/\n"
+        f"- All Reviews — {SITE_BASE}/reviews/\n"
+        f"- Categories — {SITE_BASE}/categories/\n"
+        f"- How We Test — {SITE_BASE}/how-we-test/\n"
+        f"- About — {SITE_BASE}/about/\n"
+        f"- Journal — {SITE_BASE}/journal/\n\n"
+        "## Latest reviews\n" + latest + "\n"
+    )
+    write_checked(docs_dir / "llms.txt", llms_txt, "llms.txt")
+
+    rss_xml = '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Abvorn Reviews</title><link>https://abvorn.com</link><description>Product reviews you can trust</description>'
+    for it in items:
+        rss_xml += f'<item><title>{it["title"]}</title><link>https://abvorn.com/{it["slug"]}</link><guid>https://abvorn.com/{it["slug"]}</guid><pubDate>{it["date"]}</pubDate></item>'
+    rss_xml += '</channel></rss>'
+    (docs_dir / "feed.xml").write_text(rss_xml, encoding="utf-8")
+
+    sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    sitemap += '<url><loc>https://abvorn.com/</loc></url>\n'
+    for it in items:
+        sitemap += f'<url><loc>https://abvorn.com/{it["slug"]}</loc></url>\n'
+    sitemap += '</urlset>'
+    (docs_dir / "sitemap.xml").write_text(sitemap, encoding="utf-8")
+
+    print("  Written: docs/feed.xml, docs/sitemap.xml, docs/robots.txt, docs/llms.txt")
+
+
 def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_url="", hero_images=None, google_client_id=""):
     """Write all HTML files to docs/ directory."""
     all_slugs = sorted([n["slug"] for n in state["niches"]], key=lambda s: _slugify_title(s).lower())
@@ -2942,7 +3034,7 @@ footer a{{color:#aaa;text-decoration:none}}
     write_checked(method_dir / "index.html", build_methodology_page(all_slugs, form_url), "methodology page")
     print(f"  Written: docs/how-we-test/index.html")
 
-    # Write RSS feed and sitemap
+    # Write robots.txt, llms.txt, RSS feed and sitemap
     items = []
     for p in all_posts:
         title = p.get("title", "")
@@ -2951,18 +3043,7 @@ footer a{{color:#aaa;text-decoration:none}}
             slug_path = slug_path.rsplit("/", 1)[0] + "/"
         items.append({"title": title, "slug": slug_path,
                       "date": datetime.date.today().isoformat() if 'datetime' in dir() else "2025-01-01"})
-    rss_xml = '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Abvorn Reviews</title><link>https://abvorn.com</link><description>Product reviews you can trust</description>'
-    for it in items:
-        rss_xml += f'<item><title>{it["title"]}</title><link>https://abvorn.com/{it["slug"]}</link><guid>https://abvorn.com/{it["slug"]}</guid><pubDate>{it["date"]}</pubDate></item>'
-    rss_xml += '</channel></rss>'
-    (docs / "feed.xml").write_text(rss_xml, encoding="utf-8")
-    sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    sitemap += '<url><loc>https://abvorn.com/</loc></url>\n'
-    for it in items:
-        sitemap += f'<url><loc>https://abvorn.com/{it["slug"]}</loc></url>\n'
-    sitemap += '</urlset>'
-    (docs / "sitemap.xml").write_text(sitemap, encoding="utf-8")
-    print(f"  Written: docs/feed.xml, docs/sitemap.xml")
+    write_site_metadata(docs, items)
 
 
 def OG_META(title, desc, url, image="", og_type="website"):
