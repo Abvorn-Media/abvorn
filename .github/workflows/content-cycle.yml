@@ -92,7 +92,12 @@ jobs:
         run: |
           git config user.name "Abvorn Bot"
           git config user.email "bot@abvorn.com"
-          git add docs/ data/evolution_journal.json cycle_state.json products_cache.json
+          # Stage build outputs + state. Only add paths that exist (some state
+          # files like products_cache.json are cache-only and may be absent),
+          # and stay scoped to generated content rather than a blanket -A.
+          for p in docs/ data/ cycle_state.json products_cache.json; do
+            [ -e "$p" ] && git add "$p"
+          done
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
