@@ -2838,39 +2838,75 @@ def write_site_metadata(docs_dir, items):
 
     write_checked(docs_dir / "robots.txt", SITE_ROBOTS_TXT, "robots.txt")
 
+    # Core non-review pages (always emitted) so llms.txt / sitemap cover the
+    # whole site, not just product reviews.
+    core_pages = [
+        ("Home", ""),
+        ("All Reviews", "reviews/"),
+        ("Categories", "categories/"),
+        ("How We Test", "how-we-test/"),
+        ("About", "about.html"),
+        ("Privacy Policy", "privacy.html"),
+        ("Journal", "journal/"),
+    ]
+
     latest = "\n".join(
         f"- {it.get('title', 'Review')} — {SITE_BASE}/{it['slug'].lstrip('/')}"
-        for it in items[:20]
+        for it in items[:50]
     )
     llms_txt = (
         "# Abvorn\n\n"
         "> Independent product reviews and buying guides. We test before we recommend "
         "— verdicts are based on measured specs, real prices, and scored comparisons, not spec sheets.\n\n"
         "## Core pages\n"
-        f"- Home — {SITE_BASE}/\n"
-        f"- All Reviews — {SITE_BASE}/reviews/\n"
-        f"- Categories — {SITE_BASE}/categories/\n"
-        f"- How We Test — {SITE_BASE}/how-we-test/\n"
-        f"- About — {SITE_BASE}/about/\n"
-        f"- Journal — {SITE_BASE}/journal/\n\n"
+        + "\n".join(f"- {title} — {SITE_BASE}/{path}" for title, path in core_pages)
+        + "\n\n"
         "## Latest reviews\n" + latest + "\n"
     )
     write_checked(docs_dir / "llms.txt", llms_txt, "llms.txt")
+
+    # llms-full.txt — the full, agent-citable index (every review, not a short list).
+    llms_full = (
+        "# Abvorn Full Index\n\n"
+        "> Machine-readable index of every page on Abvorn for AI agents (llmstxt.org).\n\n"
+        "## Core pages\n"
+        + "\n".join(f"- {title} — {SITE_BASE}/{path}" for title, path in core_pages)
+        + "\n\n"
+        "## All reviews\n"
+        + "\n".join(
+            f"- {it.get('title', 'Review')} — {SITE_BASE}/{it['slug'].lstrip('/')}"
+            for it in items
+        )
+        + "\n"
+    )
+    write_checked(docs_dir / "llms-full.txt", llms_full, "llms-full.txt")
 
     rss_xml = '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Abvorn Reviews</title><link>https://abvorn.com</link><description>Product reviews you can trust</description>'
     for it in items:
         rss_xml += f'<item><title>{it["title"]}</title><link>https://abvorn.com/{it["slug"]}</link><guid>https://abvorn.com/{it["slug"]}</guid><pubDate>{it["date"]}</pubDate></item>'
     rss_xml += '</channel></rss>'
-    (docs_dir / "feed.xml").write_text(rss_xml, encoding="utf-8")
+    write_checked(docs_dir / "feed.xml", rss_xml, "feed.xml")
 
+    # Sitemap covers the whole site (review pages + core pages) with <lastmod>
+    # freshness signals. lastmod for reviews uses best-known date; core pages
+    # fall back to the most recent review date.
+    newest = max((it.get("date", "") for it in items), default="") or ""
+    def _lastmod(it):
+        return f"<lastmod>{it.get('date', '')}</lastmod>" if it.get("date") else (f"<lastmod>{newest}</lastmod>" if newest else "")
+    core_urls = []
+    for title, path in core_pages:
+        if path.endswith(".html") or path.endswith("/"):
+            loc = f"{SITE_BASE}/{path}".rstrip("/") or SITE_BASE
+            core_urls.append(f"<url><loc>{loc}</loc>{_lastmod({})}</url>")
     sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    sitemap += '<url><loc>https://abvorn.com/</loc></url>\n'
+    sitemap += f'<url><loc>{SITE_BASE}</loc>{_lastmod({})}</url>\n'
+    sitemap += "\n".join(core_urls) + "\n" if core_urls else ""
     for it in items:
-        sitemap += f'<url><loc>https://abvorn.com/{it["slug"]}</loc></url>\n'
+        sitemap += f'<url><loc>{SITE_BASE}/{it["slug"]}</loc>{_lastmod(it)}</url>\n'
     sitemap += '</urlset>'
-    (docs_dir / "sitemap.xml").write_text(sitemap, encoding="utf-8")
+    write_checked(docs_dir / "sitemap.xml", sitemap, "sitemap.xml")
 
-    print("  Written: docs/feed.xml, docs/sitemap.xml, docs/robots.txt, docs/llms.txt")
+    print("  Written: docs/feed.xml, docs/sitemap.xml, docs/robots.txt, docs/llms.txt, docs/llms-full.txt")
 
 
 def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_url="", hero_images=None, google_client_id=""):

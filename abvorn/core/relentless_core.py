@@ -635,6 +635,7 @@ class RelentlessCore:
         self.evolution_counter += 1
         if self.evolution_counter >= 10 and self.genesis is not None:
             evolution = self._evolve()
+            self.evolution_counter = 0  # reset so evolution happens once per 10 cycles, not every cycle after 10
             self._write_to_cortex({**evolution, "drive_score": self.drive_score})
             return {**evolution, "drive_score": self.drive_score}
         # 1. Calculate current drive score
@@ -679,14 +680,20 @@ class RelentlessCore:
             verification = {"verified": False, "evidence": [], "caveats": []}
             learning = {"insight": "", "improvement": ""}
 
-        # 3b. Act/Prove/Grow: wrap the executed action in the Fable loop
+        # 3b. Prove/Grow: the action was ALREADY executed by _execute_action()
+        # above. We must NOT re-run it through fable.act() (that would duplicate
+        # the work); instead we wrap the executed result in verification + learning.
         if self.fable is not None:
             try:
-                action_result = self.fable.act(fable_plan or {"task": action, "plan_steps": ["run_cycle_content"]})
-                verification = self._verify_outcome(action_result)
-                learning = self._learn_from_outcome(verification)
+                executed = {
+                    "plan_task": action,
+                    "actions_taken": [action],
+                    "outcomes": [{"step": action, "success": bool(result), "output": str(result)[:500]}],
+                }
+                verification = self.fable.prove(executed)
+                learning = self.fable.grow(verification)
             except Exception as e:
-                logger.warning(f"Fable act/prove/grow failed: {e}")
+                logger.warning(f"Fable prove/grow failed: {e}")
 
         # 4. Adjust ambition based on result
         if "Expanded" in result or "triggered" in result:

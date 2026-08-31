@@ -41,16 +41,52 @@ PUBLIC_API_PATHS = {
 
 _API_TOKEN = os.environ.get("ABVORN_API_TOKEN", "") or secrets.get("ABVORN_API_TOKEN", "")
 
+# Defense-in-depth: the most dangerous endpoints (arbitrary shell execution and
+# arbitrary file writes) are masked UNLESS explicitly opted in at startup, even
+# when a token is set. A leaked/weak token must not expose remote code execution.
+_ALLOW_EXEC = os.environ.get("ABVORN_ALLOW_EXEC", "").lower() in ("1", "true", "yes")
+SENSITIVE_MASKED_PATHS = {"/api/exec", "/api/write"}
+
+
+# Security-context diagnostics. If no token is configured, the API is open to
+# anyone who can reach it — this must be loud, not silent.
+if not _API_TOKEN:
+    logger.warning(
+        "ABVORN_API_TOKEN is NOT set — /api/* is entirely unauthenticated. "
+        "Do NOT expose this server beyond localhost."
+    )
+if not _ALLOW_EXEC:
+    logger.warning(
+        "Sensitive endpoints %s are MASKED (403) until ABVORN_ALLOW_EXEC=1 is set.",
+        sorted(SENSITIVE_MASKED_PATHS),
+    )
+
 
 @app.middleware("http")
 async def require_auth(request: Request, call_next):
-    if request.url.path.startswith("/api/") and _API_TOKEN:
-        path = request.url.path.split("?")[0]
-        if path not in PUBLIC_API_PATHS:
-            auth = request.headers.get("Authorization", "")
-            expected = f"Bearer {_API_TOKEN}"
-            if auth != expected:
-                return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    path = request.url.path.split("?")[0]
+
+    # 1. Sensitive endpoints are always masked unless explicitly opted in.
+    if path in SENSITIVE_MASKED_PATHS and not _ALLOW_EXEC:
+        return JSONResponse(
+            {"error": "Forbidden: endpoint masked; set ABVORN_ALLOW_EXEC=1 to enable"},
+            status_code=403,
+        )
+
+    # 2. Everything else under /api/* fails closed: a missing token means the
+    #    route is NOT silently public. Only whitelisted public paths may open.
+    if path.startswith("/api/"):
+        if path in PUBLIC_API_PATHS:
+            return await call_next(request)
+        if not _API_TOKEN:
+            return JSONResponse(
+                {"error": "Server misconfigured: ABVORN_API_TOKEN not set; API disabled"},
+                status_code=503,
+            )
+        auth = request.headers.get("Authorization", "")
+        expected = f"Bearer {_API_TOKEN}"
+        if auth != expected:
+            return JSONResponse({"error": "Unauthorized"}, status_code=401)
     return await call_next(request)
 
 if STATIC_DIR.exists():
@@ -647,10 +683,15 @@ async def execute(cmd: CommandRequest):
     safe_path = Path(cwd).resolve()
     if not str(safe_path).startswith(str(PROJECT_DIR)):
         return JSONResponse({"error": "Command path outside project directory"}, status_code=403)
-    dangerous = ["rm -rf", "format", "del /f", "rd /s", "shutdown", "restart-computer"]
-    for d in dangerous:
-        if d.lower() in cmd.command.lower():
-            return JSONResponse({"error": f"Dangerous command blocked: {d}"}, status_code=403)
+    dangerous = ["rm -rf", "rm -fr", "rm -r", "format", "del /f", "rd /s", "rd /q",
+                 "shutdown", "restart-computer", "stop-computer", "remove-item",
+                 "delete-item", "cleartext", "format-volume", "new-item", "set-content",
+                 "add-content", "out-file", "copy-item", "move-item", "ren ", "del ",
+                 "remove-", "ii ", "iwr", "invoke-webrequest", "convertto", "bypass",
+                 "net user", "net localgroup", "schtasks", "reg add", "sc config"]
+    dangerous_re = re.compile("|".join(re.escape(d) for d in dangerous), re.IGNORECASE)
+    if dangerous_re.search(cmd.command):
+        return JSONResponse({"error": "Dangerous command blocked"}, status_code=403)
     try:
         result = subprocess.run(
             cmd.command, shell=True, capture_output=True, text=True,

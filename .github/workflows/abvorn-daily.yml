@@ -9,6 +9,12 @@ on:
 permissions:
   contents: write
 
+# Shared lock with content-cycle so the two schedules never mutate state files
+# at the same time.
+concurrency:
+  group: content-cycle-lock
+  cancel-in-progress: false
+
 env:
   ABVORN_CACHE_DIR: /home/runner/.abvorn
 

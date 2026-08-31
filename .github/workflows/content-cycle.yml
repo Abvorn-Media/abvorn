@@ -20,7 +20,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: content-cycle
+  group: content-cycle-lock
   cancel-in-progress: false
 
 jobs:
@@ -92,7 +92,7 @@ jobs:
         run: |
           git config user.name "Abvorn Bot"
           git config user.email "bot@abvorn.com"
-          git add -A
+          git add docs/ data/evolution_journal.json cycle_state.json products_cache.json
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
