@@ -2007,6 +2007,26 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         faq_jsonld = faq_schema(faq_questions) if faq_questions else ""
     except Exception:
         pass
+    # Product JSON-LD — name/image/offers only. No self-serving aggregateRating
+    # or review markup (Google disallows it for products a site promotes).
+    product_schema = ""
+    if products:
+        prod = products[0]
+        pname = clean_product_name(prod.get("name", product_name))
+        pimage = prod.get("image") or ""
+        if pimage:
+            pimage = upgrade_product_image(pimage)
+        pprice = re.sub(r"[^\d.]", "", str(prod.get("price", "")))
+        purl = affiliate_url(prod.get("url", ""), t) or f"https://www.amazon.com/s?k={niche_slug.replace('-','+')}&tag={t}"
+        offers = f',"offers":{{"@type":"Offer","priceCurrency":"USD","price":"{pprice}","url":"{purl}"}}' if pprice else ""
+        product_schema = (
+            '<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product",'
+            + f'"name":{json.dumps(pname, ensure_ascii=True)},'
+            + (f'"image":{json.dumps(pimage, ensure_ascii=True)},' if pimage else "")
+            + f'"description":{json.dumps((meta_desc or "")[:280], ensure_ascii=True)}'
+            + f"{offers}}}"
+            + "</script>"
+        )
     # Build nav dropdown
     nav_dd = build_category_dropdown(b)
     # Footer
@@ -2065,6 +2085,13 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         pub_display = datetime.strptime(pub_date, "%Y-%m-%d").strftime("%b %d, %Y")
     except Exception:
         pub_display = pub_date
+    try:
+        upd_display = datetime.strptime(upd_date, "%Y-%m-%d").strftime("%b %d, %Y") if upd_date else pub_display
+    except Exception:
+        upd_display = upd_date or pub_display
+    upd_suffix = ""
+    if upd_date and upd_date != pub_date:
+        upd_suffix = f' <span class="dot"></span> <span class="date">Updated {upd_display}</span>'
     # Pilot hero + rail.
     review_rail = build_review_rail(post_title, article_url, niche_slug, niche_name, toc_items, base=b, form_url=form_url)
     subscribe_js = WARM_NICHE_SUBSCRIBE_JS.replace("{niche_name}", niche_name.replace("\\", "\\\\").replace("'", "\\'"))
@@ -2103,6 +2130,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {bread}
     {faq_jsonld}
+    {product_schema}
     <script id="abvorn-rps-data" type="application/json">{rps_json}</script>
     <style>
         :root {{ --niche-primary: #1a1a1a; --niche-accent: #c98a2c; }}
@@ -2122,6 +2150,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .pdf-download-btn {{ display:inline-flex; align-items:center; gap:7px; background:var(--clr-accent); color:#1a1a1a; font-weight:700; font-size:.85rem; letter-spacing:.01em; padding:9px 16px; border-radius:10px; text-decoration:none; transition:filter .15s,transform .15s; }}
         .pdf-download-btn svg {{ width:14px; height:14px; }}
         .pdf-download-btn:hover {{ filter:brightness(1.07); transform:translateY(-1px); }}
+        .hero-price-check {{ margin-top:8px; font-size:.82rem; color:var(--clr-mid-gray); line-height:1.4; }}
     </style>
     {COOKIE_CONSENT_SCRIPT}
 </head>
@@ -2143,10 +2172,11 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
 <section class="article-hero"><div class="container article-hero__inner">
     <div class="hero-grid">
         <div>
-            <p class="hero-meta">{name_escaped} <span class="dot"></span> <span class="date">By Abvorn</span> <span class="dot"></span> <span class="date">Published {pub_display}</span></p>
+            <p class="hero-meta">{name_escaped} <span class="dot"></span> <span class="date">By Abvorn</span> <span class="dot"></span> <span class="date">Published {pub_display}</span>{upd_suffix}</p>
             {pdf_download}
             <h1>{title_escaped}</h1>
             <p class="hero-excerpt">{meta_escaped}</p>
+            <p class="hero-price-check">Prices checked as of {upd_display}</p>
         </div>
         {hero_img_html}
     </div>
