@@ -542,7 +542,50 @@ class RelentlessCore:
         }
 
     def _write_to_cortex(self, result: Dict[str, Any]):
-        """Write the evolution journal entry to the Obsidian vault."""
+        """Write the evolution journal entry.
+
+        Two sinks, both optional and never fatal:
+          1. The repo-tracked Evolution Journal (abvorn.core.evolution_journal)
+             — always attempted, so CI content cycles accumulate entries that
+             the public journal page can show.
+          2. The Obsidian vault (Symbiotic Cortex) — only when the local vault
+             exists on this machine.
+        """
+        version = int(result.get("version", self.version))
+        drive_score = float(result.get("drive_score", 0.0))
+        action = result.get("action", "unknown")
+        result_text = str(result.get("result", ""))
+        narrative = (
+            f"Drive score {drive_score:.3f} — "
+            f"action '{action}': {result_text}"
+        )
+
+        # 1. Repo-tracked journal — works in CI where the vault is absent.
+        try:
+            from abvorn.core.evolution_journal import append_entry
+
+            graph_nodes = graph_edges = None
+            try:
+                if self.memory_state:
+                    graph_nodes = int(self.memory_state.get("entities") or 0)
+                    graph_edges = int(self.memory_state.get("relationships") or 0)
+            except Exception:
+                pass
+            append_entry(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "generation": version,
+                    "drive_score": drive_score,
+                    "action": action,
+                    "narrative": narrative,
+                    "graph_nodes": graph_nodes,
+                    "graph_edges": graph_edges,
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Tracked journal write failed: {e}")
+
+        # 2. Obsidian vault (Symbiotic Cortex) — local vault only.
         if self.cortex is None:
             return
         try:
@@ -558,26 +601,20 @@ class RelentlessCore:
             journal_file = journal_dir / f"{today}.md"
 
             frontmatter = {
-                "generation": result.get("version", self.version),
+                "generation": version,
                 "date": datetime.now().isoformat(),
-                "drive_score": result.get("drive_score", 0.0),
+                "drive_score": drive_score,
                 "ambition": result.get("ambition_level", 0.5),
-                "action": result.get("action", "unknown"),
+                "action": action,
                 "role": result.get("role", "solo"),
             }
 
-            result_text = str(result.get("result", ""))
-            narrative = (
-                f"Drive score {result.get('drive_score', 0.0):.3f} — "
-                f"action '{result.get('action', 'unknown')}': {result_text}"
-            )
-
             if journal_file.exists():
                 existing = journal_file.read_text(encoding="utf-8")
-                if f"Cycle {result.get('version', self.version)}" in existing:
+                if f"Cycle {version}" in existing:
                     return
                 with open(journal_file, "a", encoding="utf-8") as f:
-                    f.write(f"\n\n## Cycle {result.get('version', self.version)}\n\n")
+                    f.write(f"\n\n## Cycle {version}\n\n")
                     f.write(narrative)
             else:
                 content = "---\n"

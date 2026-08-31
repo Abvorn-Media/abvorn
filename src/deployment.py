@@ -3221,18 +3221,30 @@ def _journal_entry_narrative(body: str) -> str:
     """Trim a vault journal body down to its narrative (drop the H1 heading)."""
     text = re.sub(r"^#\s+.*$", "", body, flags=re.M)
     text = re.sub(r"^-\s*$", "", text, flags=re.M)
-    return text.strip()
+    # Drop BOM/whitespace-only residue (e.g. empty n8n-summary files).
+    return text.strip("\ufeff \t\r\n")
 
 
 def load_evolution_snapshot():
-    """Build {summary, entries} from real local sources.
+    """Build {summary, entries} from real sources.
 
     summary: current_generation, total_entries, graph_nodes, graph_edges,
              last_update
     entries: [{timestamp, generation, narrative}] newest first.
-    Never raises; falls back to zeros/empty when a source is missing.
+
+    Sources, merged in this order of preference:
+      1. The repo-tracked Evolution Journal (data/evolution_journal.json),
+         written by the Relentless Core every drive cycle. This is the source
+         that survives CI (it is committed by the content-cycle workflow), so
+         it keeps the page live even without the local Obsidian vault.
+      2. The local Obsidian vault journal, when present.
+    Lineage + Neural Memory state feed the graph counters locally, but fall
+    back to the stats recorded in the tracked journal when those gitignored
+    files are absent (e.g. on a CI runner).
+
+    Never raises; falls back to zeros/empty when every source is missing.
     """
-    entries = []
+    vault_entries = []
     try:
         from abvorn.core.cortex_watcher import get_vault_path
 
@@ -3265,11 +3277,11 @@ def load_evolution_snapshot():
                     sections = re.split(r"^##\s+Cycle\s+\d+", body, flags=re.M)
                     # First chunk (pre-Cycle) is the opening narrative; each
                     # "## Cycle N" chunk is a later entry from the same day.
-                    for i, chunk in enumerate(sections):
+                    for chunk in sections:
                         narrative = _journal_entry_narrative(chunk)
                         if not narrative:
                             continue
-                        entries.append({
+                        vault_entries.append({
                             "timestamp": stamp,
                             "generation": gen,
                             "narrative": narrative,
@@ -3277,12 +3289,59 @@ def load_evolution_snapshot():
     except Exception:
         pass
 
+    # Repo-tracked journal (newest first), with graph stats when recorded.
+    tracked = []
+    try:
+        from abvorn.core.evolution_journal import load_entries as _load_journal_entries
+
+        tracked = _load_journal_entries()
+    except Exception:
+        pass
+
+    # Merge, dedupe by (generation, narrative), prefer the tracked entry.
+    merged = {}
+    for e in tracked + vault_entries:
+        key = (e.get("generation"), e.get("narrative"))
+        merged.setdefault(key, e)
+    entries = sorted(
+        merged.values(),
+        key=lambda e: str(e.get("timestamp", "")),
+        reverse=True,
+    )
+
     lineage = _read_json_safe("data/genesis/lineage.json") or {}
     current_generation = lineage.get("current_version", 1)
+    try:
+        current_generation = int(current_generation)
+    except (TypeError, ValueError):
+        current_generation = 1
 
     memory = _read_json_safe("data/neural_memory_state.json") or {}
     graph_nodes = int(memory.get("entities") or 0)
     graph_edges = int(memory.get("relationships") or 0)
+
+    # If the gitignored lineage/memory files are absent (CI), fall back to the
+    # stats recorded in the repo-tracked journal so counters don't zero out.
+    if not graph_nodes and not graph_edges:
+        try:
+            from abvorn.core.evolution_journal import read_journal as _read_journal
+
+            jsum = _read_journal()
+            entries_raw = jsum.get("entries") or []
+            recorded = [e for e in entries_raw if e.get("graph_nodes") or e.get("graph_edges")]
+            if recorded:
+                nodes = [int(e.get("graph_nodes") or 0) for e in recorded]
+                edges = [int(e.get("graph_edges") or 0) for e in recorded]
+                graph_nodes = max(nodes)
+                graph_edges = max(edges)
+        except Exception:
+            pass
+
+    if entries:
+        try:
+            current_generation = max(current_generation, max(int(e.get("generation") or 1) for e in entries))
+        except (TypeError, ValueError):
+            pass
 
     last_update = ""
     if entries:
