@@ -3006,18 +3006,37 @@ footer a{{color:#aaa;text-decoration:none}}
             hero_img_html = hero_images.get(slug, "")
             _sorted_niches = sorted(state["niches"], key=lambda n: n["name"].lower())
             related = [n for n in _sorted_niches if n["slug"] != slug][:4]
+            date_str = datetime.now().strftime("%Y-%m-%d")
+            suffix = "" if i == 0 else f"-{i}"
+            fname = f"{_title_slug(a['post_title'])}-{date_str}{suffix}.html"
+            # Persist the article's real publish date across cycles so a re-run
+            # does not slide "Published" forward to today (see run_cycle copy).
+            _publish_anchor = None
+            _anchor_re = re.compile(r"-(\d{4}-\d{2}-\d{2})\.(?:html|pdf)$")
+            for _existing in sorted(post_dir.glob("*.html")):
+                if _title_slug(a["post_title"]) in _existing.name:
+                    _m = _anchor_re.search(_existing.name)
+                    if _m:
+                        _publish_anchor = _m.group(1)
+                        break
+            if not _publish_anchor:
+                try:
+                    _idx_html = (post_dir / "index.html").read_text(encoding="utf-8")
+                    _pm = re.search(r"Published ([A-Za-z]+ \d{1,2}, \d{4})", _idx_html)
+                    if _pm:
+                        _publish_anchor = datetime.strptime(_pm.group(1), "%b %d, %Y").strftime("%Y-%m-%d")
+                except Exception:
+                    _publish_anchor = None
             article_html = build_article_page(slug, niche_name, a["post_title"], a["article_html"],
                                               a["intro"], a["product_name"], a["meta_description"],
                                               all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
-                                              related_niches=related, article_id=f"{slug}-{i}")
+                                              related_niches=related, article_id=f"{slug}-{i}",
+                                              published_date=_publish_anchor or date_str, updated_date=date_str)
             try:
                 verify_page(article_html)
             except ValueError as e:
                 logger.error(f"❌ Page verification failed for {slug}/{fname}: {e}")
                 raise
-            date_str = datetime.now().strftime("%Y-%m-%d")
-            suffix = "" if i == 0 else f"-{i}"
-            fname = f"{_title_slug(a['post_title'])}-{date_str}{suffix}.html"
             write_checked(post_dir / fname, article_html, f"article {slug}/{fname}")
             print(f"  Written: docs/reviews/{slug}/{fname} (article)")
             if i == len(post_list) - 1:

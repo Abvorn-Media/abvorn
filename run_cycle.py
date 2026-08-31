@@ -2081,14 +2081,16 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     title_escaped = html_mod.escape(post_title)
     meta_escaped = html_mod.escape(meta_desc)[:160]
     name_escaped = html_mod.escape(niche_name)
-    try:
-        pub_display = datetime.strptime(pub_date, "%Y-%m-%d").strftime("%b %d, %Y")
-    except Exception:
-        pub_display = pub_date
-    try:
-        upd_display = datetime.strptime(upd_date, "%Y-%m-%d").strftime("%b %d, %Y") if upd_date else pub_display
-    except Exception:
-        upd_display = upd_date or pub_display
+    def _fmt_date(dstr):
+        if not dstr:
+            return ""
+        try:
+            return datetime.strptime(dstr, "%Y-%m-%d").strftime("%b %d, %Y").replace(" 0", " ")
+        except Exception:
+            return dstr
+
+    pub_display = _fmt_date(pub_date) or pub_date
+    upd_display = _fmt_date(upd_date) or pub_display
     upd_suffix = ""
     if upd_date and upd_date != pub_date:
         upd_suffix = f' <span class="dot"></span> <span class="date">Updated {upd_display}</span>'
@@ -2885,10 +2887,34 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
             suffix = "" if i == 0 else f"-{i}"
             fname = f"{_title_slug(a['post_title'])}-{date_str}{suffix}.html"
             pdf_url = f"{_SITE_URL}/reviews/{slug}/{fname[:-5]}.pdf"
+            # Persist the article's real publish date across cycles. A dated file
+            # already on disk (or a prior index.html) is the stable anchor for
+            # "Published" + "Prices checked as of", so a re-run does not slide
+            # the dates forward to today. Brand-new articles use today.
+            _publish_anchor = None
+            _anchor_re = re.compile(r"-(\d{4}-\d{2}-\d{2})\.(?:html|pdf)$")
+            for _existing in sorted(post_dir.glob("*.html")):
+                if _title_slug(a["post_title"]) in _existing.name:
+                    _m = _anchor_re.search(_existing.name)
+                    if _m:
+                        _publish_anchor = _m.group(1)
+                        break
+            if not _publish_anchor:
+                try:
+                    _idx_html = (post_dir / "index.html").read_text(encoding="utf-8")
+                    _pm = re.search(r"Published ([A-Za-z]+ \d{1,2}, \d{4})", _idx_html)
+                    if _pm:
+                        from datetime import datetime as _dt
+                        _publish_anchor = _dt.strptime(_pm.group(1), "%b %d, %Y").strftime("%Y-%m-%d")
+                except Exception:
+                    _publish_anchor = None
+            _published_date = _publish_anchor or date_str
+            _updated_date = date_str
             article_html = build_article_page(slug, niche_name, a["post_title"], a["article_html"],
                                               a["intro"], a["product_name"], a["meta_description"],
                                               all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
-                                              related_niches=related, article_id=f"{slug}-{i}", pdf_url=pdf_url)
+                                              related_niches=related, article_id=f"{slug}-{i}", pdf_url=pdf_url,
+                                              published_date=_published_date, updated_date=_updated_date)
             _wc(post_dir / fname, article_html, f"article {slug}/{fname}")
             print(f"  Written: docs/reviews/{slug}/{fname} (article)")
             pdf_bytes = build_review_page_pdf(article_html, title=a["post_title"], niche_name=niche_name, base=_SITE_URL)
