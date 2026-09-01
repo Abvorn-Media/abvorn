@@ -53,6 +53,34 @@ TASK_CAPABILITY = {
 }
 
 
+# Provider -> (input_per_1k_tokens, output_per_1k_tokens) in USD.
+# Directional public list rates as of 2026 — validate against real invoices
+# before relying on them for pricing decisions (Levie pricing test).
+# Free/self-hosted providers are 0.0.
+PRICING: Dict[str, tuple] = {
+    "openai": (0.00015, 0.00060),
+    "anthropic": (0.00025, 0.00125),
+    "gemini": (0.000075, 0.00030),
+    "deepseek": (0.00027, 0.00110),
+    "kimi": (0.00055, 0.00220),
+    "nvidia": (0.00027, 0.00110),
+    "kilogateway": (0.0, 0.0),
+    "local": (0.0, 0.0),
+    "huggingface": (0.0, 0.0),
+    "default": (0.0005, 0.0015),
+}
+
+
+def _estimate_cost(provider_name: str, input_tokens: int, output_tokens: int) -> float:
+    """Estimate request cost in USD from token usage and per-provider pricing.
+
+    Free/self-hosted providers (kilogateway, local, huggingface) price at 0.0;
+    override the PRICING table to reflect real contract rates.
+    """
+    in_rate, out_rate = PRICING.get(provider_name, PRICING["default"])
+    return (input_tokens * in_rate + output_tokens * out_rate) / 1000.0
+
+
 class ProviderAdapter:
     def __init__(self, name: str, priority: int = 5, cost_per_1k_tokens: float = 0.0,
                  capability: str = "standard"):
@@ -134,19 +162,21 @@ class AnthropicProvider(ProviderAdapter):
             content = response.content[0].text
             latency = (time.time() - start) * 1000
             usage = response.usage
+            input_tokens = getattr(usage, "input_tokens", 0)
+            output_tokens = getattr(usage, "output_tokens", 0)
             self.record_success(latency)
             return QueryResult(
                 content=content,
                 provider_used=self.name,
                 confidence=0.9 if content else 0.0,
-                tokens_used=usage.input_tokens + usage.output_tokens,
-                cost_estimate=usage.input_tokens * 0.00025 / 1000 + usage.output_tokens * 0.00125 / 1000,
+                tokens_used=input_tokens + output_tokens,
+                cost_estimate=_estimate_cost(self.name, input_tokens, output_tokens),
             )
         except Exception as e:
             self.record_failure(str(e))
             return QueryResult(
                 content="", provider_used=self.name, confidence=0.0,
-                tokens_used=0, cost_estimate=0.0, latency_ms=(time.time() - start) * 1000,
+                tokens_used=0, cost_estimate=0.0,
             )
 
 
@@ -190,18 +220,24 @@ class GeminiProvider(ProviderAdapter):
             content = response.text
             latency = (time.time() - start) * 1000
             self.record_success(latency)
+            input_tokens = 0
+            output_tokens = 0
+            um = getattr(response, "usage_metadata", None)
+            if um is not None:
+                input_tokens = int(getattr(um, "prompt_token_count", 0) or 0)
+                output_tokens = int(getattr(um, "candidates_token_count", 0) or 0)
             return QueryResult(
                 content=content,
                 provider_used=self.name,
                 confidence=0.9 if content else 0.0,
-                tokens_used=0,
-                cost_estimate=0.0,
+                tokens_used=input_tokens + output_tokens,
+                cost_estimate=_estimate_cost(self.name, input_tokens, output_tokens),
             )
         except Exception as e:
             self.record_failure(str(e))
             return QueryResult(
                 content="", provider_used=self.name, confidence=0.0,
-                tokens_used=0, cost_estimate=0.0, latency_ms=(time.time() - start) * 1000,
+                tokens_used=0, cost_estimate=0.0,
             )
 
 
@@ -234,12 +270,14 @@ class DeepSeekProvider(ProviderAdapter):
             )
             content = response.choices[0].message.content or ""
             usage = response.usage
+            input_tokens = int(getattr(usage, "prompt_tokens", 0) or 0)
+            output_tokens = int(getattr(usage, "completion_tokens", 0) or 0)
             return QueryResult(
                 content=content,
                 provider_used=self.name,
                 confidence=0.9 if content else 0.0,
-                tokens_used=usage.total_tokens if usage else 0,
-                cost_estimate=0.0,
+                tokens_used=input_tokens + output_tokens,
+                cost_estimate=_estimate_cost(self.name, input_tokens, output_tokens),
             )
         except Exception as e:
             logger.error(f"DeepSeek query failed: {e}")
@@ -282,12 +320,14 @@ class KimiProvider(ProviderAdapter):
             )
             content = response.choices[0].message.content or ""
             usage = response.usage
+            input_tokens = int(getattr(usage, "prompt_tokens", 0) or 0)
+            output_tokens = int(getattr(usage, "completion_tokens", 0) or 0)
             return QueryResult(
                 content=content,
                 provider_used=self.name,
                 confidence=0.9 if content else 0.0,
-                tokens_used=usage.total_tokens if usage else 0,
-                cost_estimate=0.0,
+                tokens_used=input_tokens + output_tokens,
+                cost_estimate=_estimate_cost(self.name, input_tokens, output_tokens),
             )
         except Exception as e:
             logger.error(f"Kimi query failed: {e}")
@@ -330,12 +370,14 @@ class NvidiaProvider(ProviderAdapter):
             )
             content = response.choices[0].message.content or ""
             usage = response.usage
+            input_tokens = int(getattr(usage, "prompt_tokens", 0) or 0)
+            output_tokens = int(getattr(usage, "completion_tokens", 0) or 0)
             return QueryResult(
                 content=content,
                 provider_used=self.name,
                 confidence=0.9 if content else 0.0,
-                tokens_used=usage.total_tokens if usage else 0,
-                cost_estimate=0.0,
+                tokens_used=input_tokens + output_tokens,
+                cost_estimate=_estimate_cost(self.name, input_tokens, output_tokens),
             )
         except Exception as e:
             logger.warning(f"NVIDIA query failed: {e}")
@@ -446,7 +488,7 @@ class LocalProvider(ProviderAdapter):
             self.record_failure(str(e))
             return QueryResult(
                 content="", provider_used=self.name, confidence=0.0,
-                tokens_used=0, cost_estimate=0.0, latency_ms=(time.time() - start) * 1000,
+                tokens_used=0, cost_estimate=0.0,
             )
 
 
@@ -502,13 +544,12 @@ class HuggingFaceProvider(ProviderAdapter):
                 return QueryResult(
                     content="", provider_used=self.name, confidence=0.0,
                     tokens_used=0, cost_estimate=0.0,
-                    error=error_msg, latency_ms=(time.time() - start) * 1000,
                 )
         except Exception as e:
             self.record_failure(str(e))
             return QueryResult(
                 content="", provider_used=self.name, confidence=0.0,
-                tokens_used=0, cost_estimate=0.0, latency_ms=(time.time() - start) * 1000,
+                tokens_used=0, cost_estimate=0.0,
             )
 
 

@@ -34,10 +34,11 @@ from src.meta_evolution import MetaEvolutionEngine, Generation
 # ---------------------------------------------------------------------------
 
 class FakeQueryResult:
-    def __init__(self, content, provider="test", tokens=10):
+    def __init__(self, content, provider="test", tokens=10, cost_estimate=0.0):
         self.content = content
         self.provider_used = provider
         self.tokens_used = tokens
+        self.cost_estimate = cost_estimate
 
 
 @pytest.fixture(autouse=True)

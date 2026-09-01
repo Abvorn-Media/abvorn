@@ -39,8 +39,9 @@ def set_ai_sql(instance):
     ai_sql = instance
 
 
-def _track_call(niche: str, provider: str, tokens: int, latency_ms: float = 0.0):
-    cost = tokens * (_cost_per_1k.get(provider, _cost_per_1k["default"]) / 1000.0)
+def _track_call(niche: str, provider: str, tokens: int, latency_ms: float = 0.0, cost: float = None):
+    if cost is None:
+        cost = tokens * (_cost_per_1k.get(provider, _cost_per_1k["default"]) / 1000.0)
     infra_reporter.report_article_cost("", provider, cost, latency_ms, tokens, niche)
     energy_accounting.record_usage(provider, tokens, latency_ms)
 
@@ -102,7 +103,7 @@ Return a JSON object with:
         task="outline",
     ))
     result_text = result.content
-    _track_call(niche, result.provider_used, result.tokens_used, (time.time() - t0) * 1000)
+    _track_call(niche, result.provider_used, result.tokens_used, (time.time() - t0) * 1000, result.cost_estimate)
     if not result_text:
         return None
     try:
@@ -179,7 +180,7 @@ Return ONLY the HTML paragraphs, wrapped in <p> tags."""
         task="draft",
     ))
     intro_html = intro_result.content
-    _track_call(niche, intro_result.provider_used, intro_result.tokens_used, (time.time() - t0) * 1000)
+    _track_call(niche, intro_result.provider_used, intro_result.tokens_used, (time.time() - t0) * 1000, intro_result.cost_estimate)
     if not intro_html:
         intro_html = "<p>We tested the top products to find the ones worth your money.</p>"
     intro_html = sanitize_article_html(intro_html, strip_leading_intro=False)
@@ -204,7 +205,7 @@ Return ONLY the HTML."""
         task="draft",
     ))
     article_html = article_result.content
-    _track_call(niche, article_result.provider_used, article_result.tokens_used, (time.time() - t0) * 1000)
+    _track_call(niche, article_result.provider_used, article_result.tokens_used, (time.time() - t0) * 1000, article_result.cost_estimate)
     if not article_html:
         article_html = "<p>We're reviewing the top products in this category.</p>"
     article_html = sanitize_article_html(article_html)
