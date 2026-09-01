@@ -144,6 +144,32 @@ def extract_article(path):
             if rel_slug != niche_slug:
                 related_niches.append(rel_slug)
 
+    # Older builds hard-truncated the meta description at 160 chars mid-word
+    # (e.g. '...wellness g'). When the stored meta is a dangling fragment and
+    # the article body has a fuller intro, rebuild a clean, whole-sentence
+    # description from the intro so the SEO meta reads naturally again.
+    stored_meta = (meta_desc or "").strip()
+    intro_plain = re.sub(r"<[^>]+>", " ", intro or "")
+    intro_plain = re.sub(r"\s+", " ", html_lib.unescape(intro_plain)).strip()
+    if (stored_meta and len(stored_meta) >= 150
+            and not re.search(r"[.!?]\s*$", stored_meta)
+            and intro_plain):
+        _sentences = []
+        for _seg in re.split(r"(?<=[.!?])\s+", intro_plain):
+            _sentences.append(_seg)
+            if len(" ".join(_sentences)) >= 160:
+                break
+        _rebuilt = " ".join(_sentences)
+        _out = ""
+        for _tok in _rebuilt.split():
+            if _out and len(_out) + 1 + len(_tok) > 160:
+                break
+            _out = (_out + " " + _tok).strip()
+        if _out and not _out.endswith((".", "!", "?")):
+            _out += "."
+        if _out:
+            meta_desc = _out
+
     return {
         "post_title": post_title,
         "meta_description": meta_desc,

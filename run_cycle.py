@@ -2079,7 +2079,28 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     pub_date = published_date or today_str
     upd_date = updated_date or today_str
     title_escaped = html_mod.escape(post_title)
-    meta_escaped = html_mod.escape(meta_desc)[:160]
+
+    def _word_cap(text, cap):
+        """Truncate to at most `cap` chars, always at a whole-word boundary so
+        the result never dangles mid-word (e.g. the old '...wellness g')."""
+        out = ""
+        for _tok in str(text or "").split():
+            if out and len(out) + 1 + len(_tok) > cap:
+                break
+            out = (out + " " + _tok).strip()
+        return out
+
+    # Visible hero excerpt: prefer the article's intro (full, natural thesis
+    # text from the body), reduced to clean plain text so it never carries the
+    # corrupted/truncated meta_description, and word-capped so it can't dangle.
+    _hero_plain = re.sub(r"<[^>]+>", " ", intro or "")
+    _hero_plain = re.sub(r"\s+", " ", html_mod.unescape(_hero_plain)).strip()
+    if not _hero_plain:
+        _hero_plain = meta_desc or ""
+    hero_escaped = html_mod.escape(_word_cap(_hero_plain, 300) or _hero_plain)
+
+    # SEO meta/OG descriptions: cap near 160 chars at a whole-word boundary.
+    meta_short_escaped = html_mod.escape(_word_cap(meta_desc, 160))
     name_escaped = html_mod.escape(niche_name)
     def _fmt_date(dstr):
         if not dstr:
@@ -2123,9 +2144,9 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{b}/assets/favicon-32x32.png">
     <title>{title_escaped} | Abvorn</title>
-    <meta name="description" content="{meta_escaped}">
+    <meta name="description" content="{meta_short_escaped}">
     <link rel="canonical" href="{article_url}">
-    {OG_META(title_escaped + ' | Abvorn', meta_escaped, article_url, f'{_SITE_URL}/assets/logo.png', og_type='article')}
+    {OG_META(title_escaped + ' | Abvorn', meta_short_escaped, article_url, f'{_SITE_URL}/assets/logo.png', og_type='article')}
     {FONT_LINK}
     <link rel="preconnect" href="https://m.media-amazon.com">
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
@@ -2177,7 +2198,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             <p class="hero-meta">{name_escaped} <span class="dot"></span> <span class="date">By Abvorn</span> <span class="dot"></span> <span class="date">Published {pub_display}</span>{upd_suffix}</p>
             {pdf_download}
             <h1>{title_escaped}</h1>
-            <p class="hero-excerpt">{meta_escaped}</p>
+            <p class="hero-excerpt">{hero_escaped}</p>
             <p class="hero-price-check">Prices checked as of {upd_display}</p>
         </div>
         {hero_img_html}
