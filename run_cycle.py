@@ -2090,14 +2090,55 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             out = (out + " " + _tok).strip()
         return out
 
+    def _sentence_cap(text, cap, max_sentences):
+        """Truncate to whole sentences so the subtitle never dangles mid-sentence.
+
+        Keeps complete sentences (ending in . ! ?) up to `cap` chars / at most
+        `max_sentences`. Falls back to a whole-word cut at `cap` for a single
+        over-long sentence. Whatever is returned is guaranteed to end in a
+        sentence terminator (or an ellipsis when the source was a fragment), so
+        a reader is never left mid-sentence or mid-word.
+        """
+        text = (text or "").strip()
+        if not text:
+            return text
+        truncated = False
+        parts = re.split(r"(?<=[.!?])\s+", text)
+        out = ""
+        count = 0
+        for part in parts:
+            if count >= max_sentences:
+                break
+            if not part.strip():
+                continue
+            candidate = (out + " " + part).strip()
+            if out and len(candidate) > cap:
+                truncated = True
+                break
+            out = candidate
+            count += 1
+        if not out or len(out) > cap:
+            out = _word_cap(text, cap)
+            truncated = True
+        out = out.rstrip()
+        if not out:
+            return out
+        if out.endswith((".", "!", "?")):
+            return out
+        # Whole sentences were kept but none ended with punctuation (fragment
+        # source). Add a period if it reads like a complete snippet, else an
+        # ellipsis to signal the lead-in continues.
+        return out + ("..." if truncated else ".")
+
     # Visible hero excerpt: prefer the article's intro (full, natural thesis
     # text from the body), reduced to clean plain text so it never carries the
-    # corrupted/truncated meta_description, and word-capped so it can't dangle.
+    # corrupted/truncated meta_description, and kept as whole sentence(s) so it
+    # reads complete instead of dangling like the old '...which 4K'.
     _hero_plain = re.sub(r"<[^>]+>", " ", intro or "")
     _hero_plain = re.sub(r"\s+", " ", html_mod.unescape(_hero_plain)).strip()
     if not _hero_plain:
         _hero_plain = meta_desc or ""
-    hero_escaped = html_mod.escape(_word_cap(_hero_plain, 300) or _hero_plain)
+    hero_escaped = html_mod.escape(_sentence_cap(_hero_plain, 240, 2) or _hero_plain)
 
     # SEO meta/OG descriptions: cap near 160 chars at a whole-word boundary.
     meta_short_escaped = html_mod.escape(_word_cap(meta_desc, 160))

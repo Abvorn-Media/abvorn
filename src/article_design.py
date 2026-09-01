@@ -346,6 +346,21 @@ def sanitize_article_html(html, strip_leading_intro=True):
     return text
 
 
+def _product_signatures(name):
+    """Yield distinctive model-number substrings of a product name.
+
+    Returns digit+letter model tokens (such as "S2725QS" or "27UP650K-W")
+    longest-first. Generic words like "Monitor" are deliberately excluded so a
+    short signature can never match an unrelated heading.
+    """
+    tokens = re.split(r"\s+", str(name or "").strip())
+    for t in sorted(set(tokens), key=len, reverse=True):
+        if (re.search(r"\d", t) and re.search(r"[A-Za-z]", t)
+                and not re.fullmatch(r"[\d.,%/\-]+", t)
+                and len(t) >= 4):
+            yield t
+
+
 def inject_product_photos(article_html, products):
     """Insert a studio product photo after each product's heading.
 
@@ -364,25 +379,26 @@ def inject_product_photos(article_html, products):
             continue
         if html_mod.escape(image) in result or image in result:
             continue
-        # Match a heading that contains the product name (with optional
-        # HTML-entity escaping inside the text).
-        esc_name = re.escape(name)
-        esc_name_escaped = re.escape(html_mod.escape(name))
-        pattern = re.compile(
-            r"(<h[23][^>]*>)(.*?" + esc_name + r".*?)(</h[23]>)",
-            re.I,
-        )
-        pattern_esc = re.compile(
-            r"(<h[23][^>]*>)(.*?" + esc_name_escaped + r".*?)(</h[23]>)",
-            re.I,
-        )
+        # Build candidate matchers from most-specific to least-specific. The
+        # product name rarely matches the article heading verbatim (the page
+        # may use a shorter human name such as "Dell S2725QS" while the cache
+        # holds the full Amazon title), so fall back to a distinctive model
+        # token (e.g. "S2725QS").
+        matchers = [re.escape(name), re.escape(html_mod.escape(name))]
+        for sig in _product_signatures(name):
+            matchers.append(re.escape(sig))
 
         def _replace(m):
             return m.group(0) + "\n" + product_shot_html(image, name, size="body")
 
-        result, n = pattern.subn(_replace, result, count=1)
-        if n == 0:
-            result, n = pattern_esc.subn(_replace, result, count=1)
+        for matcher in matchers:
+            pattern = re.compile(
+                r"(<h[23][^>]*>)\s*([^<]*?" + matcher + r"[^<]*?)\s*(</h[23]>)",
+                re.I,
+            )
+            result, n = pattern.subn(_replace, result, count=1)
+            if n:
+                break
     return ensure_body_captions(result)
 
 
