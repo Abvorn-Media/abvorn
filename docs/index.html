@@ -17,6 +17,25 @@
     <meta name="twitter:description" content="Independent product reviews and buying guides. We test before we recommend.">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
+#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#2a2724;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
+#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
+#cookie-banner p{margin:0;color:#e3dbd4;font-size:13px}
+#cookie-banner a{color:#d4633e;text-decoration:underline}
+#cookie-banner .btn{background:#d4633e;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
+#cookie-banner .btn:hover{background:#b84d2a}
+#cookie-banner .btn-secondary{background:transparent;color:#e3dbd4;border:1px solid #6b6560;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
+#cookie-banner .btn-secondary:hover{border-color:#9e9690}
+</style>
+    <script>window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()</script>
+<div id="cookie-banner" role="dialog" aria-label="Cookie consent">
+<p>We use cookies to analyze traffic and improve your experience. <a href="https://abvorn.com/privacy/">Privacy Policy</a></p>
+<button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
+<button class="btn" onclick="acceptAnalytics()">Accept</button>
+</div>
+<script>
+(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){return}var b=document.getElementById("cookie-banner");if(b){b.classList.add("show")}window.acceptAnalytics=function(){document.cookie="analytics_consent=granted; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show");loadAnalytics()};window.declineAnalytics=function(){document.cookie="analytics_consent=denied; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show")}})()
+</script>
+    <style>
         :root { --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }
         
 :root {
@@ -348,26 +367,6 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
         @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
     </style>
-
-<style>
-#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#2a2724;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
-#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
-#cookie-banner p{margin:0;color:#e3dbd4;font-size:13px}
-#cookie-banner a{color:#d4633e;text-decoration:underline}
-#cookie-banner .btn{background:#d4633e;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
-#cookie-banner .btn:hover{background:#b84d2a}
-#cookie-banner .btn-secondary{background:transparent;color:#e3dbd4;border:1px solid #6b6560;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
-#cookie-banner .btn-secondary:hover{border-color:#9e9690}
-</style>
-<script>window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()</script>
-<div id="cookie-banner" role="dialog" aria-label="Cookie consent">
-<p>We use cookies to analyze traffic and improve your experience. <a href="https://abvorn.com/privacy/">Privacy Policy</a></p>
-<button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
-<button class="btn" onclick="acceptAnalytics()">Accept</button>
-</div>
-<script>
-(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){return}var b=document.getElementById("cookie-banner");if(b){b.classList.add("show")}window.acceptAnalytics=function(){document.cookie="analytics_consent=granted; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show");loadAnalytics()};window.declineAnalytics=function(){document.cookie="analytics_consent=denied; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show")}})()
-</script>
 </head>
  <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -462,31 +461,31 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 </div></section>
 
 <section class="stats-band"><div class="container stats-grid">
-    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="100">0</div><div class="stat-label">Guides published</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-number" data-target="101">0</div><div class="stat-label">Guides published</div></div>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div class="stat-number" data-target="10">0</div><div class="stat-label">Categories covered</div></div>
-    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="300">0</div><div class="stat-label">Products compared</div></div>
+    <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 8a3 3 0 106 0M13 8a3 3 0 106 0"/></svg></div><div class="stat-number" data-target="303">0</div><div class="stat-label">Products compared</div></div>
     <div><div class="stat-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3.5-7.1"/><path d="M21 3v6h-6"/></svg></div><div class="stat-number">Weekly</div><div class="stat-label">Review cycle</div></div>
 </div></section>
 
 <section class="latest-reviews-section container" id="latest-reviews">
     <span class="section-eyebrow">Fresh this week</span>
     <div class="category-section__header"><h2>Latest reviews</h2></div>
-    <div class="niche-grid"><div class="niche-card review-card niche-card--featured" style="--cat:#c98a2c">
+    <div class="niche-grid"><div class="niche-card review-card niche-card--featured" style="--cat:#cfc0ee">
     <div class="review-card__media">
-        <a href="https://abvorn.com/reviews/wireless-headphones/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones 2026: Top Picks for Every Budget" loading="lazy"></figure></div></a>
-        <span class="review-card__score" aria-label="Abvorn Verdict 7.0 out of 10"><span class="review-card__score-num">7.0</span><span class="review-card__score-out">/10</span></span>
+        <a href="https://abvorn.com/reviews/gaming-mice/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/51sg9BLSMTL._AC_SL1500_.jpg" alt="Best Gaming Mice 2026: Top Picks and Buying Guide" loading="lazy"></figure></div></a>
+        <span class="review-card__score" aria-label="Abvorn Verdict 6.8 out of 10"><span class="review-card__score-num">6.8</span><span class="review-card__score-out">/10</span></span>
     </div>
     <div class="review-card__body">
-        <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
+        <span class="review-card__banner" style="background:#cfc0ee">Gaming · Gaming Mice</span>
         <span class="review-card__updated">Updated Sep 2026</span>
-        <h2><a href="https://abvorn.com/reviews/wireless-headphones/">Best Wireless Headphones 2026: Top Picks for Every Budget</a></h2>
-        <p class="review-card__snippet">User Safety: safe</p>
+        <h2><a href="https://abvorn.com/reviews/gaming-mice/">Best Gaming Mice 2026: Top Picks and Buying Guide</a></h2>
+        <p class="review-card__snippet">&lt;p&gt;Finding the best gaming mice in 2026 is no small feat—with specs ranging from basic to bleeding-edge, choosing the right one can feel overwhelming. Whether y</p>
         <div class="review-card__footer">
-            <div class="review-card__reactions" data-review="wireless-headphones">
+            <div class="review-card__reactions" data-review="gaming-mice">
                 <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
                 <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
             </div>
-            <a href="https://abvorn.com/reviews/wireless-headphones/" class="read-link">Read review →</a>
+            <a href="https://abvorn.com/reviews/gaming-mice/" class="read-link">Read review →</a>
         </div>
     </div>
 </div><div class="niche-card review-card" style="--cat:#a7c3e8">
@@ -547,24 +546,6 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <div class="category-section__header"><h2><span class="cat-tick" aria-hidden="true"></span>Audio</h2><a href="https://abvorn.com/categories/audio/">View all in Audio →</a></div>
     <div class="niche-grid"><div class="niche-card review-card" style="--cat:#c98a2c">
     <div class="review-card__media">
-        <a href="https://abvorn.com/reviews/wireless-headphones/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones 2026: Top Picks for Every Budget" loading="lazy"></figure></div></a>
-        <span class="review-card__score" aria-label="Abvorn Verdict 7.0 out of 10"><span class="review-card__score-num">7.0</span><span class="review-card__score-out">/10</span></span>
-    </div>
-    <div class="review-card__body">
-        <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
-        <span class="review-card__updated">Updated Sep 2026</span>
-        <h2><a href="https://abvorn.com/reviews/wireless-headphones/">Best Wireless Headphones 2026: Top Picks for Every Budget</a></h2>
-        <p class="review-card__snippet">User Safety: safe</p>
-        <div class="review-card__footer">
-            <div class="review-card__reactions" data-review="wireless-headphones">
-                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
-                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
-            </div>
-            <a href="https://abvorn.com/reviews/wireless-headphones/" class="read-link">Read review →</a>
-        </div>
-    </div>
-</div><div class="niche-card review-card" style="--cat:#c98a2c">
-    <div class="review-card__media">
         <a href="https://abvorn.com/reviews/wireless-earbuds/best-wireless-earbuds-2024-a-comprehensive-buying-guide-2026-08-13.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61QGlXzWdKL._AC_SL1500_.jpg" alt="Best Wireless Earbuds 2026: A Comprehensive Buying Guide" loading="lazy"></figure></div></a>
         <span class="review-card__score" aria-label="Abvorn Verdict 6.9 out of 10"><span class="review-card__score-num">6.9</span><span class="review-card__score-out">/10</span></span>
     </div>
@@ -597,6 +578,24 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
                 <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
             </div>
             <a href="https://abvorn.com/reviews/wireless-earbuds/best-wireless-earbuds-2026-complete-buying-guide-reviews-2026-08-18.html" class="read-link">Read review →</a>
+        </div>
+    </div>
+</div><div class="niche-card review-card" style="--cat:#c98a2c">
+    <div class="review-card__media">
+        <a href="https://abvorn.com/reviews/wireless-earbuds/best-wireless-earbuds-2026-expert-comparison-buying-guide-2026-08-25.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61QGlXzWdKL._AC_SL1500_.jpg" alt="Best Wireless Earbuds 2026: Expert Comparison &amp; Buying Guide" loading="lazy"></figure></div></a>
+        <span class="review-card__score" aria-label="Abvorn Verdict 6.9 out of 10"><span class="review-card__score-num">6.9</span><span class="review-card__score-out">/10</span></span>
+    </div>
+    <div class="review-card__body">
+        <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Earbuds</span>
+        
+        <h2><a href="https://abvorn.com/reviews/wireless-earbuds/best-wireless-earbuds-2026-expert-comparison-buying-guide-2026-08-25.html">Best Wireless Earbuds 2026: Expert Comparison &amp; Buying Guide</a></h2>
+        <p class="review-card__snippet">In 2026, the wireless earbud market is more crowded than ever, with new models promising longer battery life, smarter noise cancellation, and seamless integration across devices.</p>
+        <div class="review-card__footer">
+            <div class="review-card__reactions" data-review="wireless-earbuds">
+                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
+            </div>
+            <a href="https://abvorn.com/reviews/wireless-earbuds/best-wireless-earbuds-2026-expert-comparison-buying-guide-2026-08-25.html" class="read-link">Read review →</a>
         </div>
     </div>
 </div></div>
@@ -718,6 +717,24 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     <div class="category-section__header"><h2><span class="cat-tick" aria-hidden="true"></span>Gaming</h2><a href="https://abvorn.com/categories/gaming/">View all in Gaming →</a></div>
     <div class="niche-grid"><div class="niche-card review-card" style="--cat:#cfc0ee">
     <div class="review-card__media">
+        <a href="https://abvorn.com/reviews/gaming-mice/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/51sg9BLSMTL._AC_SL1500_.jpg" alt="Best Gaming Mice 2026: Top Picks and Buying Guide" loading="lazy"></figure></div></a>
+        <span class="review-card__score" aria-label="Abvorn Verdict 6.8 out of 10"><span class="review-card__score-num">6.8</span><span class="review-card__score-out">/10</span></span>
+    </div>
+    <div class="review-card__body">
+        <span class="review-card__banner" style="background:#cfc0ee">Gaming · Gaming Mice</span>
+        <span class="review-card__updated">Updated Sep 2026</span>
+        <h2><a href="https://abvorn.com/reviews/gaming-mice/">Best Gaming Mice 2026: Top Picks and Buying Guide</a></h2>
+        <p class="review-card__snippet">&lt;p&gt;Finding the best gaming mice in 2026 is no small feat—with specs ranging from basic to bleeding-edge, choosing the right one can feel overwhelming. Whether y</p>
+        <div class="review-card__footer">
+            <div class="review-card__reactions" data-review="gaming-mice">
+                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
+                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
+            </div>
+            <a href="https://abvorn.com/reviews/gaming-mice/" class="read-link">Read review →</a>
+        </div>
+    </div>
+</div><div class="niche-card review-card" style="--cat:#cfc0ee">
+    <div class="review-card__media">
         <a href="https://abvorn.com/reviews/gaming-mice/best-gaming-mice-2026-08-14.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/51sg9BLSMTL._AC_SL1500_.jpg" alt="Best Gaming Mice" loading="lazy"></figure></div></a>
         <span class="review-card__score" aria-label="Abvorn Verdict 6.8 out of 10"><span class="review-card__score-num">6.8</span><span class="review-card__score-out">/10</span></span>
     </div>
@@ -750,24 +767,6 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
                 <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
             </div>
             <a href="https://abvorn.com/reviews/gaming-mice/best-gaming-mice-2026-08-24.html" class="read-link">Read review →</a>
-        </div>
-    </div>
-</div><div class="niche-card review-card" style="--cat:#cfc0ee">
-    <div class="review-card__media">
-        <a href="https://abvorn.com/reviews/gaming-mice/best-gaming-mice-2026-08-30.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/51sg9BLSMTL._AC_SL1500_.jpg" alt="Best Gaming Mice" loading="lazy"></figure></div></a>
-        <span class="review-card__score" aria-label="Abvorn Verdict 6.8 out of 10"><span class="review-card__score-num">6.8</span><span class="review-card__score-out">/10</span></span>
-    </div>
-    <div class="review-card__body">
-        <span class="review-card__banner" style="background:#cfc0ee">Gaming · Gaming Mice</span>
-        
-        <h2><a href="https://abvorn.com/reviews/gaming-mice/best-gaming-mice-2026-08-30.html">Best Gaming Mice</a></h2>
-        <p class="review-card__snippet">straight to your inbox. No spam, unsubscribe anytime.</p>
-        <div class="review-card__footer">
-            <div class="review-card__reactions" data-review="gaming-mice">
-                <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
-                <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
-            </div>
-            <a href="https://abvorn.com/reviews/gaming-mice/best-gaming-mice-2026-08-30.html" class="read-link">Read review →</a>
         </div>
     </div>
 </div></div>

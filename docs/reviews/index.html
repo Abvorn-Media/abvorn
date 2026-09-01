@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#2a2724;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
+#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
+#cookie-banner p{margin:0;color:#e3dbd4;font-size:13px}
+#cookie-banner a{color:#d4633e;text-decoration:underline}
+#cookie-banner .btn{background:#d4633e;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
+#cookie-banner .btn:hover{background:#b84d2a}
+#cookie-banner .btn-secondary{background:transparent;color:#e3dbd4;border:1px solid #6b6560;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
+#cookie-banner .btn-secondary:hover{border-color:#9e9690}
+</style>
+    <script>window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()</script>
+<div id="cookie-banner" role="dialog" aria-label="Cookie consent">
+<p>We use cookies to analyze traffic and improve your experience. <a href="https://abvorn.com/privacy/">Privacy Policy</a></p>
+<button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
+<button class="btn" onclick="acceptAnalytics()">Accept</button>
+</div>
+<script>
+(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){return}var b=document.getElementById("cookie-banner");if(b){b.classList.add("show")}window.acceptAnalytics=function(){document.cookie="analytics_consent=granted; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show");loadAnalytics()};window.declineAnalytics=function(){document.cookie="analytics_consent=denied; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show")}})()
+</script>
     <link rel="icon" type="image/png" href="https://abvorn.com/assets/favicon-32x32.png">
     <title>All Reviews | Abvorn</title>
     <meta name="description" content="Browse every Abvorn product review and buying guide. We test before we recommend.">
@@ -301,26 +320,6 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
         @media (max-width:760px) { .footer-grid { grid-template-columns:1fr 1fr; } }
     </style>
-
-<style>
-#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#2a2724;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
-#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
-#cookie-banner p{margin:0;color:#e3dbd4;font-size:13px}
-#cookie-banner a{color:#d4633e;text-decoration:underline}
-#cookie-banner .btn{background:#d4633e;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
-#cookie-banner .btn:hover{background:#b84d2a}
-#cookie-banner .btn-secondary{background:transparent;color:#e3dbd4;border:1px solid #6b6560;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
-#cookie-banner .btn-secondary:hover{border-color:#9e9690}
-</style>
-<script>window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()</script>
-<div id="cookie-banner" role="dialog" aria-label="Cookie consent">
-<p>We use cookies to analyze traffic and improve your experience. <a href="https://abvorn.com/privacy/">Privacy Policy</a></p>
-<button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
-<button class="btn" onclick="acceptAnalytics()">Accept</button>
-</div>
-<script>
-(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){return}var b=document.getElementById("cookie-banner");if(b){b.classList.add("show")}window.acceptAnalytics=function(){document.cookie="analytics_consent=granted; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show");loadAnalytics()};window.declineAnalytics=function(){document.cookie="analytics_consent=denied; max-age=31536000; path=/; SameSite=Lax";b.classList.remove("show")}})()
-</script>
 </head>
  <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -358,22 +357,22 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
 
 <nav class="category-index" aria-label="Guides in this category" style="--cat:#c98a2c"><div class="container category-index__inner"><span class="category-index__label">Browse the guides</span><div class="category-index__links"><a class="category-index__link is-current" aria-current="true" href="#latest"><span class="category-index__tick" style="--cat:#c98a2c"></span>All reviews</a><a class="category-index__link" href="#4k-monitors"><span class="category-index__tick" style="--cat:#c98a2c"></span>4K Monitors</a><a class="category-index__link" href="#fitness-trackers"><span class="category-index__tick" style="--cat:#c98a2c"></span>Fitness Trackers</a><a class="category-index__link" href="#gaming-mice"><span class="category-index__tick" style="--cat:#c98a2c"></span>Gaming Mice</a><a class="category-index__link" href="#laptops"><span class="category-index__tick" style="--cat:#c98a2c"></span>Laptops</a><a class="category-index__link" href="#mechanical-keyboards"><span class="category-index__tick" style="--cat:#c98a2c"></span>Mechanical Keyboards</a><a class="category-index__link" href="#smart-home"><span class="category-index__tick" style="--cat:#c98a2c"></span>Smart Home</a><a class="category-index__link" href="#streaming-devices"><span class="category-index__tick" style="--cat:#c98a2c"></span>Streaming Devices</a><a class="category-index__link" href="#webcams"><span class="category-index__tick" style="--cat:#c98a2c"></span>Webcams</a><a class="category-index__link" href="#wireless-earbuds"><span class="category-index__tick" style="--cat:#c98a2c"></span>Wireless Earbuds</a><a class="category-index__link" href="#wireless-headphones"><span class="category-index__tick" style="--cat:#c98a2c"></span>Wireless Headphones</a></div></div></nav>
 
-<section class="category-section container" id="latest" style="--cat:#c98a2c"><span class="section-eyebrow">Fresh this week</span><div class="category-section__header"><h2>Latest reviews</h2></div><div class="niche-grid"><div class="niche-card review-card niche-card--featured" style="--cat:#c98a2c">
+<section class="category-section container" id="latest" style="--cat:#c98a2c"><span class="section-eyebrow">Fresh this week</span><div class="category-section__header"><h2>Latest reviews</h2></div><div class="niche-grid"><div class="niche-card review-card niche-card--featured" style="--cat:#cfc0ee">
     <div class="review-card__media">
-        <a href="https://abvorn.com/reviews/wireless-headphones/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones 2026: Top Picks for Every Budget" loading="lazy"></figure></div></a>
-        <span class="review-card__score" aria-label="Abvorn Verdict 7.0 out of 10"><span class="review-card__score-num">7.0</span><span class="review-card__score-out">/10</span></span>
+        <a href="https://abvorn.com/reviews/gaming-mice/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/51sg9BLSMTL._AC_SL1500_.jpg" alt="Best Gaming Mice 2026: Top Picks and Buying Guide" loading="lazy"></figure></div></a>
+        <span class="review-card__score" aria-label="Abvorn Verdict 6.8 out of 10"><span class="review-card__score-num">6.8</span><span class="review-card__score-out">/10</span></span>
     </div>
     <div class="review-card__body">
-        <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
+        <span class="review-card__banner" style="background:#cfc0ee">Gaming · Gaming Mice</span>
         <span class="review-card__updated">Updated Sep 2026</span>
-        <h2><a href="https://abvorn.com/reviews/wireless-headphones/">Best Wireless Headphones 2026: Top Picks for Every Budget</a></h2>
-        <p class="review-card__snippet">User Safety: safe</p>
+        <h2><a href="https://abvorn.com/reviews/gaming-mice/">Best Gaming Mice 2026: Top Picks and Buying Guide</a></h2>
+        <p class="review-card__snippet">&lt;p&gt;Finding the best gaming mice in 2026 is no small feat—with specs ranging from basic to bleeding-edge, choosing the right one can feel overwhelming. Whether y</p>
         <div class="review-card__footer">
-            <div class="review-card__reactions" data-review="wireless-headphones">
+            <div class="review-card__reactions" data-review="gaming-mice">
                 <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
                 <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
             </div>
-            <a href="https://abvorn.com/reviews/wireless-headphones/" class="read-link">Read review →</a>
+            <a href="https://abvorn.com/reviews/gaming-mice/" class="read-link">Read review →</a>
         </div>
     </div>
 </div><div class="niche-card review-card" style="--cat:#a7c3e8">
@@ -412,22 +411,22 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
             <a href="https://abvorn.com/reviews/fitness-trackers/best-fitness-trackers-2026-compare-features-find-your-ideal-health-tracker-2026-08-23.html" class="read-link">Read review →</a>
         </div>
     </div>
-</div><div class="niche-card review-card" style="--cat:#cfc0ee">
+</div><div class="niche-card review-card" style="--cat:#a7c3e8">
     <div class="review-card__media">
-        <a href="https://abvorn.com/reviews/gaming-mice/best-gaming-mice-2026-08-14.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/51sg9BLSMTL._AC_SL1500_.jpg" alt="Best Gaming Mice" loading="lazy"></figure></div></a>
+        <a href="https://abvorn.com/reviews/laptops/best-15-6-laptops-2026-lenovo-vs-hp-vs-jumper-compared-2026-08-31.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/81wWGYF+tUL._AC_SL1500_.jpg" alt="Best 15.6&quot; Laptops 2026: Lenovo vs HP vs jumper Compared" loading="lazy"></figure></div></a>
         <span class="review-card__score" aria-label="Abvorn Verdict 6.8 out of 10"><span class="review-card__score-num">6.8</span><span class="review-card__score-out">/10</span></span>
     </div>
     <div class="review-card__body">
-        <span class="review-card__banner" style="background:#cfc0ee">Gaming · Gaming Mice</span>
+        <span class="review-card__banner" style="background:#a7c3e8">Computing &amp; Monitors · Laptops</span>
         
-        <h2><a href="https://abvorn.com/reviews/gaming-mice/best-gaming-mice-2026-08-14.html">Best Gaming Mice</a></h2>
-        <p class="review-card__snippet">Finding the best gaming-mice can feel like searching for a needle in a haystack—especially when you’re juggling performance, comfort, and price. Whether you’re battling in…</p>
+        <h2><a href="https://abvorn.com/reviews/laptops/best-15-6-laptops-2026-lenovo-vs-hp-vs-jumper-compared-2026-08-31.html">Best 15.6&quot; Laptops 2026: Lenovo vs HP vs jumper Compared</a></h2>
+        <p class="review-card__snippet">with brands like Lenovo, HP, and jumper all competing for your attention with aggressive pricing and bold claims. Whether you need a machine for work, school, or everyday tasks…</p>
         <div class="review-card__footer">
-            <div class="review-card__reactions" data-review="gaming-mice">
+            <div class="review-card__reactions" data-review="laptops">
                 <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
                 <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
             </div>
-            <a href="https://abvorn.com/reviews/gaming-mice/best-gaming-mice-2026-08-14.html" class="read-link">Read review →</a>
+            <a href="https://abvorn.com/reviews/laptops/best-15-6-laptops-2026-lenovo-vs-hp-vs-jumper-compared-2026-08-31.html" class="read-link">Read review →</a>
         </div>
     </div>
 </div></div></section><section class="subscribe-band"><div class="container subscribe-inner"><div class="subscribe-copy"><h2>Get alerted when we publish a new guide</h2><p>One email whenever we publish a new guide. No spam, unsubscribe anytime.</p></div><form class="subscribe-form" id="category-subscribe-form" onsubmit="submitCategorySubscribe(event)"><input type="text" name="_gotcha" class="hp-field" tabindex="-1" autocomplete="off"><label for="category-subscribe-email" class="sr-only">Email address</label><input type="email" class="input" id="category-subscribe-email" placeholder="you@example.com" required><button type="submit" class="btn">Notify Me</button><p class="subscribe-msg" id="category-subscribe-msg" aria-live="polite"></p></form></div></section><section class="category-section container" id="4k-monitors" style="--cat:#c98a2c"><div class="category-section__header"><h2>4K Monitors</h2><span class="category-section__count">1 review</span></div><div class="posts-grid"><div class="niche-card review-card" style="--cat:#a7c3e8">
@@ -468,20 +467,20 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     </div>
 </div></div></section><section class="category-section container" id="gaming-mice" style="--cat:#c98a2c"><div class="category-section__header"><h2>Gaming Mice</h2><span class="category-section__count">1 review</span></div><div class="posts-grid"><div class="niche-card review-card" style="--cat:#cfc0ee">
     <div class="review-card__media">
-        <a href="https://abvorn.com/reviews/gaming-mice/best-gaming-mice-2026-08-14.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/51sg9BLSMTL._AC_SL1500_.jpg" alt="Best Gaming Mice" loading="lazy"></figure></div></a>
+        <a href="https://abvorn.com/reviews/gaming-mice/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/51sg9BLSMTL._AC_SL1500_.jpg" alt="Best Gaming Mice 2026: Top Picks and Buying Guide" loading="lazy"></figure></div></a>
         <span class="review-card__score" aria-label="Abvorn Verdict 6.8 out of 10"><span class="review-card__score-num">6.8</span><span class="review-card__score-out">/10</span></span>
     </div>
     <div class="review-card__body">
         <span class="review-card__banner" style="background:#cfc0ee">Gaming · Gaming Mice</span>
-        
-        <h2><a href="https://abvorn.com/reviews/gaming-mice/best-gaming-mice-2026-08-14.html">Best Gaming Mice</a></h2>
-        <p class="review-card__snippet">Finding the best gaming-mice can feel like searching for a needle in a haystack—especially when you’re juggling performance, comfort, and price. Whether you’re battling in…</p>
+        <span class="review-card__updated">Updated Sep 2026</span>
+        <h2><a href="https://abvorn.com/reviews/gaming-mice/">Best Gaming Mice 2026: Top Picks and Buying Guide</a></h2>
+        <p class="review-card__snippet">&lt;p&gt;Finding the best gaming mice in 2026 is no small feat—with specs ranging from basic to bleeding-edge, choosing the right one can feel overwhelming. Whether y</p>
         <div class="review-card__footer">
             <div class="review-card__reactions" data-review="gaming-mice">
                 <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
                 <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
             </div>
-            <a href="https://abvorn.com/reviews/gaming-mice/best-gaming-mice-2026-08-14.html" class="read-link">Read review →</a>
+            <a href="https://abvorn.com/reviews/gaming-mice/" class="read-link">Read review →</a>
         </div>
     </div>
 </div></div></section><section class="category-section container" id="laptops" style="--cat:#c98a2c"><div class="category-section__header"><h2>Laptops</h2><span class="category-section__count">1 review</span></div><div class="posts-grid"><div class="niche-card review-card" style="--cat:#a7c3e8">
@@ -594,20 +593,20 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
     </div>
 </div></div></section><section class="category-section container" id="wireless-headphones" style="--cat:#c98a2c"><div class="category-section__header"><h2>Wireless Headphones</h2><span class="category-section__count">1 review</span></div><div class="posts-grid"><div class="niche-card review-card" style="--cat:#c98a2c">
     <div class="review-card__media">
-        <a href="https://abvorn.com/reviews/wireless-headphones/" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones 2026: Top Picks for Every Budget" loading="lazy"></figure></div></a>
+        <a href="https://abvorn.com/reviews/wireless-headphones/best-wireless-headphones-2024-a-comparison-guide-to-find-your-perfect-pair-2026-08-03.html" tabindex="-1" aria-hidden="true" class="review-card__media-link"><div class="niche-card__image-wrapper"><figure class="product-shot product-shot--card"><img class="product-shot__img" src="https://m.media-amazon.com/images/I/61eQgGlycYL._AC_SL1500_.jpg" alt="Best Wireless Headphones 2026: A Comparison Guide to Find Your Perfect Pair" loading="lazy"></figure></div></a>
         <span class="review-card__score" aria-label="Abvorn Verdict 7.0 out of 10"><span class="review-card__score-num">7.0</span><span class="review-card__score-out">/10</span></span>
     </div>
     <div class="review-card__body">
         <span class="review-card__banner" style="background:#c98a2c">Audio · Wireless Headphones</span>
-        <span class="review-card__updated">Updated Sep 2026</span>
-        <h2><a href="https://abvorn.com/reviews/wireless-headphones/">Best Wireless Headphones 2026: Top Picks for Every Budget</a></h2>
-        <p class="review-card__snippet">User Safety: safe</p>
+        
+        <h2><a href="https://abvorn.com/reviews/wireless-headphones/best-wireless-headphones-2024-a-comparison-guide-to-find-your-perfect-pair-2026-08-03.html">Best Wireless Headphones 2026: A Comparison Guide to Find Your Perfect Pair</a></h2>
+        <p class="review-card__snippet">Wireless headphones promise freedom from tangled cords and seamless connectivity, but the sheer number of options on the market makes finding the perfect pair a frustrating maze…</p>
         <div class="review-card__footer">
             <div class="review-card__reactions" data-review="wireless-headphones">
                 <span class="reaction-btn is-counter" data-type="like"><span class="reaction-icon">&#x1F44D;</span><span class="reaction-count">0</span></span>
                 <span class="reaction-btn is-counter" data-type="love"><span class="reaction-icon">&#x2764;&#xFE0F;</span><span class="reaction-count">0</span></span>
             </div>
-            <a href="https://abvorn.com/reviews/wireless-headphones/" class="read-link">Read review →</a>
+            <a href="https://abvorn.com/reviews/wireless-headphones/best-wireless-headphones-2024-a-comparison-guide-to-find-your-perfect-pair-2026-08-03.html" class="read-link">Read review →</a>
         </div>
     </div>
 </div></div></section>
