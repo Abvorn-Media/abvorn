@@ -1336,6 +1336,8 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .footer-bottom {{ border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }}
         @media (max-width:760px) {{ .footer-grid {{ grid-template-columns:1fr 1fr; }} }}
     </style>
+    <style>{CONSENT_CSS}</style>
+{ANALYTICS_HTML}
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -1762,6 +1764,8 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     <title>{blog_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
     <link rel="canonical" href="{_SITE_URL}/categories/{category_slug}/">
+    <style>{CONSENT_CSS}</style>
+    {ANALYTICS_HTML}
     <meta property="og:title" content="{blog_title} | Abvorn">
     <meta property="og:description" content="{meta_desc}">
     <meta property="og:url" content="{_SITE_URL}/categories/{category_slug}/">
@@ -2132,6 +2136,8 @@ def _hub_page(b, meta_title, meta_desc, canonical_path, hero_html, index_nav, se
     return f'''<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>{CONSENT_CSS}</style>
+    {ANALYTICS_HTML}
     <link rel="icon" type="image/png" href="{b}/assets/favicon-32x32.png">
     <title>{meta_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
@@ -3135,7 +3141,8 @@ if _ga_id:
 <p>We use cookies to analyze traffic and improve your experience. <a href="{SITE_BASE}/privacy/">Privacy Policy</a></p>
 <button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
 <button class="btn" onclick="acceptAnalytics()">Accept</button>
-</div>'''
+</div>
+<script>{CONSENT_JS}</script>'''
 
 FTC_DISCLOSURE = '<div class="disclosure">We earn a commission if you buy through our links, at no extra cost to you. Our opinions are our own.</div>'
 
@@ -3561,6 +3568,8 @@ finish review, the verdict, and DESIGN.md
 @keyframes entry-in {{ from {{ opacity:0; transform:translateY(10px); }} to {{ opacity:1; transform:none; }} }}
 @media (max-width:640px) {{ .journal-entry {{ grid-template-columns:22px minmax(0,1fr); gap:12px; }} }}
 </style>
+<style>{CONSENT_CSS}</style>
+{ANALYTICS_HTML}
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -3739,6 +3748,8 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <meta name="twitter:title" content="Abvorn – Reviews Based on Real Testing, Not Spec Sheets">
     <meta name="twitter:description" content="Independent product reviews and buying guides. We test before we recommend.">
     ''' + FONT_LINK + '''
+    <style>''' + CONSENT_CSS + '''</style>
+    ''' + ANALYTICS_HTML + '''
     <style>
         :root { --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }
         ''' + DESIGN_SYSTEM_CSS + '''

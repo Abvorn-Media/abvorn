@@ -895,7 +895,8 @@ if _ga_id:
 <p>We use cookies to analyze traffic and improve your experience. <a href="{SITE_BASE}/privacy/">Privacy Policy</a></p>
 <button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
 <button class="btn" onclick="acceptAnalytics()">Accept</button>
-</div>'''
+</div>
+<script>{CONSENT_JS}</script>'''
 
 FTC_DISCLOSURE = '<div class="disclosure">We earn a commission if you buy through our links, at no extra cost to you. Our opinions are our own.</div>'
 
@@ -1438,6 +1439,8 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
     <title>{blog_title} | Abvorn</title>
     <meta name="description" content="{meta_desc}">
     <link rel="canonical" href="{_SITE_URL}/{niche_slug}/">
+    <style>{CONSENT_CSS}</style>
+    {ANALYTICS_HTML}
     <meta property="og:title" content="{blog_title} | Abvorn">
     <meta property="og:description" content="{meta_desc}">
     <meta property="og:url" content="{_SITE_URL}/{niche_slug}/">
@@ -2216,7 +2219,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         .pdf-download-btn:hover {{ filter:brightness(1.07); transform:translateY(-1px); }}
         .hero-price-check {{ margin-top:8px; font-size:.82rem; color:var(--clr-mid-gray); line-height:1.4; }}
     </style>
-    {COOKIE_CONSENT_SCRIPT}
+    {ANALYTICS_HTML}
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>

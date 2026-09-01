@@ -5,8 +5,13 @@ G-XXXXXXXXXX placeholder) with the consent-gated loader + cookie banner
 used by the run_cycle/deployment templates, so analytics only fires after
 the visitor accepts.
 """
+import os
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from src.deployment import ANALYTICS_HTML, CONSENT_CSS
 
 GA_ID = "G-J0GTXLC86C"
 
@@ -49,12 +54,20 @@ _OLD_GTAG_RE = re.compile(
 )
 _LOADER_RE = re.compile(
     r'<script>window\.loadAnalytics=function\(\).*?gtag\("config","[^"]+"\)\};\('
-    r'function\(\)\{var c=document\.cookie\.match.*?loadAnalytics\(\)\}\)\(\)</script>',
+    r'function\(\)\{var c=document\.cookie\.match.*?loadAnalytics\(\)\}\}\)\(\)</script>',
     re.S,
 )
 _BANNER_RE = re.compile(r'<div id="cookie-banner"[^>]*>.*?</div>', re.S)
 _CONSENT_JS_RE = re.compile(r'<script>\s*\(function\(\)\{var c=document\.cookie\.match.*?analytics_consent.*?</script>', re.S)
-_CONSENT_CSS_RE = re.compile(r'<style>#cookie-banner\{[^}]*\}.*?</style>', re.S)
+# Remove every #cookie-banner CSS rule (and its sibling rules) wherever it
+# appears — inline in a shared <style> block or in a dedicated block — so we
+# never leave a duplicate behind.
+_CONSENT_CSS_RULES_RE = re.compile(
+    r'\n?\s*#cookie-banner[^{}]*\{[^}]*\}\n?', re.M
+)
+_EMPTY_STYLE_RE = re.compile(r'<style>\s*</style>', re.S)
+_CONSENT_CSS_RE = re.compile(r'<style>\s*#cookie-banner\{[^}]*\}.*?</style>', re.S)
+_BLANK_RUNS_RE = re.compile(r'\n{3,}')
 
 
 def add_ga(filepath):
@@ -67,9 +80,12 @@ def add_ga(filepath):
     html = _LOADER_RE.sub("", html)
     html = _BANNER_RE.sub("", html)
     html = _CONSENT_JS_RE.sub("", html)
+    html = _CONSENT_CSS_RULES_RE.sub("", html)
     html = _CONSENT_CSS_RE.sub("", html)
-    block = f"\n{COOKIE_BANNER_CSS}\n{GA_LOADER}\n{COOKIE_BANNER}\n{CONSENT_JS}\n"
-    html = html.replace("</head>", f"{block}</head>")
+    html = _EMPTY_STYLE_RE.sub("", html)
+    block = f"\n<style>{CONSENT_CSS}</style>\n{ANALYTICS_HTML}\n"
+    html = html.replace("</head>", f"{block}</head>", 1)
+    html = _BLANK_RUNS_RE.sub("\n\n", html)
     if html == orig:
         return False
     filepath.write_text(html, encoding="utf-8")
