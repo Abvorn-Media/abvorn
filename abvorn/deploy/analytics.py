@@ -1,5 +1,6 @@
 import json, logging
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 
 logger = logging.getLogger("abvorn.analytics")
 
@@ -40,11 +41,14 @@ def pull_ga4_analytics(secrets: dict) -> dict:
             limit=50
         )
         response = client.run_report(request)
+        base_path = urlparse(secrets.get("SITE_URL", "")).path.rstrip("/")
         analytics = {}
         for row in response.rows:
             path = row.dimension_values[0].value
+            if base_path and path.startswith(base_path + "/"):
+                path = path[len(base_path):]
             slug = path.strip("/").split("/")[0]
-            if not slug or slug in ("", "index.html", "about.html", "contact.html", "privacy.html"):
+            if not slug or slug.endswith(".html") or slug in ("index", "about", "contact", "privacy"):
                 continue
             views = int(row.metric_values[0].value or 0)
             users = int(row.metric_values[1].value or 0)
