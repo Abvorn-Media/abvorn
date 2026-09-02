@@ -70,12 +70,19 @@
     },
     {
       "parameters": {
-        "options": {}
+        "method": "POST",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/trigger_evolution",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({}) }}",
+        "options": {},
+        "contentType": "json"
       },
-      "id": "evolve",
-      "name": "Trigger Evolution",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "id": "evolve_trigger",
+      "name": "Perform Evolution",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         560,
         0
@@ -122,7 +129,7 @@
       "main": [
         [
           {
-            "node": "Trigger Evolution",
+            "node": "Perform Evolution",
             "type": "main",
             "index": 0
           }

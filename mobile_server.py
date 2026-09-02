@@ -598,10 +598,53 @@ async def abvorn_webhook(action: str, request: Request):
         generations = lineage.get("generations", [])
         if not isinstance(generations, (list, tuple)):
             generations = [generations] if generations else []
+
+        # A meaningful evolve signal: the v1 core is ready to hand off once it
+        # has actually done real work (recorded actions/cycles) since boot.
+        # Using `len(generations) > 0` alone was circular (true only *after* an
+        # evolution had already happened, so it never triggered the first).
+        activities = 0
+        activity_path = PROJECT_DIR / "data" / "relentless_state.json"
+        try:
+            if activity_path.exists():
+                import json as _json
+
+                state = _json.loads(activity_path.read_text(encoding="utf-8"))
+                activities = len(state.get("history", state.get("outcomes", [])) or [])
+        except Exception:
+            pass
+
         return {
             "success": True,
             "lineage": lineage,
-            "should_evolve": bool(len(generations) > 0),
+            "activities": activities,
+            "should_evolve": bool(activities > 0),
+        }
+
+    if action == "trigger_evolution":
+        from abvorn.core.genesis_protocol import GenesisProtocol
+
+        genesis = GenesisProtocol()
+        from_version = genesis.version
+        # Safe handoff: record the vN -> vN+1 lineage and write the child
+        # genome, but DO NOT terminate the running mobile-server orchestrator
+        # (it is the API/loop host, not the core being replaced). The child
+        # start.sh is written and can be run/verified without killing live ops.
+        # Target is a writable sibling under the project dir (not /opt root,
+        # which the ubuntu user cannot create in).
+        evo_dir = PROJECT_DIR / "evolutions"
+        evo_dir.mkdir(parents=True, exist_ok=True)
+        child_path = genesis.transfer_genome(
+            target_path=str(evo_dir / f"abvorn_v{genesis.version + 1}")
+        )
+        lineage = genesis.get_lineage()
+        return {
+            "success": True,
+            "status": "evolved",
+            "from_version": from_version,
+            "to_version": genesis.version + 1,
+            "child_path": child_path,
+            "lineage": lineage,
         }
 
     if action == "journal_update":
