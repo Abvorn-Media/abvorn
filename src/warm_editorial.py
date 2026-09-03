@@ -518,9 +518,7 @@ def build_review_rail(post_title, article_url, niche_slug, niche_name, toc_items
         <nav class="rail-card rail-toc" aria-label="In this guide">
             <p class="rail-card__title">In this guide</p>
             <ol>
-                <li><a href="#verdict">Abvorn Verdict</a></li>
                 {toc_links}
-                <li><a href="#faq">FAQ</a></li>
             </ol>
         </nav>
 

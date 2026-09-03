@@ -1878,7 +1878,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     article_html, toc_items = warm_heading_ids(article_html)
     product_cards = ""
     if products:
-        product_cards = '<h2 class="warm-grid-heading">Products Mentioned</h2><div class="warm-product-section">'
+        product_cards = '<h2 class="warm-grid-heading" id="products">Products Mentioned</h2><div class="warm-product-section">'
         for prod in products:
             aff_url = _product_aff_url(prod, niche_slug, t)
             product_cards += warm_product_card_html(prod, affiliate_url=aff_url, base=b, overall=prod.get("verdict_score", ""), label=prod.get("verdict_label", ""))
@@ -1996,7 +1996,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             f'<a class="cat-card" href="{b}/{r["slug"]}/"><div class="cat-name">{r["name"]}</div><div class="cat-count">{r.get("posts", 0)} reviews</div></a>'
             for r in related_niches
         )
-        related_html = f'<div class="related-cats"><h2>Related Categories</h2><div class="grid-3">{cards}</div></div>'
+        related_html = f'<div class="related-cats"><h2 id="related">Related Categories</h2><div class="grid-3">{cards}</div></div>'
     # Guaranteed FAQ section + FAQPage JSON-LD (generated from rubric + products).
     faq_html = ""
     faq_jsonld = ""
@@ -2159,8 +2159,17 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     upd_suffix = ""
     if upd_date and upd_date != pub_date:
         upd_suffix = f' <span class="dot"></span> <span class="date">Updated {upd_display}</span>'
-    # Pilot hero + rail.
-    review_rail = build_review_rail(post_title, article_url, niche_slug, niche_name, toc_items, base=b, form_url=form_url)
+    # Pilot hero + rail. The "In this guide" menu reflects the complete set of
+    # on-page sections in their rendered order, so it reads the same on every
+    # review regardless of how many h2s the AI writer happened to produce.
+    _rail_toc = [("verdict", "Abvorn Verdict")]
+    _rail_toc.extend(toc_items)
+    if products:
+        _rail_toc.append(("products", "Products Mentioned"))
+    _rail_toc.append(("faq", "FAQ"))
+    if related_niches:
+        _rail_toc.append(("related", "Related Categories"))
+    review_rail = build_review_rail(post_title, article_url, niche_slug, niche_name, _rail_toc, base=b, form_url=form_url)
     subscribe_js = WARM_NICHE_SUBSCRIBE_JS.replace("{niche_name}", niche_name.replace("\\", "\\\\").replace("'", "\\'"))
     guide_js = WARM_EMAIL_GUIDE_JS.replace("__GUIDE_PAYLOAD__", json.dumps({
         "action": "pdf_guide",
