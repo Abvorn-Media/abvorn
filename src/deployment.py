@@ -269,7 +269,7 @@ def product_card_html(product, pexels_key="", amazon_tag="", include_compare: bo
             f'data-name="{html_mod.escape(name)}" data-price="{html_mod.escape(str(price or ""))}" '
             f'data-image="{html_mod.escape(product_image or "")}" data-url="{html_mod.escape(product_url or "")}" '
             f'data-score="{html_mod.escape(str(verdict_score or ""))}" data-label="{html_mod.escape(verdict_label or "")}" '
-            f'href="/abvorn/compare.html?{qs}"><span class="av-compare-icon">⊕</span> Compare</a>'
+             f'href="{SITE_BASE}/compare.html?{qs}"><span class="av-compare-icon">⊕</span> Compare</a>'
         )
     summary_escaped = html_mod.escape(summary)
     return f"""<div class="product-card"{data_attrs}>
@@ -2888,8 +2888,13 @@ def write_site_metadata(docs_dir, items):
     write_checked(docs_dir / "llms-full.txt", llms_full, "llms-full.txt")
 
     rss_xml = '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Abvorn Reviews</title><link>https://abvorn.com</link><description>Product reviews you can trust</description>'
+    def _rfc822(d):
+        try:
+            return datetime.strptime(d, "%Y-%m-%d").strftime("%a, %d %b %Y 00:00:00 +0000")
+        except Exception:
+            return ""
     for it in items:
-        rss_xml += f'<item><title>{it["title"]}</title><link>https://abvorn.com/{it["slug"]}</link><guid>https://abvorn.com/{it["slug"]}</guid><pubDate>{it["date"]}</pubDate></item>'
+        rss_xml += f'<item><title>{it["title"]}</title><link>https://abvorn.com/{it["slug"]}</link><guid>https://abvorn.com/{it["slug"]}</guid><pubDate>{_rfc822(it["date"])}</pubDate></item>'
     rss_xml += '</channel></rss>'
     write_checked(docs_dir / "feed.xml", rss_xml, "feed.xml")
 
@@ -3103,7 +3108,7 @@ footer a{{color:#aaa;text-decoration:none}}
         if not slug_path.endswith("/"):
             slug_path = slug_path.rsplit("/", 1)[0] + "/"
         items.append({"title": title, "slug": slug_path,
-                      "date": datetime.date.today().isoformat() if 'datetime' in dir() else "2025-01-01"})
+                      "date": datetime.date.today().isoformat()})
     write_site_metadata(docs, items)
 
 
@@ -3158,7 +3163,7 @@ COOKIE_CONSENT_SCRIPT = '''
 #cookie-banner .btn-secondary:hover{border-color:#888}
 </style>
 <div id="cookie-banner" role="dialog" aria-label="Cookie consent">
-<p>We use cookies to analyze traffic and improve your experience. <a href="/abvorn/privacy/">Privacy Policy</a></p>
+<p>We use cookies to analyze traffic and improve your experience. <a href="/privacy/">Privacy Policy</a></p>
 <button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
 <button class="btn" onclick="acceptAnalytics()">Accept</button>
 </div>

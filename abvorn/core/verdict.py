@@ -342,7 +342,7 @@ def render_verdict_card(verdict: dict, product_name: str, affiliate_url: str = "
         }
         from urllib.parse import urlencode
         compare_btn = (
-            f'<a class="btn btn--ghost" href="/abvorn/compare.html?{urlencode(params)}" '
+            f'<a class="btn btn--ghost" href="/compare.html?{urlencode(params)}" '
             f'data-track="compare" data-product-name="{_html.escape(name_clean, quote=True)}" '
             f'data-category="{_html.escape(category, quote=True)}" data-score="{verdict.get("overall", "")}">'
             f'Compare &oplus;</a>'

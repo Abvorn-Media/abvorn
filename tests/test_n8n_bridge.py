@@ -212,12 +212,20 @@ def test_workflow_json_files_are_valid_and_reference_real_endpoints():
 
 
 def test_evolution_check_webhook_returns_should_evolve():
-    """The evolution workflow reads {{ $json.should_evolve }} — the webhook must return it."""
+    """The evolution workflow reads {{ $json.should_evolve }} — the webhook must return it.
+
+    Webhooks are write surfaces, so they now require a Bearer token. The n8n
+    workflows send `ABVORN_WEBHOOK_TOKEN` in the Authorization header.
+    """
+    import os
+
     import mobile_server
     from fastapi.testclient import TestClient
 
+    os.environ["ABVORN_WEBHOOK_TOKEN"] = "test-webhook-token"
     client = TestClient(mobile_server.app)
-    response = client.post("/webhook/abvorn/evolution_check", json={})
+    headers = {"Authorization": "Bearer test-webhook-token"}
+    response = client.post("/webhook/abvorn/evolution_check", json={}, headers=headers)
     assert response.status_code == 200
     body = response.json()
     assert body["success"] is True
@@ -225,12 +233,26 @@ def test_evolution_check_webhook_returns_should_evolve():
     assert isinstance(body["should_evolve"], bool)
 
 
-def test_unknown_webhook_action_returns_error():
+def test_webhook_rejects_unauthenticated_request():
+    """Webhooks are a write/publish surface and must fail closed without a token."""
     import mobile_server
     from fastapi.testclient import TestClient
 
     client = TestClient(mobile_server.app)
-    response = client.post("/webhook/abvorn/nope", json={})
+    response = client.post("/webhook/abvorn/evolution_check", json={})
+    assert response.status_code == 401
+
+
+def test_unknown_webhook_action_returns_error():
+    import os
+
+    import mobile_server
+    from fastapi.testclient import TestClient
+
+    os.environ["ABVORN_WEBHOOK_TOKEN"] = "test-webhook-token"
+    client = TestClient(mobile_server.app)
+    headers = {"Authorization": "Bearer test-webhook-token"}
+    response = client.post("/webhook/abvorn/nope", json={}, headers=headers)
     assert response.status_code == 200
     assert response.json()["success"] is False
 

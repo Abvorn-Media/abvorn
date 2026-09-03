@@ -20,7 +20,15 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/publish_content",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/publish_content",        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.ABVORN_WEBHOOK_TOKEN }}"
+            }
+          ]
+        },
+
         "options": {},
         "sendBody": true,
         "specifyBody": "json",

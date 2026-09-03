@@ -36,7 +36,15 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/gsc_fetch",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/gsc_fetch",        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.ABVORN_WEBHOOK_TOKEN }}"
+            }
+          ]
+        },
+
         "options": {},
         "sendBody": true,
         "specifyBody": "json",
@@ -54,7 +62,15 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/generate_reflection",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/generate_reflection",        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.ABVORN_WEBHOOK_TOKEN }}"
+            }
+          ]
+        },
+
         "options": {},
         "sendBody": true,
         "specifyBody": "json",
@@ -72,7 +88,15 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/journal_update",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/journal_update",        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.ABVORN_WEBHOOK_TOKEN }}"
+            }
+          ]
+        },
+
         "options": {},
         "sendBody": true,
         "specifyBody": "json",

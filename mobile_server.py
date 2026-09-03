@@ -1,6 +1,6 @@
 """Abvorn Mobile Server — PWA-backed AI command center accessible from phone."""
 
-import os, sys, json, subprocess, logging, shlex, asyncio, re
+import os, sys, json, subprocess, logging, shlex, asyncio, re, hmac
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
@@ -34,8 +34,7 @@ app = FastAPI(title="Abvorn Mobile Server", version="1.0.0")
 # Public (unauthenticated) API routes — must be safe to expose.
 PUBLIC_API_PATHS = {
     "/api/health", "/api/newsletter/subscribe", "/api/content/recent",
-    "/api/entitlements/pending", "/api/entitlements/approve",
-    "/api/entitlements/deny", "/api/entitlements/audit", "/api/surplus",
+    "/api/entitlements/pending", "/api/entitlements/audit", "/api/surplus",
     "/api/dashboard/metrics",
 }
 
@@ -85,7 +84,10 @@ async def require_auth(request: Request, call_next):
             )
         auth = request.headers.get("Authorization", "")
         expected = f"Bearer {_API_TOKEN}"
-        if auth != expected:
+        if not auth.startswith("Bearer "):
+            return JSONResponse({"error": "Unauthorized"}, status_code=401)
+        supplied = auth[len("Bearer "):]
+        if not hmac.compare_digest(supplied, _API_TOKEN):
             return JSONResponse({"error": "Unauthorized"}, status_code=401)
     return await call_next(request)
 
@@ -556,7 +558,24 @@ async def abvorn_webhook(action: str, request: Request):
 
     Actions: generate_reflection, publish_content, gsc_fetch,
     evolution_check, journal_update.
+
+    Authenticated: requires a Bearer token in the Authorization header
+    matching ABVORN_API_TOKEN or ABVORN_WEBHOOK_TOKEN. Fail-closed — if no
+    token is configured the webhook rejects all requests rather than opening
+    an unauthenticated write/publish surface.
     """
+    # Authenticate the webhook. Fail closed even when no token is configured.
+    webhook_token = (
+        os.environ.get("ABVORN_WEBHOOK_TOKEN", "")
+        or secrets.get("ABVORN_WEBHOOK_TOKEN", "")
+        or _API_TOKEN
+    )
+    auth = request.headers.get("Authorization", "")
+    supplied = auth[len("Bearer "):] if auth.startswith("Bearer ") else ""
+    if not webhook_token or not hmac.compare_digest(supplied, webhook_token):
+        logger.warning("Rejected unauthenticated webhook action: %s", action)
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
     try:
         data = await request.json()
     except Exception:
@@ -675,21 +694,33 @@ async def abvorn_webhook(action: str, request: Request):
 
 
 def _call_ai_subprocess(prompt: str) -> str:
-    """Call AI in a subprocess with hard timeout. Kills if hung."""
+    """Call AI in a subprocess with hard timeout. Kills if hung.
+
+    The prompt and system prompt are passed to the child via environment
+    variables, never interpolated into the script source, so untrusted user
+    input cannot inject Python code (prior versions built a -c script with
+    naive quote escaping that was bypassable).
+    """
     import subprocess as sp, sys
-    script = '''
-import json, sys
-sys.path.insert(0, r"''' + PROJECT_DIR.as_posix() + '''")
-from abvorn.core.secrets import load_secrets
-from abvorn.core.models import ModelRouter
-s = load_secrets()
-r = ModelRouter(s, timeout=20)
-resp = r.ask("''' + prompt.replace('"', '\\"').replace("'", "\\'") + '''", system="''' + SYSTEM_PROMPT.replace('"', '\\"').replace("'", "\\'") + '''")
-print(json.dumps({"response": resp or ""}))
-'''
+    script = (
+        "import json, os, sys\n"
+        "sys.path.insert(0, os.environ['ABVORN_PROJECT_DIR'])\n"
+        "from abvorn.core.secrets import load_secrets\n"
+        "from abvorn.core.models import ModelRouter\n"
+        "s = load_secrets()\n"
+        "r = ModelRouter(s, timeout=20)\n"
+        "resp = r.ask(os.environ['ABVORN_AI_PROMPT'], system=os.environ['ABVORN_AI_SYSTEM'])\n"
+        "print(json.dumps({'response': resp or ''}))\n"
+    )
+    env = {
+        **os.environ,
+        "ABVORN_PROJECT_DIR": PROJECT_DIR.as_posix(),
+        "ABVORN_AI_PROMPT": prompt,
+        "ABVORN_AI_SYSTEM": SYSTEM_PROMPT,
+    }
     try:
-        p = sp.run([sys.executable, '-c', script], capture_output=True, text=True,
-                    timeout=90, cwd=str(PROJECT_DIR))
+        p = sp.run([sys.executable, "-c", script], capture_output=True, text=True,
+                    timeout=90, cwd=str(PROJECT_DIR), env=env)
         if p.returncode == 0 and p.stdout:
             data = json.loads(p.stdout.strip())
             return data.get("response", "")

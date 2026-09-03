@@ -343,7 +343,7 @@ def product_card_html(product, pexels_key="", amazon_tag=""):
         "image": product_image or "",
         "url": product_url or "",
     })
-    compare_btn = f'<a class="buy-btn" href="/abvorn/compare.html?{compare_qs}" target="_self" style="background:transparent;color:var(--clr-accent);border:1px solid var(--clr-accent);box-shadow:none;margin-left:8px;font-size:0.85rem;padding:6px 16px">⊕ Compare</a>'
+    compare_btn = f'<a class="buy-btn" href="{SITE_BASE}/compare.html?{compare_qs}" target="_self" style="background:transparent;color:var(--clr-accent);border:1px solid var(--clr-accent);box-shadow:none;margin-left:8px;font-size:0.85rem;padding:6px 16px">⊕ Compare</a>'
     return f"""<div class="product-card">
  {img}
  <div class="product-card-body">
@@ -912,7 +912,7 @@ COOKIE_CONSENT_SCRIPT = '''
 #cookie-banner .btn-secondary:hover{border-color:#888}
 </style>
 <div id="cookie-banner" role="dialog" aria-label="Cookie consent">
-<p>We use cookies to analyze traffic and improve your experience. <a href="/abvorn/privacy/">Privacy Policy</a></p>
+<p>We use cookies to analyze traffic and improve your experience. <a href="/privacy/">Privacy Policy</a></p>
 <button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
 <button class="btn" onclick="acceptAnalytics()">Accept</button>
 </div>
@@ -2365,7 +2365,7 @@ document.addEventListener('DOMContentLoaded', function() {{
   }}
 }})();
 </script>
-<script src="/abvorn/js/price-charts.js"></script>
+<script src="{SITE_BASE}/js/price-charts.js"></script>
 </body></html>'''
 
 
@@ -3016,7 +3016,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
         title = p.get("title", "")
         slug_path = p.get("slug", "")
         items.append({"title": title, "slug": slug_path,
-                      "date": datetime.date.today().isoformat() if 'datetime' in dir() else "2025-01-01"})
+                      "date": datetime.date.today().isoformat()})
     from src.deployment import write_site_metadata
     write_site_metadata(docs, items)
 
@@ -3415,7 +3415,7 @@ def main(forced_niche=None, force=False, batch_mode=False):
             assets_dir.mkdir(exist_ok=True)
             img_path = assets_dir / f"{niche_slug}.png"
             img_path.write_bytes(img_bytes)
-            hero_images[niche_slug] = f'<img class="hero-img" src="/abvorn/assets/{niche_slug}.png" alt="{headline}" width="1200" height="630">'
+            hero_images[niche_slug] = f'<img class="hero-img" src="{SITE_BASE}/assets/{niche_slug}.png" alt="{headline}" width="1200" height="630">'
             print(f"  Generated: assets/{niche_slug}.png ({len(img_bytes)} bytes)")
             # Also generate social-sized versions
             social = resizer.resize(img_bytes, "og")

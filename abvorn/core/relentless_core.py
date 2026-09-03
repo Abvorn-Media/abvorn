@@ -25,7 +25,7 @@ class RelentlessCore:
         self.data_dir = Path("data")
         self.state_file = Path("cycle_state.json")
         self.clicks_db = self.data_dir / "clicks.db"
-        self.economic_file = self.data_dir / "economic_records.json"
+        self.economic_file = self.data_dir / "surplus" / "economic_records.json"
         self.weights_file = self.data_dir / "verdict_weights.json"
 
         # State

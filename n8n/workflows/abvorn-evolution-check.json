@@ -21,7 +21,15 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/evolution_check",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/evolution_check",        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.ABVORN_WEBHOOK_TOKEN }}"
+            }
+          ]
+        },
+
         "options": {},
         "sendBody": true,
         "specifyBody": "json",
@@ -71,7 +79,15 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/trigger_evolution",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/trigger_evolution",        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.ABVORN_WEBHOOK_TOKEN }}"
+            }
+          ]
+        },
+
         "authentication": "none",
         "sendBody": true,
         "specifyBody": "json",
