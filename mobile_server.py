@@ -46,6 +46,16 @@ _API_TOKEN = os.environ.get("ABVORN_API_TOKEN", "") or secrets.get("ABVORN_API_T
 _ALLOW_EXEC = os.environ.get("ABVORN_ALLOW_EXEC", "").lower() in ("1", "true", "yes")
 SENSITIVE_MASKED_PATHS = {"/api/exec", "/api/write"}
 
+# Files that /api/write must never overwrite: credential stores and executable
+# config/secrets that, if tampered with, could grant the server new credentials
+# or redirect data. Written as exact filenames + directory names (case-insensitive).
+PROTECTED_WRITE = {
+    ".env", ".env.local", "secrets.json", "secrets.py", "credentials.json",
+    "gsc-credentials.json", "service-account.json", "client_secret.json",
+    "config.yaml", "config.yml", "pyproject.toml", "package.json", "requirements.txt",
+    "id_rsa", "id_ed25519", ".netrc", ".npmrc", ".pypirc", "start.sh",
+}
+
 
 # Security-context diagnostics. If no token is configured, the API is open to
 # anyone who can reach it — this must be loud, not silent.
@@ -762,13 +772,29 @@ async def execute(cmd: CommandRequest):
                  "delete-item", "cleartext", "format-volume", "new-item", "set-content",
                  "add-content", "out-file", "copy-item", "move-item", "ren ", "del ",
                  "remove-", "ii ", "iwr", "invoke-webrequest", "convertto", "bypass",
-                 "net user", "net localgroup", "schtasks", "reg add", "sc config"]
+                 "net user", "net localgroup", "schtasks", "reg add", "sc config",
+                 # Shell/interpreter invocation is never allowed here — even a
+                 # legit binary can run `-enc` payloads (powershell) or -c (sh)
+                 # that need no shell to execute. Block the interpreters and
+                 # encoded-command flags outright.
+                 "powershell", "pwsh", "cmd.exe", "cmd /c", "cmd /k",
+                 "bash", "zsh", "fish", "/bin/sh", "/bin/zsh", "/usr/bin/env",
+                 "-enc ", "-encodedcommand", "-Command", "-c ", "sh -c ",
+                 "curl", "wget", "aria2c"]
     dangerous_re = re.compile("|".join(re.escape(d) for d in dangerous), re.IGNORECASE)
     if dangerous_re.search(cmd.command):
         return JSONResponse({"error": "Dangerous command blocked"}, status_code=403)
+    # Commands are parsed into an argv list (no shell involved). shell=False is
+    # the core injection defense: metacharacters (|, &, ;, $(), >, env expansion,
+    # powershell -enc, base64) are passed literally as arguments and can never be
+    # interpreted as control by a shell. The denylist above remains as
+    # defense-in-depth against clearly destructive argument patterns.
     try:
+        argv = shlex.split(cmd.command)
+        if not argv:
+            return JSONResponse({"error": "Empty command"}, status_code=400)
         result = subprocess.run(
-            cmd.command, shell=True, capture_output=True, text=True,
+            argv, shell=False, capture_output=True, text=True,
             cwd=str(safe_path), timeout=120,
         )
         output = result.stdout or ""
@@ -777,6 +803,8 @@ async def execute(cmd: CommandRequest):
         if result.returncode != 0:
             output += f"\n--- EXIT CODE: {result.returncode} ---"
         return {"stdout": result.stdout, "stderr": result.stderr, "returncode": result.returncode, "output": output}
+    except ValueError as e:
+        return JSONResponse({"error": f"Cannot parse command: {e}"}, status_code=400)
     except subprocess.TimeoutExpired:
         return JSONResponse({"error": "Command timed out after 120s"}, status_code=408)
     except Exception as e:
@@ -818,6 +846,11 @@ async def write_file(req: FileRequest):
     path = path.resolve()
     if not str(path).startswith(str(PROJECT_DIR)):
         return JSONResponse({"error": "Path outside project directory"}, status_code=403)
+    if path.name.lower() in PROTECTED_WRITE:
+        return JSONResponse(
+            {"error": f"Forbidden: '{path.name}' is a protected file and cannot be overwritten"},
+            status_code=403,
+        )
     if req.content is None:
         return JSONResponse({"error": "No content provided"}, status_code=400)
     try:
