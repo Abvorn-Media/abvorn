@@ -46,7 +46,18 @@ BOARDROOM_DIR = _boardroom
 EMPIRE_DIR = BOARDROOM_DIR / "6_Empire_Network"
 SKILLS_DIR = BOARDROOM_DIR / "Design_Skills"
 STATE_FILE = BOARDROOM_DIR / "empire_state.json"
-SITE_BASE_PATH = "/abvorn" if "abvorn-media" in S.get("GITHUB_REPO","") else ""
+# Unified base-path helper (matches Cell 1). Deriving the base path from the
+# path component of SITE_URL keeps root-domain deploys (custom CNAME / org
+# Pages, e.g. https://abvorn.com) root-relative (SITE_BASE_PATH="") and any
+# GitHub Pages subpath deploy (https://owner.github.io/repo) on "/repo".
+def _compute_site_base_path(site_url):
+    from urllib.parse import urlparse
+
+    if not site_url:
+        return ""
+    return urlparse(site_url).path.rstrip("/")
+
+SITE_BASE_PATH = _compute_site_base_path(S["SITE_URL"])
 
 # Logger fallback
 try:

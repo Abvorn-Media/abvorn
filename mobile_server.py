@@ -905,17 +905,6 @@ async def create_price_alert(req: PriceAlertRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/price-alerts")
-async def list_price_alerts(email: Optional[str] = None, chat_id: Optional[str] = None):
-    try:
-        from src.price_alerts import PriceAlertSystem
-        system = PriceAlertSystem()
-        items = system.get_alerts_for_user(email=email, chat_id=chat_id)
-        return {"alerts": items}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 class SubscribeRequest(BaseModel):
     email: str
     name: Optional[str] = ""

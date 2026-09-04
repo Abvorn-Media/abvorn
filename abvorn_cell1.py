@@ -69,13 +69,18 @@ GMAIL_APP_PASSWORD = S["GMAIL_APP_PASSWORD"]
 TELEGRAM_TOKEN = S["TELEGRAM_TOKEN"]
 TELEGRAM_CHAT_ID = S["TELEGRAM_CHAT_ID"]
 
-def _compute_site_base_path(repo_full_name):
-    if not repo_full_name or "/" not in repo_full_name: return ""
-    owner, name = repo_full_name.split("/", 1)
-    if name.lower() == f"{owner.lower()}.github.io": return ""
-    return f"/{name}"
+def _compute_site_base_path(site_url):
+    # Unified base-path helper (shared with Cell 3). Deriving from the path
+    # component of SITE_URL keeps root-domain deploys (custom CNAME / org
+    # Pages, e.g. https://abvorn.com) root-relative ("" => "/...") and any
+    # GitHub Pages subpath deploy (https://owner.github.io/repo) on "/repo".
+    from urllib.parse import urlparse
 
-SITE_BASE_PATH = _compute_site_base_path(S["GITHUB_REPO"])
+    if not site_url:
+        return ""
+    return urlparse(site_url).path.rstrip("/")
+
+SITE_BASE_PATH = _compute_site_base_path(S["SITE_URL"])
 
 def apply_base_path(html):
     if not SITE_BASE_PATH: return html
