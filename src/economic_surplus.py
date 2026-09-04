@@ -493,7 +493,52 @@ def create_economic_surplus_tracker() -> EconomicSurplusTracker:
     return EconomicSurplusTracker()
 
 
-if __name__ == "__main__":
+def _main(argv=None) -> int:
+    """CLI: track economic surplus and import real affiliate revenue.
+
+    Commands:
+      measure              Run a surplus measurement and print the report.
+      summary              Print real/estimated revenue totals.
+      import-csv <file>    Import real revenue from a CSV (A2).
+      import-json <file>   Import real revenue from JSON (A2).
+
+    CSV columns: source,revenue[,costs,niche,note].
+    JSON: a list of objects with keys source,revenue[,costs,niche,note].
+    Never fabricates revenue: only positive, source-bearing rows are imported.
+    """
+    import sys
+
+    args = list(argv) if argv is not None else sys.argv[1:]
     tracker = create_economic_surplus_tracker()
-    report = tracker.measure()
-    print(json.dumps(report, indent=2, default=str))
+
+    if not args or args[0] in ("measure", "report"):
+        print(json.dumps(tracker.measure(), indent=2, default=str))
+    elif args[0] == "summary":
+        print(json.dumps({
+            "real": round(tracker.real_revenue_total(), 6),
+            "estimated": round(tracker.estimated_revenue_total(), 6),
+            "total_records": len(tracker.article_records),
+        }, indent=2, default=str))
+    elif args[0] == "import-csv" and len(args) >= 2:
+        count = tracker.import_real_revenue_csv(args[1])
+        print(json.dumps({
+            "imported": count,
+            "real": round(tracker.real_revenue_total(), 6),
+            "estimated": round(tracker.estimated_revenue_total(), 6),
+        }, indent=2))
+    elif args[0] == "import-json" and len(args) >= 2:
+        count = tracker.import_real_revenue_json(args[1])
+        print(json.dumps({
+            "imported": count,
+            "real": round(tracker.real_revenue_total(), 6),
+            "estimated": round(tracker.estimated_revenue_total(), 6),
+        }, indent=2))
+    else:
+        raise SystemExit(
+            "usage: economic_surplus.py {measure|summary|import-csv <file>|import-json <file>}"
+        )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(_main())

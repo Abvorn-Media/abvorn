@@ -5,7 +5,8 @@ from pathlib import Path
 
 from abvorn.core.models import ModelCostTracker
 from abvorn.core.unified_database import UnifiedDatabase
-from src.economic_surplus import EconomicSurplusTracker
+from src import economic_surplus
+from src.economic_surplus import EconomicSurplusTracker, _main
 
 
 def _isolated_db(tmp_path) -> None:
@@ -59,3 +60,32 @@ def test_import_real_revenue_json(tmp_path):
     count = tracker.import_real_revenue_json(str(src))
     assert count == 2
     assert abs(tracker.real_revenue_total() - 12.25) < 1e-6
+
+
+def test_cli_import_json(tmp_path, monkeypatch, capsys):
+    src = Path(tmp_path) / "payout.json"
+    src.write_text('[{"source": "aff:amazon-1", "revenue": 5.20, "costs": 0.0,'
+                   ' "niche": "audio"}]', encoding="utf-8")
+
+    def _fake_factory():
+        return EconomicSurplusTracker(data_dir=str(tmp_path / "surplus_cli"))
+
+    monkeypatch.setattr(economic_surplus, "create_economic_surplus_tracker", _fake_factory)
+    rc = _main(["import-json", str(src)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert '"imported": 1' in out
+    assert '"real": 5.2' in out
+
+
+def test_cli_summary(tmp_path, monkeypatch, capsys):
+    def _fake_factory():
+        tracker = EconomicSurplusTracker(data_dir=str(tmp_path / "surplus_cli2"))
+        tracker.record_revenue(9.99, "aff:payout-x", niche="gaming")
+        return tracker
+
+    monkeypatch.setattr(economic_surplus, "create_economic_surplus_tracker", _fake_factory)
+    rc = _main(["summary"])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert '"real": 9.99' in out
