@@ -236,9 +236,20 @@ TASK_MODELS = {
 
 
 class ModelCostTracker:
-    """Tracks per-call model costs. In-memory or state-backed."""
+    """Tracks per-call model costs. Durable SQLite-backed with per-provider rates."""
 
-    def __init__(self, state=None):
+    # Per-provider rates per 1k tokens (in/out USD). Used when a provider lacks
+    # its own pricing metadata. Order maps model names and provider families.
+    DEFAULT_RATES = {
+        "anthropic": {"in": 0.003, "out": 0.015},
+        "openai": {"in": 0.002, "out": 0.010},
+        "moonshot": {"in": 0.002, "out": 0.002},
+        "gemini": {"in": 0.00125, "out": 0.005},
+        "kimi": {"in": 0.002, "out": 0.002},
+    }
+    FALLBACK_RATE_PER_1K = 0.002
+
+    def __init__(self, state=None, durable: bool = True):
         self._state = state
         self._calls = []
 
@@ -254,18 +265,51 @@ class ModelCostTracker:
         if self._state:
             self._state.set_meta(f"cost_log_{len(self._calls)}", entry)
             self._state.set_meta("cost_call_count", len(self._calls))
+        try:
+            from abvorn.core.unified_database import get_unified_db
+            provider = (provider or "").lower()
+            in_r, out_r = self._rates_for(provider)
+            cost = self._estimate(entry, in_r, out_r)
+            get_unified_db().log_cost(
+                provider=provider, model=model, tokens_in=tokens, tokens_out=0,
+                rate_per_1k_in=in_r, rate_per_1k_out=out_r, cost=cost, source=task,
+            )
+        except Exception:
+            logger.exception("Could not persist cost to unified db")
+
+    @staticmethod
+    def _rates_for(provider: str) -> tuple:
+        for key, rates in ModelCostTracker.DEFAULT_RATES.items():
+            if key in provider:
+                return rates["in"], rates["out"]
+        return ModelCostTracker.FALLBACK_RATE_PER_1K, ModelCostTracker.FALLBACK_RATE_PER_1K
+
+    @staticmethod
+    def _estimate(entry: dict, rate_per_1k_in: float, rate_per_1k_out: float) -> float:
+        tokens = float(entry.get("tokens", 0) or 0)
+        return round((tokens / 1000.0) * rate_per_1k_in, 6)
 
     def get_stats(self) -> dict:
         total = len(self._calls)
         successful = sum(1 for c in self._calls if c.get("success"))
         failed = total - successful
         total_tokens = sum(c.get("tokens", 0) for c in self._calls)
-        rate_per_1k = 0.002
-        estimated_cost = (total_tokens / 1000) * rate_per_1k
+        try:
+            from abvorn.core.unified_database import get_unified_db
+            durable = get_unified_db().get_cost_summary()
+        except Exception:
+            durable = {"total_cost": 0.0, "entries": 0}
+        # Estimated session spend using per-provider rates.
+        estimated_cost = 0.0
+        for c in self._calls:
+            in_r, out_r = self._rates_for(c.get("provider", ""))
+            estimated_cost += self._estimate(c, in_r, out_r)
         return dict(
             total_calls=total,
             successful=successful,
             failed=failed,
             total_tokens=total_tokens,
             estimated_cost_usd=round(estimated_cost, 4),
+            durable_cost_usd=round(durable.get("total_cost", 0.0), 6),
+            durable_entries=durable.get("entries", 0),
         )

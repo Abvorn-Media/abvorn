@@ -299,6 +299,11 @@ class EconomicSurplusTracker:
             "community": self.community.get_report(),
             "country": self.country.get_report(),
             "social_permission_score": self._calculate_social_permission(),
+            "revenue_breakdown": {
+                "real": round(self.real_revenue_total(), 6),
+                "estimated": round(self.estimated_revenue_total(), 6),
+                "total": round(self.real_revenue_total() + self.estimated_revenue_total(), 6),
+            },
             "measured_at": datetime.now().isoformat(),
         }
         self.measurement_history.append(result)
@@ -318,13 +323,17 @@ class EconomicSurplusTracker:
         sales = clicks * conv_rate
         return float(sales * avg_order * comm_rate)
 
-    def record_article(self, article_id: str, niche: str, revenue: float, costs: float = 0.0) -> Dict[str, Any]:
+    def record_article(self, article_id: str, niche: str, revenue: float,
+                       costs: float = 0.0, kind: str = "estimated",
+                       note: str = "") -> Dict[str, Any]:
         record = {
             "article_id": article_id,
             "niche": niche,
             "revenue": revenue,
             "costs": costs,
             "profit": revenue - costs,
+            "kind": kind if kind in ("real", "estimated") else "estimated",
+            "note": note,
             "recorded_at": datetime.now().isoformat(),
         }
         self.article_records.append(record)
@@ -333,6 +342,95 @@ class EconomicSurplusTracker:
             self.saas.add_cost_savings(costs, category=f"article:{article_id}")
         self.save_records()
         return record
+
+    def record_revenue(self, amount: float, source: str, kind: str = "real",
+                       niche: str = "unspecified", costs: float = 0.0,
+                       note: str = "") -> Dict[str, Any]:
+        """Record a real revenue figure (e.g. a commission payout from a real
+        affiliate report). Does NOT fabricate data — callers must supply the
+        actual amount."""
+        record = {
+            "article_id": source,
+            "niche": niche,
+            "revenue": float(amount),
+            "costs": float(costs),
+            "profit": float(amount) - float(costs),
+            "kind": "real",
+            "note": note,
+            "recorded_at": datetime.now().isoformat(),
+        }
+        self.article_records.append(record)
+        self.saas.add_revenue(float(amount), source=f"real:{source}")
+        if costs:
+            self.saas.add_cost_savings(float(costs), category=f"real:{source}")
+        self.save_records()
+        return record
+
+    def import_real_revenue_csv(self, file_path: str) -> int:
+        """Import real revenue from a CSV with columns:
+        source,revenue[,costs,niche,note]. Never creates estimated values."""
+        import csv
+
+        path = Path(file_path)
+        if not path.exists():
+            raise FileNotFoundError(path)
+        count = 0
+        with open(path, "r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                source = (row.get("source") or "").strip()
+                try:
+                    revenue = float(row.get("revenue") or 0)
+                except (TypeError, ValueError):
+                    continue
+                costs = float(row.get("costs") or 0 or 0.0) if row.get("costs") else 0.0
+                if not source or revenue <= 0:
+                    continue
+                self.record_revenue(
+                    amount=revenue,
+                    source=source,
+                    niche=(row.get("niche") or "unspecified").strip(),
+                    costs=costs,
+                    note=(row.get("note") or "").strip(),
+                )
+                count += 1
+        return count
+
+    def import_real_revenue_json(self, file_path: str) -> int:
+        """Import real revenue from JSON. Accepts a list of objects with
+        keys: source, revenue[, costs, niche, note]. Never fabricates."""
+        path = Path(file_path)
+        if not path.exists():
+            raise FileNotFoundError(path)
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, list):
+            data = [data]
+        count = 0
+        for item in data:
+            source = str(item.get("source") or "").strip()
+            try:
+                revenue = float(item.get("revenue") or 0)
+            except (TypeError, ValueError):
+                continue
+            if not source or revenue <= 0:
+                continue
+            self.record_revenue(
+                amount=revenue,
+                source=source,
+                niche=str(item.get("niche") or "unspecified"),
+                costs=float(item.get("costs") or 0 or 0.0),
+                note=str(item.get("note") or ""),
+            )
+            count += 1
+        return count
+
+    def real_revenue_total(self) -> float:
+        return sum(float(r.get("revenue", 0) or 0) for r in self.article_records
+                   if r.get("kind") == "real")
+
+    def estimated_revenue_total(self) -> float:
+        return sum(float(r.get("revenue", 0) or 0) for r in self.article_records
+                   if r.get("kind") != "real")
 
     def save_records(self):
         """Save all article records to disk."""

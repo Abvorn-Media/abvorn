@@ -136,6 +136,22 @@ class UnifiedDatabase:
             )
         """)
 
+        # AI cost log (A3: durable per-provider cost tracking)
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS cost_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                provider TEXT,
+                model TEXT,
+                tokens_in INTEGER DEFAULT 0,
+                tokens_out INTEGER DEFAULT 0,
+                rate_per_1k_in REAL DEFAULT 0.0,
+                rate_per_1k_out REAL DEFAULT 0.0,
+                cost REAL DEFAULT 0.0,
+                source TEXT,
+                timestamp TEXT
+            )
+        """)
+
         # System metrics
         c.execute("""
             CREATE TABLE IF NOT EXISTS system_metrics (
@@ -182,6 +198,8 @@ class UnifiedDatabase:
         c.execute("CREATE INDEX IF NOT EXISTS idx_engagement_events_sub ON engagement_events(subscriber_id)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_engagement_events_ts ON engagement_events(timestamp)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_economic_records_ts ON economic_records(timestamp)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_cost_log_ts ON cost_log(timestamp)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_cost_log_provider ON cost_log(provider)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_metrics_ts ON system_metrics(timestamp)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_reflections_created_at ON reflections(created_at)")
 
@@ -327,6 +345,46 @@ class UnifiedDatabase:
             logger.info("Imported %s economic records", len(records))
         except Exception as e:
             logger.error("Failed to import economic records: %s", e)
+
+    def log_cost(self, provider: str, model: str, tokens_in: int = 0,
+                 tokens_out: int = 0, rate_per_1k_in: float = 0.0,
+                 rate_per_1k_out: float = 0.0, cost: float = 0.0,
+                 source: str = ""):
+        """Persist a per-provider AI cost entry (A3)."""
+        conn = self._connect()
+        c = conn.cursor()
+        try:
+            c.execute("""
+                INSERT INTO cost_log
+                (provider, model, tokens_in, tokens_out, rate_per_1k_in, rate_per_1k_out,
+                 cost, source, timestamp)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                provider, model, tokens_in, tokens_out, rate_per_1k_in, rate_per_1k_out,
+                cost, source, datetime.now().isoformat(),
+            ))
+            conn.commit()
+            return c.lastrowid
+        except Exception as e:
+            logger.error("Failed to log cost: %s", e)
+            return None
+        finally:
+            conn.close()
+
+    def get_cost_summary(self) -> Dict[str, Any]:
+        """Aggregate durable AI cost from cost_log."""
+        conn = self._connect()
+        c = conn.cursor()
+        c.execute("SELECT COALESCE(SUM(cost), 0), COUNT(*) FROM cost_log")
+        total_cost, count = c.fetchone()
+        c.execute("SELECT COALESCE(SUM(cost), 0) FROM cost_log WHERE source = 'affiliate'")
+        affiliate_cost = c.fetchone()[0]
+        conn.close()
+        return {
+            "total_cost": round(total_cost, 6),
+            "entries": count,
+            "affiliate_cost": round(affiliate_cost, 6),
+        }
 
     def get_summary(self) -> Dict:
         conn = self._connect()
