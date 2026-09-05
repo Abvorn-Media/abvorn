@@ -59,6 +59,10 @@ function doRoute_(e) {
   // broadcast trigger in a single call (no editor needed).
   if (action === 'setup-broadcast') return runSetup_();
 
+  // Authorization probe — open /dev?action=auth-check while signed in as the
+  // owner to force the permission-consent screen for the feed-fetch scope.
+  if (action === 'auth-check') return authProbe_();
+
   // Manual test: fills Sheet1 with a fake lead without needing live traffic.
   if (action === 'test-lead') return handleLeadForm_({
       email: body.email || (e.parameter && e.parameter.email) || 'test@example.com',
@@ -492,6 +496,28 @@ function runSetup_() {
   } catch (err) {
     return json_({ success: false, error: 'setup failed: ' + err });
   }
+}
+
+/** Authorization probe — hit /dev?action=auth-check once while signed in as
+ * the owner. It performs a real scoped call (fetch the feed), which makes
+ * Google show the consent screen so script.external_request etc. get granted
+ * to the project; anonymous /exec calls inherit them after a fresh deploy. */
+function authProbe_() {
+  var out = {};
+  try {
+    var res = UrlFetchApp.fetch(FEED_URL, { muteHttpExceptions: true });
+    out.fetch = 'ok:' + res.getResponseCode();
+  } catch (e) {
+    out.fetch = 'error: ' + e;
+    return json_({ success: false, detail: out });
+  }
+  try {
+    SpreadsheetApp.openById(REACTIONS_SPREADSHEET_ID);
+    out.sheets = 'ok';
+  } catch (e2) {
+    out.sheets = 'error: ' + e2;
+  }
+  return json_({ success: true, detail: out });
 }
 
 function isEmail_(email) {
