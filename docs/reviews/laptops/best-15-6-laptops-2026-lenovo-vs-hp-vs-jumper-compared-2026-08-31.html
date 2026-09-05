@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -327,6 +327,16 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
     .hero-grid { grid-template-columns:minmax(0,1fr); }
     .hero-pick { max-width: 320px; }
 }
+
+#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
+#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
+#cookie-banner p{margin:0;color:#ffffff;font-size:13px}
+#cookie-banner a{color:#c98a2c;text-decoration:underline}
+#cookie-banner .btn{background:#c98a2c;color:#0a0a0a;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}
+#cookie-banner .btn:hover{background:#c98a2c}
+#cookie-banner .btn-secondary{background:transparent;color:#ffffff;border:1px solid #555;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
+#cookie-banner .btn-secondary:hover{border-color:#888}
+
         
 :root {
   --bg-alt:#f6f5f2; --border:#e8e8e8; --text-muted:#666;
@@ -400,21 +410,9 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
         .pdf-download-btn:hover { filter:brightness(1.07); transform:translateY(-1px); }
         .hero-price-check { margin-top:8px; font-size:.82rem; color:var(--clr-mid-gray); line-height:1.4; }
     </style>
-    
-
-<style>
-#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#2a2724;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
-#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
-#cookie-banner p{margin:0;color:#e3dbd4;font-size:13px}
-#cookie-banner a{color:#d4633e;text-decoration:underline}
-#cookie-banner .btn{background:#d4633e;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
-#cookie-banner .btn:hover{background:#b84d2a}
-#cookie-banner .btn-secondary{background:transparent;color:#e3dbd4;border:1px solid #6b6560;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
-#cookie-banner .btn-secondary:hover{border-color:#9e9690}
-</style>
-<script>window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()</script>
+    <script>window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()</script>
 <div id="cookie-banner" role="dialog" aria-label="Cookie consent">
-<p>We use cookies to analyze traffic and improve your experience. <a href="https://abvorn.com/privacy/">Privacy Policy</a></p>
+<p>We use cookies to analyze traffic and improve your experience. <a href="/privacy/">Privacy Policy</a></p>
 <button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
 <button class="btn" onclick="acceptAnalytics()">Accept</button>
 </div>
@@ -440,11 +438,11 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <section class="article-hero"><div class="container article-hero__inner">
     <div class="hero-grid">
         <div>
-            <p class="hero-meta">Laptops <span class="dot"></span> <span class="date">By Abvorn</span> <span class="dot"></span> <span class="date">Published Aug 31, 2026</span> <span class="dot"></span> <span class="date">Updated Sep 1, 2026</span></p>
+            <p class="hero-meta">Laptops <span class="dot"></span> <span class="date">By Abvorn</span> <span class="dot"></span> <span class="date">Published Aug 31, 2026</span> <span class="dot"></span> <span class="date">Updated Sep 5, 2026</span></p>
             <p class="hero-pdf"><a class="pdf-download-btn" href="https://abvorn.com/reviews/laptops/best-15-6-laptops-2026-lenovo-vs-hp-vs-jumper-compared-2026-08-31.pdf" download>Download PDF <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></a></p>
             <h1>Best 15.6&quot; Laptops 2026: Lenovo vs HP vs jumper Compared</h1>
             <p class="hero-excerpt">Finding the right 15.6-inch laptop in 2026 can feel overwhelming — with brands like Lenovo, HP, and jumper all competing for your attention with aggressive pricing and bold claims.</p>
-            <p class="hero-price-check">Prices checked as of Sep 1, 2026</p>
+            <p class="hero-price-check">Prices checked as of Sep 5, 2026</p>
         </div>
         
     <aside class="hero-pick">
@@ -674,7 +672,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">Lenovo 15.6&quot; Business Laptop</h3>
 <div class="warm-product-card__price">$459.99</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/laptops-0/0" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0GX66CNNJ?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0GX66CNNJ&name=Lenovo+15.6%22+Business+Laptop&price=%24459.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F81wWGYF%2BtUL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0GX66CNNJ&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div><div class="warm-product-card" data-description="HP 15.6&quot; FHD Laptop 2026 Edition, Intel Processor, 8GB RAM, 256GB SSD | Copilot AI, Long Battery Life, Lightweight 3.64 lbs, Microsoft 365, Windows 11 for Students &amp; Office, with 5 in 1 hub">
@@ -682,7 +680,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">HP 15.6&quot; FHD Laptop 2026 Edition</h3>
 <div class="warm-product-card__price">$414.99</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/laptops-0/1" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0GRVFY42Q?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0GRVFY42Q&name=HP+15.6%22+FHD+Laptop+2026+Edition&price=%24414.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71sTXs4lkqL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0GRVFY42Q&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div><div class="warm-product-card" data-description="jumper 15.6&quot; FHD Laptop, 12GB RAM 256GB Storage Expandable to 512GB,1 Year Office 365, Numeric Keyboard, HDMI, WiFi5, BT4.2,38Wh Battery, Windows 11 Laptop for Business and Student">
@@ -690,7 +688,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">jumper 15.6&quot; FHD Laptop</h3>
 <div class="warm-product-card__price">$326.99</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/laptops-0/2" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0H56TH8JM?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0H56TH8JM&name=jumper+15.6%22+FHD+Laptop&price=%24326.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71pzfgiLZ4L._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0H56TH8JM&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div><div class="warm-product-card" data-description="ASUS ROG Strix G16 (2025) Gaming Laptop, 16” FHD+ 16:10 165Hz/3ms, NVIDIA® GeForce RTX™ 5060, Intel® Core™ i7 Processor 14650HX, 16GB DDR5, 1TB Gen 4 SSD, Wi-Fi 7, Windows 11 Home, G615JMR-AS74">
@@ -698,7 +696,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">ASUS ROG Strix G16 (2025) Gaming Laptop</h3>
 <div class="warm-product-card__price">$1,393.65</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/laptops-0/3" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0DZZWMB2L?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0DZZWMB2L&name=ASUS+ROG+Strix+G16+%282025%29+Gaming+Laptop&price=%241%2C393.65&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F81n1T4CYfmL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0DZZWMB2L&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div><div class="warm-product-card" data-description="Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI, 13.6-inch Liquid Retina Display, 16GB Unified Memory, 512GB SSD, 12MP Center Stage Camera, Touch ID, Wi-Fi 7; Sky Blue">
@@ -706,7 +704,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI</h3>
 <div class="warm-product-card__price">$1,199.00</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/laptops-0/4" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0GR1493ZV?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0GR1493ZV&name=Apple+2026+MacBook+Air+13-inch+Laptop+with+M5+chip%3A+Built+for+AI&price=%241%2C199.00&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71igu9e9hFL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0GR1493ZV&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div></div>
@@ -744,11 +742,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
         <nav class="rail-card rail-toc" aria-label="In this guide">
             <p class="rail-card__title">In this guide</p>
             <ol>
-                <li><a href="#verdict">Abvorn Verdict</a></li>
-                <li><a href="#introduction-finding-the-best-laptop-for-work-and-everyday-use-in-2026">Introduction: Finding the Best Laptop for Work and Everyday Use in 2026</a></li><li><a href="#what-to-look-for-when-buying-a-15-6-laptop-in-2026">What to Look for When Buying a 15.6″ Laptop in 2026</a></li><li><a href="#product-reviews-our-top-3-picks">Product Reviews: Our Top 3 Picks</a></li><li><a href="#side-by-side-comparison-lenovo-vs-hp-vs-jumper">Side‑by‑Side Comparison: Lenovo vs HP vs jumper</a></li><li><a href="#pros-and-cons-of-each-laptop">Pros and Cons of Each Laptop</a></li>
-                <li><a href="#products">Products Mentioned</a></li>
-                <li><a href="#faq">FAQ</a></li>
-                <li><a href="#related">Related Categories</a></li>
+                <li><a href="#verdict">Abvorn Verdict</a></li><li><a href="#introduction-finding-the-best-laptop-for-work-and-everyday-use-in-2026">Introduction: Finding the Best Laptop for Work and Everyday Use in 2026</a></li><li><a href="#what-to-look-for-when-buying-a-15-6-laptop-in-2026">What to Look for When Buying a 15.6″ Laptop in 2026</a></li><li><a href="#product-reviews-our-top-3-picks">Product Reviews: Our Top 3 Picks</a></li><li><a href="#side-by-side-comparison-lenovo-vs-hp-vs-jumper">Side‑by‑Side Comparison: Lenovo vs HP vs jumper</a></li><li><a href="#pros-and-cons-of-each-laptop">Pros and Cons of Each Laptop</a></li><li><a href="#products">Products Mentioned</a></li><li><a href="#faq">FAQ</a></li><li><a href="#related">Related Categories</a></li>
             </ol>
         </nav>
 
@@ -918,6 +912,7 @@ document.addEventListener('click',function(e){
   var cat=el.getAttribute('data-track');
   var w=parseFloat(el.getAttribute('data-weight')||'5');
   trackPref(cat,w);
+  if(cat==='value'||cat==='affiliate'){try{window.gtag?gtag('event','affiliate_click',{event_category:'affiliate',link_url:el.href||'',label:(el.getAttribute('data-product-name')||'')}):(window.dataLayer||[]).push({event:'affiliate_click',link_url:el.href||''})}catch(err){}}
 });
 
 // Calculate alignment and regret probability (JS port of Python RPS engine)

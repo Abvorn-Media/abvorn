@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -327,6 +327,16 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
     .hero-grid { grid-template-columns:minmax(0,1fr); }
     .hero-pick { max-width: 320px; }
 }
+
+#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
+#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
+#cookie-banner p{margin:0;color:#ffffff;font-size:13px}
+#cookie-banner a{color:#c98a2c;text-decoration:underline}
+#cookie-banner .btn{background:#c98a2c;color:#0a0a0a;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}
+#cookie-banner .btn:hover{background:#c98a2c}
+#cookie-banner .btn-secondary{background:transparent;color:#ffffff;border:1px solid #555;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
+#cookie-banner .btn-secondary:hover{border-color:#888}
+
         
 :root {
   --bg-alt:#f6f5f2; --border:#e8e8e8; --text-muted:#666;
@@ -400,21 +410,9 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
         .pdf-download-btn:hover { filter:brightness(1.07); transform:translateY(-1px); }
         .hero-price-check { margin-top:8px; font-size:.82rem; color:var(--clr-mid-gray); line-height:1.4; }
     </style>
-    
-
-<style>
-#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#2a2724;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
-#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
-#cookie-banner p{margin:0;color:#e3dbd4;font-size:13px}
-#cookie-banner a{color:#d4633e;text-decoration:underline}
-#cookie-banner .btn{background:#d4633e;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
-#cookie-banner .btn:hover{background:#b84d2a}
-#cookie-banner .btn-secondary{background:transparent;color:#e3dbd4;border:1px solid #6b6560;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
-#cookie-banner .btn-secondary:hover{border-color:#9e9690}
-</style>
-<script>window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()</script>
+    <script>window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()</script>
 <div id="cookie-banner" role="dialog" aria-label="Cookie consent">
-<p>We use cookies to analyze traffic and improve your experience. <a href="https://abvorn.com/privacy/">Privacy Policy</a></p>
+<p>We use cookies to analyze traffic and improve your experience. <a href="/privacy/">Privacy Policy</a></p>
 <button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
 <button class="btn" onclick="acceptAnalytics()">Accept</button>
 </div>
@@ -440,11 +438,11 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <section class="article-hero"><div class="container article-hero__inner">
     <div class="hero-grid">
         <div>
-            <p class="hero-meta">Laptops <span class="dot"></span> <span class="date">By Abvorn</span> <span class="dot"></span> <span class="date">Published Jul 27, 2026</span> <span class="dot"></span> <span class="date">Updated Sep 1, 2026</span></p>
+            <p class="hero-meta">Laptops <span class="dot"></span> <span class="date">By Abvorn</span> <span class="dot"></span> <span class="date">Published Jul 27, 2026</span> <span class="dot"></span> <span class="date">Updated Sep 5, 2026</span></p>
             <p class="hero-pdf"><a class="pdf-download-btn" href="https://abvorn.com/reviews/laptops/the-ultimate-laptop-buying-guide-find-your-perfect-match-2026-07-27.pdf" download>Download PDF <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></a></p>
             <h1>The Ultimate Laptop Buying Guide: Find Your Perfect Match</h1>
             <p class="hero-excerpt">With so many options available in the market, buying a laptop can be a daunting task.</p>
-            <p class="hero-price-check">Prices checked as of Sep 1, 2026</p>
+            <p class="hero-price-check">Prices checked as of Sep 5, 2026</p>
         </div>
         
     <aside class="hero-pick">
@@ -497,7 +495,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">HP Essential Laptop Computer</h3>
 <div class="warm-product-card__price">$289.99</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/laptops-3-22/0" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0H7DMZ68L?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0H7DMZ68L&name=HP+Essential+Laptop+Computer&price=%24289.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71pIODAIdhL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0H7DMZ68L&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div><div class="warm-product-card" data-description="HP 15.6&quot; FHD Laptop 2026 Edition, Intel Processor, 8GB RAM, 256GB SSD | Copilot AI, Long Battery Life, Lightweight 3.64 lbs, Microsoft 365, Windows 11 for Students &amp; Office, with 5 in 1 hub">
@@ -505,7 +503,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">HP 15.6&quot; FHD Laptop 2026 Edition</h3>
 <div class="warm-product-card__price">$399.99</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/laptops-3-22/1" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0GRVFY42Q?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0GRVFY42Q&name=HP+15.6%22+FHD+Laptop+2026+Edition&price=%24399.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71sTXs4lkqL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0GRVFY42Q&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div><div class="warm-product-card" data-description="Dell Inspiron 14 2 in 1 Touchscreen Laptop 16GB DDR5 1TB SSD Intel Core 7 | 10-Cores Up to 5.4 GHz | 14&quot; FHD+, WVA, 300 nits | 5200 MT/s RAM | Fingerprint| backlit &amp; Copilot key | Windows 11 Pro">
@@ -513,7 +511,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">Dell Inspiron 14 2 in 1 Touchscreen Laptop 16GB DDR5 1TB SSD Intel Core 7 | 10-Cores Up to 5.4 GHz | 14&quot; FHD+</h3>
 <div class="warm-product-card__price">$1,099.99</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/laptops-3-22/2" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0H8C4HBBF?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0H8C4HBBF&name=Dell+Inspiron+14+2+in+1+Touchscreen+Laptop+16GB+DDR5+1TB+SSD+Intel+Core+7+%7C+10-Cores+Up+to+5.4+GHz+%7C+14%22+FHD%2B&price=%241%2C099.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71Ua0XOTqfL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0H8C4HBBF&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div><div class="warm-product-card" data-description="HP Latest Stream 14&quot; HD Laptop, Intel Celeron Processor, 4GB Memory, 64GB eMMC Storage, Fast Charge, HDMI, Up to 11 Hours Long Battery Life, Office 365 1-Year, Win 11 S, Microfiber Bundle, White">
@@ -521,7 +519,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">HP Latest Stream 14&quot; HD Laptop</h3>
 <div class="warm-product-card__price">$219.00</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/laptops-3-22/3" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0C5S8626M?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0C5S8626M&name=HP+Latest+Stream+14%22+HD+Laptop&price=%24219.00&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F51qhN7a-AgL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0C5S8626M&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div><div class="warm-product-card" data-description="Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI, 13.6-inch Liquid Retina Display, 16GB Unified Memory, 512GB SSD, 12MP Center Stage Camera, Touch ID, Wi-Fi 7; Midnight">
@@ -529,7 +527,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">Apple 2026 MacBook Air 13-inch Laptop with M5 chip: Built for AI</h3>
 <div class="warm-product-card__price">$1,259.99</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/laptops-3-22/4" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0GR1JTFP8?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0GR1JTFP8&name=Apple+2026+MacBook+Air+13-inch+Laptop+with+M5+chip%3A+Built+for+AI&price=%241%2C259.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71pkfQGcMKL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0GR1JTFP8&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div></div>
@@ -567,11 +565,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
         <nav class="rail-card rail-toc" aria-label="In this guide">
             <p class="rail-card__title">In this guide</p>
             <ol>
-                <li><a href="#verdict">Abvorn Verdict</a></li>
-                
-                <li><a href="#products">Products Mentioned</a></li>
-                <li><a href="#faq">FAQ</a></li>
-                <li><a href="#related">Related Categories</a></li>
+                <li><a href="#verdict">Abvorn Verdict</a></li><li><a href="#products">Products Mentioned</a></li><li><a href="#faq">FAQ</a></li><li><a href="#related">Related Categories</a></li>
             </ol>
         </nav>
 
@@ -741,6 +735,7 @@ document.addEventListener('click',function(e){
   var cat=el.getAttribute('data-track');
   var w=parseFloat(el.getAttribute('data-weight')||'5');
   trackPref(cat,w);
+  if(cat==='value'||cat==='affiliate'){try{window.gtag?gtag('event','affiliate_click',{event_category:'affiliate',link_url:el.href||'',label:(el.getAttribute('data-product-name')||'')}):(window.dataLayer||[]).push({event:'affiliate_click',link_url:el.href||''})}catch(err){}}
 });
 
 // Calculate alignment and regret probability (JS port of Python RPS engine)

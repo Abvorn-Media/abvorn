@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -327,6 +327,16 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
     .hero-grid { grid-template-columns:minmax(0,1fr); }
     .hero-pick { max-width: 320px; }
 }
+
+#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
+#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
+#cookie-banner p{margin:0;color:#ffffff;font-size:13px}
+#cookie-banner a{color:#c98a2c;text-decoration:underline}
+#cookie-banner .btn{background:#c98a2c;color:#0a0a0a;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}
+#cookie-banner .btn:hover{background:#c98a2c}
+#cookie-banner .btn-secondary{background:transparent;color:#ffffff;border:1px solid #555;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
+#cookie-banner .btn-secondary:hover{border-color:#888}
+
         
 :root {
   --bg-alt:#f6f5f2; --border:#e8e8e8; --text-muted:#666;
@@ -400,21 +410,9 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
         .pdf-download-btn:hover { filter:brightness(1.07); transform:translateY(-1px); }
         .hero-price-check { margin-top:8px; font-size:.82rem; color:var(--clr-mid-gray); line-height:1.4; }
     </style>
-    
-
-<style>
-#cookie-banner{position:fixed;bottom:0;left:0;right:0;background:#2a2724;color:#fff;padding:16px 24px;z-index:9999;display:none;font-size:13px;line-height:1.5;box-shadow:0 -4px 12px rgba(0,0,0,.15)}
-#cookie-banner.show{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:center}
-#cookie-banner p{margin:0;color:#e3dbd4;font-size:13px}
-#cookie-banner a{color:#d4633e;text-decoration:underline}
-#cookie-banner .btn{background:#d4633e;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
-#cookie-banner .btn:hover{background:#b84d2a}
-#cookie-banner .btn-secondary{background:transparent;color:#e3dbd4;border:1px solid #6b6560;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px}
-#cookie-banner .btn-secondary:hover{border-color:#9e9690}
-</style>
-<script>window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()</script>
+    <script>window.loadAnalytics=function(){var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=G-J0GTXLC86C";document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag("js",new Date());gtag("config","G-J0GTXLC86C")};(function(){var c=document.cookie.match(/(?:^|;) *analytics_consent=([^;]*)/);if(c&&c[1]==="granted"){loadAnalytics()}})()</script>
 <div id="cookie-banner" role="dialog" aria-label="Cookie consent">
-<p>We use cookies to analyze traffic and improve your experience. <a href="https://abvorn.com/privacy/">Privacy Policy</a></p>
+<p>We use cookies to analyze traffic and improve your experience. <a href="/privacy/">Privacy Policy</a></p>
 <button class="btn-secondary" onclick="declineAnalytics()">Decline</button>
 <button class="btn" onclick="acceptAnalytics()">Accept</button>
 </div>
@@ -440,11 +438,11 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <section class="article-hero"><div class="container article-hero__inner">
     <div class="hero-grid">
         <div>
-            <p class="hero-meta">Mechanical Keyboards <span class="dot"></span> <span class="date">By Abvorn</span> <span class="dot"></span> <span class="date">Published Aug 23, 2026</span> <span class="dot"></span> <span class="date">Updated Sep 1, 2026</span></p>
+            <p class="hero-meta">Mechanical Keyboards <span class="dot"></span> <span class="date">By Abvorn</span> <span class="dot"></span> <span class="date">Published Aug 23, 2026</span> <span class="dot"></span> <span class="date">Updated Sep 5, 2026</span></p>
             <p class="hero-pdf"><a class="pdf-download-btn" href="https://abvorn.com/reviews/mechanical-keyboards/best-mechanical-keyboards-2026-08-23.pdf" download>Download PDF <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></a></p>
             <h1>Best Mechanical Keyboards</h1>
             <p class="hero-excerpt">If your keyboard feels mushy, noisy, or unreliable after long sessions, you’re not alone—most standard boards trade precision for cost, leaving both gamers and heavy typists frustrated.</p>
-            <p class="hero-price-check">Prices checked as of Sep 1, 2026</p>
+            <p class="hero-price-check">Prices checked as of Sep 5, 2026</p>
         </div>
         
     <aside class="hero-pick">
@@ -499,7 +497,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">Redragon Mechanical Gaming Keyboard Wired</h3>
 <div class="warm-product-card__price">$29.99</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/mechanical-keyboards-0/0" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0CF3VGQFL?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0CF3VGQFL&name=Redragon+Mechanical+Gaming+Keyboard+Wired&price=%2429.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F71Bk2A2WmOL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0CF3VGQFL&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div><div class="warm-product-card" data-description="Redragon K668 108-Key Hot-Swap Wired RGB Gaming Keyboard, Extra 4 Hotkeys | Dedicated Shortcut Keys for Mute, Calc &amp; Desktop, Cushioned Noise Dampening for Creamy Thocky Sound, Swap-Ready, PRO Software">
@@ -507,7 +505,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">Redragon K668 108-Key Hot-Swap Wired RGB Gaming Keyboard</h3>
 <div class="warm-product-card__price">$36.99</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/mechanical-keyboards-0/1" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0CDWP1D58?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0CDWP1D58&name=Redragon+K668+108-Key+Hot-Swap+Wired+RGB+Gaming+Keyboard&price=%2436.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F618A%2BB25MKL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0CDWP1D58&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div><div class="warm-product-card" data-description="AULA F75 Pro Wireless Mechanical Keyboard,75% Hot Swappable Custom Keyboard with Knob,RGB Backlit,Pre-lubed Reaper Switches,Side Printed PBT Keycaps,2.4GHz/USB-C/BT5.0 Mechanical Gaming Keyboards Global Recycled Standard">
@@ -515,7 +513,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">AULA F75 Pro Wireless Mechanical Keyboard</h3>
 <div class="warm-product-card__price">$69.99</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/mechanical-keyboards-0/2" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0D14N2QZF?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0D14N2QZF&name=AULA+F75+Pro+Wireless+Mechanical+Keyboard&price=%2469.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F61MC8BK0w0L._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0D14N2QZF&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div><div class="warm-product-card" data-description="AULA F99 Wireless Mechanical Keyboard,Tri-Mode BT5.0/2.4GHz/USB-C Hot Swappable Custom Keyboard,Pre-lubed Linear Switches,RGB Backlit Computer Gaming Keyboards for PC/Tablet/PS/Xbox Global Recycled Standard">
@@ -523,7 +521,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">AULA F99 Wireless Mechanical Keyboard</h3>
 <div class="warm-product-card__price">$68.99</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/mechanical-keyboards-0/3" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B0CLLHSWRL?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B0CLLHSWRL&name=AULA+F99+Wireless+Mechanical+Keyboard&price=%2468.99&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F61mB8mL33pL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB0CLLHSWRL&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div><div class="warm-product-card" data-description="Logitech MX Mechanical Wireless Illuminated Keyboard Tactile - Graphite | Illuminated performance, backlit keys, Bluetooth, USB-C, macOS, Windows, Linux, iOS, Android, metal construction">
@@ -531,7 +529,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 <h3 class="warm-product-card__name">Logitech MX Mechanical Wireless Illuminated Keyboard Tactile - Graphite | Illuminated performance</h3>
 <div class="warm-product-card__price">$157.00</div>
 <div class="cta-row">
-<a class="btn btn--accent" href="https://abvorn.com/click/mechanical-keyboards-0/4" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
+<a class="btn btn--accent" href="https://www.amazon.com/dp/B09LK1P1RD?tag=viraltestco-20" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="/compare.html?asin=B09LK1P1RD&name=Logitech+MX+Mechanical+Wireless+Illuminated+Keyboard+Tactile+-+Graphite+%7C+Illuminated+performance&price=%24157.00&image=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F61%2B%2Bok6AqtL._AC_SL1500_.jpg&url=https%3A%2F%2Fwww.amazon.com%2Fdp%2FB09LK1P1RD&score=&label=" data-track="compare">Compare &oplus;</a>
 </div>
 </div></div>
@@ -569,11 +567,7 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
         <nav class="rail-card rail-toc" aria-label="In this guide">
             <p class="rail-card__title">In this guide</p>
             <ol>
-                <li><a href="#verdict">Abvorn Verdict</a></li>
-                
-                <li><a href="#products">Products Mentioned</a></li>
-                <li><a href="#faq">FAQ</a></li>
-                <li><a href="#related">Related Categories</a></li>
+                <li><a href="#verdict">Abvorn Verdict</a></li><li><a href="#products">Products Mentioned</a></li><li><a href="#faq">FAQ</a></li><li><a href="#related">Related Categories</a></li>
             </ol>
         </nav>
 
@@ -743,6 +737,7 @@ document.addEventListener('click',function(e){
   var cat=el.getAttribute('data-track');
   var w=parseFloat(el.getAttribute('data-weight')||'5');
   trackPref(cat,w);
+  if(cat==='value'||cat==='affiliate'){try{window.gtag?gtag('event','affiliate_click',{event_category:'affiliate',link_url:el.href||'',label:(el.getAttribute('data-product-name')||'')}):(window.dataLayer||[]).push({event:'affiliate_click',link_url:el.href||''})}catch(err){}}
 });
 
 // Calculate alignment and regret probability (JS port of Python RPS engine)

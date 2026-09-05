@@ -300,6 +300,11 @@ def generate_click_url(article_id: str, product_index: int, product_url: str = "
 def rewrite_affiliate_urls(html: str, article_id: str) -> str:
     import re, html as html_mod
     from src.click_tracker import record_product_url
+    # Static hosts (GitHub Pages) cannot resolve /click/<...>/ redirects, so the
+    # default links straight to the tagged affiliate URL. Set
+    # AFFILIATE_CLICK_MODE=redirect to keep the old server-side click-counting
+    # scheme (requires a FastAPI host for /click/ to actually work).
+    redirect_mode = os.environ.get("AFFILIATE_CLICK_MODE", "direct").lower() == "redirect"
     pattern = re.compile(r'(<a\s[^>]*href=")(https?://[^"]*(?:amazon|amzn)[^"]*?)("[^>]*>)', re.IGNORECASE)
     product_index = 0
     seen_indices = {}
@@ -315,9 +320,10 @@ def rewrite_affiliate_urls(html: str, article_id: str) -> str:
             idx = product_index
             seen_indices[original_url] = idx
             product_index += 1
-        click_url = generate_click_url(article_id, idx)
         record_product_url(article_id, idx, original_url)
-        return f'{prefix}{click_url}{suffix}'
+        if redirect_mode:
+            return f'{prefix}{generate_click_url(article_id, idx)}{suffix}'
+        return f'{prefix}{original_url}{suffix}'
 
     return pattern.sub(replace_match, html)
 
@@ -2601,6 +2607,7 @@ document.addEventListener('click',function(e){
   var cat=el.getAttribute('data-track');
   var w=parseFloat(el.getAttribute('data-weight')||'5');
   trackPref(cat,w);
+  if(cat==='value'||cat==='affiliate'){try{window.gtag?gtag('event','affiliate_click',{event_category:'affiliate',link_url:el.href||'',label:(el.getAttribute('data-product-name')||'')}):(window.dataLayer||[]).push({event:'affiliate_click',link_url:el.href||''})}catch(err){}}
 });
 
 // Calculate alignment and regret probability (JS port of Python RPS engine)

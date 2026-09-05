@@ -1744,6 +1744,7 @@ document.addEventListener('click',function(e){
   var cat=el.getAttribute('data-track');
   var w=parseFloat(el.getAttribute('data-weight')||'5');
   trackPref(cat,w);
+  if(cat==='value'||cat==='affiliate'){try{window.gtag?gtag('event','affiliate_click',{event_category:'affiliate',link_url:el.href||'',label:(el.getAttribute('data-product-name')||'')}):(window.dataLayer||[]).push({event:'affiliate_click',link_url:el.href||''})}catch(err){}}
 });
 
 // Calculate alignment and regret probability (JS port of Python RPS engine)

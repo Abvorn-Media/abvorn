@@ -137,8 +137,8 @@ def test_generate_click_url_custom_domain(monkeypatch):
 def test_rewrite_affiliate_urls_single_link():
     html = '<a href="https://www.amazon.com/s?k=earbuds&tag=viraltestco-20">buy</a>'
     out = rewrite_affiliate_urls(html, "niche-1")
-    assert "/click/niche-1/" in out
-    assert "amazon.com" not in out
+    assert "amazon.com" in out
+    assert "/click/" not in out
 
 
 def test_rewrite_affiliate_urls_multiple_unique_products():
@@ -147,8 +147,17 @@ def test_rewrite_affiliate_urls_multiple_unique_products():
         '<a href="https://www.amazon.com/s?k=headphones&tag=viraltestco-20">buy2</a>'
     )
     out = rewrite_affiliate_urls(html, "niche-2")
-    assert "/click/niche-2/0" in out
-    assert "/click/niche-2/1" in out
+    assert "amazon.com/s?k=earbuds" in out
+    assert "amazon.com/s?k=headphones" in out
+    assert "/click/" not in out
+
+
+def test_rewrite_affiliate_urls_redirect_mode(monkeypatch):
+    monkeypatch.setenv("AFFILIATE_CLICK_MODE", "redirect")
+    html = '<a href="https://www.amazon.com/s?k=earbuds&tag=viraltestco-20">buy</a>'
+    out = rewrite_affiliate_urls(html, "niche-4")
+    assert "/click/niche-4/0" in out
+    assert "amazon.com" not in out
 
 
 def test_rewrite_affiliate_urls_skips_already_rewritten():
@@ -157,7 +166,7 @@ def test_rewrite_affiliate_urls_skips_already_rewritten():
     assert out == html
 
 
-def test_build_article_page_rewrites_links_when_article_id_given():
+def test_build_article_page_direct_links_when_article_id_given():
     html = build_article_page(
         niche_slug="test-niche",
         niche_name="Test Niche",
@@ -170,7 +179,8 @@ def test_build_article_page_rewrites_links_when_article_id_given():
         products=[],
         article_id="test-niche-0",
     )
-    assert "/click/test-niche-0/" in html
+    assert "/click/test-niche-0/" not in html
+    assert "amazon.com/s?k=test" in html
 
 
 def test_build_article_page_preserves_original_links_without_article_id():
