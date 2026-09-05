@@ -1,6 +1,7 @@
 import pytest
 from abvorn.crm.template import (
-    render_email, render_lead_magnet_email, render_persona_update,
+    render_email, render_lead_magnet_email, render_new_post_digest,
+    render_niche_welcome_email, render_persona_update,
     render_pdf_guide_email,
 )
 from abvorn.crm.sender import EmailSender
@@ -75,6 +76,59 @@ def test_render_pdf_guide():
     assert "Download Your Guide (PDF)" in html
     assert "best-4k-monitors.pdf" in html
     assert "online" in html
+
+
+def test_render_niche_welcome():
+    """Niche welcome should name the niche, link browse page, and use the live unsubscribe URL."""
+    html = render_niche_welcome_email(
+        to_name="Marcus",
+        niche_name="Laptops",
+        niche_slug="laptops",
+        email="marcus@example.com",
+        apps_script_url="https://script.google.com/macros/s/AKfycbxyz/exec",
+    )
+    assert "subscribed to <strong>Laptops updates</strong>" in html
+    assert "reviews/laptops/" in html
+    assert "https://script.google.com/macros/s/AKfycbxyz/exec?action=unsubscribe&email=marcus%40example.com" in html
+    assert "You are subscribed to Laptops updates" in html
+
+
+def test_render_niche_welcome_general():
+    """General subscription should point at the homepage, not a fake slug."""
+    html = render_niche_welcome_email(
+        to_name="Marcus", niche_name="Products", niche_slug="general",
+        email="marcus@example.com", apps_script_url="https://script.google.com/macros/s/AKfycbxyz/exec",
+    )
+    assert "marcus%40example.com" in html
+    assert "reviews/general/" not in html
+
+
+def test_render_new_post_digest_single():
+    """Single-item digest subject should carry the post title."""
+    html = render_new_post_digest(
+        to_name="Marcus", niche_name="Laptops", niche_slug="laptops",
+        email="marcus@example.com",
+        items=[{"title": "Best Budget Laptops for Students", "link": "https://abvorn.com/reviews/laptops/best-budget-laptops/"}],
+        apps_script_url="https://script.google.com/macros/s/AKfycbxyz/exec",
+    )
+    assert "New on Abvorn: Best Budget Laptops for Students" in html
+    assert "best-budget-laptops/" in html
+    assert "action=unsubscribe" in html
+
+
+def test_render_new_post_digest_multi():
+    """Multi-item digest subject should count guides and list each link."""
+    html = render_new_post_digest(
+        to_name="Marcus", niche_name="Laptops", niche_slug="laptops",
+        email="marcus@example.com",
+        items=[
+            {"title": "Best Budget Laptops for Students", "link": "https://abvorn.com/reviews/laptops/best-budget-laptops/"},
+            {"title": "Best Gaming Laptops", "link": "https://abvorn.com/reviews/laptops/best-gaming-laptops/"},
+        ],
+    )
+    assert "New on Abvorn (Laptops): 2 new guides" in html
+    assert "best-gaming-laptops/" in html
+    assert "Browse all Laptops reviews" in html
 
 
 def test_email_sender_pdf_guide_no_creds():

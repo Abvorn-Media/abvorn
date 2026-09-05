@@ -1,5 +1,7 @@
 """Email HTML templates — beautiful, consistent, responsive."""
 
+from urllib.parse import quote
+
 from src.humanizer_engine import HumanizerEngine
 
 _humanizer = HumanizerEngine()
@@ -63,8 +65,15 @@ def render_email(to_name: str, subject: str, body_html: str,
                  niche: str = "products",
                  unsubscribe_url: str = "#",
                  tracking_pixel: str = "",
-                 tracking_consent: bool = False) -> str:
-    """Render a complete HTML email with all optional blocks."""
+                 tracking_consent: bool = False,
+                 humanize: bool = True) -> str:
+    """Render a complete HTML email with all optional blocks.
+
+    humanize=False is for callers that supply final HTML bodies containing
+    raw URLs/links: the humanizer's text-rewrite rules operate on plain text
+    and can split markup (e.g. "https://abvorn.com/..." becoming
+    "https://abvorn." + "com/...").
+    """
     cta_block = ""
     if cta_text and cta_url:
         cta_block = f'''
@@ -92,8 +101,9 @@ def render_email(to_name: str, subject: str, body_html: str,
 </table>
 </td></tr></table>'''
 
-    subject = _humanizer.humanize_email_subject(subject)
-    body_html = _humanizer.humanize_email_body(body_html)
+    if humanize:
+        subject = _humanizer.humanize_email_subject(subject)
+        body_html = _humanizer.humanize_email_body(body_html)
 
     return _EMAIL_TEMPLATE.format(
         subject=subject, to_name=to_name,
@@ -165,4 +175,84 @@ def render_persona_update(to_name: str, persona_name: str,
         cta_url=post_url,
         niche=niche,
         tracking_consent=tracking_consent,
+    )
+
+
+def _unsubscribe_url(email: str, apps_script_url: str = "") -> str:
+    """Real one-click unsubscribe against the live Apps Script web-app URL.
+
+    Matches the endpoint deployed in abvorn/reactions_merged_Code.gs
+    (action=unsubscribe). Falls back to "#" when the URL is unknown, which
+    mirrors the previous no-op default.
+    """
+    if not apps_script_url or apps_script_url == "#":
+        return "#"
+    sep = "&" if "?" in apps_script_url else "?"
+    return f"{apps_script_url}{sep}action=unsubscribe&email={quote(email)}"
+
+
+def render_niche_welcome_email(to_name: str, niche_name: str, niche_slug: str,
+                               email: str, apps_script_url: str = "",
+                               tracking_consent: bool = False) -> str:
+    """Render the niche-subscription welcome (mirror of the Apps Script version).
+
+    A reader who used the "Get updates for this niche" card gets a welcome that
+    names their niche and promises exactly one email per new guide in it.
+    """
+    browse_url = ("https://abvorn.com/" if niche_slug == "general"
+                  else f"https://abvorn.com/reviews/{niche_slug}/")
+    body = (
+        f'<p style="margin:0 0 16px;font-size:16px;color:#333;line-height:1.6">'
+        f'You are now subscribed to <strong>{niche_name} updates</strong>. One email whenever we publish a new '
+        f'{niche_name} guide — no spam, unsubscribe anytime.</p>'
+        f'<p style="margin:0 0 16px;font-size:16px;color:#333;line-height:1.6">'
+        f'In the meantime, here is the latest on {niche_name.lower()}:</p>'
+    )
+    return render_email(
+        to_name=to_name,
+        subject=f"You are subscribed to {niche_name} updates",
+        body_html=body,
+        cta_text=f"Browse {niche_name} reviews",
+        cta_url=browse_url,
+        niche=niche_name,
+        unsubscribe_url=_unsubscribe_url(email, apps_script_url),
+        tracking_consent=tracking_consent,
+        humanize=False,
+    )
+
+
+def render_new_post_digest(to_name: str, niche_name: str, niche_slug: str,
+                           email: str, items: list, apps_script_url: str = "",
+                           tracking_consent: bool = False) -> str:
+    """Render the new-post digest (mirror of the Apps Script broadcast version).
+
+    items: list of {"title": str, "link": str} for the niche's new guides.
+    A single item produces a one-title subject; multiple produce a count.
+    """
+    titles = [it["title"] for it in items]
+    if len(titles) == 1:
+        subject = f"New on Abvorn: {titles[0]}"
+    else:
+        subject = f"New on Abvorn ({niche_name}): {len(titles)} new guides"
+    list_html = "".join(
+        f'<p style="margin:0 0 14px;font-size:16px;color:#333;line-height:1.5">'
+        f'<a href="{it["link"]}" style="color:#d4633e;font-weight:600;text-decoration:none">{it["title"]}</a></p>'
+        for it in items
+    )
+    browse_url = ("https://abvorn.com/" if niche_slug == "general"
+                  else f"https://abvorn.com/reviews/{niche_slug}/")
+    body = (
+        f'<p style="margin:0 0 16px;font-size:16px;color:#333;line-height:1.6">'
+        f'New {niche_name.lower()} guides just went live on Abvorn, scored and priced fresh:</p>{list_html}'
+    )
+    return render_email(
+        to_name=to_name,
+        subject=subject,
+        body_html=body,
+        cta_text=f"Browse all {niche_name} reviews",
+        cta_url=browse_url,
+        niche=niche_name,
+        unsubscribe_url=_unsubscribe_url(email, apps_script_url),
+        tracking_consent=tracking_consent,
+        humanize=False,
     )
