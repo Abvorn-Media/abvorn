@@ -1,15 +1,29 @@
 /**
- * Abvorn merged Apps Script backend = existing LEAD form handler + new like/love reactions.
+ * Abvorn merged Apps Script backend = LEAD form handler + PDF guide email +
+ * like/love reactions + niche welcome + new-post broadcast + unsubscribe.
  *
  * Replace your entire Code.gs with this file, add a sheet named  "reactions"
  * to spreadsheet 1NnDwOewcMNr68D5x8uVHGzKx1SVI7Xv8c5fEjdKm6uI , then deploy a NEW
  * web-app version with access = "Anyone, even anonymous".
+ *
+ * After deploying, run setupBroadcastTrigger_() once from the editor to install
+ * the every-6h new-post broadcast that emails each niche's subscribers when
+ * feed.xml gains new items.
  */
 
 var REACTIONS_SHEET_NAME = 'reactions';
 var REACTIONS_SPREADSHEET_ID = '1lw7u8rX9eVbXTF8Dyw1gzwZxWKjLrTgUAxM-lroI024';
 var LEADS_SHEET_NAME = 'Sheet1';   // capture email leads here
 var REACTIONS_LOCK = LockService.getScriptLock();
+var FEED_URL = 'https://abvorn.com/feed.xml';
+var MAX_BROADCAST_PER_RUN = 80;    // MailApp quota guard (consumer = 100/day)
+var NICHES = {
+  '4k-monitors': '4K Monitors', 'wireless-earbuds': 'Wireless Earbuds',
+  'mechanical-keyboards': 'Mechanical Keyboards', 'streaming-devices': 'Streaming Devices',
+  'wireless-headphones': 'Wireless Headphones', 'fitness-trackers': 'Fitness Trackers',
+  'laptops': 'Laptops', 'gaming-mice': 'Gaming Mice', 'webcams': 'Webcams',
+  'smart-home': 'Smart Home'
+};
 
 /* ---------------------------------------------------------------------------
  * Main entry — called by BOTH POST and GET (GET used by the site to test CORS).
@@ -22,6 +36,8 @@ function doPost(e) {
 // Browsers/paste-in-URL send a GET; route it the same as POST so you can
 // test in the address bar:  ?action=test-lead&email=a@b.com
 function doGet(e) {
+  var action = (e && e.parameter && e.parameter.action) || '';
+  if (action === 'unsubscribe') return unsubscribePage_(e.parameter);
   return doRoute_(e);
 }
 
@@ -35,6 +51,9 @@ function doRoute_(e) {
 
   // 'Email this review' CTA: email the review's PDF link to the reader.
   if (action === 'pdf_guide') return handlePdfGuide_(body);
+
+  // One-click unsubscribe from the footer link in every email.
+  if (action === 'unsubscribe') return handleUnsubscribe_(body);
 
   // Manual test: fills Sheet1 with a fake lead without needing live traffic.
   if (action === 'test-lead') return handleLeadForm_({
@@ -126,10 +145,11 @@ function writeReactions_(votes) {
    YOUR EXISTING EMAIL LEAD FORM (unchanged)
  * ------------------------------------------------------------------------- */
 function handleLeadForm_(data) {
-  var email = data.email;
-  var niche = data.niche;
+  var email = String(data.email || '').trim();
+  var niche = String(data.niche || 'general').trim();
   var source = data.source || 'blog';
   var leadMagnet = data.lead_magnet || 'Free Guide';
+  if (!isEmail_(email)) return json_({ success: false, message: 'Please use a valid email address.' });
 
   var sheet = SpreadsheetApp.openById(REACTIONS_SPREADSHEET_ID).getSheetByName(LEADS_SHEET_NAME)
     || SpreadsheetApp.openById(REACTIONS_SPREADSHEET_ID).insertSheet(LEADS_SHEET_NAME);
@@ -137,29 +157,57 @@ function handleLeadForm_(data) {
     sheet.appendRow(['email', 'niche', 'source', 'subscribed_at', 'status', 'lead_magnet']);
   }
 
-  var emails = sheet.getRange(1, 1, sheet.getLastRow(), 1).getValues().flat();
-  if (emails.indexOf(email) > -1) {
+  var dataRows = sheet.getDataRange().getValues();
+  var rowIndex = -1, status = '';
+  for (var i = 1; i < dataRows.length; i++) {
+    if (String(dataRows[i][0] || '').trim().toLowerCase() === email.toLowerCase()) {
+      rowIndex = i + 1; status = String(dataRows[i][4] || 'active'); break;
+    }
+  }
+
+  if (rowIndex > -1 && status === 'active') {
     return json_({ success: false, message: 'Already subscribed.' });
   }
 
-  sheet.appendRow([email, niche, source, new Date().toISOString(), 'active', leadMagnet]);
+  if (rowIndex > -1) {
+    // Re-subscribe after unsubscribing: flip status back and refresh niche.
+    sheet.getRange(rowIndex, 1, 1, 6).setValues([[dataRows[rowIndex - 1][0], niche, source, dataRows[rowIndex - 1][3], 'active', leadMagnet]]);
+  } else {
+    sheet.appendRow([email, niche, source, new Date().toISOString(), 'active', leadMagnet]);
+  }
 
   sendWelcomeEmail(email, niche, leadMagnet);
-
   return json_({ success: true });
 }
 
 function sendWelcomeEmail(email, niche, leadMagnet) {
-  var subject = 'Your ' + leadMagnet + ' is ready';
-  var body = '<h1>Welcome to Abvorn</h1>'
-    + '<p>Thanks for requesting the <strong>' + leadMagnet + '</strong>.</p>'
-    + '<p><a href="https://abvorn.com/' + niche + '/" style="display:inline-block;padding:12px 24px;background:#ec4899;color:#fff;text-decoration:none;">Browse Reviews</a></p>';
+  var isNicheSignup = leadMagnet && leadMagnet.indexOf('updates') > -1;
+  var nicheName = NICHES[niche] || humanizeSlug_(niche);
+  var browseUrl = niche === 'general' ? 'https://abvorn.com/' : 'https://abvorn.com/reviews/' + niche + '/';
 
-  MailApp.sendEmail({
-    to: email,
-    subject: subject,
-    htmlBody: body
+  var subject, pre, post;
+  if (isNicheSignup) {
+    subject = 'You are subscribed to ' + nicheName + ' updates';
+    pre = '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.6">' +
+      'You are now subscribed to <strong>' + nicheName + ' updates</strong>. One email whenever we publish a new ' +
+      nicheName + ' guide \u2014 no spam, unsubscribe anytime.</p>';
+    post = '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.6">' +
+      'In the meantime, here is the latest on ' + nicheName.toLowerCase() + ':</p>';
+  } else {
+    subject = (leadMagnet && leadMagnet !== 'Free Guide') ? 'Your ' + leadMagnet + ' is ready' : 'Welcome to Abvorn';
+    pre = '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.6">' +
+      'Thanks for joining Abvorn' + (leadMagnet && leadMagnet !== 'Free Guide' ? ' and requesting the <strong>' + leadMagnet + '</strong>.' : '.') + '</p>';
+    post = '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.6">' +
+      'Started browsing, rated, and reviewed mechanically \u2014 prices pulled fresh, verdicts scored, no sponsored picks.' +
+      ' Start with the latest reviews:</p>';
+  }
+
+  var htmlBody = _renderEmail_(email, {
+    pre: pre,
+    post: post,
+    cta: { text: isNicheSignup ? 'Browse ' + nicheName + ' reviews' : 'Read the latest reviews', url: browseUrl }
   });
+  MailApp.sendEmail({ to: email, subject: subject, htmlBody: htmlBody });
 }
 
 /* ---------------------------------------------------------------------------
@@ -203,21 +251,212 @@ function sendPdfGuideEmail_(email, title, pdfUrl, guideUrl, niche) {
       'Prefer the live version? <a href="' + guideUrl + '" style="color:#d4633e">Read the full guide online</a> instead.</p>'
     : '';
   var subject = 'Your guide is ready: ' + title;
-  var htmlBody =
+  var htmlBody = _renderEmail_(email, {
+    pre:
     '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.6">' +
     'Hi there,</p>' +
     '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.6">' +
     'Your copy of <strong>' + title + '</strong> is ready. Every score, price, and verdict from the guide, ' +
     'in one clean downloadable document.</p>' +
     '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.6">' +
-    'No sign-up walls and no paywall \u2014 just the guide, so you can read it at your own pace.</p>' + liveLine +
-    '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0"><tr><td style="background-color:#d4633e;border-radius:8px;padding:12px 28px">' +
-    '<a href="' + pdfUrl + '" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;display:inline-block">' +
-    'Download Your Guide (PDF) \u2192</a></td></tr></table>' +
-    '<p style="margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#9e9690">' +
-    'As an Amazon Associate we earn from qualifying purchases.</p>';
+    'No sign-up walls and no paywall \u2014 just the guide, so you can read it at your own pace.</p>' + liveLine,
+    post: '',
+    cta: { text: 'Download Your Guide (PDF)', url: pdfUrl, arrow: true }
+  });
 
   MailApp.sendEmail({ to: email, subject: subject, htmlBody: htmlBody });
+}
+
+/* ---------------------------------------------------------------------------
+   Shared email shell — brand header, content, CTA, footer (disclosure +
+   working one-click unsubscribe). Every outbound email goes through this so
+   the opt-out is never missing.
+ * ------------------------------------------------------------------------- */
+function _renderEmail_(email, opts) {
+  var arrow = opts.cta && opts.cta.arrow ? ' \u2192' : '';
+  var ctaHtml = opts.cta
+    ? '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0"><tr><td style="background-color:#d4633e;border-radius:8px;padding:12px 28px">' +
+      '<a href="' + opts.cta.url + '" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;display:inline-block">' +
+      opts.cta.text + arrow + '</a></td></tr></table>'
+    : '';
+  return '<html><body style="margin:0;padding:0;background:#faf8f6">' +
+    '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" bgcolor="#faf8f6"><tr><td align="center" style="padding:32px 16px">' +
+    '<table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden">' +
+    '<tr><td style="background:#ffffff;padding:24px 32px 4px">' +
+    '<a href="https://abvorn.com/" style="text-decoration:none"><span style="font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:800;color:#d4633e;letter-spacing:-0.5px">abvorn</span>' +
+    '<span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:600;color:#9e9690;letter-spacing:1.5px;text-transform:uppercase;margin-left:6px">tested reviews</span></a></td></tr>' +
+    '<tr><td style="background:#ffffff;padding:16px 32px 8px">' + (opts.pre || '') + '</td></tr>' +
+    '<tr><td style="background:#ffffff;padding:8px 32px">' + ctaHtml + '</td></tr>' +
+    '<tr><td style="background:#ffffff;padding:8px 32px 24px">' + (opts.post || '') + '</td></tr>' +
+    '<tr><td style="background:#f1ece8;padding:20px 32px">' +
+    '<p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#9e9690;line-height:1.6">' +
+    'As an Amazon Associate we earn from qualifying purchases. Every review is scored mechanically from real specs and current prices \u2014 commission never changes a verdict.</p>' +
+    '<p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#9e9690">You received this because you subscribed on <a href="https://abvorn.com/" style="color:#9e9690;text-decoration:underline">abvorn.com</a>.' +
+    ' <a href="' + _unsubUrl_(email) + '" style="color:#9e9690;text-decoration:underline">Unsubscribe</a>.</p></td></tr>' +
+    '</table></td></tr></table></body></html>';
+}
+
+function _unsubUrl_(email) {
+  var base;
+  try { base = ScriptApp.getService().getUrl(); } catch (err) { base = 'https://script.google.com/macros/s/'; }
+  return base + '?action=unsubscribe&email=' + encodeURIComponent(email);
+}
+
+function humanizeSlug_(slug) {
+  return slug.split('-').map(function (w) { return w ? w.charAt(0).toUpperCase() + w.slice(1) : w; }).join(' ');
+}
+
+/* ---------------------------------------------------------------------------
+   ONE-CLICK UNSUBSCRIBE — flips the lead row to 'unsubscribed'. Email sends
+   (welcome, PDF, broadcast) all skip non-active rows.
+ * ------------------------------------------------------------------------- */
+function handleUnsubscribe_(body) {
+  var email = String((body && body.email) || '').trim();
+  if (!isEmail_(email)) return json_({ success: false, message: 'Invalid email.' });
+  var sheet = SpreadsheetApp.openById(REACTIONS_SPREADSHEET_ID).getSheetByName(LEADS_SHEET_NAME);
+  if (sheet) {
+    var dataRows = sheet.getDataRange().getValues();
+    for (var i = 1; i < dataRows.length; i++) {
+      if (String(dataRows[i][0] || '').trim().toLowerCase() === email.toLowerCase()) {
+        sheet.getRange(i + 1, 5).setValue('unsubscribed');
+        break;
+      }
+    }
+  }
+  return json_({ success: true, message: 'Unsubscribed.' });
+}
+
+function unsubscribePage_(params) {
+  handleUnsubscribe_(params);
+  var html = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>Unsubscribed — Abvorn</title></head>' +
+    '<body style="margin:0;padding:0;background:#faf8f6;font-family:Arial,Helvetica,sans-serif">' +
+    '<div style="max-width:480px;margin:80px auto;background:#fff;border-radius:12px;padding:40px;text-align:center">' +
+    '<div style="font-size:24px;font-weight:800;color:#d4633e">abvorn</div>' +
+    '<p style="font-size:18px;font-weight:600;color:#333;margin:24px 0 8px">You are unsubscribed.</p>' +
+    '<p style="font-size:14px;color:#9e9690;line-height:1.6;margin:0 0 24px">You will no longer receive email updates from Abvorn. If this was a mistake, subscribe again from any review page.</p>' +
+    '<a href="https://abvorn.com/" style="display:inline-block;background:#d4633e;color:#fff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;padding:12px 28px">Back to Abvorn</a>' +
+    '</div></body></html>';
+  return HtmlService.createHtmlOutput(html);
+}
+
+/* ---------------------------------------------------------------------------
+   NEW-POST BROADCAST — reads docs/feed.xml, emails each niche's active
+   subscribers whenever new items appear for their niche, then remembers the
+   sent GUIDs so nothing is emailed twice. Install once with
+   setupBroadcastTrigger_() to run on a time-based trigger.
+ * ------------------------------------------------------------------------- */
+function broadcastNewPosts_() {
+  var props = PropertiesService.getScriptProperties();
+  var sent = {};
+  try { sent = JSON.parse(props.getProperty('SENT_GUIDS') || '{}'); } catch (err) { sent = {}; }
+
+  var items = _fetchFeedItems_();
+  var byNiche = {};
+  items.forEach(function (it) {
+    if (sent[it.guid]) return;
+    (byNiche[it.niche] = byNiche[it.niche] || []).push(it);
+  });
+
+  var nNicheWithNew = Object.keys(byNiche).length;
+  if (nNicheWithNew === 0) return -1;
+
+  var sheet = SpreadsheetApp.openById(REACTIONS_SPREADSHEET_ID).getSheetByName(LEADS_SHEET_NAME);
+  var subs = [];   // {email,niche}
+  if (sheet && sheet.getLastRow() > 0) {
+    var rows = sheet.getDataRange().getValues();
+    for (var i = 1; i < rows.length; i++) {
+      if (String(rows[i][4] || '').trim() === 'active' && isEmail_(rows[i][0])) {
+        subs.push({ email: String(rows[i][0]).trim(), niche: String(rows[i][1] || '').trim() });
+      }
+    }
+  }
+  if (subs.length === 0) return -1;
+
+  var sentCount = 0, skipped = 0;
+  for (var s = 0; s < subs.length && sentCount < MAX_BROADCAST_PER_RUN; s++) {
+    var sub = subs[s];
+    var nicheItems = byNiche[sub.niche] || (sub.niche === 'general' ? _allNew_(byNiche) : null);
+    if (!nicheItems || nicheItems.length === 0) { skipped++; continue; }
+    if (sub.niche === 'general' && nicheItems.length > 3) nicheItems = nicheItems.slice(0, 3);
+    _sendDigest_(sub.email, sub.niche, nicheItems);
+    sentCount++;
+  }
+
+  // Remember GUIDs we processed so the next run emails only genuinely new items.
+  var newSent = {};
+  Object.keys(byNiche).forEach(function (n) {
+    byNiche[n].forEach(function (it) { newSent[it.guid] = 1; });
+  });
+  Object.keys(sent).forEach(function (g) { if (!newSent[g]) newSent[g] = sent[g]; });
+  props.setProperty('SENT_GUIDS', JSON.stringify(newSent));
+
+  Logger.log('broadcastNewPosts_: sent=' + sentCount + ' skipped(no match)=' + skipped + ' niches=' + nNicheWithNew);
+  return sentCount;
+}
+
+function _allNew_(byNiche) {
+  var out = [];
+  Object.keys(byNiche).forEach(function (n) { out = out.concat(byNiche[n]); });
+  return out.sort(function (a, b) { return (b.dateGMT || 0) - (a.dateGMT || 0); });
+}
+
+function _sendDigest_(email, niche, items) {
+  var nicheName = NICHES[niche] || humanizeSlug_(niche);
+  var titles = items.map(function (it) { return it.title; });
+  var subject = titles.length === 1
+    ? 'New on Abvorn: ' + titles[0]
+    : 'New on Abvorn (' + nicheName + '): ' + titles.length + ' new guides';
+  var list = items.map(function (it) {
+    return '<p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.5">' +
+      '<a href="' + it.link + '" style="color:#d4633e;font-weight:600;text-decoration:none">' + it.title + '</a></p>';
+  }).join('');
+  var base = niche === 'general' ? 'https://abvorn.com/' : 'https://abvorn.com/reviews/' + niche + '/';
+  var htmlBody = _renderEmail_(email, {
+    pre: '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.6">' +
+      'Hi there,</p>' +
+      '<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#333;line-height:1.6">' +
+      'New ' + nicheName.toLowerCase() + ' guides just went live on Abvorn, scored and priced fresh:</p>' + list,
+    post: '',
+    cta: { text: 'Browse all ' + nicheName + ' reviews', url: base }
+  });
+  MailApp.sendEmail({ to: email, subject: subject, htmlBody: htmlBody });
+}
+
+function _fetchFeedItems_() {
+  var res = UrlFetchApp.fetch(FEED_URL, { muteHttpExceptions: true });
+  if (res.getResponseCode() !== 200) return [];
+  var doc = XmlService.parse(res.getContentText());
+  var ns = XmlService.getNamespace('http://purl.org/rss/1.0/');
+  var items = doc.getRootElement().getChild('channel').getChildren('item');
+  return items.map(function (item) {
+    var title = item.getChildText('title') || '';
+    var link = item.getChildText('link') || '';
+    var guidEl = item.getChild('guid');
+    var guid = guidEl ? (guidEl.getText() || link) : link;
+    var pubDate = item.getChildText('pubDate') || '';
+    return {
+      title: title, link: link, guid: guid, niche: _nicheForLink_(link),
+      dateGMT: new Date(pubDate).getTime() || 0
+    };
+  });
+}
+
+function _nicheForLink_(link) {
+  var m = link.match(/\/reviews\/([a-z0-9-]+)\//);
+  return m ? m[1] : 'general';
+}
+
+/** Install (or replace) the 6-hourly new-post broadcast trigger. Run once after deploy. */
+function setupBroadcastTrigger_() {
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'broadcastNewPosts_') {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+  ScriptApp.newTrigger('broadcastNewPosts_').timeBased().everyHours(6).create();
+  Logger.log('Broadcast trigger installed (every 6h).');
 }
 
 function isEmail_(email) {
