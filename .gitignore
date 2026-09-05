@@ -59,6 +59,9 @@ data/economic_records.json
 data/fable_state.json
 data/verdict_weights.json
 data/openweb_cache/
+data/_c.json
+data/brain_category_map.json
+data/evolution_journal.json
 data/spawn_state.json
 data/neural_memory_state.json
 data/genesis/
