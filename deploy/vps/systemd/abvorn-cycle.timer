@@ -1,0 +1,9 @@
+[Unit]
+Description=Abvorn content cycle timer
+
+[Timer]
+OnCalendar=*-*-* 03:50,09:50,15:50,21:50
+Persistent=true
+
+[Install]
+WantedBy=timers.target

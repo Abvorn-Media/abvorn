@@ -1,0 +1,18 @@
+[Unit]
+Description=Abvorn daemon (24/7 organism)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=abvorn
+WorkingDirectory=/opt/abvorn/abvorn
+EnvironmentFile=/opt/abvorn/abvorn/.env
+ExecStart=/opt/abvorn/venv/bin/python /opt/abvorn/abvorn/run_daemon.py
+Restart=on-failure
+RestartSec=30
+TimeoutStopSec=30
+SyslogIdentifier=abvorn-daemon
+
+[Install]
+WantedBy=multi-user.target

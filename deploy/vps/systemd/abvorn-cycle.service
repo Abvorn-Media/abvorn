@@ -1,0 +1,10 @@
+[Unit]
+Description=Abvorn content cycle
+
+[Service]
+Type=oneshot
+User=abvorn
+WorkingDirectory=/opt/abvorn/abvorn
+EnvironmentFile=/opt/abvorn/abvorn/.env
+ExecStart=/opt/abvorn/abvorn/deploy/vps/run_cycle.sh
+SyslogIdentifier=abvorn-cycle
