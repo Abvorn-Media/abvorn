@@ -55,6 +55,10 @@ function doRoute_(e) {
   // One-click unsubscribe from the footer link in every email.
   if (action === 'unsubscribe') return handleUnsubscribe_(body);
 
+  // One-time onboarding from a browser: seed sent-GUIDs + install the 6h
+  // broadcast trigger in a single call (no editor needed).
+  if (action === 'setup-broadcast') return runSetup_();
+
   // Manual test: fills Sheet1 with a fake lead without needing live traffic.
   if (action === 'test-lead') return handleLeadForm_({
       email: body.email || (e.parameter && e.parameter.email) || 'test@example.com',
@@ -469,6 +473,25 @@ function setupBroadcastTrigger_() {
   }
   ScriptApp.newTrigger('broadcastNewPosts_').timeBased().everyHours(6).create();
   Logger.log('Broadcast trigger installed (every 6h).');
+}
+
+/** One-time onboarding, callable from a browser URL: seeds the sent-GUID set
+ * (so the first broadcast only covers genuinely new posts) and installs the
+ * 6-hourly broadcast trigger in one shot. Runs under the owner's
+ * authorization when the web app is deployed as "Execute as: Me". */
+function runSetup_() {
+  try {
+    var seeded = seedBroadcastState_();
+    setupBroadcastTrigger_();
+    return json_({
+      success: true,
+      seeded: seeded,
+      trigger: 'installed (every 6h)',
+      message: 'Sent-GUID set seeded. First broadcast will only cover posts published after this moment.'
+    });
+  } catch (err) {
+    return json_({ success: false, error: 'setup failed: ' + err });
+  }
 }
 
 function isEmail_(email) {
