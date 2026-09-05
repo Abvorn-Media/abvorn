@@ -1,0 +1,5 @@
+SOCIAL PUBLISH GATE ENABLED
+
+Posts to live social platforms are allowed. Scoped to the platforms listed in
+data/social_platforms.txt (X and Medium only). Disable by deleting this file or
+unsetting ABVORN_SOCIAL_PUBLISH.

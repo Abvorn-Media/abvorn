@@ -71,6 +71,14 @@ class ReplyPoster:
             logger.info("Reply staged (not posted) — publish gate OFF")
             return {"status": "staged", "mention_id": mention.get("id", ""),
                     "author": mention.get("author", ""), "text": reply_text[:280]}
+        # Platform scoping: with the gate ON, only explicitly allowed platforms reply.
+        from ..deploy.social import _allowed_platforms
+        allowed = _allowed_platforms()
+        source = str(mention.get("platform", "") or "").lower() or "x"
+        if allowed is not None and source not in allowed:
+            logger.info(f"Reply staged (not posted) — {source} not in allowed list")
+            return {"status": "staged", "mention_id": mention.get("id", ""),
+                    "author": mention.get("author", ""), "text": reply_text[:280]}
         if not self._composio:
             return {"status": "skipped", "reason": "no_composio"}
         tweet_id = mention.get("tweet_id", "")

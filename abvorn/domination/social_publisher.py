@@ -113,6 +113,12 @@ class SocialPublisher:
         if not require_social_publishing():
             return self._export(script, platform, niche)
 
+        # Platform scoping: with the gate ON, only explicitly allowed platforms go live.
+        from ..deploy.social import _allowed_platforms
+        allowed = _allowed_platforms()
+        if allowed is not None and platform not in allowed:
+            return self._export(script, platform, niche)
+
         if mapping.get("export_only") or not self.composio:
             return self._export(script, platform, niche)
 

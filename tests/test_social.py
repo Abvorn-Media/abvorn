@@ -16,8 +16,9 @@ def test_social_deployer_init():
     assert deployer is not None
 
 
-def test_post_x_without_key():
-    """Should NOT post — publish gate is off by default, so drafts are staged."""
+def test_post_x_without_key(monkeypatch):
+    """Should NOT post — with the publish gate OFF, drafts are staged."""
+    monkeypatch.setattr("abvorn.core.social_gate.require_social_publishing", lambda state=None: False)
     deployer = SocialDeployer()
     content = {"post_title": "Test", "intro": "", "article_html": "", "tags": []}
     result = deployer.post(content, "x")
@@ -86,7 +87,8 @@ def test_sanitize_encoding_repairs_list_and_dict():
     assert out_dict["title"] == "ok"
 
 
-def test_post_stages_clean_content_through_guard():
+def test_post_stages_clean_content_through_guard(monkeypatch):
+    monkeypatch.setattr("abvorn.core.social_gate.require_social_publishing", lambda state=None: False)
     deployer = SocialDeployer()
     content = {"post_title": "Best mice — 2026", "intro": "<p>Real em dash — fine.</p>", "article_html": "<p>Body</p>", "tags": ["mice"]}
     result = deployer.post(content, "x")
@@ -101,3 +103,26 @@ def test_post_raises_on_unrepairable_mojibake():
     content = {"post_title": "Test", "intro": "<p>Broken \ufffd text</p>", "article_html": "<p>Body</p>", "tags": []}
     with pytest.raises(ValueError, match="Mojibake"):
         deployer.post(content, "x")
+
+
+def test_gate_on_but_platform_not_allowed_stays_staged(monkeypatch):
+    """Gate ON + platform scoping env must leave disallowed platforms staged."""
+    monkeypatch.setenv("ABVORN_SOCIAL_PUBLISH", "1")
+    monkeypatch.setenv("ABVORN_SOCIAL_PLATFORMS", "x,medium")
+    deployer = SocialDeployer(composio_key="test_key")
+    content = {"post_title": "Test", "intro": "<p>Test</p>", "article_html": "<p>Body</p>", "tags": []}
+    result = deployer.post(content, "linkedin")
+    assert result["status"] == "staged"
+    assert result["platform"] == "linkedin"
+
+
+def test_gate_on_allowed_platform_proceeds_past_scoping(monkeypatch):
+    """Gate ON + allowed platform must NOT be blocked by scoping."""
+    monkeypatch.setenv("ABVORN_SOCIAL_PUBLISH", "1")
+    monkeypatch.setenv("ABVORN_SOCIAL_PLATFORMS", "x,medium")
+    deployer = SocialDeployer()  # no composio key
+    content = {"post_title": "Test", "intro": "<p>Test</p>", "article_html": "<p>Body</p>", "tags": []}
+    result = deployer.post(content, "x")
+    # Passed the scoping gate; with no key it must be "skipped", not a live post.
+    assert result["status"] == "skipped"
+    assert result["reason"] == "no_composio_key"

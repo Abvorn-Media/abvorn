@@ -1,6 +1,9 @@
 """Registry-aware social deployer — posts to any registered platform via Composio."""
 
 import logging
+import os
+from pathlib import Path
+
 from ..platform import registry
 
 logger = logging.getLogger("abvorn.deploy.social")
@@ -42,6 +45,24 @@ SOCIAL_ACTIONS = {
         "params_fn": lambda adapted: {"caption": adapted[0][:2200]},
     },
 }
+
+
+def _allowed_platforms() -> set | None:
+    """Which platforms may go live when the gate is ON.
+
+    Scoping comes from env ABVORN_SOCIAL_PLATFORMS (highest priority) or the
+    data/social_platforms.txt file (one name per line). None means "no scoping
+    — every registered platform is allowed", preserving legacy behaviour.
+    """
+    raw = os.environ.get("ABVORN_SOCIAL_PLATFORMS", "").strip()
+    if not raw:
+        try:
+            raw = Path("data/social_platforms.txt").read_text(encoding="utf-8").strip()
+        except OSError:
+            raw = ""
+    if not raw:
+        return None
+    return {p.strip().lower() for p in raw.replace(",", "\n").splitlines() if p.strip()}
 
 
 class SocialDeployer:
@@ -120,6 +141,14 @@ class SocialDeployer:
         if not require_social_publishing():
             self._posted.append(platform)
             logger.info(f"{platform}: publish gate OFF — draft staged (not posted)")
+            return {"status": "staged", "platform": platform, "data": adapted}
+
+        # Platform scoping: with the gate ON, only explicitly allowed platforms
+        # go live; everything else stays staged.
+        allowed = _allowed_platforms()
+        if allowed is not None and platform not in allowed:
+            self._posted.append(platform)
+            logger.info(f"{platform}: not in allowed list — draft staged (not posted)")
             return {"status": "staged", "platform": platform, "data": adapted}
 
         if config.is_export_only:
