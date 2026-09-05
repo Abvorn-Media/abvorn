@@ -1,0 +1,58 @@
+name: Auto-Heal Content
+
+on:
+  schedule:
+    # Twice daily, in the post-commit windows between 6-hourly content cycles
+    - cron: "30 4,16 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Shared lock with the content/daily cycles so healing commits never race the
+# pipelines that generate docs/ and data/.
+concurrency:
+  group: content-cycle-lock
+  cancel-in-progress: false
+
+jobs:
+  heal:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Heal content integrity
+        run: |
+          python scripts/check_publish_content.py --fix || true
+          python scripts/check_publish_content.py
+
+      - name: Commit and push fixes
+        run: |
+          git config user.name "Abvorn Bot"
+          git config user.email "bot@abvorn.com"
+          for p in docs/ data/; do
+            [ -e "$p" ] && git add "$p"
+          done
+          if git diff --cached --quiet; then
+            echo "No fixes to commit"
+          else
+            git commit -m "chore: auto-heal content integrity $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git push
+          fi
+
+      - name: Notify failure on Telegram
+        if: failure()
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            -d "chat_id=${TG_CHAT}" \
+            --data-urlencode "text=🚨 <b>Auto-Heal Content</b> failed on ${GITHUB_REF} (run #${GITHUB_RUN_NUMBER}). Logs: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            -d "parse_mode=HTML"

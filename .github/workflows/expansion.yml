@@ -1,0 +1,119 @@
+name: Core Expansion
+
+on:
+  schedule:
+    # Weekly, Monday 05:45 UTC — well after the 00:00 content-cycle commit
+    - cron: "45 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Shared lock with the content/daily/auto-heal cycles so child-core and
+# mainline runs never mutate state or commit at the same time.
+concurrency:
+  group: content-cycle-lock
+  cancel-in-progress: false
+
+jobs:
+  expansion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install PDF render system libs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0
+
+      - name: Restore content state cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            cycle_state.json
+            products_cache.json
+          key: abvorn-state-${{ runner.os }}
+          restore-keys: |
+            abvorn-state-
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compute next generation
+        id: nextgen
+        run: |
+          GEN=$(python -c "
+          import json
+          try:
+              j = json.load(open('data/evolution_journal.json', encoding='utf-8'))
+              gens = [int(e.get('generation') or 1) for e in j.get('entries', [])]
+              print(max(gens) if gens else 1)
+          except Exception:
+              print(1)
+          ")
+          echo "current generation: $GEN"
+          echo "next=$((GEN + 1))" >> "$GITHUB_OUTPUT"
+
+      - name: Run child-core expansion cycle
+        env:
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          DEEPSEEK_KEY: ${{ secrets.DEEPSEEK_KEY }}
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          GROQ_KEY: ${{ secrets.GROQ_KEY }}
+          GLM_KEYS: ${{ secrets.GLM_KEYS }}
+          PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
+          AMAZON_TAG: ${{ secrets.AMAZON_TAG }}
+          APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
+          OPENWEB_NINJA_KEY: ${{ secrets.OPENWEB_NINJA_KEY }}
+          TAVILY_KEY: ${{ secrets.TAVILY_KEY }}
+          CEREBRAS_KEY: ${{ secrets.CEREBRAS_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
+        run: |
+          python run_cycle.py --batch --genesis-version ${{ steps.nextgen.outputs.next }}
+
+      - name: Save content state cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            cycle_state.json
+            products_cache.json
+          key: abvorn-state-${{ runner.os }}-${{ github.run_id }}
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "Abvorn Bot"
+          git config user.email "bot@abvorn.com"
+          for p in docs/ data/; do
+            [ -e "$p" ] && git add "$p"
+          done
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: core expansion V${{ steps.nextgen.outputs.next }} $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git push
+          fi
+
+      - name: Notify failure on Telegram
+        if: failure()
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            -d "chat_id=${TG_CHAT}" \
+            --data-urlencode "text=🚨 <b>Core Expansion</b> failed on ${GITHUB_REF} (run #${GITHUB_RUN_NUMBER}). Logs: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            -d "parse_mode=HTML"

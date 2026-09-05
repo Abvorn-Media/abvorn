@@ -2,12 +2,17 @@ name: Generate Review PDFs
 
 on:
   workflow_dispatch:
+  schedule:
+    # Weekly, Sunday 20:15 UTC
+    - cron: "15 20 * * 0"
 
 permissions:
   contents: write
 
+# Shared lock with the other main-mutating workflows so automated commits
+# never race the content/daily/heal/expansion pipelines.
 concurrency:
-  group: generate-pdfs
+  group: content-cycle-lock
   cancel-in-progress: false
 
 jobs:
