@@ -3626,7 +3626,7 @@ def main(forced_niche=None, force=False, batch_mode=False):
 
         engine = AbvornVerdictEngine(weight_overrides=load_verdict_weights())
         learner = FeedbackLearner(verdict_engine=engine)
-        engagement = get_engagement_data()
+        engagement = get_engagement_data(secrets)
         updated = 0
         for article_id, data in engagement.items():
             niche = data.get("niche", article_id.split("-")[0] if "-" in article_id else article_id)
@@ -3755,32 +3755,52 @@ def load_verdict_weights() -> dict:
     return {}
 
 
-def get_engagement_data() -> dict:
-    """Aggregate engagement data from clicks.db for the feedback learner."""
+def get_engagement_data(secrets=None) -> dict:
+    """Aggregate engagement data for the feedback learner.
+
+    Sources, merged (GA4 wins where both exist since it is the production signal):
+      1. data/clicks.db — from local click-tracker installs (per article).
+      2. Real GA4 affiliate clicks per niche slug (memoized; {} when unavailable,
+         e.g. no credentials configured).
+    """
     import sqlite3
     from pathlib import Path
-    db_path = Path("data/clicks.db")
-    if not db_path.exists():
-        return {}
-    con = sqlite3.connect(db_path)
-    cur = con.cursor()
-    cur.execute("SELECT article_id, COUNT(*) FROM clicks GROUP BY article_id")
-    clicks = {row[0]: row[1] for row in cur.fetchall()}
-    cur.execute("SELECT article_id, niche, title FROM articles")
-    articles = {row[0]: {"niche": row[1], "title": row[2]} for row in cur.fetchall()}
-    con.close()
+
     result = {}
-    for article_id, click_count in clicks.items():
-        article = articles.get(article_id, {})
-        niche = article.get("niche", article_id.split("-")[0] if "-" in article_id else article_id)
-        result[article_id] = {
-            "niche": niche,
-            "title": article.get("title", ""),
-            "affiliate_clicks": click_count,
-            "page_views": max(click_count, 1),
+
+    db_path = Path("data/clicks.db")
+    if db_path.exists():
+        con = sqlite3.connect(db_path)
+        cur = con.cursor()
+        cur.execute("SELECT article_id, COUNT(*) FROM clicks GROUP BY article_id")
+        clicks = {row[0]: row[1] for row in cur.fetchall()}
+        cur.execute("SELECT article_id, niche, title FROM articles")
+        articles = {row[0]: {"niche": row[1], "title": row[2]} for row in cur.fetchall()}
+        con.close()
+        for article_id, click_count in clicks.items():
+            article = articles.get(article_id, {})
+            niche = article.get("niche", article_id.split("-")[0] if "-" in article_id else article_id)
+            result[article_id] = {
+                "niche": niche,
+                "title": article.get("title", ""),
+                "affiliate_clicks": click_count,
+                "page_views": max(click_count, 1),
+                "conversions": 0,
+                "revenue": 0.0,
+            }
+
+    ga4_clicks = _get_ga4_clicks_by_slug(secrets) if secrets else {}
+    for slug, data in ga4_clicks.items():
+        article_id = f"{slug}-0"
+        ga4_clicks_count = int((data or {}).get("clicks", 0))
+        existing = result.setdefault(article_id, {
+            "niche": slug,
+            "title": slug,
             "conversions": 0,
             "revenue": 0.0,
-        }
+        })
+        existing["affiliate_clicks"] = ga4_clicks_count
+        existing["page_views"] = max(ga4_clicks_count, existing.get("page_views", 0), 1)
     return result
 
 

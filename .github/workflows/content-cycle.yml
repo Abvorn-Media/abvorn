@@ -68,6 +68,10 @@ jobs:
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
           AMAZON_TAG: ${{ secrets.AMAZON_TAG }}
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
+          GA4_MEASUREMENT_ID:    ${{ secrets.GA4_MEASUREMENT_ID }}
+          GA4_API_SECRET:        ${{ secrets.GA4_API_SECRET }}
+          GA4_PROPERTY_ID:       ${{ secrets.GA4_PROPERTY_ID }}
+          GA4_CREDENTIALS_JSON:  ${{ secrets.GA4_CREDENTIALS_JSON }}
           OPENWEB_NINJA_KEY: ${{ secrets.OPENWEB_NINJA_KEY }}
           TAVILY_KEY: ${{ secrets.TAVILY_KEY }}
           CEREBRAS_KEY: ${{ secrets.CEREBRAS_KEY }}
