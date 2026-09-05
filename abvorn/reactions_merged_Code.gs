@@ -447,6 +447,18 @@ function _nicheForLink_(link) {
   return m ? m[1] : 'general';
 }
 
+/** Record every item currently in the feed as already-sent, WITHOUT emailing. Run once after deploy so the first broadcast only covers genuinely new posts. */
+function seedBroadcastState_() {
+  var props = PropertiesService.getScriptProperties();
+  var sent = {};
+  try { sent = JSON.parse(props.getProperty('SENT_GUIDS') || '{}'); } catch (err) { sent = {}; }
+  var items = _fetchFeedItems_();
+  items.forEach(function (it) { sent[it.guid] = 1; });
+  props.setProperty('SENT_GUIDS', JSON.stringify(sent));
+  Logger.log('seedBroadcastState_: recorded ' + items.length + ' existing feed items without sending.');
+  return items.length;
+}
+
 /** Install (or replace) the 6-hourly new-post broadcast trigger. Run once after deploy. */
 function setupBroadcastTrigger_() {
   var triggers = ScriptApp.getProjectTriggers();
