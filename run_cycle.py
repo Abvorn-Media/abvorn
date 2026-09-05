@@ -178,6 +178,9 @@ def get_secrets():
         "AMAZON_TAG": os.environ.get("AMAZON_TAG", ""),
         "APPS_SCRIPT_URL": os.environ.get("APPS_SCRIPT_URL", ""),
         "GA_MEASUREMENT_ID": os.environ.get("GA_MEASUREMENT_ID", ""),
+        "GA4_PROPERTY_ID": os.environ.get("GA4_PROPERTY_ID", ""),
+        "GA4_CREDENTIALS_JSON": os.environ.get("GA4_CREDENTIALS_JSON", ""),
+        "SITE_URL": os.environ.get("SITE_URL", ""),
         "GOOGLE_CLIENT_ID": os.environ.get("GOOGLE_CLIENT_ID", ""),
         "OPENWEB_NINJA_KEY": os.environ.get("OPENWEB_NINJA_KEY", ""),
         "TAVILY_KEY": os.environ.get("TAVILY_KEY", ""),
@@ -193,6 +196,25 @@ def get_secrets():
     except Exception:
         pass
     return keys
+
+
+_GA4_CLICK_CACHE = None
+
+
+def _get_ga4_clicks_by_slug(secrets):
+    """Memoized real GA4 affiliate clicks, keyed by niche slug ({} on any failure).
+
+    Fallback to simulated clicks happens in the caller when a slug has no GA4 data.
+    """
+    global _GA4_CLICK_CACHE
+    if _GA4_CLICK_CACHE is None:
+        try:
+            from abvorn.deploy.analytics import pull_ga4_affiliate_clicks
+            _GA4_CLICK_CACHE = pull_ga4_affiliate_clicks(secrets) or {}
+        except Exception as e:
+            logger.warning(f"GA4 affiliate clicks unavailable: {e}")
+            _GA4_CLICK_CACHE = {}
+    return _GA4_CLICK_CACHE
 
 
 # ─── Image & affiliate helpers ──────────────────────────────────────────
@@ -3444,12 +3466,16 @@ def main(forced_niche=None, force=False, batch_mode=False):
         "post_title": draft.get("post_title"),
     }])
 
-    # Track affiliate clicks (real clicks via SQLite; redirect handled by mobile_server)
+    # Track affiliate clicks (real GA4 events when available; simulated fallback)
     state.setdefault("affiliate_clicks", 0)
     state.setdefault("affiliate_clicks_by_article", {})
-    simulated_clicks = max(0, min(5, len(products)))
-    state["affiliate_clicks"] += simulated_clicks
-    state["affiliate_clicks_by_article"][niche_slug] = simulated_clicks
+    ga4_slug_clicks = _get_ga4_clicks_by_slug(secrets).get(niche_slug, {})
+    if ga4_slug_clicks:
+        recorded_clicks = int(ga4_slug_clicks.get("clicks", 0))
+    else:
+        recorded_clicks = max(0, min(5, len(products)))
+    state["affiliate_clicks"] += recorded_clicks
+    state["affiliate_clicks_by_article"][niche_slug] = recorded_clicks
 
     # 4.5 FACT-CHECK — Validate all factual claims before marking complete
     fact_checker = create_fact_checker(draft)
