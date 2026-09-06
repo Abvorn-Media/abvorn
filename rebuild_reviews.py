@@ -13,6 +13,7 @@ YYYY``), and the hand-written pilot (``.product-review`` prose blocks).
 import re
 import sys
 import json
+import os
 import html as html_lib
 from collections import Counter
 from datetime import datetime
@@ -412,7 +413,7 @@ def main():
             all_slugs,
             a.get("products"),
             pexels_key="",
-            amazon_tag="",
+            amazon_tag=os.environ.get("AMAZON_TAG", ""),
             form_url=run_cycle.get_secrets().get("APPS_SCRIPT_URL", ""),
             hero_img="",
             google_client_id="",
