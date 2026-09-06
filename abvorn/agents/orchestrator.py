@@ -250,11 +250,11 @@ STORY_HTML = """<section class="story-section">
 <div class="container">
 <h2>Why Abvorn?</h2>
 <p>Most buying advice is paid, not earned. Sponsored placements, undisclosed commissions, and recycled press releases masquerading as reviews. We started Abvorn to fix that.</p>
-<p>Every recommendation here comes from real testing, real research, and real opinions. We buy the products, we test them head-to-head, and we tell you which one to buy — no favours, no sponsorships, no compromises.</p>
+<p>Every recommendation here comes from real research and real opinions. We dig through the specs, prices, and verified owner feedback to tell you which one to buy — no favours, no sponsorships, no compromises.</p>
 <ul class="trust-list">
-<li class="trust-item"><strong>Independent</strong><span>Zero sponsor influence. We buy what we test.</span></li>
+<li class="trust-item"><strong>Independent</strong><span>Zero sponsor influence. Our picks are based on the evidence, not paid placements.</span></li>
 <li class="trust-item"><strong>Transparent</strong><span>We show our work. Every pick has a reason.</span></li>
-<li class="trust-item"><strong>Expert-led</strong><span>Specialist reviewers who know their categories.</span></li>
+<li class="trust-item"><strong>Research-led</strong><span>We compare real specs, prices, and owner feedback, not press releases.</span></li>
 <li class="trust-item"><strong>Reader-first</strong><span>We recommend what we'd buy our own family.</span></li>
 </ul>
 <p style="text-align:center;font-size:.9rem;color:var(--text-muted)"><em>Buy with confidence.</em></p>

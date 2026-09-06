@@ -115,6 +115,36 @@ def test_facebook_adapter_uses_real_url(monkeypatch):
     assert out["link"] == "https://abvorn.com/reviews/4k-monitors/"
 
 
+def test_post_copy_avoids_false_testing_claims(monkeypatch):
+    """Live adapter copy must never claim we physically buy/test products.
+
+    We do research-based comparison (specs, prices, owner feedback) — not
+    hands-on lab testing — so no generated post may claim otherwise.
+    """
+    monkeypatch.delenv("SITE_URL", raising=False)
+    from abvorn.platform.adapters import (
+        x_adapter, linkedin_adapter, tiktok_adapter, facebook_adapter,
+    )
+    content = {
+        "post_title": "Best 4K Monitors 2026",
+        "niche": "4k-monitors",
+        "intro": "<p>We physically tested 20+ monitors side by side in our lab.</p>",
+        "article_html": "<h2>Brightness</h2><h2>Color Accuracy</h2><h2>Ergonomics</h2>",
+        "meta_description": "We bought and tested every 4K monitor to find the best one.",
+    }
+    forbidden = ["we tested", "we test", "we buy", "we bought", "lab-test", "hands-on"]
+    outputs = [
+        "\n".join(x_adapter(content)),
+        linkedin_adapter(content).get("post", ""),
+        tiktok_adapter(content).get("body", ""),
+        facebook_adapter(content).get("message", ""),
+    ]
+    for out in outputs:
+        lower = out.lower()
+        for phrase in forbidden:
+            assert phrase not in lower, f"false claim '{phrase}' leaked into post: {out}"
+
+
 def test_sanitize_encoding_repairs_mojibake_in_string():
     deployer = SocialDeployer()
     corrupted = "price \u00e2\u20ac\u009d worth"  # "price ” worth" double-encoded

@@ -45,6 +45,28 @@ def _shorten_heading(heading: str) -> str:
     """Trim a heading to its core phrase (drop trailing ':'/'-' labels)."""
     return re.sub(r"[:\-–].*$", "", heading).strip().strip('"')
 
+# Honest method: we compare real specs, prices and owner feedback — we do NOT
+# physically buy/test products. Any of these phrases in incoming copy is a
+# false claim and must be neutralised before the copy reaches a live platform.
+_FALSE_CLAIM_MARKER = re.compile(r"\b(tested|testing|bought|purchased|hands-on|in our lab|side-by-side|head-to-head)\b", re.IGNORECASE)
+
+
+def _has_false_testing_claim(text: str) -> bool:
+    """True if incoming copy claims we physically buy/test products."""
+    return bool(text and _FALSE_CLAIM_MARKER.search(text))
+
+
+def _honest_text(text: str) -> str:
+    """Return honest copy: if incoming text claims hands-on testing, drop it
+    (we do research-based comparison, never physical tests) and let the caller
+    fall back to neutral phrasing. Do NOT regurgitate the false claim.
+    """
+    if not text:
+        return text
+    if _has_false_testing_claim(text):
+        return ""
+    return text
+
 
 @registry.register("x", label="X", content_types=["thread"],
                    max_length=280, category="social",
@@ -55,11 +77,11 @@ def _shorten_heading(heading: str) -> str:
 def x_adapter(anchor: dict) -> list[str]:
     """Convert anchor content into an X thread (8-12 posts)."""
     title = anchor.get("post_title", "New Post")
-    intro = _clean_text(anchor.get("intro", ""))
+    intro = _honest_text(_clean_text(anchor.get("intro", "")))
     headings = _extract_headings(anchor.get("article_html", ""))
     thread = [
         f"🧵 {title}",
-        intro[:280] if intro else f"After testing 20+ products, here's what we found.",
+        intro[:280] if intro else f"After comparing specs, prices, and real owner feedback, here's what we found.",
     ]
     for h in headings[:5]:
         thread.append(f"{h} — The full breakdown in our guide.")
@@ -80,26 +102,26 @@ def x_adapter(anchor: dict) -> list[str]:
 def linkedin_adapter(anchor: dict) -> dict:
     """Convert anchor into a LinkedIn card share with real link + visual."""
     title = anchor.get("post_title", "New Post")
-    intro = _clean_text(anchor.get("intro", ""))
-    body = _clean_text(anchor.get("article_html", ""))
-    description = anchor.get("meta_description", "")
+    intro = _honest_text(_clean_text(anchor.get("intro", "")))
+    body = _honest_text(_clean_text(anchor.get("article_html", "")))
+    description = _honest_text(anchor.get("meta_description", ""))
     headings = _extract_headings(anchor.get("article_html", ""))
     niche = anchor.get("niche", "")
     url = resolve_url(anchor)
 
     article = f"# {title}\n\n{description}\n\n{intro}\n\n{body[:2000]}"
 
-    hook = (description or intro or f"After weeks of hands-on testing, one thing got clear…")[:160]
-    summary = (intro or f"We put the top options through real, side-by-side testing — here's the honest verdict.")[:260]
+    hook = (description or intro or f"After digging through the specs, prices, and owner feedback, one thing got clear…")[:160]
+    summary = (intro or f"We compared the top options across specs, real prices, and verified owner feedback — here's what stands out.")[:260]
     bullet_lines = [f"✅ {_shorten_heading(h)}" for h in headings[:3]]
     bullets = "\n".join(bullet_lines)
     question = (
         "What's on your desk right now — and would you switch after this?" if niche
         else "What would you pick today?"
     )
-    link_line = f"\n\nFull breakdown with all the test data: {url}" if url else ""
+    link_line = f"\n\nFull breakdown with all the specs and prices: {url}" if url else ""
 
-    post = f"🛒 {hook}\n\n{summary}\n\n{bullets}\n\n{question}{link_line}\n\n#Reviews #RealTesting #LabNotSpecs"
+    post = f"🛒 {hook}\n\n{summary}\n\n{bullets}\n\n{question}{link_line}\n\n#Reviews #RealPrices #SpecsMatter"
 
     result = {"title": title, "body": article[:5000], "post": post[:1300]}
     if url:
@@ -118,8 +140,8 @@ def tiktok_adapter(anchor: dict) -> dict:
     hook = heading_hook[0] if heading_hook else f"Stop buying the wrong {anchor.get('niche', 'product')}"
     return {
         "hook": f"🎯 {hook}",
-        "body": "Here's what most people get wrong: they buy on price, not on fit.\n\nAfter testing 20+ options, here's the ONE that wins for most people.",
-        "cta": f"Link in bio for the full breakdown. Follow for more {anchor.get('niche', 'product')} reviews.",
+        "body": "Here's what most people get wrong: they buy on price, not on fit.\n\nAfter comparing the real specs and owner feedback, here's the ONE that wins for most people.",
+        "cta": f"Link in bio for the full breakdown. Follow for more {anchor.get('niche', 'product')} comparisons.",
         "duration_seconds": 45,
     }
 
@@ -164,8 +186,8 @@ def pinterest_adapter(anchor: dict) -> dict:
 def medium_adapter(anchor: dict) -> str:
     """Convert anchor into a Medium article."""
     title = anchor.get("post_title", "New Post")
-    intro = _clean_text(anchor.get("intro", ""))
-    body = _clean_text(anchor.get("article_html", ""))
+    intro = _honest_text(_clean_text(anchor.get("intro", "")))
+    body = _honest_text(_clean_text(anchor.get("article_html", "")))
     return f"# {title}\n\n{intro}\n\n{body[:3000]}"
 
 
@@ -178,9 +200,11 @@ def telegram_adapter(anchor: dict) -> dict:
     """Convert anchor into a Telegram channel post."""
     import os
     title = anchor.get("post_title", anchor.get("title", "New guide from Abvorn"))
-    description = (anchor.get("meta_description")
-                   or anchor.get("intro")
-                   or _clean_text(anchor.get("article_html", "")))[:900]
+    description = _honest_text(
+        (anchor.get("meta_description")
+         or anchor.get("intro")
+         or _clean_text(anchor.get("article_html", "")))[:900]
+    )
     text = str(title)
     if description:
         text = f"{text}\n\n{description}"
@@ -205,7 +229,7 @@ def telegram_adapter(anchor: dict) -> dict:
 def facebook_adapter(anchor: dict) -> dict:
     """Convert anchor into a Facebook post. Stub — ready for API integration."""
     title = anchor.get("post_title", "New Post")
-    description = anchor.get("meta_description", "")
+    description = _honest_text(anchor.get("meta_description", ""))
     url = resolve_url(anchor)
     link = url or "[link]"
     return {

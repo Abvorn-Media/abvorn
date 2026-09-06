@@ -5,8 +5,8 @@ def build_pre_suade(persona: dict) -> str:
     """Cialdini: frame context and establish trust before the pitch."""
     anxieties = persona.get("psychology", {}).get("anxieties", [])
     if anxieties:
-        return f"You've been burned by bad {anxieties[0].lower()} before? We get it. That's why we actually tested these."
-    return "We tested 20+ products so you don't have to waste money on the wrong one."
+        return f"You've been burned by bad {anxieties[0].lower()} before? We get it. That's why we dig into the real data before recommending."
+    return "We dig through the real specs, prices, and owner feedback so you don't waste money on the wrong one."
 
 
 def build_awareness_match(persona: dict) -> str:

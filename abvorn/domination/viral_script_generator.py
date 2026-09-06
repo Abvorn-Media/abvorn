@@ -18,7 +18,7 @@ HOOK_TEMPLATES = {
     "curiosity": [
         "Nobody talks about this, but {niche} has a dirty secret.",
         "The {niche} you're using is probably wrong for you.",
-        "I tested 10 {niche} so you don\u2019t have to. Here\u2019s the one that won.",
+        "I compared 10 {niche} so you don\u2019t have to. Here\u2019s the one that wins.",
         "Stop buying {niche} before watching this.",
         "This {price} {niche} outperforms everything I\u2019ve tried.",
     ],
