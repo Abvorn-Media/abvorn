@@ -1,5 +1,7 @@
 """Central platform registry — plugins register here, consumers query here."""
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from typing import Callable, Optional

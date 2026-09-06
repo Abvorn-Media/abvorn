@@ -5,7 +5,8 @@ chromadb
 openai
 anthropic
 google-generativeai
-duckduckgo-search
+duckduckgo-search==5.1.0
+ddgs
 pytrends
 requests
 beautifulsoup4
