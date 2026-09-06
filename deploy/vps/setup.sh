@@ -62,6 +62,17 @@ else
 fi
 chmod +x "$APP_DIR/abvorn/deploy/vps/run_cycle.sh"
 
+step "Configure git remote auth (GITHUB_TOKEN)"
+TOKEN="$(grep -E '^GITHUB_TOKEN=' "$APP_DIR/abvorn/.env" | head -1 | cut -d= -f2-)"
+if [ -n "$TOKEN" ] && ! git -C "$APP_DIR/abvorn" remote get-url origin | grep -q "x-access-token"; then
+  as_user git -C "$APP_DIR/abvorn" remote set-url origin \
+    "https://x-access-token:${TOKEN}@github.com/Abvorn-Media/abvorn.git"
+  chmod 600 "$APP_DIR/abvorn/.git/config"
+  echo "git remote auth configured"
+else
+  echo "GITHUB_TOKEN missing (or remote already authed) — cycle push may fail"
+fi
+
 step "Create Python venv + install deps"
 if [ ! -x "$APP_DIR/venv/bin/python" ]; then
   as_user python3.11 -m venv "$APP_DIR/venv"
