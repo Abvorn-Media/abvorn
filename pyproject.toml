@@ -34,7 +34,7 @@ dependencies = [
     "Pillow",
     "textstat",
     "jinja2",
-    "composio-core",
+    "composio==0.21.1",
     "pdfplumber",
     "feedparser",
     "networkx>=3.1",

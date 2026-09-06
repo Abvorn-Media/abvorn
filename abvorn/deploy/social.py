@@ -17,34 +17,22 @@ except ImportError:
     repair_mojibake = None
 
 try:
-    from composio import ComposioToolSet, Action
+    from composio import Composio
     HAS_COMPOSIO = True
 except ImportError:
     HAS_COMPOSIO = False
-    Action = object
+    Composio = None
 
-SOCIAL_ACTIONS = {
-    "x": {
-        "actions": ["X_CREATE_TWEET", "TWITTER_CREATE_TWEET", "TWITTER_POST_TWEET"],
-        "params_fn": lambda adapted: {"text": adapted[0][:280]},
-    },
-    "linkedin": {
-        "actions": ["LINKEDIN_CREATE_POST", "LINKEDIN_POST_CREATE", "LINKEDIN_CREATE_ARTICLE"],
-        "params_fn": lambda adapted: {"text": adapted.get("post", adapted.get("body", ""))[:3000]},
-    },
-    "facebook": {
-        "actions": ["FACEBOOK_CREATE_POST", "FACEBOOK_POST_CREATE"],
-        "params_fn": lambda adapted: {"message": adapted.get("message", "")[:63206]},
-    },
-    "medium": {
-        "actions": ["MEDIUM_CREATE_POST", "MEDIUM_PUBLISH_POST"],
-        "params_fn": lambda adapted: {"title": adapted.get("title", "Post"), "content": adapted.get("body", "")[:5000]},
-    },
-    "instagram": {
-        "actions": ["INSTAGRAM_CREATE_POST", "INSTAGRAM_CREATE_MEDIA_POST"],
-        "params_fn": lambda adapted: {"caption": adapted[0][:2200]},
-    },
+# Composio v3 (SDK >= 0.21) — tools are raw slugs on a modern REST API.
+# Only platforms with a live connected account get a backend here; the
+# publication pipeline resolves the account, toolkit version, and author
+# identity at runtime from the Composio platform.
+COMPOSIO_TOOLS = {
+    "x": {"toolkit": "twitter", "slug": "TWITTER_CREATION_OF_A_POST"},
+    "linkedin": {"toolkit": "linkedin", "slug": "LINKEDIN_CREATE_LINKED_IN_POST"},
 }
+
+LINKEDIN_MY_INFO_TOOL = "LINKEDIN_GET_MY_INFO"
 
 
 def _allowed_platforms() -> set | None:
@@ -110,14 +98,98 @@ class SocialDeployer:
     def __init__(self, composio_key: str = ""):
         self.composio_key = composio_key
         self.composio = None
+        self._toolkit_state = {}  # toolkit -> (user_id, connected_account_id, version)
+        self._linkedin_urn = ""
         if composio_key and HAS_COMPOSIO:
             try:
-                self.composio = ComposioToolSet(api_key=composio_key)
-                logger.info("Composio client initialized")
+                os.environ["COMPOSIO_API_KEY"] = composio_key
+                self.composio = Composio()
+                logger.info("Composio v3 client initialized")
             except Exception as e:
                 logger.warning(f"Composio init failed: {e}")
         self._posted = []
         self._results = []
+
+    def _toolkit_version(self, toolkit: str) -> str | None:
+        """Resolve the publishable toolkit version from the Composio API."""
+        if toolkit in self._toolkit_state:
+            return self._toolkit_state[toolkit][2]
+        try:
+            raw_tools = self.composio.tools.get_raw_composio_tools(toolkits=[toolkit])
+        except Exception as e:
+            logger.warning(f"composio toolkit {toolkit} unavailable: {e}")
+            return None
+        if not raw_tools:
+            return None
+        return getattr(raw_tools[0], "version", None) or None
+
+    def _connection(self, toolkit: str):
+        """Return (user_id, connected_account_id, version) for a toolkit, cached.
+
+        The connection is resolved from the live list of connected accounts so
+        the deployer survives account rotation without code changes.
+        """
+        state = self._toolkit_state.get(toolkit)
+        if state is not None:
+            return state
+        state = (None, None, None)
+        try:
+            accounts = self.composio.connected_accounts.list()
+            items = getattr(accounts, "items", None) or []
+            for acct in items:
+                tk = getattr(acct, "toolkit", None)
+                if getattr(tk, "slug", None) != toolkit:
+                    continue
+                if getattr(acct, "status", None) != "ACTIVE":
+                    continue
+                state = (
+                    getattr(acct, "user_id", None) or os.environ.get("COMPOSIO_USER_ID", ""),
+                    getattr(acct, "id", None),
+                    self._toolkit_version(toolkit),
+                )
+                break
+        except Exception as e:
+            logger.warning(f"composio connection lookup failed for {toolkit}: {e}")
+        self._toolkit_state[toolkit] = state
+        return state
+
+    def _linkedin_author_urn(self) -> str:
+        """Resolve the author URN for LinkedIn posts (env override or discovery)."""
+        urn = os.environ.get("LINKEDIN_AUTHOR_URN", "").strip()
+        if urn:
+            return urn
+        if self._linkedin_urn:
+            return self._linkedin_urn
+        uid, caid, version = self._connection("linkedin")
+        if not uid or not version:
+            raise RuntimeError("no linkedin connection/version for author URN lookup")
+        try:
+            resp = self.composio.tools.execute(
+                slug=LINKEDIN_MY_INFO_TOOL,
+                arguments={},
+                user_id=uid,
+                connected_account_id=caid or None,
+                version=version,
+            )
+            profile_id = (resp.get("data") or {}).get("id")
+            if not profile_id:
+                raise RuntimeError("linkedin profile id missing from LINKEDIN_GET_MY_INFO")
+            self._linkedin_urn = f"urn:li:person:{profile_id}"
+            return self._linkedin_urn
+        except Exception as e:
+            raise RuntimeError(f"linkedin author URN lookup failed: {e}") from e
+
+    def _params_for(self, platform: str, adapted) -> dict:
+        if platform == "x":
+            text = adapted[0][:280] if isinstance(adapted, list) and adapted else str(adapted)[:280]
+            return {"text": text}
+        if platform == "linkedin":
+            commentary = (
+                adapted.get("post", adapted.get("body", ""))
+                if isinstance(adapted, dict) else str(adapted)
+            )
+            return {"author": self._linkedin_author_urn(), "commentary": commentary[:3000]}
+        raise ValueError(f"no params builder for {platform}")
 
     @staticmethod
     def _sanitize_encoding(adapted, platform: str):
@@ -206,32 +278,53 @@ class SocialDeployer:
             logger.warning(f"No Composio key — {platform} post skipped")
             return {"status": "skipped", "platform": platform, "reason": "no_composio_key"}
 
-        mapping = SOCIAL_ACTIONS.get(platform)
+        mapping = COMPOSIO_TOOLS.get(platform)
         if not mapping:
-            logger.warning(f"No Composio action mapping for {platform}")
-            return {"status": "error", "platform": platform, "reason": "no_action_mapping"}
+            logger.warning(f"No Composio v3 backend for {platform}")
+            return {"status": "error", "platform": platform, "reason": "no_composio_backend"}
 
-        params = mapping["params_fn"](adapted)
-        last_error = ""
+        uid, caid, version = self._connection(mapping["toolkit"])
+        if not uid or not caid or not version:
+            result = {
+                "status": "failed",
+                "platform": platform,
+                "reason": f"no_resolved_composio_connection:{mapping['toolkit']}",
+            }
+            self._results.append(result)
+            logger.warning(f"{platform}: {result['reason']}")
+            return result
 
-        for action_name in mapping["actions"]:
-            action = getattr(Action, action_name, None)
-            if not action:
-                continue
-            try:
-                self.composio.execute_action(action, params=params)
+        try:
+            params = self._params_for(platform, adapted)
+        except Exception as e:
+            result = {"status": "failed", "platform": platform, "reason": str(e)[:200]}
+            self._results.append(result)
+            logger.warning(f"{platform}: params failed — {result['reason']}")
+            return result
+
+        try:
+            resp = self.composio.tools.execute(
+                slug=mapping["slug"],
+                arguments=params,
+                user_id=uid,
+                connected_account_id=caid,
+                version=version,
+            )
+            if resp and resp.get("successful"):
                 self._posted.append(platform)
-                result = {"status": "posted", "platform": platform, "action": action_name}
+                result = {"status": "posted", "platform": platform, "tool": mapping["slug"]}
                 self._results.append(result)
-                logger.info(f"{platform}: posted via {action_name}")
+                logger.info(f"{platform}: posted via {mapping['slug']}")
                 return result
-            except Exception as e:
-                last_error = str(e)[:100]
-                logger.debug(f"{platform} via {action_name}: {last_error}")
-
-        result = {"status": "failed", "platform": platform, "error": last_error}
+            result = {
+                "status": "failed",
+                "platform": platform,
+                "error": str(resp.get("error") or "unknown execution failure")[:300],
+            }
+        except Exception as e:
+            result = {"status": "failed", "platform": platform, "error": str(e)[:200]}
         self._results.append(result)
-        logger.warning(f"{platform}: all actions failed — {last_error}")
+        logger.warning(f"{platform}: composio execution failed — {result.get('error')}")
         return result
 
     def post_to_all(self, content: dict, platforms: list[str] = None) -> list[dict]:
