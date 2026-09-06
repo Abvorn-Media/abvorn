@@ -13,6 +13,7 @@ beautifulsoup4
 PyGithub
 google-auth
 google-api-python-client
+google-analytics-data
 gspread
 Pillow
 textstat

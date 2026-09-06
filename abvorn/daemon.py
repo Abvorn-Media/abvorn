@@ -327,6 +327,9 @@ class AbvornDaemon:
         gsc_task = asyncio.create_task(self._gsc_loop())
         self._tasks.append(gsc_task)
 
+        analytics_task = asyncio.create_task(self._analytics_feedback_loop())
+        self._tasks.append(analytics_task)
+
         logger.info(f"Daemon running with {len(self.agents)} agents")
 
     async def _bus_loop(self):
@@ -390,6 +393,44 @@ class AbvornDaemon:
             if result.get("status") == "complete":
                 self.state.set_meta("domination_last_run", datetime.now().isoformat())
             await asyncio.sleep(14400)
+
+    async def _analytics_feedback_loop(self):
+        """Close the learning loop: pull GA4 traffic + affiliate clicks, feed
+        niche scoring, and flag doubles-down / pivots. Runs every 24 hours."""
+        while self.running:
+            last_run = self.state.get_meta("analytics_last_feedback", "")
+            if last_run:
+                last_time = datetime.fromisoformat(last_run)
+                elapsed = datetime.now() - last_time
+                if elapsed < timedelta(hours=24):
+                    await asyncio.sleep(1800)
+                    continue
+            try:
+                from .deploy.analytics import (
+                    pull_ga4_analytics,
+                    pull_ga4_affiliate_clicks,
+                    apply_analytics_feedback,
+                )
+
+                analytics = await asyncio.to_thread(pull_ga4_analytics, self.secrets)
+                clicks = await asyncio.to_thread(pull_ga4_affiliate_clicks, self.secrets, 28)
+                apply_analytics_feedback(self.state, analytics)
+
+                clicks_total = sum(
+                    v.get("clicks", 0) for v in clicks.values()
+                ) if isinstance(clicks, dict) else 0
+                summary = {
+                    "niches": len(analytics),
+                    "total_views": sum(a.get("views", 0) for a in analytics.values()),
+                    "affiliate_clicks": clicks_total,
+                }
+                self.state.set_meta("analytics_last_feedback", datetime.now().isoformat())
+                self.state.set_meta("analytics_summary", json.dumps(summary))
+                self.bus.publish("analytics.updated", summary)
+                logger.info("Analytics feedback applied: %s", summary)
+            except Exception as e:
+                logger.warning("Analytics feedback error (non-fatal): %s", e)
+            await asyncio.sleep(43200)
 
     async def stop(self):
         """Graceful shutdown of all agents."""
