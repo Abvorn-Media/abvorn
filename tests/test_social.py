@@ -66,6 +66,55 @@ def test_youtube_stub():
     assert "description" in result
 
 
+def test_resolve_url_priority(monkeypatch):
+    monkeypatch.delenv("SITE_URL", raising=False)
+    from abvorn.platform.adapters import resolve_url
+    assert resolve_url({"url": "https://x.test/a", "slug": "b"}) == "https://x.test/a"
+    assert resolve_url({"link": "https://x.test/a", "url": ""}) == "https://x.test/a"
+    assert resolve_url({"slug": "b"}) == "https://abvorn.com/b"
+    assert resolve_url({"niche": "4k-monitors"}) == "https://abvorn.com/reviews/4k-monitors/"
+    assert resolve_url({}) == ""
+
+
+def test_linkedin_adapter_includes_real_url_no_placeholder(monkeypatch):
+    monkeypatch.delenv("SITE_URL", raising=False)
+    from abvorn.platform.adapters import linkedin_adapter
+    content = {
+        "post_title": "Best 4K Monitors 2026",
+        "niche": "4k-monitors",
+        "intro": "<p>We tested 20+ monitors side by side for hours.</p>",
+        "article_html": "<h2>Brightness: the numbers</h2><h2>Color Accuracy</h2><h2>Ergonomics</h2>",
+        "meta_description": "The honest verdict on the best 4K monitors, tested side by side.",
+    }
+    out = linkedin_adapter(content)
+    assert "https://abvorn.com/reviews/4k-monitors/" in out["post"]
+    assert "[link]" not in out["post"]
+    assert out["url"] == "https://abvorn.com/reviews/4k-monitors/"
+    assert "lab-tested" not in out["post"]
+    assert "✅" in out["post"]
+
+
+def test_x_adapter_last_tweet_has_real_url(monkeypatch):
+    monkeypatch.delenv("SITE_URL", raising=False)
+    from abvorn.platform.adapters import x_adapter
+    content = {
+        "post_title": "Best 4K Monitors 2026",
+        "niche": "4k-monitors",
+        "intro": "<p>We tested 20+ monitors side by side.</p>",
+        "article_html": "<h2>Brightness</h2><h2>Color Accuracy</h2>",
+    }
+    thread = x_adapter(content)
+    assert "https://abvorn.com/reviews/4k-monitors/" in thread[-1]
+    assert "[link]" not in "\n".join(thread)
+
+
+def test_facebook_adapter_uses_real_url(monkeypatch):
+    monkeypatch.delenv("SITE_URL", raising=False)
+    from abvorn.platform.adapters import facebook_adapter
+    out = facebook_adapter({"post_title": "Test", "niche": "4k-monitors", "meta_description": "Desc"})
+    assert out["link"] == "https://abvorn.com/reviews/4k-monitors/"
+
+
 def test_sanitize_encoding_repairs_mojibake_in_string():
     deployer = SocialDeployer()
     corrupted = "price \u00e2\u20ac\u009d worth"  # "price ” worth" double-encoded

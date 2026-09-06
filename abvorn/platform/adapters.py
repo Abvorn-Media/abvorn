@@ -6,6 +6,7 @@ Adding a new platform:
   3. Done. No other file changes needed.
 """
 
+import os
 import re
 from . import registry
 from .voice import get_voice
@@ -17,6 +18,27 @@ def _clean_text(html_text: str) -> str:
 
 def _extract_headings(html_text: str) -> list[str]:
     return re.findall(r'<h2>(.*?)</h2>', html_text, re.IGNORECASE)
+
+
+def resolve_url(anchor: dict) -> str:
+    """Resolve a canonical shareable URL for anchor content.
+
+    Priority: explicit url/link/permalink on the content; else site + slug
+    (site deploy layout); else site + /reviews/<niche>/ (the canonical path
+    the daemon deploys per niche); else empty string when nothing is known.
+    """
+    for key in ("url", "link", "permalink"):
+        value = str(anchor.get(key, "") or "").strip()
+        if value:
+            return value
+    site = os.environ.get("SITE_URL", "https://abvorn.com").rstrip("/")
+    slug = str(anchor.get("slug", "") or "").strip("/")
+    if slug:
+        return f"{site}/{slug}"
+    niche = str(anchor.get("niche", "") or "").strip("/")
+    if niche:
+        return f"{site}/reviews/{niche}/"
+    return ""
 
 
 @registry.register("x", label="X", content_types=["thread"],
@@ -36,7 +58,11 @@ def x_adapter(anchor: dict) -> list[str]:
     ]
     for h in headings[:5]:
         thread.append(f"{h} — The full breakdown in our guide.")
-    thread.append(f"Full guide: [link] What's your experience with these?")
+    url = resolve_url(anchor)
+    if url:
+        thread.append(f"Full breakdown: {url}")
+    else:
+        thread.append(f"What's your experience with these?")
     return [t[:280] for t in thread]
 
 
@@ -47,14 +73,34 @@ def x_adapter(anchor: dict) -> list[str]:
                                       "min_gap_hours": 24, "max_per_day": 1, "cadence": "daily"},
                    voice_profile=get_voice("linkedin"))
 def linkedin_adapter(anchor: dict) -> dict:
-    """Convert anchor into a LinkedIn article + post."""
+    """Convert anchor into a LinkedIn card share with real link + visual."""
     title = anchor.get("post_title", "New Post")
     intro = _clean_text(anchor.get("intro", ""))
     body = _clean_text(anchor.get("article_html", ""))
     description = anchor.get("meta_description", "")
+    headings = _extract_headings(anchor.get("article_html", ""))
+    niche = anchor.get("niche", "")
+    url = resolve_url(anchor)
+
     article = f"# {title}\n\n{description}\n\n{intro}\n\n{body[:2000]}"
-    post = f"{description}\n\nFull article: [link]\n\nWhat's your pick? 👇"
-    return {"title": title, "body": article[:5000], "post": post[:1300]}
+
+    hook = (description or intro or f"After weeks of hands-on testing, one thing got clear…")[:160]
+    summary = (intro or f"We put the top options through real, side-by-side testing — here's the honest verdict.")[:260]
+    bullets = "".join(
+        f"✅ {re.sub(r'[:\-–].*$', '', h).strip().strip('\"')}\n" for h in headings[:3]
+    ).strip()
+    question = (
+        "What's on your desk right now — and would you switch after this?" if niche
+        else "What would you pick today?"
+    )
+    link_line = f"\n\nFull breakdown with all the test data: {url}" if url else ""
+
+    post = f"🛒 {hook}\n\n{summary}\n\n{bullets}\n\n{question}{link_line}\n\n#Reviews #RealTesting #LabNotSpecs"
+
+    result = {"title": title, "body": article[:5000], "post": post[:1300]}
+    if url:
+        result["url"] = url
+    return result
 
 
 @registry.register("tiktok", label="TikTok", content_types=["script"],
@@ -156,9 +202,11 @@ def facebook_adapter(anchor: dict) -> dict:
     """Convert anchor into a Facebook post. Stub — ready for API integration."""
     title = anchor.get("post_title", "New Post")
     description = anchor.get("meta_description", "")
+    url = resolve_url(anchor)
+    link = url or "[link]"
     return {
-        "message": f"{title}\n\n{description}\n\nFull guide: [link]",
-        "link": "[link]",
+        "message": f"{title}\n\n{description}\n\nFull guide: {link}",
+        "link": link,
     }
 
 
@@ -174,6 +222,6 @@ def youtube_adapter(anchor: dict) -> dict:
     return {
         "title": title,
         "script": f"INTRO: {anchor.get('intro', '')}\n\nMAIN: {' → '.join(headings[:5])}",
-        "description": f"{anchor.get('meta_description', '')}\n\n🔗 Full guide: [link]\n#affiliatemarketing",
+        "description": f"{anchor.get('meta_description', '')}\n\n🔗 Full guide: {resolve_url(anchor)}\n#affiliatemarketing",
         "thumbnail_suggestions": ["comparison shot", "product hero", "before/after"],
     }

@@ -148,6 +148,11 @@ class AbvornDaemon:
             self.notifier.report_error(niche, "Content factory returned None")
             return {"status": "content_failed"}
 
+        # Canonical article URL so every platform adapter carries a real link
+        # (the site deployer publishes one guide per niche under /reviews/<niche>/).
+        from .platform.adapters import resolve_url
+        content.setdefault("url", resolve_url({**content, "niche": niche}))
+
         from .platform import registry
         from .exploder.email import generate_lead_magnet, generate_sequence
 

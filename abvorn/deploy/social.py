@@ -24,7 +24,12 @@ from .composio_client import ComposioClient, HAS_COMPOSIO
 # identity at runtime from the Composio platform.
 COMPOSIO_TOOLS = {
     "x": {"toolkit": "twitter", "slug": "TWITTER_CREATION_OF_A_POST"},
-    "linkedin": {"toolkit": "linkedin", "slug": "LINKEDIN_CREATE_LINKED_IN_POST"},
+    "linkedin": {
+        "toolkit": "linkedin",
+        "slug": "LINKEDIN_CREATE_LINKED_IN_POST",
+        # Article/URL share renders the link-preview card (visual + link).
+        "url_share_slug": "LINKEDIN_CREATE_ARTICLE_OR_URL_SHARE",
+    },
 }
 
 
@@ -122,8 +127,52 @@ class SocialDeployer:
                 adapted.get("post", adapted.get("body", ""))
                 if isinstance(adapted, dict) else str(adapted)
             )
-            return {"author": self._linkedin_author_urn(), "commentary": commentary[:3000]}
+            params = {"author": self._linkedin_author_urn(), "commentary": commentary[:3000]}
+            if isinstance(adapted, dict):
+                raw_url = str(adapted.get("url", "") or "").strip()
+                if raw_url:
+                    params["url"] = raw_url
+                    params["title"] = str(adapted.get("title", ""))[:200]
+                    params["description"] = str(adapted.get("body", ""))[:350]
+            return params
         raise ValueError(f"no params builder for {platform}")
+
+    def _exec_linkedin_url_share(self, uid, caid, version, share_slug, params):
+        """Post a LinkedIn article/URL share (link-preview card).
+
+        Returns the execute response on success, or None so the caller can fall
+        through to the plain text post when the card path fails.
+        """
+        try:
+            args = {
+                "author": params["author"],
+                "specificContent": {
+                    "com.linkedin.ugc.ShareContent": {
+                        "shareCommentary": {"text": params["commentary"]},
+                        "shareMediaCategory": "ARTICLE",
+                        "media": [{
+                            "status": "READY",
+                            "originalUrl": params["url"],
+                            "title": {"text": params.get("title", "") or ""},
+                            "description": {"text": params.get("description", "") or ""},
+                        }],
+                    }
+                },
+                "visibility": {"com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"},
+            }
+            resp = self.composio.tools.execute(
+                slug=share_slug,
+                arguments=args,
+                user_id=uid,
+                connected_account_id=caid,
+                version=version,
+            )
+            if resp and resp.get("successful"):
+                return resp
+            logger.warning(f"linkedin: URL-share failed — {str(resp.get('error'))[:160]}")
+        except Exception as e:
+            logger.warning(f"linkedin: URL-share exception — {str(e)[:160]}")
+        return None
 
     @staticmethod
     def _sanitize_encoding(adapted, platform: str):
@@ -237,13 +286,25 @@ class SocialDeployer:
             return result
 
         try:
-            resp = self.composio.tools.execute(
-                slug=mapping["slug"],
-                arguments=params,
-                user_id=uid,
-                connected_account_id=caid,
-                version=version,
-            )
+            resp = None
+            share_slug = mapping.get("url_share_slug") if platform == "linkedin" else None
+            if share_slug and params.get("url"):
+                resp = self._exec_linkedin_url_share(uid, caid, version, share_slug, params)
+                if resp is not None:
+                    self._posted.append(platform)
+                    result = {"status": "posted", "platform": platform, "tool": share_slug}
+                    self._results.append(result)
+                    logger.info(f"{platform}: posted via {share_slug}")
+                    return result
+                logger.warning(f"{platform}: URL-share failed — falling back to text post")
+            if resp is None:
+                resp = self.composio.tools.execute(
+                    slug=mapping["slug"],
+                    arguments=params,
+                    user_id=uid,
+                    connected_account_id=caid,
+                    version=version,
+                )
             if resp and resp.get("successful"):
                 self._posted.append(platform)
                 result = {"status": "posted", "platform": platform, "tool": mapping["slug"]}

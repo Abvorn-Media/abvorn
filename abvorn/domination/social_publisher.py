@@ -24,6 +24,7 @@ PLATFORM_ACTIONS = {
     "linkedin": {
         "toolkit": "linkedin",
         "slug": "LINKEDIN_CREATE_LINKED_IN_POST",
+        "url_share_slug": "LINKEDIN_CREATE_ARTICLE_OR_URL_SHARE",
         "params_fn": lambda script: _linkedin_params(script),
     },
     "instagram": {"slug": None, "toolkit": None, "export_only": True},
@@ -51,7 +52,35 @@ def _linkedin_params(script: dict) -> dict:
         or script.get("body")
         or _extract_text(script)
     )
-    return {"commentary": commentary[:3000]}
+    params = {"commentary": commentary[:3000]}
+    raw_url = str(script.get("url", "") or "").strip()
+    if raw_url:
+        params["url"] = raw_url
+        params["title"] = str(script.get("title", "") or "")[:200]
+        params["description"] = str(script.get("body", "") or "")[:350]
+    return params
+
+
+def _linkedin_url_share_args(params: dict) -> dict | None:
+    raw_url = params.get("url")
+    if not raw_url:
+        return None
+    return {
+        "author": params["author"],
+        "specificContent": {
+            "com.linkedin.ugc.ShareContent": {
+                "shareCommentary": {"text": params["commentary"]},
+                "shareMediaCategory": "ARTICLE",
+                "media": [{
+                    "status": "READY",
+                    "originalUrl": raw_url,
+                    "title": {"text": params.get("title", "") or ""},
+                    "description": {"text": params.get("description", "") or ""},
+                }],
+            }
+        },
+        "visibility": {"com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"},
+    }
 
 
 class SocialPublisher:
@@ -98,6 +127,17 @@ class SocialPublisher:
             params["author"] = self._client.linkedin_author_urn()
 
         try:
+            share_slug = mapping.get("url_share_slug") if platform == "linkedin" else None
+            share_args = _linkedin_url_share_args(params) if share_slug else None
+            if share_args:
+                try:
+                    self._client.execute(mapping["toolkit"], share_slug, share_args)
+                    result = {"status": "posted", "platform": platform, "tool": share_slug}
+                    self._results.append(result)
+                    logger.info(f"{platform}: posted via {share_slug}")
+                    return result
+                except Exception as e:
+                    logger.warning(f"{platform}: URL-share failed — falling back: {e}")
             self._client.execute(mapping["toolkit"], mapping["slug"], params)
             result = {"status": "posted", "platform": platform, "tool": mapping["slug"]}
             self._results.append(result)
