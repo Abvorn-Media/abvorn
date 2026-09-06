@@ -15,12 +15,9 @@ ENGAGEMENT_PERSONA = (
     "Stay warm and consistent with the Abvorn brand voice."
 )
 
-try:
-    from composio import ComposioToolSet, Action
-    HAS_COMPOSIO = True
-except ImportError:
-    HAS_COMPOSIO = False
-    Action = object
+from ..deploy.composio_client import ComposioClient
+
+REPLY_SLUG = "TWITTER_CREATION_OF_A_POST"
 
 
 class ReplyGenerator:
@@ -56,12 +53,7 @@ class ReplyPoster:
 
     def __init__(self, composio_key: str = ""):
         self.composio_key = composio_key
-        self._composio = None
-        if composio_key and HAS_COMPOSIO:
-            try:
-                self._composio = ComposioToolSet(api_key=composio_key)
-            except Exception as e:
-                logger.warning(f"Composio init failed: {e}")
+        self._client = ComposioClient(api_key=composio_key)
 
     def post(self, mention: dict, reply_text: str) -> dict:
         """Post a reply to the mention's tweet."""
@@ -79,18 +71,15 @@ class ReplyPoster:
             logger.info(f"Reply staged (not posted) — {source} not in allowed list")
             return {"status": "staged", "mention_id": mention.get("id", ""),
                     "author": mention.get("author", ""), "text": reply_text[:280]}
-        if not self._composio:
+        if not self._client.available:
             return {"status": "skipped", "reason": "no_composio"}
         tweet_id = mention.get("tweet_id", "")
         if not tweet_id:
             return {"status": "error", "reason": "no_tweet_id"}
-        reply_action = getattr(Action, "TWITTER_CREATE_TWEET", None)
-        if not reply_action:
-            return {"status": "error", "reason": "no_action"}
         try:
-            self._composio.execute_action(reply_action, params={
+            self._client.execute("twitter", REPLY_SLUG, {
                 "text": reply_text[:280],
-                "reply_to": tweet_id,
+                "reply_in_reply_to_tweet_id": tweet_id,
             })
             logger.info(f"Replied to {mention.get('author')}: {reply_text[:60]}...")
             return {"status": "posted", "mention_id": mention.get("id", ""),

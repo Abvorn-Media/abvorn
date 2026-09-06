@@ -9,45 +9,28 @@ logger = logging.getLogger("abvorn.domination.social_publisher")
 
 EXPORT_DIR = Path.home() / ".abvorn" / "exports"
 
-try:
-    from composio import ComposioToolSet, Action
-    HAS_COMPOSIO = True
-except ImportError:
-    HAS_COMPOSIO = False
-    Action = object
+from ..deploy.composio_client import ComposioClient
 
-
+# Composio v3 tool slugs. Only platforms with a live connected account get a
+# direct backend; everything else falls back to export files (TikTok/Pinterest
+# by design, Instagram whenever the image-container flow is not wired, and any
+# platform without a connected account).
 PLATFORM_ACTIONS = {
     "x": {
-        "actions": ["X_CREATE_TWEET", "TWITTER_CREATE_TWEET", "TWITTER_POST_TWEET"],
+        "toolkit": "twitter",
+        "slug": "TWITTER_CREATION_OF_A_POST",
         "params_fn": lambda script: {"text": _extract_text(script)[:280]},
     },
     "linkedin": {
-        "actions": ["LINKEDIN_CREATE_POST", "LINKEDIN_POST_CREATE"],
+        "toolkit": "linkedin",
+        "slug": "LINKEDIN_CREATE_LINKED_IN_POST",
         "params_fn": lambda script: _linkedin_params(script),
     },
-    "instagram": {
-        "actions": ["INSTAGRAM_CREATE_POST", "INSTAGRAM_CREATE_MEDIA_POST"],
-        "params_fn": lambda script: {"caption": _extract_text(script)[:2200]},
-    },
-    "facebook": {
-        "actions": ["FACEBOOK_CREATE_POST", "FACEBOOK_POST_CREATE"],
-        "params_fn": lambda script: {"message": _extract_text(script)[:63206]},
-    },
-    "tiktok": {
-        "actions": [],
-        "params_fn": lambda script: {},
-        "export_only": True,
-    },
-    "pinterest": {
-        "actions": [],
-        "params_fn": lambda script: {},
-        "export_only": True,
-    },
-    "medium": {
-        "actions": ["MEDIUM_CREATE_POST", "MEDIUM_PUBLISH_POST"],
-        "params_fn": lambda script: _medium_params(script),
-    },
+    "instagram": {"slug": None, "toolkit": None, "export_only": True},
+    "facebook": {"slug": None, "toolkit": None, "export_only": True},
+    "tiktok": {"slug": None, "toolkit": None, "export_only": True},
+    "pinterest": {"slug": None, "toolkit": None, "export_only": True},
+    "medium": {"slug": None, "toolkit": None, "export_only": True},
 }
 
 
@@ -62,15 +45,13 @@ def _extract_text(script: dict | list | str) -> str:
 
 
 def _linkedin_params(script: dict) -> dict:
-    return {
-        "text": script.get("headline", script.get("hook", "")),
-        "body": script.get("body", str(script))[:3000],
-    }
-
-
-def _medium_params(script: dict) -> dict:
-    text = _extract_text(script)
-    return {"title": "New Post", "content": text[:5000]}
+    commentary = (
+        script.get("post")
+        or script.get("commentary")
+        or script.get("body")
+        or _extract_text(script)
+    )
+    return {"commentary": commentary[:3000]}
 
 
 class SocialPublisher:
@@ -79,27 +60,17 @@ class SocialPublisher:
     Falls back to export files when:
     - Composio is not installed
     - API key is not configured
-    - Platform is export-only (TikTok, Pinterest)
+    - Platform is export-only (TikTok, Pinterest, Instagram)
+    - No connected account exists for a platform
     """
 
     def __init__(self, composio_key: str = ""):
         self.composio_key = composio_key
         self.composio = None
         self._results = []
-        self._init_composio()
-
-    def _init_composio(self):
-        if not HAS_COMPOSIO:
-            logger.info("Composio not installed — export-only mode")
-            return
-        if not self.composio_key:
-            logger.info("No Composio key — export-only mode")
-            return
-        try:
-            self.composio = ComposioToolSet(api_key=self.composio_key)
-            logger.info("Composio client initialized")
-        except Exception as e:
-            logger.warning(f"Composio init failed: {e}")
+        self._client = ComposioClient(api_key=composio_key)
+        if self._client.available:
+            self.composio = self._client.client
 
     def publish(self, script: dict, platform: str, niche: str = "",
                 media_paths: list[str] | None = None) -> dict:
@@ -119,31 +90,22 @@ class SocialPublisher:
         if allowed is not None and platform not in allowed:
             return self._export(script, platform, niche)
 
-        if mapping.get("export_only") or not self.composio:
+        if mapping.get("export_only") or not self._client.available:
             return self._export(script, platform, niche)
 
         params = mapping["params_fn"](script)
-        last_error = ""
+        if platform == "linkedin":
+            params["author"] = self._client.linkedin_author_urn()
 
-        for action_name in mapping["actions"]:
-            action = getattr(Action, action_name, None)
-            if not action:
-                continue
-            try:
-                self.composio.execute_action(action, params=params)
-                result = {"status": "posted", "platform": platform, "action": action_name}
-                self._results.append(result)
-                logger.info(f"{platform}: posted via {action_name}")
-                return result
-            except Exception as e:
-                last_error = str(e)[:200]
-                logger.debug(f"{platform} via {action_name}: {last_error}")
-
-        if last_error:
-            logger.warning(f"{platform}: Composio failed — exporting instead")
+        try:
+            self._client.execute(mapping["toolkit"], mapping["slug"], params)
+            result = {"status": "posted", "platform": platform, "tool": mapping["slug"]}
+            self._results.append(result)
+            logger.info(f"{platform}: posted via {mapping['slug']}")
+            return result
+        except Exception as e:
+            logger.warning(f"{platform}: Composio failed — exporting instead: {e}")
             return self._export(script, platform, niche)
-
-        return {"status": "failed", "platform": platform, "error": last_error}
 
     def publish_all(self, scripts: dict, niche: str = "") -> list[dict]:
         results = []
@@ -186,4 +148,4 @@ class SocialPublisher:
         return list(self._results)
 
     def can_post_direct(self) -> bool:
-        return HAS_COMPOSIO and self.composio is not None
+        return self._client.available

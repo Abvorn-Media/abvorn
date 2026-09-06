@@ -16,12 +16,7 @@ except ImportError:
     check_encoding = None
     repair_mojibake = None
 
-try:
-    from composio import Composio
-    HAS_COMPOSIO = True
-except ImportError:
-    HAS_COMPOSIO = False
-    Composio = None
+from .composio_client import ComposioClient, HAS_COMPOSIO
 
 # Composio v3 (SDK >= 0.21) — tools are raw slugs on a modern REST API.
 # Only platforms with a live connected account get a backend here; the
@@ -31,8 +26,6 @@ COMPOSIO_TOOLS = {
     "x": {"toolkit": "twitter", "slug": "TWITTER_CREATION_OF_A_POST"},
     "linkedin": {"toolkit": "linkedin", "slug": "LINKEDIN_CREATE_LINKED_IN_POST"},
 }
-
-LINKEDIN_MY_INFO_TOOL = "LINKEDIN_GET_MY_INFO"
 
 
 def _allowed_platforms() -> set | None:
@@ -98,30 +91,15 @@ class SocialDeployer:
     def __init__(self, composio_key: str = ""):
         self.composio_key = composio_key
         self.composio = None
-        self._toolkit_state = {}  # toolkit -> (user_id, connected_account_id, version)
-        self._linkedin_urn = ""
-        if composio_key and HAS_COMPOSIO:
-            try:
-                os.environ["COMPOSIO_API_KEY"] = composio_key
-                self.composio = Composio()
-                logger.info("Composio v3 client initialized")
-            except Exception as e:
-                logger.warning(f"Composio init failed: {e}")
+        self._client = ComposioClient(api_key=composio_key)
+        if self._client.available:
+            self.composio = self._client.client
         self._posted = []
         self._results = []
 
     def _toolkit_version(self, toolkit: str) -> str | None:
         """Resolve the publishable toolkit version from the Composio API."""
-        if toolkit in self._toolkit_state:
-            return self._toolkit_state[toolkit][2]
-        try:
-            raw_tools = self.composio.tools.get_raw_composio_tools(toolkits=[toolkit])
-        except Exception as e:
-            logger.warning(f"composio toolkit {toolkit} unavailable: {e}")
-            return None
-        if not raw_tools:
-            return None
-        return getattr(raw_tools[0], "version", None) or None
+        return self._client.toolkit_version(toolkit)
 
     def _connection(self, toolkit: str):
         """Return (user_id, connected_account_id, version) for a toolkit, cached.
@@ -129,55 +107,11 @@ class SocialDeployer:
         The connection is resolved from the live list of connected accounts so
         the deployer survives account rotation without code changes.
         """
-        state = self._toolkit_state.get(toolkit)
-        if state is not None:
-            return state
-        state = (None, None, None)
-        try:
-            accounts = self.composio.connected_accounts.list()
-            items = getattr(accounts, "items", None) or []
-            for acct in items:
-                tk = getattr(acct, "toolkit", None)
-                if getattr(tk, "slug", None) != toolkit:
-                    continue
-                if getattr(acct, "status", None) != "ACTIVE":
-                    continue
-                state = (
-                    getattr(acct, "user_id", None) or os.environ.get("COMPOSIO_USER_ID", ""),
-                    getattr(acct, "id", None),
-                    self._toolkit_version(toolkit),
-                )
-                break
-        except Exception as e:
-            logger.warning(f"composio connection lookup failed for {toolkit}: {e}")
-        self._toolkit_state[toolkit] = state
-        return state
+        return self._client.connection(toolkit)
 
     def _linkedin_author_urn(self) -> str:
         """Resolve the author URN for LinkedIn posts (env override or discovery)."""
-        urn = os.environ.get("LINKEDIN_AUTHOR_URN", "").strip()
-        if urn:
-            return urn
-        if self._linkedin_urn:
-            return self._linkedin_urn
-        uid, caid, version = self._connection("linkedin")
-        if not uid or not version:
-            raise RuntimeError("no linkedin connection/version for author URN lookup")
-        try:
-            resp = self.composio.tools.execute(
-                slug=LINKEDIN_MY_INFO_TOOL,
-                arguments={},
-                user_id=uid,
-                connected_account_id=caid or None,
-                version=version,
-            )
-            profile_id = (resp.get("data") or {}).get("id")
-            if not profile_id:
-                raise RuntimeError("linkedin profile id missing from LINKEDIN_GET_MY_INFO")
-            self._linkedin_urn = f"urn:li:person:{profile_id}"
-            return self._linkedin_urn
-        except Exception as e:
-            raise RuntimeError(f"linkedin author URN lookup failed: {e}") from e
+        return self._client.linkedin_author_urn()
 
     def _params_for(self, platform: str, adapted) -> dict:
         if platform == "x":
