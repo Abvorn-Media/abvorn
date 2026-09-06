@@ -41,6 +41,11 @@ def resolve_url(anchor: dict) -> str:
     return ""
 
 
+def _shorten_heading(heading: str) -> str:
+    """Trim a heading to its core phrase (drop trailing ':'/'-' labels)."""
+    return re.sub(r"[:\-–].*$", "", heading).strip().strip('"')
+
+
 @registry.register("x", label="X", content_types=["thread"],
                    max_length=280, category="social",
                    schedule_profile={"best_days": ["Tuesday", "Wednesday", "Thursday"],
@@ -86,9 +91,8 @@ def linkedin_adapter(anchor: dict) -> dict:
 
     hook = (description or intro or f"After weeks of hands-on testing, one thing got clear…")[:160]
     summary = (intro or f"We put the top options through real, side-by-side testing — here's the honest verdict.")[:260]
-    bullets = "".join(
-        f"✅ {re.sub(r'[:\-–].*$', '', h).strip().strip('\"')}\n" for h in headings[:3]
-    ).strip()
+    bullet_lines = [f"✅ {_shorten_heading(h)}" for h in headings[:3]]
+    bullets = "\n".join(bullet_lines)
     question = (
         "What's on your desk right now — and would you switch after this?" if niche
         else "What would you pick today?"
