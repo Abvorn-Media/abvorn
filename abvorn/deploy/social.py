@@ -65,6 +65,41 @@ def _allowed_platforms() -> set | None:
     return {p.strip().lower() for p in raw.replace(",", "\n").splitlines() if p.strip()}
 
 
+class TelegramDeployer:
+    """Posts a message to a Telegram channel or private chat using the Bot API."""
+
+    def __init__(self, token: str = "", chat_id: str = "", channel: str = ""):
+        self.token = token or os.environ.get("TELEGRAM_TOKEN", "")
+        self.chat_id = chat_id or os.environ.get("TELEGRAM_CHAT_ID", "")
+        self.channel = channel or os.environ.get("ABVORN_TELEGRAM_CHANNEL", "")
+        if not self.token or not self.chat_id:
+            try:
+                from ..core.secrets import load_secrets
+                secrets = load_secrets()
+                self.token = self.token or secrets.get("TELEGRAM_TOKEN", "")
+                self.chat_id = self.chat_id or secrets.get("TELEGRAM_CHAT_ID", "")
+            except Exception:
+                pass
+
+    def post(self, adapted: dict) -> dict:
+        if not self.token:
+            return {"status": "error", "platform": "telegram", "reason": "no_telegram_token"}
+        target = self.channel or self.chat_id
+        if not target:
+            return {"status": "error", "platform": "telegram", "reason": "no_telegram_chat_id"}
+        import requests
+        url = f"https://api.telegram.org/bot{self.token}/sendMessage"
+        payload = {"chat_id": target, "text": adapted.get("text", "")[:4000]}
+        try:
+            resp = requests.post(url, json=payload, timeout=15)
+            data = resp.json()
+        except Exception as e:
+            return {"status": "failed", "platform": "telegram", "error": str(e)[:200]}
+        if resp.status_code == 200 and data.get("ok"):
+            return {"status": "posted", "platform": "telegram", "chat_id": target}
+        return {"status": "failed", "platform": "telegram", "error": f"{resp.status_code} {str(data)[:200]}"}
+
+
 class SocialDeployer:
     """Posts content to registered social platforms via Composio."""
 
@@ -155,6 +190,13 @@ class SocialDeployer:
             logger.info(f"{platform}: export-only — adapted content ready")
             self._posted.append(platform)
             return {"status": "exported", "platform": platform, "data": adapted}
+
+        if platform == "telegram":
+            result = TelegramDeployer().post(adapted)
+            self._posted.append(platform)
+            self._results.append(result)
+            logger.info(f"telegram: {result.get('status')}")
+            return result
 
         if not self.composio_key or not self.composio:
             logger.warning(f"No Composio key — {platform} post skipped")

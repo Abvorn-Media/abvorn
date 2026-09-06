@@ -119,6 +119,32 @@ def medium_adapter(anchor: dict) -> str:
     return f"# {title}\n\n{intro}\n\n{body[:3000]}"
 
 
+@registry.register("telegram", label="Telegram", content_types=["post", "link"],
+                   max_length=4000, supports_html=False, category="social",
+                   schedule_profile={"best_days": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+                                      "best_hours": list(range(8, 21)),
+                                      "min_gap_hours": 12, "max_per_day": 2, "cadence": "daily"})
+def telegram_adapter(anchor: dict) -> dict:
+    """Convert anchor into a Telegram channel post."""
+    import os
+    title = anchor.get("post_title", anchor.get("title", "New guide from Abvorn"))
+    description = (anchor.get("meta_description")
+                   or anchor.get("intro")
+                   or _clean_text(anchor.get("article_html", "")))[:900]
+    text = str(title)
+    if description:
+        text = f"{text}\n\n{description}"
+    url = str(anchor.get("url") or anchor.get("link") or anchor.get("permalink") or "").strip()
+    if not url:
+        site = os.environ.get("SITE_URL", "").rstrip("/")
+        slug = str(anchor.get("slug", "")).strip("/")
+        if site and slug:
+            url = f"{site}/{slug}"
+    if url:
+        text = f"{text}\n\n{url}"
+    return {"text": text[:4000]}
+
+
 # ─── Future Platform Stubs ──────────────────────────────────────────
 
 @registry.register("facebook", label="Facebook", content_types=["post", "link"],
