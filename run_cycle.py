@@ -3039,7 +3039,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
         title = p.get("title", "")
         slug_path = p.get("slug", "")
         items.append({"title": title, "slug": slug_path,
-                      "date": datetime.date.today().isoformat()})
+                      "date": datetime.now().date().isoformat()})
     from src.deployment import write_site_metadata
     write_site_metadata(docs, items)
 
