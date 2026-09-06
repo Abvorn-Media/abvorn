@@ -89,7 +89,11 @@ class TelegramDeployer:
             return {"status": "error", "platform": "telegram", "reason": "no_telegram_chat_id"}
         import requests
         url = f"https://api.telegram.org/bot{self.token}/sendMessage"
-        payload = {"chat_id": target, "text": adapted.get("text", "")[:4000]}
+        payload = {
+            "chat_id": target,
+            "text": adapted.get("text", "")[:4000],
+            "link_preview_options": {"is_disabled": True},
+        }
         try:
             resp = requests.post(url, json=payload, timeout=15)
             data = resp.json()
