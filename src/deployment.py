@@ -1091,7 +1091,7 @@ def build_homepage(state, form_url="", reviews=None, base=None):
         else:
             cards = f'''<div class="niche-card" style="--cat:{category_color(cat_name)}">
     <div class="niche-card__media"><div class="niche-card__image-wrapper"><img src="{b}/assets/hero-home.svg" alt="Coming soon" loading="lazy"></div></div>
-    <div class="review-card__body"><span class="review-card__banner" style="background:{category_color(cat_name)}">{html_mod.escape(cat_name)}</span><h2>Reviews coming soon</h2><p class="review-card__snippet">We're testing products in this category now.</p></div>
+    <div class="review-card__body"><span class="review-card__banner" style="background:{category_color(cat_name)}">{html_mod.escape(cat_name)}</span><h2>Reviews coming soon</h2><p class="review-card__snippet">We're researching the top products in this category now.</p></div>
 </div>'''
         cat_color = category_color(cat_name)
         cat_sections += f'''<div class="category-section" style="--cat:{cat_color}">
@@ -1099,7 +1099,7 @@ def build_homepage(state, form_url="", reviews=None, base=None):
     <div class="niche-grid">{cards}</div>
 </div>'''
     if not cat_sections:
-        cat_sections = '<div class="category-section"><div class="niche-card"><div class="niche-card__image-wrapper"><img src="' + b + '/assets/hero-home.svg" alt="Coming soon"></div><div class="niche-card__body"><h2>Our first guide is in testing</h2><p>Check back shortly for hands-on reviews.</p></div></div></div>'
+        cat_sections = '<div class="category-section"><div class="niche-card"><div class="niche-card__image-wrapper"><img src="' + b + '/assets/hero-home.svg" alt="Coming soon"></div><div class="niche-card__body"><h2>Our first guide is in research</h2><p>Check back shortly for research-based reviews.</p></div></div></div>'
 
     # Trending ticker items text. Drives off the actually-published reviews
     # rather than the gitignored cycle_state.json so the ticker survives a
@@ -1126,7 +1126,7 @@ def build_homepage(state, form_url="", reviews=None, base=None):
     html = html.replace("STAT_PRODUCTS_COUNT", str(total_products))
     html = html.replace("LATEST_UPDATES_PLACEHOLDER", ticker_items if ticker_items else "No reviews yet")
     html = html.replace("LATEST_REVIEWS_PLACEHOLDER", latest_cards if latest_cards else '<p style="grid-column:1/-1;text-align:center;color:#888;padding:40px 0">More guides on the way.</p>')
-    html = html.replace("CATEGORY_SECTIONS_PLACEHOLDER", cat_sections if cat_sections else '<div class="category-section"><div class="niche-card"><div class="niche-card__image-wrapper"><img src="' + b + '/assets/hero-home.svg" alt="Coming soon"></div><div class="niche-card__body"><h2>Our first guide is in testing</h2><p>Check back shortly for hands-on reviews.</p></div></div></div>')
+    html = html.replace("CATEGORY_SECTIONS_PLACEHOLDER", cat_sections if cat_sections else '<div class="category-section"><div class="niche-card"><div class="niche-card__image-wrapper"><img src="' + b + '/assets/hero-home.svg" alt="Coming soon"></div><div class="niche-card__body"><h2>Our first guide is in research</h2><p>Check back shortly for research-based reviews.</p></div></div></div>')
     html = html.replace("FOOTER_SOCIAL_PLACEHOLDER", footer_social)
     html = html.replace("FOOTER_CATEGORY_LINKS_PLACEHOLDER", footer_cats)
     html = html.replace("MEGA_MENU_CSS_PLACEHOLDER", MEGA_MENU_CSS)
@@ -1175,7 +1175,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
                       '</div><div class="review-card__body">'
                       f'<span class="review-card__banner" style="background:{cat_color}">{cat_esc}</span>'
                       '<h2>Reviews coming soon</h2>'
-                      '<p class="review-card__snippet">We\'re testing products in this category now.</p></div></div>')
+                      '<p class="review-card__snippet">We\'re researching the top products in this category now.</p></div></div>')
         grid_count = '<span class="category-section__count">Reviews coming soon</span>'
 
     # Nav dropdown (white mega-menu)
@@ -1191,7 +1191,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     year_str = str(datetime.now().year)
 
     blog_title = f"Best {title_escaped} Reviews"
-    meta_desc = f"Expert {niche_name.lower()} reviews and buying guides. Independent testing, real recommendations."
+    meta_desc = f"Expert {niche_name.lower()} reviews and buying guides. Independent research, honest recommendations."
     post_list = post_cards or '<p style="grid-column:1/-1;text-align:center;color:var(--clr-mid-gray);padding:40px 0">Reviews coming soon.</p>'
 
     return f'''<!DOCTYPE html>
@@ -1395,7 +1395,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
 <section class="how-we-test"><div class="how-we-test__inner">
     <div class="how-we-test__intro">
         <span class="section-eyebrow">Our method</span>
-        <h2>How we test {title_escaped}</h2>
+        <h2>How we research {title_escaped}</h2>
         <p>Every score follows the same repeatable process. No paid placements, no editorial bias — just a consistent method.</p>
     </div>
     <div class="hwt-steps">
@@ -1464,11 +1464,11 @@ async function submitCategorySubscribe(e) {{
 # Tailored tagline per category; falls back to the generic promise.
 CATEGORY_TAGLINES = {
     "audio": "Marketing copy calls everything 'studio-quality.' We check real prices and verified owner feedback to find the headphones and earbuds actually worth your ears.",
-    "computing-and-monitors": "Spec sheets can't tell you what a laptop feels like at 2am before a deadline. We benchmark the monitors and machines that actually deserve your desk space.",
+    "computing-and-monitors": "Spec sheets can't tell you what a laptop feels like at 2am before a deadline. We dig into the specs and owner reports to find the monitors and machines that actually deserve your desk space.",
     "fitness-and-health": "Most fitness trackers count steps and little else. We check which ones measure what matters — heart, sleep, and recovery — and which are just jewelry.",
-    "gaming": "Latency and build quality beat RGB every time. We test the mice and keyboards that survive the grind, not just the hype.",
-    "home-and-lifestyle": "Streaming boxes and smart gadgets promise a better living room. We test which ones deliver without the subscription trap.",
-    "webcams-and-accessories": "Your webcam is what eight hours of meetings sees. We test video, audio, and software so your calls look like you put effort in.",
+    "gaming": "Latency and build quality beat RGB every time. We dig into specs and owner feedback on the mice and keyboards that survive the grind, not just the hype.",
+    "home-and-lifestyle": "Streaming boxes and smart gadgets promise a better living room. We check the specs and real user reports to find which ones deliver without the subscription trap.",
+    "webcams-and-accessories": "Your webcam is what eight hours of meetings sees. We research video, audio, and software so your calls look like you put effort in.",
 }
 
 
@@ -1687,12 +1687,12 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     year_str = str(datetime.now().year)
 
     blog_title = f"{title_escaped} Reviews"
-    meta_desc = f"Independent {category_name.lower()} reviews and buying guides. We test before we recommend."
+    meta_desc = f"Independent {category_name.lower()} reviews and buying guides. We research before we recommend."
 
     # Per-category hero tagline. Falls back to the generic promise.
     hero_tagline = CATEGORY_TAGLINES.get(
         category_slug.lower(),
-        "Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.",
+        "Independent research, honest recommendations. We dig through specs and real user feedback, and tell you what's actually worth your money.",
     )
     hero_accent = category_color(category_name)
     hero_html = _build_category_hero(category_name, category_slug, items, hero_accent, hero_tagline)
@@ -2398,8 +2398,8 @@ def build_reviews_hub_page(reviews, all_slugs, base=None, affiliate_tag=""):
     b = base or SITE_BASE
     reviews = _dedupe_reviews(reviews)
     accent = CATEGORY_COLOR_FALLBACK
-    tagline = ("Every product review and buying guide we've published — tested "
-               "by hand, judged on real benchmarks, and free of spec-sheet fiction.")
+    tagline = ("Every product review and buying guide we've published — researched "
+               "from real specs, prices, and verified owner feedback, free of spec-sheet fiction.")
     hero_html = _build_category_hero(
         "Reviews", "reviews", reviews, accent, tagline, heading="All Abvorn Reviews"
     )
@@ -2415,7 +2415,7 @@ def build_reviews_hub_page(reviews, all_slugs, base=None, affiliate_tag=""):
     return _hub_page(
         b=b,
         meta_title="All Reviews",
-        meta_desc="Browse every Abvorn product review and buying guide. We test before we recommend.",
+        meta_desc="Browse every Abvorn product review and buying guide. We research before we recommend.",
         canonical_path="/reviews/",
         hero_html=hero_html,
         index_nav=index_nav,
@@ -2448,7 +2448,7 @@ def build_categories_hub_page(reviews, all_slugs, base=None, affiliate_tag=""):
     return _hub_page(
         b=b,
         meta_title="All Categories",
-        meta_desc="Browse every Abvorn review category. Independent product reviews and buying guides, based on real testing.",
+        meta_desc="Browse every Abvorn review category. Independent product reviews and buying guides, based on real research.",
         canonical_path="/categories/",
         hero_html=hero_html,
         index_nav=_build_category_tiles(b, accent),
@@ -2869,8 +2869,8 @@ def write_site_metadata(docs_dir, items):
     )
     llms_txt = (
         "# Abvorn\n\n"
-        "> Independent product reviews and buying guides. We test before we recommend "
-        "— verdicts are based on measured specs, real prices, and scored comparisons, not spec sheets.\n\n"
+"> Independent product reviews and buying guides. We research before we recommend "
+            "— verdicts are based on real specs, real prices, and verified owner feedback, not spec sheets.\n\n"
         "## Core pages\n"
         + "\n".join(f"- {title} — {SITE_BASE}/{path}" for title, path in core_pages)
         + "\n\n"
@@ -3239,7 +3239,7 @@ def build_site_footer(b=""):
     year_str = str(datetime.now().year)
     return f'''<footer class="footer"><div class="container">
     <div class="footer-grid">
-        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real testing.</p><div class="footer-social">{render_footer_social()}</div></div>
+        <div class="footer-col"><img src="{b}/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px"><p>Independent product reviews and buying guides, based on real research.</p><div class="footer-social">{render_footer_social()}</div></div>
         <div class="footer-col"><h4>Categories</h4>{build_footer_categories(b)}</div>
         <div class="footer-col">
             <h4>Company</h4><a href="{b}/about.html">About</a>
@@ -3748,17 +3748,17 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="hKduUnYJjstWTZehDR7W7YOEhx0NWKzujAXX_neehMk" />
     <link rel="icon" type="image/png" href="__SITE_BASE__/assets/favicon-32x32.png">
-    <title>Abvorn – Reviews Based on Real Testing, Not Spec Sheets</title>
-    <meta name="description" content="Independent product reviews and buying guides. We test before we recommend.">
+    <title>Abvorn – Reviews Based on Real Research, Not Spec Sheets</title>
+    <meta name="description" content="Independent product reviews and buying guides. We research before we recommend.">
     <link rel="canonical" href="__SITE_URL__/">
-    <meta property="og:title" content="Abvorn – Reviews Based on Real Testing, Not Spec Sheets">
-    <meta property="og:description" content="Independent product reviews and buying guides. We test before we recommend.">
+    <meta property="og:title" content="Abvorn – Reviews Based on Real Research, Not Spec Sheets">
+    <meta property="og:description" content="Independent product reviews and buying guides. We research before we recommend.">
     <meta property="og:url" content="__SITE_URL__/">
     <meta property="og:type" content="website">
     <meta property="og:image" content="__SITE_URL__/assets/logo.png"><meta name="twitter:image" content="__SITE_URL__/assets/logo.png">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Abvorn – Reviews Based on Real Testing, Not Spec Sheets">
-    <meta name="twitter:description" content="Independent product reviews and buying guides. We test before we recommend.">
+    <meta name="twitter:title" content="Abvorn – Reviews Based on Real Research, Not Spec Sheets">
+    <meta name="twitter:description" content="Independent product reviews and buying guides. We research before we recommend.">
     ''' + FONT_LINK + '''
     <style>''' + CONSENT_CSS + '''</style>
     ''' + ANALYTICS_HTML + '''
@@ -4036,7 +4036,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <div class="footer-grid">
         <div class="footer-col">
             <img src="__SITE_BASE__/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px">
-            <p>Independent product reviews and buying guides, based on real testing.</p>
+<p>Independent product reviews and buying guides, based on real research.</p>
             <div class="footer-social">FOOTER_SOCIAL_PLACEHOLDER</div>
         </div>
         <div class="footer-col"><h4>Categories</h4>FOOTER_CATEGORY_LINKS_PLACEHOLDER</div>

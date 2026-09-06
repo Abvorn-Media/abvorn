@@ -96,7 +96,7 @@ PLATFORM_VOICES: dict[str, dict] = {
             "Write like you're talking to one person",
             "Encourage comments and shares",
             "Be helpful first, promotional second",
-            "Use storytelling — 'I tested 12 pairs so you don't have to'",
+            "Use storytelling — 'I compared 12 pairs so you don't have to'",
             "Emojis: moderate, friendly",
             "Avoid: clickbait, too-good-to-be-true language",
         ],

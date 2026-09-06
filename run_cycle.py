@@ -487,7 +487,7 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
 {nav_html(all_slugs)}
 <section class="hero" id="main" style="padding:24px 16px"><div class="container">
 <h1>{html_mod.escape(post_title)}</h1>
-<p>We put the top {niche_name.lower()} head-to-head. Here's how they stack up.</p>
+<p>We put the top {niche_name.lower()} head-to-head on specs, prices, and owner feedback. Here's how they stack up.</p>
 </div></section>
 <section class="section"><div class="container">
 <div style="overflow-x:auto"><table class="comparison-table">
@@ -964,8 +964,8 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="__SITE_BASE__/assets/favicon-32x32.png">
-    <title>Abvorn – Reviews Based on Real Testing, Not Spec Sheets</title>
-    <meta name="description" content="Independent product reviews and buying guides. We test before we recommend.">
+    <title>Abvorn – Reviews Based on Real Research, Not Spec Sheets</title>
+    <meta name="description" content="Independent product reviews and buying guides. We research before we recommend.">
     ''' + FONT_LINK + '''
     <style>
         ''' + DESIGN_SYSTEM_CSS + '''
@@ -1299,12 +1299,12 @@ CAROUSEL_JS = """<script>(function(){var c=document.querySelector('.carousel');i
 NICHE_TAGLINES = {
     "4k-monitors": "Every panel claims '4K'. We check which ones deliver real sharpness, color, and desk presence — not just a resolution number.",
     "fitness-trackers": "Most trackers count steps and little else. We check which ones measure what matters — heart, sleep, and recovery.",
-    "gaming-mice": "Latency and build quality beat RGB every time. We test the mice that survive the grind.",
-    "laptops": "Spec sheets can't tell you what a laptop feels like at 2am before a deadline. We benchmark the machines that deserve your desk.",
-    "mechanical-keyboards": "Switches, stabilizers, and build feel beat RGB every time. We type on the boards that survive the grind.",
-    "smart-home": "Smart gadgets promise a better home. We test which ones deliver without the subscription trap.",
-    "streaming-devices": "Streaming boxes promise a better living room. We test which ones deliver without the bloatware.",
-    "webcams": "Your webcam is what eight hours of meetings sees. We test video, audio, and software so you look like you put effort in.",
+    "gaming-mice": "Latency and build quality beat RGB every time. We dig into the specs and owner feedback on the mice that survive the grind.",
+    "laptops": "Spec sheets can't tell you what a laptop feels like at 2am before a deadline. We dig into the specs and owner reports to find the machines that deserve your desk.",
+    "mechanical-keyboards": "Switches, stabilizers, and build feel beat RGB every time. We study the boards that survive the grind.",
+    "smart-home": "Smart gadgets promise a better home. We check which ones deliver without the subscription trap.",
+    "streaming-devices": "Streaming boxes promise a better living room. We check which ones deliver without the bloatware.",
+    "webcams": "Your webcam is what eight hours of meetings sees. We research video, audio, and software so you look like you put effort in.",
     "wireless-earbuds": "Marketing copy calls everything 'studio-quality'. We check real fit, battery, and sound to find the earbuds actually worth your ears.",
     "wireless-headphones": "Every pair claims 'studio-quality'. We check real sound, ANC, and battery to find the cans actually worth your commute.",
 }
@@ -1362,7 +1362,7 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
         niche_slug,
         CATEGORY_TAGLINES.get(
             _category_slug(category),
-            "Independent testing, real recommendations. We buy it, test it, and tell you what's actually worth your money.",
+            "Independent research, honest recommendations. We dig through specs and real user feedback to tell you what's actually worth your money.",
         ),
     )
 
@@ -1913,7 +1913,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         for i, prod in enumerate(products):
             use_cases = ["Best Overall", "Best Value", "Premium Pick"]
             uc = use_cases[i] if i < len(use_cases) else "Also Great"
-            why = prod.get("description", "Top-rated product after extensive testing.")
+            why = prod.get("description", "Top-rated product after extensive research.")
             matrix_rows += f"<tr><td>{uc}</td><td>{html_mod.escape(clean_product_name(prod.get('name','Product')))}</td><td>{html_mod.escape(why)}</td></tr>"
     matrix_html = (
         '<div class="table-wrap decision-matrix">'
@@ -2484,8 +2484,8 @@ def build_methodology_page(all_slugs, form_url=""):
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-{HEAD_HTML('How We Test — Abvorn', 'Our rigorous, independent testing methodology. Every recommendation is earned through real-world evaluation.')}
-{OG_META('How We Test — Abvorn', 'Our rigorous, independent testing methodology. Every recommendation is earned through real-world evaluation.', f'{_SITE_URL}/how-we-test/', f'{_SITE_URL}/assets/logo.png')}
+{HEAD_HTML('How We Research — Abvorn', 'Our rigorous, independent research methodology. Every recommendation is earned through honest, evidence-based evaluation.')}
+{OG_META('How We Research — Abvorn', 'Our rigorous, independent research methodology. Every recommendation is earned through honest, evidence-based evaluation.', f'{_SITE_URL}/how-we-test/', f'{_SITE_URL}/assets/logo.png')}
 <link rel="canonical" href="{f'{_SITE_URL}/how-we-test/'}">
 {ANALYTICS_HTML}
 <style>{UTILITY_PAGE_CSS}</style>
@@ -2493,18 +2493,18 @@ def build_methodology_page(all_slugs, form_url=""):
 <a class="skip-link" href="#main">Skip to content</a>
 {nav_html(all_slugs)}
 <section class="hero" id="main" style="padding:clamp(2rem,4vh,4rem) 0 1.5rem"><div class="container">
-<img src="{b}/assets/hero-home.svg" alt="Abvorn testing" style="width:100%;max-width:min(560px,100%);height:auto;object-fit:contain;border-radius:var(--radius-md);margin-bottom:24px;display:block;box-shadow:var(--shadow-md)">
-<h1>How We Test</h1>
-<p>Every recommendation on Abvorn is earned through real testing — not press releases or affiliate quotas.</p>
+<img src="{b}/assets/hero-home.svg" alt="Abvorn research" style="width:100%;max-width:min(560px,100%);height:auto;object-fit:contain;border-radius:var(--radius-md);margin-bottom:24px;display:block;box-shadow:var(--shadow-md)">
+<h1>How We Research</h1>
+<p>Every recommendation on Abvorn is earned through honest, real research — not press releases or affiliate quotas.</p>
 </div></section>
 <section class="section"><div class="container" style="max-width:680px">
-<h2>Our Testing Philosophy</h2>
-<p>We buy every product we review with our own money. No sponsorships, no free units, no manufacturer influence. If it's on our site, we've held it in our hands.</p>
-<h2>The Testing Process</h2>
+<h2>Our Research Philosophy</h2>
+<p>We dig through public specs, real prices, and verified owner feedback for every product we review. No paid placements, no manufactured approval — just the evidence that's actually out there.</p>
+<h2>The Research Process</h2>
 <div class="trust-list" style="list-style:none;display:flex;flex-direction:column;gap:20px;margin:24px 0">
 <div class="trust-item"><strong>1. Research</strong><span>We identify the top 10–15 products in a category based on market share, user reviews, and expert consensus.</span></div>
-<div class="trust-item"><strong>2. Procurement</strong><span>We purchase each product at full retail price — no review units, no sample requests.</span></div>
-<div class="trust-item"><strong>3. Testing</strong><span>Products are tested side-by-side over 3–7 days using standardized criteria specific to each category.</span></div>
+<div class="trust-item"><strong>2. Specs &amp; Pricing</strong><span>We compare each product on the specs that actually matter for its price, using current retail data.</span></div>
+<div class="trust-item"><strong>3. Owner Feedback</strong><span>We read what real buyers say across retailers — the consistent strengths and the recurring complaints.</span></div>
 <div class="trust-item"><strong>4. Scoring</strong><span>Each product is scored on performance, build quality, value, and user experience using a weighted rubric.</span></div>
 <div class="trust-item"><strong>5. Writing</strong><span>We write our findings honestly — including what we didn't like — and publish with clear recommendations.</span></div>
 <div class="trust-item"><strong>6. Updating</strong><span>Reviews are refreshed quarterly to reflect price changes, new models, and evolving market conditions.</span></div>
@@ -2512,7 +2512,7 @@ def build_methodology_page(all_slugs, form_url=""):
 <h2>What We Don't Do</h2>
 <ul style="padding-left:24px;margin:16px 0">
 <li style="margin:8px 0;color:var(--text-secondary)">Accept free products or sponsored placements</li>
-<li style="margin:8px 0;color:var(--text-secondary)">Publish reviews without hands-on testing</li>
+<li style="margin:8px 0;color:var(--text-secondary)">Publish reviews without real research — no press releases word-for-word</li>
 <li style="margin:8px 0;color:var(--text-secondary)">Allow manufacturers to review or approve our content</li>
 <li style="margin:8px 0;color:var(--text-secondary)">Use affiliate revenue to influence recommendations</li>
 </ul>
@@ -2537,7 +2537,7 @@ CONTENT_TYPE_MAP = {
         "purpose": "Help the solution-aware decide between approaches.",
         "example": "Noise Cancelling vs Transparency Mode — Which Commuter Type Are You?"},
     "product_aware": {"type": "product_review", "label": "Product Review",
-        "purpose": "Give the product-aware the final nudge. Real testing, real verdict.",
+        "purpose": "Give the product-aware the final nudge. Real research, honest verdict.",
         "example": "Sony XM6 Review: 30 Days as a Daily Commuter"},
     "most_aware": {"type": "micro_comparison", "label": "Micro-Comparison",
         "purpose": "Convert the most-aware. Quick, decisive head-to-head.",
@@ -2588,8 +2588,8 @@ def generate_persona_content_plan(niche_name, persona, awareness_level="problem_
             f"Should You Prioritize {hopes[0] if len(hopes)>1 else 'Quality'} or {frust}?",
         ],
         "product_review": [
-            f"Best {niche_lower} for {p_name}: Real Testing, Honest Verdict",
-            f"We Tested the Top {niche_lower} So {p_name} Doesn't Have To",
+            f"Best {niche_lower} for {p_name}: Real Research, Honest Verdict",
+            f"We Compared the Top {niche_lower} So {p_name} Doesn't Have To",
         ],
         "micro_comparison": [
             f"[Product A] vs [Product B]: The {p_name}'s Verdict",
@@ -2742,27 +2742,27 @@ def _persona_article_template(plan, persona, niche_name, products=None):
 <h2>Step 2: Choose the Right Approach</h2>
 <p>Not all solutions are created equal. For {p_name}, the best approach prioritizes {hope.lower()} without creating new problems. Here's what to look for...</p>
 <h2>Step 3: Invest in What Works</h2>
-<p>Once you've identified the right approach, it's time to execute. We've tested extensively and found that <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod}</a> delivers the best results for people in your situation.</p>
+<p>Once you've identified the right approach, it's time to execute. Our research shows that <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod}</a> delivers the best results for people in your situation.</p>
 <h2>Step 4: Optimize and Maintain</h2>
 <p>Getting it right is one thing. Keeping it right is another. Here's how to maintain your setup for long-term success...</p>""",
         "solution_comparison": f"""<p>If you're reading this, you already know {frust} is a problem. Now the question is: what's the best way to solve it?</p>
-<p>We've tested every major approach. Here's our honest assessment of what works best for {p_name}.</p>
+<p>We've researched every major approach. Here's our honest assessment of what works best for {p_name}.</p>
 <h2>Option A: The Quick Fix</h2>
 <p>Fast, affordable, but often temporary. Good if you need an immediate solution and are comfortable iterating.</p>
 <h2>Option B: The Long-Term Solution</h2>
 <p>More investment upfront, but delivers {hope} sustainably. This is what we recommend for most people.</p>
 <h2>Our Verdict</h2>
 <p>For {p_name}, we recommend <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod}</a>. It strikes the best balance of performance, value, and reliability.</p>""",
-        "product_review": f"""<p>After spending [X hours] testing {prod} against its top competitors, here's our honest verdict — including what we didn't like.</p>
+        "product_review": f"""<p>After digging through the real specs, prices, and owner feedback on {prod} and its top competitors, here's our honest verdict — including what we didn't like.</p>
 <h2>First Impressions</h2>
-<p>Out of the box, {prod} feels {hope.lower()} in mind. The build quality is solid, the setup is straightforward, and the initial performance is impressive.</p>
-<h2>How It Performs in Real-World Use</h2>
-<p>We tested {prod} for [X days/weeks] in real conditions. Here's what we found...
-<strong>What we loved:</strong> [Key strengths]
-<strong>What we didn't:</strong> [Honest weaknesses]</p>
+<p>{prod} looks and feels like it's built for {hope.lower()} in mind. The build quality is solid, the setup is straightforward, and the specs are impressive on paper.</p>
+<h2>How It Stacks Up on Paper and for Real Owners</h2>
+<p>We compared {prod} against its main rivals on the specs that matter, checked the current price, and read what real owners are saying. Here's what our research found...
+<strong>Key strengths:</strong> [Key strengths]
+<strong>Honest weaknesses:</strong> [Honest weaknesses]</p>
 <h2>Bottom Line</h2>
 <p>Is {prod} right for {p_name}? If {frust} is your main concern, then yes — this is the best option at {prod_price}. <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">Check the current price on Amazon</a>.</p>""",
-        "micro_comparison": f"""<p>Quick question for {p_name}: Are you better off with the market leader or the value pick? We tested both to give you a straight answer.</p>
+        "micro_comparison": f"""<p>Quick question for {p_name}: Are you better off with the market leader or the value pick? We compared them in depth to give you a straight answer.</p>
 <h2>At a Glance</h2>
 <table class="decision-matrix"><thead><tr><th>Feature</th><th>{prod}</th><th>Alternative</th></tr></thead><tbody>
 <tr><td>Price</td><td>{prod_price}</td><td>$XX</td></tr>
@@ -2773,7 +2773,7 @@ def _persona_article_template(plan, persona, niche_name, products=None):
 <p>If {frust} is your priority, <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod}</a> is the clear choice.</p>""",
         "cross_sell": f"""<p>Most people stop at one product. But if you really want to solve {frust}, you need a system — not just a gadget.</p>
 <h2>The Essential Kit for {p_name}</h2>
-<p>After extensive testing, here are the three products {p_name} needs for the perfect {niche_name} setup:</p>
+<p>After extensive research, here are the three products {p_name} needs for the perfect {niche_name} setup:</p>
 <p><strong>1. {prod}</strong> — The cornerstone. This handles the core {frust.lower()} problem.</p>
 <p><strong>2. [Complementary product]</strong> — Extends your capabilities and fills the gaps.</p>
 <p><strong>3. [Accessory]</strong> — The finishing touch that makes everything work together seamlessly.</p>

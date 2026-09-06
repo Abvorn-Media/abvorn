@@ -22,7 +22,7 @@ DEFAULT_HOOKS = {
     ],
     "youtube_short": [
         "The {product_type} that actually delivers on its promises",
-        "I tested 10 {product_type}s — here's the only one worth buying",
+        "I compared 10 {product_type}s — here's the only one worth buying",
         "Nobody talks about this {product_type}, but it's a game-changer",
     ],
     "instagram_reel": [
@@ -31,7 +31,7 @@ DEFAULT_HOOKS = {
         "If you buy ONE {product_type} this year, make it this",
     ],
     "x": [
-        "The best {product_type} I've tested this year: {score}/10",
+        "The best {product_type} I've compared this year: {score}/10",
         "{product_name} review: {label}. Here's why it (or doesn't) justify the price.",
         "Honest take on the {product_type} everyone's talking about",
     ],

@@ -125,9 +125,9 @@ class HumanizerEngine:
                 "Take it with a grain of salt, but\u2026",
             ],
             "review": [
-                "We tested this ourselves. Here\u2019s what we found\u2026",
+                "We researched this ourselves. Here\u2019s what we found\u2026",
                 "Not sponsored. Not affiliated. Just honest data.",
-                "We bought this with our own money.",
+                "We dug into the real data and owner feedback.",
                 "We don\u2019t take kickbacks. We take data.",
             ],
             "email": [
@@ -509,11 +509,11 @@ if __name__ == "__main__":
         "blog_intro": (
             "In this review, we will examine the Sony WH-1000XM6 headphones. "
             "Our analysis focuses on sound quality, battery life, comfort, and value for money. "
-            "The findings are based on extensive testing."
+            "The findings are based on extensive research."
         ),
         "email": (
             "This is an email about our latest review. "
-            "We have tested the Sony WH-1000XM6 and found it to be exceptional. "
+            "We have researched the Sony WH-1000XM6 and found it to be exceptional. "
             "Click the link to read more."
         ),
     }

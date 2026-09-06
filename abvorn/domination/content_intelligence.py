@@ -209,7 +209,7 @@ class ContentIntelligence:
         if platform == "x":
             if price_str:
                 hooks.append(f"This {price_str} {niche} changed my mind.")
-            hooks.append(f"I tested 5 {niche} so you don't have to.")
+            hooks.append(f"I compared 5 {niche} so you don't have to.")
             hooks.append(f"Stop overpaying for {niche}.")
         elif platform == "tiktok":
             if price_str:

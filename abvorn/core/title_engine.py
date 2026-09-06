@@ -51,7 +51,7 @@ TEMPLATES: Dict[str, Dict[str, Any]] = {
         "platforms": ["tiktok", "x"],
     },
     "brutal_truth": {
-        "template": "I tested [product] for [time]... here's the brutal truth",
+        "template": "I compared [product] for [time]... here's the brutal truth",
         "base_impact": 0.84,
         "platforms": ["tiktok", "linkedin"],
     },

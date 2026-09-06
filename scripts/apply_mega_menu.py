@@ -23,7 +23,7 @@ CANON_FOOTER = (
     '    <div class="footer-grid">\n'
     '        <div class="footer-col">\n'
     '            <img src="/abvorn/logo.svg" alt="Abvorn" style="max-height:28px;width:auto;margin-bottom:8px">\n'
-    '            <p>Independent product reviews and buying guides, based on real testing.</p>\n'
+    '            <p>Independent product reviews and buying guides, based on real research.</p>\n'
     '            <div class="footer-social">' + SOCIAL_SVGS + '</div>\n'
     '        </div>\n'
     '        <div class="footer-col"><h4>Categories</h4>' + CATEGORY_LINKS + '</div>\n'

@@ -621,7 +621,7 @@ def build_review_page_pdf(page_html, *, title="", niche_name="", base="https://a
                 f'<div class="pdf-header"><img class="pdf-logo" src="{_logo_data_uri()}" alt="Abvorn"></div>'
                 f'<div class="pdf-kicker">Abvorn &middot; {html_escape(niche_name or "Review")}</div>'
                 f"<h1>{html_escape(title)}</h1>"
-                f'<div class="pdf-sub">Independent testing and reviews &middot; {html_escape(base.rstrip("/"))}</div>'
+                f'<div class="pdf-sub">Independent research and reviews &middot; {html_escape(base.rstrip("/"))}</div>'
                 "</div>"
                 '<div class="pdf-rule"></div>'
             )

@@ -98,7 +98,7 @@ class QuantumContentEngine:
         return [
             ContentComponent(id="hook_001", type="hook", text="The secret {product} companies don't want you to know...", engagement_score=0.85),
             ContentComponent(id="hook_002", type="hook", text="{number}% of people buy the wrong {product}... here's why", engagement_score=0.82),
-            ContentComponent(id="hook_003", type="hook", text="I tested {number} {product}s so you don't have to...", engagement_score=0.88),
+            ContentComponent(id="hook_003", type="hook", text="I compared {number} {product}s so you don't have to...", engagement_score=0.88),
             ContentComponent(id="hook_004", type="hook", text="The {product} that broke the internet (and why)", engagement_score=0.75),
             ContentComponent(id="hook_005", type="hook", text="Stop buying {product}s until you see this...", engagement_score=0.79),
             ContentComponent(id="hook_006", type="hook", text="Here's what nobody tells you about {product}...", engagement_score=0.81),
@@ -125,9 +125,9 @@ class QuantumContentEngine:
 
     def _initialize_trust_signals(self) -> List[ContentComponent]:
         return [
-            ContentComponent(id="trust_001", type="trust_signal", text="We tested this ourselves. Here's what we found...", engagement_score=0.80),
+            ContentComponent(id="trust_001", type="trust_signal", text="We researched this ourselves. Here's what we found...", engagement_score=0.80),
             ContentComponent(id="trust_002", type="trust_signal", text="Not sponsored. Not affiliated. Just honest data.", engagement_score=0.85),
-            ContentComponent(id="trust_003", type="trust_signal", text="We bought this with our own money.", engagement_score=0.82),
+            ContentComponent(id="trust_003", type="trust_signal", text="We dug into the real data and owner feedback.", engagement_score=0.82),
             ContentComponent(id="trust_004", type="trust_signal", text="Full disclosure:", engagement_score=0.78),
             ContentComponent(id="trust_005", type="trust_signal", text="We were surprised by this too...", engagement_score=0.76),
         ]

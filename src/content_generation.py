@@ -182,7 +182,7 @@ Return ONLY the HTML paragraphs, wrapped in <p> tags."""
     intro_html = intro_result.content
     _track_call(niche, intro_result.provider_used, intro_result.tokens_used, (time.time() - t0) * 1000, intro_result.cost_estimate)
     if not intro_html:
-        intro_html = "<p>We tested the top products to find the ones worth your money.</p>"
+        intro_html = "<p>We compare specs, prices, and real owner feedback to find the products worth your money.</p>"
     intro_html = sanitize_article_html(intro_html, strip_leading_intro=False)
 
     article_prompt = f"""Write the full article body for '{post_title}' about {niche}.
@@ -283,8 +283,8 @@ def generate_persona_content_plan(niche_name, persona, awareness_level="problem_
             f"Should You Prioritize {hopes[0] if len(hopes)>1 else 'Quality'} or {frust}?",
         ],
         "product_review": [
-            f"Best {niche_lower} for {p_name}: Real Testing, Honest Verdict",
-            f"We Tested the Top {niche_lower} So {p_name} Doesn't Have To",
+            f"Best {niche_lower} for {p_name}: Real Research, Honest Verdict",
+            f"We Compared the Top {niche_lower} So {p_name} Doesn't Have To",
         ],
         "micro_comparison": [
             f"[Product A] vs [Product B]: The {p_name}'s Verdict",
@@ -431,7 +431,7 @@ def _persona_article_template(plan, persona, niche_name, products=None):
 <p>The root cause is almost never what people think. It's not about budget, or brand, or even the specific product. It's about how {niche_name} fits into your specific situation.</p>
 <p>When you understand the underlying mechanics, you stop wasting money on Band-Aid fixes and start investing in solutions that last.</p>
 <h2>What {p_name} Should Do Instead</h2>
-<p>Here's the framework we use after testing dozens of options. Step one: identify your actual use case. Step two: match it to proven solutions. Step three: ignore everything else.</p>
+<p>Here's the framework we use after comparing dozens of options across specs, prices, and owner feedback. Step one: identify your actual use case. Step two: match it to proven solutions. Step three: ignore everything else.</p>
 <p>Want the shortcut? Start with <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod}</a> — it consistently outperforms alternatives in this exact scenario.</p>""",
         "how_to": f"""<p>If you've been struggling with {frust}, here's a step-by-step system that will help you achieve {hope}.</p>
 <h2>Step 1: Assess Your Starting Point</h2>
@@ -439,27 +439,27 @@ def _persona_article_template(plan, persona, niche_name, products=None):
 <h2>Step 2: Choose the Right Approach</h2>
 <p>Not all solutions are created equal. For {p_name}, the best approach prioritizes {hope.lower()} without creating new problems. Here's what to look for...</p>
 <h2>Step 3: Invest in What Works</h2>
-<p>Once you've identified the right approach, it's time to execute. We've tested extensively and found that <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod}</a> delivers the best results for people in your situation.</p>
+<p>Once you've identified the right approach, it's time to execute. Our research shows that <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod}</a> delivers the best results for people in your situation.</p>
 <h2>Step 4: Optimize and Maintain</h2>
 <p>Getting it right is one thing. Keeping it right is another. Here's how to maintain your setup for long-term success...</p>""",
         "solution_comparison": f"""<p>If you're reading this, you already know {frust} is a problem. Now the question is: what's the best way to solve it?</p>
-<p>We've tested every major approach. Here's our honest assessment of what works best for {p_name}.</p>
+<p>We've researched every major approach. Here's our honest assessment of what works best for {p_name}.</p>
 <h2>Option A: The Quick Fix</h2>
 <p>Fast, affordable, but often temporary. Good if you need an immediate solution and are comfortable iterating.</p>
 <h2>Option B: The Long-Term Solution</h2>
 <p>More investment upfront, but delivers {hope} sustainably. This is what we recommend for most people.</p>
 <h2>Our Verdict</h2>
 <p>For {p_name}, we recommend <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod}</a>. It strikes the best balance of performance, value, and reliability.</p>""",
-        "product_review": f"""<p>After spending [X hours] testing {prod} against its top competitors, here's our honest verdict — including what we didn't like.</p>
+        "product_review": f"""<p>After digging through the real specs, prices, and owner feedback on {prod} and its top competitors, here's our honest verdict — including what we didn't like.</p>
 <h2>First Impressions</h2>
 <p>Out of the box, {prod} feels {hope.lower()} in mind. The build quality is solid, the setup is straightforward, and the initial performance is impressive.</p>
-<h2>How It Performs in Real-World Use</h2>
-<p>We tested {prod} for [X days/weeks] in real conditions. Here's what we found...
+<h2>How It Stacks Up on Paper and in Practice</h2>
+<p>We compared {prod} against its main rivals on the specs that matter, checked the current price, and read what real owners are saying. Here's what our research found...
 <strong>What we loved:</strong> [Key strengths]
 <strong>What we didn't:</strong> [Honest weaknesses]</p>
 <h2>Bottom Line</h2>
 <p>Is {prod} right for {p_name}? If {frust} is your main concern, then yes — this is the best option at {prod_price}. <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">Check the current price on Amazon</a>.</p>""",
-        "micro_comparison": f"""<p>Quick question for {p_name}: Are you better off with the market leader or the value pick? We tested both to give you a straight answer.</p>
+        "micro_comparison": f"""<p>Quick question for {p_name}: Are you better off with the market leader or the value pick? We compared them in depth to give you a straight answer.</p>
 <h2>At a Glance</h2>
 <table class="decision-matrix"><thead><tr><th>Feature</th><th>{prod}</th><th>Alternative</th></tr></thead><tbody>
 <tr><td>Price</td><td>{prod_price}</td><td>$XX</td></tr>
@@ -470,7 +470,7 @@ def _persona_article_template(plan, persona, niche_name, products=None):
 <p>If {frust} is your priority, <a href="https://www.amazon.com/s?k={niche_name.replace(' ','+')}&tag={amazon_tag}" target="_blank" rel="sponsored">{prod}</a> is the clear choice.</p>""",
         "cross_sell": f"""<p>Most people stop at one product. But if you really want to solve {frust}, you need a system — not just a gadget.</p>
 <h2>The Essential Kit for {p_name}</h2>
-<p>After extensive testing, here are the three products {p_name} needs for the perfect {niche_name} setup:</p>
+<p>After extensive research, here are the three products {p_name} needs for the perfect {niche_name} setup:</p>
 <p><strong>1. {prod}</strong> — The cornerstone. This handles the core {frust.lower()} problem.</p>
 <p><strong>2. [Complementary product]</strong> — Extends your capabilities and fills the gaps.</p>
 <p><strong>3. [Accessory]</strong> — The finishing touch that makes everything work together seamlessly.</p>

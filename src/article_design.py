@@ -461,7 +461,7 @@ def build_faq(niche_slug, niche_name, products, product_name, price_floor,
         ),
         (
             f"Is {best_name} worth it?",
-            f"Based on our testing, yes for most people. {best_name} scored "
+            f"Based on our research, yes for most people. {best_name} scored "
             f"{score}/10 on our rubric, which weighs {criteria.lower()} in "
             f"proportion to what real buyers care about. "
             f"{verdict_summary or 'It is the best-rounded option in this category today.'}",
@@ -481,7 +481,7 @@ def build_faq(niche_slug, niche_name, products, product_name, price_floor,
             f"shows exactly how every model scores on each one.",
         ),
         (
-            "How does Abvorn test products?",
+            "How does Abvorn research products?",
             "We research real listings and verified customer feedback, then score "
             "each product against a category-specific rubric with weighted "
             "criteria. Scores are out of 10 and the full breakdown is shown "

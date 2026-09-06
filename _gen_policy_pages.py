@@ -233,8 +233,8 @@ ABOUT = f"""<!DOCTYPE html>
 <p>Every product we recommend goes through rigorous evaluation:</p>
 <ul>
 <li><strong>Research:</strong> We analyze specifications, expert opinions, and thousands of user reviews</li>
-<li><strong>Test:</strong> Products are tested against real-world use cases relevant to each category</li>
-<li><strong>Compare:</strong> We benchmark against competitors at similar price points</li>
+<li><strong>Specs &amp; Price:</strong> We compare each product on the specs that matter at its current price</li>
+<li><strong>Compare:</strong> We benchmark products against competitors at similar price points</li>
 <li><strong>Verify:</strong> Recommendations are updated as new products launch and market conditions change</li>
 </ul>
 <p>See our full <a href="{BASE}/how-we-test/">How We Test</a> page for detailed methodology.</p>

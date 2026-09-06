@@ -133,7 +133,7 @@ def format_voice_rules() -> str:
 
 DISCLOSURE_BANNER = "We independently review everything we recommend. When you buy through our links, we may earn a commission."
 
-TRUST_SIGNAL = "Why you can trust Abvorn: Our team spends hours researching and testing products so you can buy with confidence. Every recommendation is independent and free from sponsor influence."
+TRUST_SIGNAL = "Why you can trust Abvorn: Our team spends hours researching real specs, prices, and owner feedback for every product we cover. Every recommendation is independent and free from sponsor influence."
 
 AFFILIATE_FOOTER = "As an Amazon Associate we earn from qualifying purchases."
 

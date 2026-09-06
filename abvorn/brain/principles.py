@@ -10,7 +10,7 @@ CRO_PRINCIPLES = {
     "contrast": "Highlight the difference between before/after, with/without, cheap/quality. Contrast drives clarity.",
     "commitment": "Start with a tiny ask (read more, scroll). Each small commitment makes the next one easier.",
     "reciprocity": "Give value before asking for the sale. Free guide, comparison tool, checklist → then CTA.",
-    "authority": "Position as expert. Data, credentials, testing methodology, research depth all build authority.",
+    "authority": "Position as expert. Data, research depth, verified owner feedback all build authority.",
     "liking": "People buy from people they like. Human voice, personality, relatability, humor.",
     "unity": "Shared identity converts. 'For people like you', 'Join our community', 'From one [persona] to another'.",
     "urgency": "Time pressure (real). Limited-time deals, expiring discounts, seasonal offers.",
@@ -73,13 +73,13 @@ STORYTELLING_PRINCIPLES = {
     "concrete_details": "Abstract = ignored. Concrete = remembered. 'Scratched on day 3' > 'poor quality'. '$47' > 'affordable'.",
     "unexpectedness": "Surprise breaks patterns. 'What if everything you know about buying a mattress is wrong?'",
     "credibility_chain": "Who told you? → What did you find? → Why should they care? Chain of credibility builds trust.",
-    "show_dont_tell": "'We tested for 40 hours' > 'We're thorough'. 'The handle broke on day 3' > 'It's not durable'.",
+    "show_dont_tell": "'We tracked 212 real owner reviews' > 'We're thorough'. 'The handle broke on day 3 per multiple owners' > 'It's not durable'.",
     "pattern_interrupt": "Break reader's autopilot. Start with a question, a shocking stat, a confession, a paradox.",
     "mini_stories": "Embed short stories (2-3 sentences) in product reviews. 'I bought this for my dad. He called me twice.'",
     "open_loops": "Create curiosity gaps. 'There's one thing most buyers miss — and it costs them hundreds.' Close it later.",
     "metaphor": "Complex ideas need simple frames. 'Think of it like a Swiss Army knife. Lots of tools, but you'll only use two.'",
     "sensory_language": "Engage all senses. 'The aluminum body feels cool and solid in your hand.' Not 'It's well-built'.",
-    "specificity": "'3 hours of testing with 12 different materials' beats 'extensive testing'. Specificity is credibility.",
+    "specificity": "'Averaged across 340 verified owner reviews over 2 years' beats 'extensive research'. Specificity is credibility.",
     "transformation": "Show the before and after. 'Before: 30 minutes grinding beans. After: Fresh espresso in 30 seconds.'"
 }
 

@@ -398,7 +398,7 @@ class SiteDeployer:
 <section class="hero" id="main">
 <div class="container">
 <h1>The Best {niche.replace("-"," ").title()}</h1>
-<p>We tested the top contenders to find the ones worth your money.</p>
+<p>We compared the top contenders on specs, prices, and owner feedback to find the ones worth your money.</p>
 </div>
 </section>
 
