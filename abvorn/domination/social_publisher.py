@@ -1,7 +1,7 @@
 """Social Publisher — publishes content to social platforms via Composio
 or export-ready file generation when Composio is unavailable."""
 
-import logging, json
+import logging, json, re
 from pathlib import Path
 from datetime import datetime
 
@@ -27,7 +27,11 @@ PLATFORM_ACTIONS = {
         "url_share_slug": "LINKEDIN_CREATE_ARTICLE_OR_URL_SHARE",
         "params_fn": lambda script: _linkedin_params(script),
     },
-    "instagram": {"slug": None, "toolkit": None, "export_only": True},
+    "instagram": {
+        "toolkit": "instagram",
+        "flow": "carousel",
+        "slug": "INSTAGRAM_CREATE_POST",
+    },
     "facebook": {"slug": None, "toolkit": None, "export_only": True},
     "tiktok": {"slug": None, "toolkit": None, "export_only": True},
     "pinterest": {"slug": None, "toolkit": None, "export_only": True},
@@ -122,6 +126,9 @@ class SocialPublisher:
         if mapping.get("export_only") or not self._client.available:
             return self._export(script, platform, niche)
 
+        if mapping.get("flow") == "carousel":
+            return self._publish_instagram_carousel(script, platform, niche, media_paths)
+
         params = mapping["params_fn"](script)
         if platform == "linkedin":
             params["author"] = self._client.linkedin_author_urn()
@@ -147,12 +154,84 @@ class SocialPublisher:
             logger.warning(f"{platform}: Composio failed — exporting instead: {e}")
             return self._export(script, platform, niche)
 
-    def publish_all(self, scripts: dict, niche: str = "") -> list[dict]:
+    def publish_all(self, scripts: dict, niche: str = "",
+                media_paths: list[str] | None = None) -> list[dict]:
         results = []
         for platform, script in scripts.items():
-            r = self.publish(script, platform, niche)
+            r = self.publish(script, platform, niche, media_paths=media_paths)
             results.append(r)
         return results
+
+    def _honest_instagram_caption(self, script: dict | list | str, niche: str) -> str:
+        """Build a caption that never claims physical hands-on testing.
+
+        We do research-based comparison (specs, prices, owner feedback) — not
+        physical product testing — so any caption carrying a false-testing
+        marker is replaced with neutral, honest phrasing. For a carousel
+        (list of slides) the caption is the hook slide, not the whole deck.
+        """
+        if isinstance(script, list) and script:
+            caption = str(script[0]) or ""
+        else:
+            caption = _extract_text(script)
+        caption = caption.replace("\U0001F4CC", "").replace("\U0001F517", "").strip()
+        caption = re.sub(r"\s+", " ", caption)[:2000]
+        from ..platform.adapters import _has_false_testing_claim
+        if not caption or _has_false_testing_claim(caption):
+            caption = (
+                f"After comparing specs, prices, and real owner feedback for "
+                f"{niche or 'these products'}, here's what stands out."
+            )
+        return caption[:2200]
+
+    def _resize_for_instagram(self, media_paths: list[str]) -> list[str]:
+        """Resize images to 1080x1080 (IG feed format) into the export cache."""
+        imported = False
+        try:
+            from .cinematic_filter import CinematicFilter
+            imported = True
+        except Exception:
+            pass
+        resized = []
+        cache_dir = Path.home() / ".abvorn" / "exports" / "instagram"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        for i, path in enumerate(media_paths[:10]):
+            if imported:
+                import time
+                out = cache_dir / f"ig_{int(time.time() * 1000)}_{i}.jpg"
+                try:
+                    done = CinematicFilter().resize_for_platform(path, "instagram", str(out))
+                    if done:
+                        resized.append(str(out))
+                        continue
+                except Exception:
+                    pass
+            resized.append(str(path))
+        return resized
+
+    def _publish_instagram_carousel(self, script: dict | list | str, platform: str,
+                                    niche: str, media_paths: list[str] | None) -> dict:
+        media_paths = media_paths or []
+        if len(media_paths) < 2:
+            logger.warning("instagram: carousel needs >=2 images — exporting instead")
+            return self._export(script, platform, niche)
+
+        caption = self._honest_instagram_caption(script, niche)
+        images = self._resize_for_instagram(media_paths)
+        try:
+            result_data = self._client.instagram_publish_carousel(caption, images)
+            result = {
+                "status": "posted",
+                "platform": platform,
+                "tool": "INSTAGRAM_CREATE_POST",
+                "data": result_data,
+            }
+            self._results.append(result)
+            logger.info(f"instagram: carousel posted ({result_data})")
+            return result
+        except Exception as e:
+            logger.warning(f"instagram: Composio failed — exporting instead: {e}")
+            return self._export(script, platform, niche)
 
     def _export(self, script: dict | list | str, platform: str,
                 niche: str) -> dict:

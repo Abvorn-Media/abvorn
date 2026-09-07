@@ -187,7 +187,9 @@ class DominationOrchestrator:
                 script_obj = scripts[platform_key]["script"]
                 publish_targets[platform_key] = script_obj
 
-            publish_results = self.publisher.publish_all(publish_targets, target["niche"])
+            publish_results = self.publisher.publish_all(
+                publish_targets, target["niche"], media_paths=media_paths
+            )
             posted = [r for r in publish_results if r["status"] == "posted"]
             exported = [r for r in publish_results if r["status"] == "exported"]
             steps["publish"] = {

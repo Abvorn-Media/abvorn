@@ -22,6 +22,11 @@ except ImportError:
 
 LINKEDIN_MY_INFO_TOOL = "LINKEDIN_GET_MY_INFO"
 
+INSTAGRAM_TOOLKIT = "instagram"
+INSTAGRAM_GET_USER_INFO_TOOL = "INSTAGRAM_GET_USER_INFO"
+INSTAGRAM_CAROUSEL_CONTAINER_TOOL = "INSTAGRAM_CREATE_CAROUSEL_CONTAINER"
+INSTAGRAM_CREATE_POST_TOOL = "INSTAGRAM_CREATE_POST"
+
 
 class ComposioConnectionError(RuntimeError):
     """Raised when a toolkit has no usable connected account / version."""
@@ -35,6 +40,7 @@ class ComposioClient:
         self.client = None
         self._toolkit_state = {}  # toolkit -> (user_id, connected_account_id, version)
         self._linkedin_urn = ""
+        self._instagram_user_id = ""
         if api_key and HAS_COMPOSIO:
             try:
                 os.environ["COMPOSIO_API_KEY"] = api_key
@@ -153,3 +159,88 @@ class ComposioClient:
             raise ComposioConnectionError(
                 f"linkedin author URN lookup failed: {e}"
             ) from e
+
+    def instagram_user_id(self) -> str:
+        """Resolve the numeric Instagram Business/Creator account ID.
+
+        Env override (INSTAGRAM_USER_ID) wins, then a cached discovery result,
+        then live discovery via INSTAGRAM_GET_USER_INFO. The numeric ID is
+        required by INSTAGRAM_CREATE_POST (the literal "me" is rejected).
+        """
+        env_id = os.environ.get("INSTAGRAM_USER_ID", "").strip()
+        if env_id:
+            return env_id
+        if self._instagram_user_id:
+            return self._instagram_user_id
+        uid, caid, version = self.resolve_connection(INSTAGRAM_TOOLKIT)
+        try:
+            resp = self.client.tools.execute(
+                slug=INSTAGRAM_GET_USER_INFO_TOOL,
+                arguments={},
+                user_id=uid,
+                connected_account_id=caid,
+                version=version,
+            )
+            user_id = (resp.get("data") or {}).get("id")
+            if not user_id:
+                raise ComposioConnectionError(
+                    "instagram user id missing from INSTAGRAM_GET_USER_INFO"
+                )
+            self._instagram_user_id = str(user_id)
+            return self._instagram_user_id
+        except Exception as e:
+            raise ComposioConnectionError(
+                f"instagram user id lookup failed: {e}"
+            ) from e
+
+    def instagram_publish_carousel(self, caption: str,
+                                   image_paths: list[str]) -> dict:
+        """Publish a carousel from local image files.
+
+        Uploads each image through Composio's file-upload pipeline
+        (FileUploadable), creates a carousel container with the uploaded
+        children, then publishes it with INSTAGRAM_CREATE_POST. Returns the
+        create-post response data on success; raises on any step failure so
+        the caller can keep its export fallback.
+        """
+        uid, caid, version = self.resolve_connection(INSTAGRAM_TOOLKIT)
+        user_id = self.instagram_user_id()
+
+        try:
+            from composio.core.models._files import FileUploadable
+        except ImportError as e:
+            raise RuntimeError(
+                f"composio FileUploadable unavailable: {e}"
+            ) from e
+
+        children = []
+        for path in image_paths[:10]:
+            fu = FileUploadable.from_path(
+                client=self.client.client,
+                file=path,
+                tool=INSTAGRAM_CAROUSEL_CONTAINER_TOOL,
+                toolkit=INSTAGRAM_TOOLKIT,
+                sensitive_file_upload_protection=False,
+            )
+            children.append(fu.model_dump())
+
+        container = self.execute(
+            INSTAGRAM_TOOLKIT,
+            INSTAGRAM_CAROUSEL_CONTAINER_TOOL,
+            {
+                "ig_user_id": user_id,
+                "caption": caption[:2200],
+                "child_image_files": children,
+            },
+        )
+        creation_id = (container or {}).get("id") or ""
+        if not creation_id:
+            raise RuntimeError(
+                "instagram carousel container returned no creation id"
+            )
+
+        return self.execute(
+            INSTAGRAM_TOOLKIT,
+            INSTAGRAM_CREATE_POST_TOOL,
+            {"ig_user_id": user_id, "creation_id": creation_id},
+        )
