@@ -2900,8 +2900,15 @@ def write_site_metadata(docs_dir, items):
             return datetime.strptime(d, "%Y-%m-%d").strftime("%a, %d %b %Y 00:00:00 +0000")
         except Exception:
             return ""
+    def _xml_escape(s: str) -> str:
+        # XML text/attr escaping: &, <, >, ", ' must not appear raw or the
+        # feed/sitemap become malformed (e.g. "A & B" in a title).
+        return (
+            html_mod.escape(str(s or ""), quote=True)
+            .replace("&#x27;", "&apos;")
+        )
     for it in items:
-        rss_xml += f'<item><title>{it["title"]}</title><link>https://abvorn.com/{it["slug"]}</link><guid>https://abvorn.com/{it["slug"]}</guid><pubDate>{_rfc822(it["date"])}</pubDate></item>'
+        rss_xml += f'<item><title>{_xml_escape(it["title"])}</title><link>https://abvorn.com/{_xml_escape(it["slug"])}</link><guid>https://abvorn.com/{_xml_escape(it["slug"])}</guid><pubDate>{_rfc822(it["date"])}</pubDate></item>'
     rss_xml += '</channel></rss>'
     write_checked(docs_dir / "feed.xml", rss_xml, "feed.xml")
 
@@ -2915,12 +2922,13 @@ def write_site_metadata(docs_dir, items):
     for title, path in core_pages:
         if path.endswith(".html") or path.endswith("/"):
             loc = f"{SITE_BASE}/{path}".rstrip("/") or SITE_BASE
-            core_urls.append(f"<url><loc>{loc}</loc>{_lastmod({})}</url>")
+            core_urls.append(f"<url><loc>{_xml_escape(loc)}</loc>{_lastmod({})}</url>")
     sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    sitemap += f'<url><loc>{SITE_BASE}</loc>{_lastmod({})}</url>\n'
+    sitemap += f'<url><loc>{_xml_escape(SITE_BASE)}</loc>{_lastmod({})}</url>\n'
     sitemap += "\n".join(core_urls) + "\n" if core_urls else ""
     for it in items:
-        sitemap += f'<url><loc>{SITE_BASE}/{it["slug"]}</loc>{_lastmod(it)}</url>\n'
+        item_loc = f'{SITE_BASE}/{it["slug"]}'
+        sitemap += f'<url><loc>{_xml_escape(item_loc)}</loc>{_lastmod(it)}</url>\n'
     sitemap += '</urlset>'
     write_checked(docs_dir / "sitemap.xml", sitemap, "sitemap.xml")
 
