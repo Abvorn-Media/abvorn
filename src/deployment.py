@@ -1028,11 +1028,16 @@ def build_homepage(state, form_url="", reviews=None, base=None):
     niches = sorted(state["niches"], key=lambda n: n["name"].lower())
     all_slugs = sorted([n["slug"] for n in niches], key=lambda s: _slugify_title(s).lower())
     b = base or SITE_BASE
-    total_posts = sum(n["posts"] for n in niches)
-    total_products = total_posts * 3  # rough estimate
 
     # Published reviews — one card per review page (up to 3 per category).
     review_list = reviews if reviews is not None else scan_published_reviews()
+
+    # Stats must derive from actually-published reviews, not the gitignored
+    # state["niches"][]["posts"] which reports 0 on a fresh checkout (every
+    # niche would show 0 guides / 0 products). This mirrors how the trending
+    # ticker below scans published pages. Products is a rough estimate.
+    total_posts = len(review_list)
+    total_products = total_posts * 3  # rough estimate
 
     # Build nav dropdown (white mega-menu)
     nav_dd = build_category_dropdown(b)
