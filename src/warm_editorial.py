@@ -227,9 +227,15 @@ header { background:#0a0a0a; padding:18px 0; border-bottom:1px solid #2a2a2a; po
 .cta-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(circle at 20% 30%, rgba(201,138,44,.25), transparent 55%); }
 .cta-banner > * { position:relative; }
 .cta-banner h3 { color:#fff; font-size: clamp(1.2rem,2.5vw,1.7rem); margin-bottom:8px; }
-.cta-banner p { color:#b5b5b5; max-width:56ch; margin-bottom:20px; }
+.cta-banner p { color:#b5b5b5; max-width:56ch; margin:0 auto 20px; }
 .cta-banner .btn { background:var(--clr-accent); color:#0a0a0a; font-weight:800; }
 .cta-banner .btn:hover { background:#c98a2c; }
+.cta-banner form { max-width:460px; margin:0 auto; width:100%; }
+.cta-lead-row { display:flex; gap:10px; align-items:stretch; flex-wrap:wrap; }
+.cta-lead-row .input { flex:1 1 220px; min-width:0; width:auto; padding:0.7em 1em; font-family:var(--font-body); font-size:0.9rem; color:#1a1a1a; background:#ffffff; border:2px solid transparent; border-radius:var(--radius-sm); transition:border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); }
+.cta-lead-row .input:focus { outline:none; border-color:var(--clr-accent); background:#fff; }
+.cta-lead-row .btn { flex-shrink:0; }
+@media(max-width:520px) { .cta-banner form { max-width:100%; } .cta-lead-row .input { flex-basis:100%; } }
 
 /* -- FAQ -- */
 .faq-section { margin: var(--space-xl) 0; }
