@@ -56,6 +56,12 @@ def _linkedin_params(script: dict) -> dict:
         or script.get("body")
         or _extract_text(script)
     )
+    commentary = str(commentary or "").strip()
+    if not commentary:
+        commentary = (
+            str(script.get("headline") or script.get("title") or "").strip()
+            or "After comparing real specs, prices, and owner feedback across the top options, here's what stands out."
+        )
     params = {"commentary": commentary[:3000]}
     raw_url = str(script.get("url", "") or "").strip()
     if raw_url:

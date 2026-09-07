@@ -165,6 +165,12 @@ class ViralScriptGenerator:
         clean = re.sub(r"<[^>]+>", "", summary)[:800]
         paragraphs = clean.split("\n")[:4]
         body = "\n\n".join(p for p in paragraphs if p.strip())
+        if not body:
+            body = (
+                f"{hook}\n\nAfter comparing real specs, prices, and owner "
+                f"feedback across the leading {niche} options, here's what "
+                f"actually stands out — and what to skip."
+            )
         return {
             "headline": hook,
             "body": body,
