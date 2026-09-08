@@ -19,7 +19,6 @@ journal produces no commit. Never raises past the gate checks.
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import shutil
@@ -61,6 +60,17 @@ def main() -> int:
         logger.error("repo-src missing: %s", REPO_DIR)
         return 1
 
+    # Base the commit on the current origin/main. The runtime-sync timer
+    # hard-resets repo-src to origin/main every ~10 min, so regenerate on a
+    # clean tree each run instead of rebasing onto local work.
+    try:
+        _git(["fetch", "origin"], REPO_DIR)
+        _git(["reset", "--hard", "origin/main"], REPO_DIR)
+        _git(["clean", "-fd", "docs/journal", "data/evolution_journal.json"], REPO_DIR, check=False)
+    except Exception as e:
+        logger.error("repo reset failed: %s", e)
+        return 1
+
     # Sync the tracked journal from real runtime signals.
     try:
         from abvorn.core import journal_sync
@@ -95,21 +105,30 @@ def main() -> int:
         logger.error("journal page rebuild failed: %s", e)
         return 1
 
+    # Nothing to publish when the harvest + rebuild changed nothing.
     changed = _git(["status", "--porcelain"], REPO_DIR).stdout
-    touched = [l for l in changed.splitlines() if "evolution_journal.json" in l or ("journal/index.html" in l and l.strip().startswith(("M", "A")))]
+    touched = [l for l in changed.splitlines() if "evolution_journal.json" in l
+               or "docs/journal/index.html" in l]
 
     if not touched:
         logger.info("no journal changes to publish")
         return 0
 
-    # Fetch + rebase onto origin/main, commit, push.
+    # Commit + push (one retry against a concurrent push from CI).
     try:
-        _git(["fetch", "origin"], REPO_DIR)
-        _git(["rebase", "origin/main"], REPO_DIR)
         _git(["add", "data/evolution_journal.json", "docs/journal/index.html"], REPO_DIR)
         stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         _git(["commit", "-m", f"journal: sync live evolution entries ({stamp})"], REPO_DIR)
-        _git(["push", "origin", "main"], REPO_DIR)
+        for attempt in range(2):
+            try:
+                _git(["push", "origin", "main"], REPO_DIR)
+                break
+            except Exception:
+                if attempt == 0:
+                    _git(["fetch", "origin"], REPO_DIR)
+                    _git(["rebase", "origin/main"], REPO_DIR)
+                else:
+                    raise
         logger.info("pushed journal sync to origin/main")
     except Exception as e:
         logger.error("journal sync publish failed: %s", e)
