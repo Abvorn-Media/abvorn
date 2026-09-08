@@ -40,7 +40,11 @@ class GSCIngestor:
 
         df = self.client.fetch_performance(days)
         if not df:
-            return {"status": "failed", "error": "No data fetched"}
+            # Empty is not an error: a young/lightly-indexed site (or the 2-3
+            # day Search Console reporting lag) means the window legitimately
+            # has no rows. Report it distinctly so the daemon marks the run as
+            # done instead of retrying on a failure loop.
+            return {"status": "no_data_yet", "error": f"No data fetched for last {days} days"}
 
         top_content = self.client.fetch_top_performing(days)
         opportunities = self.client.fetch_growth_opportunities(days)
