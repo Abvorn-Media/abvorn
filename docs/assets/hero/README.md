@@ -1,28 +1,39 @@
-# Product Images — Upload Guide
-> **SITE-006** — Instructions for hero image upload vs AI fallback logic.
+# Category Hero Images
 
-## Where to Upload
+> **SITE-006** — Real product photography for niche page heroes, sourced from
+> Pexels and credited on page. The SVG placeholders in `docs/assets/` remain
+> the fallback.
+
+## How Images Land Here
+
+Fetch with the maintenance script on a machine that has a Pexels key (the
+prod server reads `PEXELS_KEY` from `/opt/abvorn-core/.env`):
 
 ```
-docs/assets/hero/{niche-slug}.jpg
+python scripts/fetch_category_heroes.py --out <dir> --key "$PEXELS_KEY"
 ```
 
-Example: `docs/assets/hero/wireless-headphones.jpg`
+- Runs from the repo root. Art direction is baked into `HEROES` (object-first,
+  no people, no bright backdrops — a "specimen on a dark stage") plus a default
+  rank pick per niche.
+- Downloads at `w=1440` from the Pexels CDN and recompresses to progressive
+  JPG (q82). Files stay well under 500 KB.
+- Writes `credits.json` next to the images — the page needs one entry per JPG
+  to render the on-page `Photo: {photographer} — Pexels` line with a link back
+  to the source.
+
+Commit the JPGs and `credits.json`; the generated pages reference them.
 
 ## File Spec
 
 | Property | Value |
 |----------|-------|
-| **Dimensions** | 1920 × 1080 pixels (16:9 landscape) |
-| **Format** | JPG (sRGB, progressive optional) |
-| **Quality** | 80–85% compression (under 500 KB per file ideal) |
-| **Orientation** | Landscape only |
-
-Do **not** upload PNG, WebP, SVG, or other formats — the carousel only loads JPG.
+| **Layout** | `docs/assets/hero/{niche-slug}.jpg` |
+| **Format** | JPG (progressive, q≈82) |
+| **Size** | ~30–180 KB (w1440) |
+| **Display** | `max-width:480px`, `aspect-ratio:4/3`, `object-fit:cover` |
 
 ## Naming Convention
-
-Use the exact slug from the URL:
 
 | Niche | Filename |
 |-------|----------|
@@ -37,29 +48,23 @@ Use the exact slug from the URL:
 | Webcams | `webcams.jpg` |
 | Smart Home | `smart-home.jpg` |
 
-Homepage hero: `docs/assets/hero/hero-home.jpg`
-
-## What the Image Should Show
-
-- **Product hero shot** — the best-reviewed product in the category, centered or slightly offset
-- Clean background (white, gradient, or lifestyle setting)
-- No text overlays, logos, or branding on the image itself
-- Well-lit, sharp, true-to-life colors
-- Example style: Amazon product hero shots, Best Buy category banners
+The homepage slider and `/categories/*/` listing pages use their own art
+(niche SVG and generated category motifs) — do not rely on these JPGs there.
 
 ## How It's Used
 
-Once uploaded, the carousel on each category page will:
+`run_cycle.py::build_category_page` checks for a JPG + `credits.json` entry:
+with both present it renders the photo on the hero stage with a visible credit
+line; missing either, it falls back to `docs/assets/{slug}.svg` with the stage
+hidden from assistive tech as before.
 
-1. Load `hero/{slug}.jpg` as the slide background (full-bleed)
-2. Render the product name, badge ("Our Pick"), and CTA button on top
-3. Auto-rotate between slides every 5 seconds
+## Regenerating
 
-If no JPG exists for a niche, the system falls back to the SVG placeholder.
+After changing `HEROES` queries or picks in `scripts/fetch_category_heroes.py`:
 
-## Bulk Upload Checklist
-
-- [ ] All 10 niche JPGs in `docs/assets/hero/`
-- [ ] `hero-home.jpg` for the homepage
-- [ ] Each file under 500 KB
-- [ ] Verify on live site after push
+1. scp the script to the server and run with the real key into a staging dir
+   (see `--out`), including `--dry-run`/`--top` to rank before committing to a
+   pick.
+2. scp the JPGs + `credits.json` back over `docs/assets/hero/`.
+3. Run the mojibake gate (`python scripts/check_publish_content.py`), the test
+   suite, and verify one built niche page before committing.
