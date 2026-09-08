@@ -273,7 +273,7 @@ def test_gsc_fetch_webhook_runs_ingest_and_returns_summary(monkeypatch):
     body = response.json()
     assert body["success"] is True
     assert calls.get("constructed") is True
-    assert calls.get("days") == 7
+    assert calls.get("days") == 30
     assert body["ingest"]["status"] == "success"
     assert body["total_clicks"] == 12
 
