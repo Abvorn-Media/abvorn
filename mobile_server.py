@@ -617,7 +617,7 @@ async def abvorn_webhook(action: str, request: Request):
         client = GSCClient()
         if not client.enabled:
             return {"success": False, "error": "GSC Client disabled"}
-        ingest = GSCIngestor().ingest_performance(7)
+        ingest = GSCIngestor().ingest_performance(30)
         summary = client.get_summary()
         return {"success": True, "ingest": ingest, **summary}
 
