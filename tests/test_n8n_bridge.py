@@ -233,6 +233,51 @@ def test_evolution_check_webhook_returns_should_evolve():
     assert isinstance(body["should_evolve"], bool)
 
 
+def test_gsc_fetch_webhook_runs_ingest_and_returns_summary(monkeypatch):
+    """gsc_fetch must persist the summary (GSCIngestor) and still return the
+    read-only stats the n8n sheet step expects."""
+    import os
+
+    import mobile_server
+    from fastapi.testclient import TestClient
+
+    calls = {}
+
+    class FakeClient:
+        enabled = True
+        property_url = "sc-domain:abvorn.com"
+
+        def get_summary(self):
+            return {"enabled": True, "property": self.property_url,
+                    "total_clicks": 12, "total_impressions": 300,
+                    "avg_ctr": 0.04, "avg_position": 3.2, "data_rows": 1}
+
+    class FakeIngestor:
+        def __init__(self):
+            calls["constructed"] = True
+
+        def ingest_performance(self, days):
+            calls["days"] = days
+            return {"status": "success", "rows_processed": 1,
+                    "top_content_count": 0, "opportunities_count": 0,
+                    "insights": []}
+
+    monkeypatch.setattr("abvorn.core.gsc_client.GSCClient", FakeClient)
+    monkeypatch.setattr("abvorn.core.gsc_ingestor.GSCIngestor", FakeIngestor)
+
+    os.environ["ABVORN_WEBHOOK_TOKEN"] = "test-webhook-token"
+    client = TestClient(mobile_server.app)
+    headers = {"Authorization": "Bearer test-webhook-token"}
+    response = client.post("/webhook/abvorn/gsc_fetch", json={}, headers=headers)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+    assert calls.get("constructed") is True
+    assert calls.get("days") == 7
+    assert body["ingest"]["status"] == "success"
+    assert body["total_clicks"] == 12
+
+
 def test_webhook_rejects_unauthenticated_request():
     """Webhooks are a write/publish surface and must fail closed without a token."""
     import mobile_server

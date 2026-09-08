@@ -611,13 +611,15 @@ async def abvorn_webhook(action: str, request: Request):
         return {"success": True, "result": result}
 
     if action == "gsc_fetch":
+        from abvorn.core.gsc_ingestor import GSCIngestor
         from abvorn.core.gsc_client import GSCClient
 
         client = GSCClient()
         if not client.enabled:
             return {"success": False, "error": "GSC Client disabled"}
+        ingest = GSCIngestor().ingest_performance(7)
         summary = client.get_summary()
-        return {"success": True, **summary}
+        return {"success": True, "ingest": ingest, **summary}
 
     if action == "evolution_check":
         from abvorn.core.genesis_protocol import GenesisProtocol
