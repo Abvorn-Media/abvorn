@@ -36,6 +36,7 @@ PUBLIC_API_PATHS = {
     "/api/health", "/api/newsletter/subscribe", "/api/content/recent",
     "/api/entitlements/pending", "/api/entitlements/audit", "/api/surplus",
     "/api/dashboard/metrics",
+    "/api/evolution/public",
 }
 
 _API_TOKEN = os.environ.get("ABVORN_API_TOKEN", "") or secrets.get("ABVORN_API_TOKEN", "")

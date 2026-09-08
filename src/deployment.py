@@ -3290,7 +3290,14 @@ def _journal_entry_narrative(body: str) -> str:
     text = re.sub(r"^#\s+.*$", "", body, flags=re.M)
     text = re.sub(r"^-\s*$", "", text, flags=re.M)
     # Drop BOM/whitespace-only residue (e.g. empty n8n-summary files).
-    return text.strip("\ufeff \t\r\n")
+    text = text.strip("\ufeff \t\r\n")
+    # n8n-reflection vault notes are JSON-lines of machine records, not
+    # readable narrative — drop them so they never surface on the journal page.
+    if text.startswith("{") or text.startswith("["):
+        return ""
+    if "Timestamp:" in text and '"reflection_id"' in text:
+        return ""
+    return text
 
 
 def load_evolution_snapshot():
