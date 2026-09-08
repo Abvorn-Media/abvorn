@@ -38,7 +38,7 @@ class GSCIngestor:
         if not self.client.enabled:
             return {"status": "failed", "error": "GSC Client disabled"}
 
-        df = self.client.fetch_performance(days)
+        df = self.client.fetch_performance(days, [])
         if not df:
             # Empty is not an error: a young/lightly-indexed site (or the 2-3
             # day Search Console reporting lag) means the window legitimately

@@ -9,8 +9,10 @@ class _FakeClient:
     def __init__(self, rows):
         self._rows = rows
         self.enabled = True
+        self.last_dims = None
 
-    def fetch_performance(self, days):
+    def fetch_performance(self, days, dimensions=None):
+        self.last_dims = dimensions
         return self._rows
 
     def fetch_top_performing(self, days):
@@ -62,3 +64,4 @@ def test_data_window_reports_success(monkeypatch, tmp_path, capsys):
     result = ing.ingest_performance(days=30)
     assert result["status"] == "success"
     assert result["rows_processed"] == 1
+    assert ing.client.last_dims == []
