@@ -49,6 +49,9 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-asyncio",
+    "pytest-timeout",
+    "ruff",
+    "vulture",
 ]
 
 [project.scripts]
@@ -59,3 +62,4 @@ include = ["abvorn*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = ["--timeout=180"]

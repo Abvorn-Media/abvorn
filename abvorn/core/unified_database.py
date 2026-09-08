@@ -485,10 +485,19 @@ class UnifiedDatabase:
 
 
 _instance = None
+_instance_path = None
 
 
 def get_unified_db() -> UnifiedDatabase:
-    global _instance
-    if _instance is None:
-        _instance = UnifiedDatabase()
+    """Return the process-wide UnifiedDatabase.
+
+    The instance follows ABVORN_DB_PATH: if the env var changes between calls
+    (e.g. tests isolating their DB), a fresh instance for the new path is
+    created instead of reusing a stale singleton.
+    """
+    global _instance, _instance_path
+    current_path = os.environ.get("ABVORN_DB_PATH", None)
+    if _instance is None or _instance_path != current_path:
+        _instance = UnifiedDatabase(current_path)
+        _instance_path = current_path
     return _instance
