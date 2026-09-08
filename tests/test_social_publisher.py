@@ -124,6 +124,37 @@ def test_telegram_script_strips_stray_leading_dot():
     assert script["text"].startswith("How to choose")
 
 
+def test_telegram_script_no_duplicate_hook_on_empty_summary():
+    """feed.xml has no descriptions, so empty-summary scripts must not repeat
+    the hook twice in the post."""
+    gen = ViralScriptGenerator()
+    post = {
+        "title": "Best Laptops 2026",
+        "niche": "laptops",
+        "summary": "",
+        "url": "https://abvorn.com/reviews/laptops/",
+        "hooks": {},
+    }
+    text = gen.generate(post, platforms=["telegram"])["telegram"]["script"]["text"]
+    assert text.count("Nobody talks about this") <= 1
+    assert text.count(text.strip().splitlines()[0]) == 1
+
+
+def test_linkedin_post_no_duplicate_hook_on_empty_summary():
+    gen = ViralScriptGenerator()
+    post = {
+        "title": "Best Laptops 2026",
+        "niche": "laptops",
+        "summary": "",
+        "url": "https://abvorn.com/reviews/laptops/",
+        "hooks": {},
+    }
+    post_text = gen.generate(post, platforms=["linkedin"])["linkedin"]["script"]["post"]
+    first_line = post_text.strip().splitlines()[0]
+    assert post_text.count(first_line) == 1
+    assert post_text.count("After comparing real specs") == 1
+
+
 def test_social_publisher_posts_telegram_without_composio(publisher, monkeypatch):
     """Telegram must post via the Bot API even when Composio is unavailable."""
     monkeypatch.setenv("ABVORN_SOCIAL_PUBLISH", "1")

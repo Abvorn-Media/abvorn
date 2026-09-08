@@ -170,9 +170,9 @@ class ViralScriptGenerator:
         body = "\n\n".join(p for p in paragraphs if p.strip())
         if not body:
             body = (
-                f"{hook}\n\nAfter comparing real specs, prices, and owner "
+                f"After comparing real specs, prices, and owner "
                 f"feedback across the leading {niche} options, here's what "
-                f"actually stands out — and what to skip."
+                f"actually stands out \u2014 and what to skip."
             )
         return {
             "headline": hook,
@@ -199,9 +199,9 @@ class ViralScriptGenerator:
         body = "\n\n".join(paragraphs[:3])
         if not body:
             body = (
-                f"{hook}\n\nAfter comparing real specs, prices, and owner "
-                f"feedback across the leading {niche} options, here's what "
-                f"actually stands out \u2014 and what to skip."
+                f"After comparing real specs, prices, and owner feedback "
+                f"across the leading {niche} options, here's what actually "
+                f"stands out \u2014 and what to skip."
             )
         parts = [str(hook or "").lstrip(" .\u2022").strip(), body]
         if url:
