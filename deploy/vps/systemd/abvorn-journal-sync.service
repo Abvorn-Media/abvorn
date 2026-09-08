@@ -1,0 +1,11 @@
+[Unit]
+Description=Abvorn Evolution Journal sync (harvest runtime signals, rebuild page, push)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/opt/abvorn-core/repo-src
+ExecStart=/opt/abvorn-core/venv/bin/python /opt/abvorn-core/repo-src/scripts/sync_journal_site.py
+TimeoutStartSec=300
