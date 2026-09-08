@@ -6,6 +6,12 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 
+def _noop_brain_refresher():
+    """A refresh that is instant so tests never touch the real brain corpus
+    (which lives on disk and can include pathological PDFs)."""
+    return {"refreshed": True, "indexed": 0, "skipped": 0}
+
+
 @pytest.fixture
 def state(tmp_path):
     from abvorn.core.state import AbvornState
@@ -22,7 +28,8 @@ def daemon(state):
     class _MockProvider:
         def search(self, category, max_results=5):
             return []
-    return OptimizationDaemon(state, trend_scanner=TrendScanner(providers=[_MockProvider()]))
+    return OptimizationDaemon(state, trend_scanner=TrendScanner(providers=[_MockProvider()]),
+                              brain_refresher=_noop_brain_refresher)
 
 
 class TestOptimizationDaemon:
@@ -115,7 +122,8 @@ def test_run_once_sets_last_run(state):
     class _MockProvider:
         def search(self, category, max_results=5):
             return []
-    d = OptimizationDaemon(state, trend_scanner=TrendScanner(providers=[_MockProvider()]))
+    d = OptimizationDaemon(state, trend_scanner=TrendScanner(providers=[_MockProvider()]),
+                           brain_refresher=_noop_brain_refresher)
     d.run_cycle()
     last_run = state.get_meta("optimization_last_run")
     assert last_run is not None
@@ -158,7 +166,8 @@ def test_daemon_trend_integration(state):
         def search(self, category, max_results=5):
             return []
     from abvorn.trends.scanner import TrendScanner
-    d = OptimizationDaemon(state, trend_scanner=TrendScanner(providers=[_MockProvider()]))
+    d = OptimizationDaemon(state, trend_scanner=TrendScanner(providers=[_MockProvider()]),
+                           brain_refresher=_noop_brain_refresher)
     result = d.run_cycle()
     assert "cycle_id" in result
     trend_actions = [a for a in result.get("actions", []) if a.get("type") == "trend_scan"]
@@ -179,7 +188,8 @@ def test_daemon_trend_schedule_fill(state):
         state,
         trend_scanner=TrendScanner(providers=[_MockProvider()]),
         content_planner=ContentPlanner(),
-        schedule=Schedule(state)
+        schedule=Schedule(state),
+        brain_refresher=_noop_brain_refresher,
     )
     result = d.run_cycle()
     assert "cycle_id" in result
@@ -200,7 +210,8 @@ def test_daemon_trend_records_scan_time(state):
         def search(self, category, max_results=5):
             return [{"product_name": "Test TV", "category": "tv", "source": "mock", "score": 80, "price_range": "", "url": ""}]
     from abvorn.trends.scanner import TrendScanner
-    d = OptimizationDaemon(state, trend_scanner=TrendScanner(providers=[_MockProvider()]))
+    d = OptimizationDaemon(state, trend_scanner=TrendScanner(providers=[_MockProvider()]),
+                           brain_refresher=_noop_brain_refresher)
     d.run_cycle()
     last_scan = state.get_meta("trend_last_scan")
     assert last_scan is not None
@@ -232,7 +243,8 @@ def test_daemon_email_dispatch_wired_in_cycle(state):
     mock_db = MagicMock()
     mock_db.get_subscribers.return_value = [{"email": "x@y.com", "name": "Test"}]
     d = OptimizationDaemon(state, email_sender=mock_sender, subscriber_db=mock_db,
-                            trend_scanner=TrendScanner(providers=[_MockProvider()]))
+                            trend_scanner=TrendScanner(providers=[_MockProvider()]),
+                            brain_refresher=_noop_brain_refresher)
     result = d.run_cycle()
     email_actions = [a for a in result.get("actions", []) if a.get("type") == "email_dispatch"]
     assert isinstance(email_actions, list)

@@ -120,6 +120,27 @@ class AbvornState:
                     click_count INT DEFAULT 0,
                     created_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS engagement_likes (
+                    post_id INTEGER NOT NULL,
+                    visitor_hash TEXT NOT NULL,
+                    reaction TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    UNIQUE(post_id, visitor_hash)
+                );
+                CREATE TABLE IF NOT EXISTS engagement_shares (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    post_id INTEGER NOT NULL,
+                    platform TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS engagement_comments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    post_id INTEGER NOT NULL,
+                    author TEXT NOT NULL,
+                    body TEXT NOT NULL,
+                    status TEXT DEFAULT 'pending',
+                    created_at TEXT NOT NULL
+                );
             """)
             try:
                 c.execute("ALTER TABLE subscribers ADD COLUMN tracking_consent INT DEFAULT 0")
@@ -354,6 +375,75 @@ class AbvornState:
             keys = ["id", "niche", "persona_id", "day", "subject", "body",
                     "lead_magnet", "sent_count", "open_count", "click_count", "created_at"]
             return [dict(zip(keys, row)) for row in c.fetchall()]
+
+    def add_like(self, post_id: int, visitor_hash: str, reaction: str = "like"):
+        """Record a reaction; one reaction per visitor per post (re-act replaces)."""
+        with self._cursor() as c:
+            c.execute("""
+                INSERT INTO engagement_likes (post_id, visitor_hash, reaction, created_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(post_id, visitor_hash) DO UPDATE SET reaction=excluded.reaction
+            """, (post_id, visitor_hash, reaction, datetime.now().isoformat()))
+
+    def remove_like(self, post_id: int, visitor_hash: str):
+        with self._cursor() as c:
+            c.execute("DELETE FROM engagement_likes WHERE post_id=? AND visitor_hash=?",
+                      (post_id, visitor_hash))
+
+    def has_liked(self, post_id: int, visitor_hash: str) -> bool:
+        with self._cursor() as c:
+            c.execute("SELECT 1 FROM engagement_likes WHERE post_id=? AND visitor_hash=?",
+                      (post_id, visitor_hash))
+            return c.fetchone() is not None
+
+    def get_likes(self, post_id: int) -> dict:
+        with self._cursor() as c:
+            c.execute("""
+                SELECT reaction, COUNT(*) FROM engagement_likes
+                WHERE post_id=? GROUP BY reaction
+            """, (post_id,))
+            counts = {reaction: n for reaction, n in c.fetchall()}
+            counts["total"] = sum(counts.values())
+            return counts
+
+    def track_share(self, post_id: int, platform: str = ""):
+        with self._cursor() as c:
+            c.execute("INSERT INTO engagement_shares (post_id, platform, created_at) VALUES (?, ?, ?)",
+                      (post_id, platform, datetime.now().isoformat()))
+
+    def get_total_shares(self, post_id: int) -> int:
+        with self._cursor() as c:
+            c.execute("SELECT COUNT(*) FROM engagement_shares WHERE post_id=?", (post_id,))
+            return c.fetchone()[0]
+
+    def add_comment(self, post_id: int, author: str, body: str, status: str = "pending"):
+        with self._cursor() as c:
+            c.execute("""
+                INSERT INTO engagement_comments (post_id, author, body, status, created_at)
+                VALUES (?, ?, ?, ?, ?)
+            """, (post_id, author, body, status, datetime.now().isoformat()))
+
+    def get_comments(self, post_id: int, status: str = None) -> list:
+        with self._cursor() as c:
+            if status:
+                c.execute("""
+                    SELECT * FROM engagement_comments WHERE post_id=? AND status=? ORDER BY created_at
+                """, (post_id, status))
+            else:
+                c.execute("SELECT * FROM engagement_comments WHERE post_id=? ORDER BY created_at", (post_id,))
+            keys = ["id", "post_id", "author", "body", "status", "created_at"]
+            return [dict(zip(keys, row)) for row in c.fetchall()]
+
+    def moderate_comment(self, comment_id: int, status: str):
+        with self._cursor() as c:
+            c.execute("UPDATE engagement_comments SET status=? WHERE id=?", (status, comment_id))
+
+    def get_engagement_summary(self, post_id: int) -> dict:
+        return {
+            "likes": self.get_likes(post_id),
+            "shares": {"total": self.get_total_shares(post_id)},
+            "comments": {"count": len(self.get_comments(post_id))},
+        }
 
     def log_cta_event(self, post_id: int, cta_id: str, cta_type: str = "affiliate_link",
                        event_type: str = "impression", cta_text: str = "",
