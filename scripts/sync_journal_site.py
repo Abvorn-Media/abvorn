@@ -37,6 +37,8 @@ SITE_BASE = os.environ.get("SITE_URL", "https://abvorn.com").rstrip("/")
 
 # Target the repo-tracked journal for both harvest and page rebuild.
 os.environ["ABVORN_JOURNAL_PATH"] = str(REPO_DIR / "data" / "evolution_journal.json")
+# Make the repo's abvorn/ + src/ packages importable regardless of CWD.
+sys.path.insert(0, str(REPO_DIR))
 
 
 def _git(cmd: list, repo_dir: Path, check: bool = True) -> subprocess.CompletedProcess:
@@ -83,7 +85,6 @@ def main() -> int:
     # Rebuild the journal page from the refreshed snapshot.
     try:
         os.chdir(REPO_DIR)
-        sys.path.insert(0, str(REPO_DIR))
         from src.deployment import build_journal_page, write_checked
 
         journal_dir = REPO_DIR / "docs" / "journal"
