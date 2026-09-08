@@ -27,6 +27,10 @@ PLATFORM_ACTIONS = {
         "url_share_slug": "LINKEDIN_CREATE_ARTICLE_OR_URL_SHARE",
         "params_fn": lambda script: _linkedin_params(script),
     },
+    "telegram": {
+        "toolkit": "telegram",
+        "params_fn": lambda script: {"text": _extract_text(script)[:3800]},
+    },
     "instagram": {
         "toolkit": "instagram",
         "flow": "carousel",
@@ -129,6 +133,11 @@ class SocialPublisher:
         if allowed is not None and platform not in allowed:
             return self._export(script, platform, niche)
 
+        # Telegram posts via the Bot API directly — no Composio connection needed.
+        if platform == "telegram":
+            params = mapping["params_fn"](script)
+            return self._publish_telegram(params, script, platform, niche)
+
         if mapping.get("export_only") or not self._client.available:
             return self._export(script, platform, niche)
 
@@ -214,6 +223,22 @@ class SocialPublisher:
                     pass
             resized.append(str(path))
         return resized
+
+    def _publish_telegram(self, params: dict, script: dict | list | str,
+                          platform: str, niche: str) -> dict:
+        """Post a text message to Telegram via the Bot API (no Composio needed)."""
+        from ..deploy.social import TelegramDeployer
+        try:
+            result = TelegramDeployer().post({"text": params.get("text", "")}, enable_preview=True)
+        except Exception as e:
+            logger.warning(f"telegram: Bot API failed — exporting instead: {e}")
+            return self._export(script, platform, niche)
+        if result.get("status") == "posted":
+            self._results.append(result)
+            logger.info("telegram: posted via Bot API sendMessage")
+            return result
+        logger.warning(f"telegram: {result.get('status')} ({result.get('error')}) — exporting instead")
+        return self._export(script, platform, niche)
 
     def _publish_instagram_carousel(self, script: dict | list | str, platform: str,
                                     niche: str, media_paths: list[str] | None) -> dict:

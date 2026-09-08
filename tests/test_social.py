@@ -1,5 +1,5 @@
 import pytest
-from abvorn.deploy.social import SocialDeployer
+from abvorn.deploy.social import SocialDeployer, TelegramDeployer
 from abvorn.platform import registry
 
 
@@ -14,6 +14,32 @@ def test_social_deployer_init():
     """Should initialize without real credentials."""
     deployer = SocialDeployer(composio_key="test_key")
     assert deployer is not None
+
+
+def test_telegram_deployer_retries_once_on_429(monkeypatch):
+    """Bot API 429+retry_after must be honored with one retry, not dropped."""
+    monkeypatch.setattr("abvorn.deploy.social.time.sleep", lambda s: None)
+    calls = {"n": 0}
+
+    class FakeResp:
+        def __init__(self, code, ok=False):
+            self.status_code = code
+            self._ok = ok
+
+        def json(self):
+            if self.status_code == 429:
+                return {"parameters": {"retry_after": 1}}
+            return {"ok": self._ok}
+
+    def fake_post(*a, **k):
+        calls["n"] += 1
+        return FakeResp(429 if calls["n"] == 1 else 200, ok=True)
+
+    monkeypatch.setattr("abvorn.deploy.social.requests.post", fake_post)
+    d = TelegramDeployer(token="t", chat_id="c", channel="")
+    result = d.post({"text": "hello"})
+    assert result["status"] == "posted"
+    assert calls["n"] == 2
 
 
 def test_post_x_without_key(monkeypatch):

@@ -2,7 +2,10 @@
 
 import logging
 import os
+import time
 from pathlib import Path
+
+import requests
 
 from ..platform import registry
 
@@ -67,22 +70,26 @@ class TelegramDeployer:
             except Exception:
                 pass
 
-    def post(self, adapted: dict) -> dict:
+    def post(self, adapted: dict, enable_preview: bool = False) -> dict:
         if not self.token:
             return {"status": "error", "platform": "telegram", "reason": "no_telegram_token"}
         target = self.channel or self.chat_id
         if not target:
             return {"status": "error", "platform": "telegram", "reason": "no_telegram_chat_id"}
-        import requests
         url = f"https://api.telegram.org/bot{self.token}/sendMessage"
         payload = {
             "chat_id": target,
             "text": adapted.get("text", "")[:4000],
-            "link_preview_options": {"is_disabled": True},
+            "link_preview_options": {"is_disabled": not enable_preview},
         }
         try:
             resp = requests.post(url, json=payload, timeout=15)
             data = resp.json()
+            if resp.status_code == 429:
+                retry_after = int((data.get("parameters") or {}).get("retry_after") or 30)
+                time.sleep(min(retry_after, 60))
+                resp = requests.post(url, json=payload, timeout=15)
+                data = resp.json()
         except Exception as e:
             return {"status": "failed", "platform": "telegram", "error": str(e)[:200]}
         if resp.status_code == 200 and data.get("ok"):
