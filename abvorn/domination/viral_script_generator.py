@@ -11,6 +11,7 @@ PLATFORM_SPECS = {
     "tiktok": {"max_length": 2200, "style": "script", "hook_priority": "curiosity"},
     "instagram": {"max_length": 2200, "style": "carousel", "hook_priority": "visual"},
     "linkedin": {"max_length": 3000, "style": "story", "hook_priority": "educational"},
+    "telegram": {"max_length": 2000, "style": "telegram", "hook_priority": "curiosity"},
     "pinterest": {"max_length": 500, "style": "pin", "hook_priority": "useful"},
 }
 
@@ -100,6 +101,8 @@ class ViralScriptGenerator:
             script = self._carousel_script(title, selected_hook, summary, niche, hooks)
         elif spec["style"] == "story":
             script = self._linkedin_script(title, selected_hook, summary, niche, url)
+        elif spec["style"] == "telegram":
+            script = self._telegram_script(title, selected_hook, summary, niche, url)
         elif spec["style"] == "pin":
             script = self._pin_script(title, selected_hook, summary, niche, num)
         else:
@@ -176,7 +179,35 @@ class ViralScriptGenerator:
             "body": body,
             "engagement_question": f"What\u2019s your experience with {niche}? Drop it below \U0001F447",
             "url": url,
+            "post": self._linkedin_post_text(hook, body, niche, url),
         }
+
+    def _linkedin_post_text(self, hook: str, body: str, niche: str, url: str) -> str:
+        hook = str(hook or "").lstrip(" .\u2022").strip()[:200]
+        parts = [hook, body]
+        question = f"What\u2019s your experience with {niche}? Drop it below \U0001F447"
+        if question:
+            parts.append(question)
+        if url:
+            parts.append(f"Full guide: {url}")
+        return "\n\n".join([p for p in parts if p])[:3000]
+
+    def _telegram_script(self, title: str, hook: str, summary: str,
+                         niche: str, url: str) -> dict:
+        clean = re.sub(r"<[^>]+>", "", summary)[:700]
+        paragraphs = [p.strip() for p in clean.split("\n") if p.strip()]
+        body = "\n\n".join(paragraphs[:3])
+        if not body:
+            body = (
+                f"{hook}\n\nAfter comparing real specs, prices, and owner "
+                f"feedback across the leading {niche} options, here's what "
+                f"actually stands out \u2014 and what to skip."
+            )
+        parts = [str(hook or "").lstrip(" .\u2022").strip(), body]
+        if url:
+            parts.append(f"Full guide: {url}")
+        text = "\n\n".join([p for p in parts if p])[:1900]
+        return {"text": text}
 
     def _pin_script(self, title: str, hook: str, summary: str,
                     niche: str, num: str) -> dict:

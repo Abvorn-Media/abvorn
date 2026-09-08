@@ -50,6 +50,11 @@ class TelegramNotifier:
         try:
             url = f"https://api.telegram.org/bot{self.token}/sendMessage"
             resp = requests.post(url, json={"chat_id": self.chat_id, "text": text[:4000], "parse_mode": "HTML"}, timeout=10)
+            if resp.status_code == 429:
+                retry_after = int((resp.json().get("parameters") or {}).get("retry_after") or 30)
+                logger.warning(f"Telegram rate-limited (retry_after={retry_after}s) — retrying once")
+                time.sleep(min(retry_after, 60))
+                resp = requests.post(url, json={"chat_id": self.chat_id, "text": text[:4000], "parse_mode": "HTML"}, timeout=10)
             if resp.status_code != 200:
                 logger.warning(f"Telegram API error: {resp.status_code} {resp.text[:200]}")
                 return False

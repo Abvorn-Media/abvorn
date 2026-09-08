@@ -189,6 +189,7 @@ class ContentIntelligence:
         hooks["tiktok"] = self._hook_for_platform(combined, niche, "tiktok", price_match, number_match)
         hooks["instagram"] = self._hook_for_platform(combined, niche, "instagram", price_match, number_match)
         hooks["linkedin"] = self._hook_for_platform(combined, niche, "linkedin", price_match, number_match)
+        hooks["telegram"] = self._hook_for_platform(combined, niche, "telegram", price_match, number_match)
         hooks["pinterest"] = self._hook_for_platform(combined, niche, "pinterest", price_match, number_match)
 
         return hooks
@@ -223,6 +224,13 @@ class ContentIntelligence:
         elif platform == "linkedin":
             hooks.append(f"I spent {num_str or 'months'} researching {niche}. Here's what matters.")
             hooks.append(f"The {niche} you're buying is probably wrong.")
+        elif platform == "telegram":
+            if price_str:
+                hooks.append(f"Don\u2019t buy {niche} until you\u2019ve seen this.")
+            hooks.append(f"Before you buy another {niche}, read this.")
+            hooks.append(f"The {niche} comparison worth your time.")
+            if num_str:
+                hooks.append(f"{num_str} things to check before buying {niche}.")
         elif platform == "pinterest":
             hooks.append(f"The ultimate {niche} guide for {num_str or '2026'}.")
             hooks.append(f"{niche.title()} buying checklist \u2014 save this pin!")

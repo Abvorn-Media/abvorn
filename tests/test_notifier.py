@@ -43,3 +43,33 @@ def test_report_health_formats(no_creds):
     stats = {"total_cycles": 10, "success_rate": 0.8, "avg_duration_s": 120, "pending_opportunities": 3}
     result = notifier.report_health(stats)
     assert result is False  # no creds, but no crash
+
+
+class _FakeResp:
+    def __init__(self, code, ok=False):
+        self.status_code = code
+        self._ok = ok
+
+    def json(self):
+        if self.status_code == 429:
+            return {"parameters": {"retry_after": 1}}
+        return {"ok": self._ok}
+
+    @property
+    def text(self):
+        return ""
+
+
+def test_notifier_send_retries_once_on_429(monkeypatch):
+    """429+retry_after must be honored with one retry, not silently dropped."""
+    monkeypatch.setattr("abvorn.deploy.notifier.time.sleep", lambda s: None)
+    calls = {"n": 0}
+
+    def fake_post(*a, **k):
+        calls["n"] += 1
+        return _FakeResp(429 if calls["n"] == 1 else 200, ok=True)
+
+    monkeypatch.setattr("abvorn.deploy.notifier.requests.post", fake_post)
+    notifier = TelegramNotifier(token="t", chat_id="c")
+    assert notifier.send("hello") is True
+    assert calls["n"] == 2
