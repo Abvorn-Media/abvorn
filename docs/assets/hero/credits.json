@@ -1,0 +1,122 @@
+{
+  "4k-monitors": {
+    "query": "computer monitor black background",
+    "alt": "A sleek computer setup with dual monitors, keyboard, and mouse in a dark room.",
+    "photo_id": 7172661,
+    "photographer": "Matheus Bertelli",
+    "photographer_url": "https://www.pexels.com/@bertellifotografia",
+    "pexels_url": "https://www.pexels.com/photo/black-flat-screen-computer-monitor-and-black-computer-keyboard-7172661/",
+    "width": 6170,
+    "height": 4113,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:25"
+  },
+  "fitness-trackers": {
+    "query": "smart watch product black background",
+    "alt": "Detailed close-up of a stylish modern smartwatch with a black band, ideal for tech enthusiasts.",
+    "photo_id": 437038,
+    "photographer": "Torsten Dettlaff",
+    "photographer_url": "https://www.pexels.com/@tdcat",
+    "pexels_url": "https://www.pexels.com/photo/silver-aluminum-case-apple-watch-437038/",
+    "width": 5760,
+    "height": 3840,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:26"
+  },
+  "gaming-mice": {
+    "query": "gaming mouse dark",
+    "alt": "High-tech gaming mouse on a hexagonal-patterned surface with ambient lighting.",
+    "photo_id": 28779691,
+    "photographer": "Atahan Demir",
+    "photographer_url": "https://www.pexels.com/@atahandemir",
+    "pexels_url": "https://www.pexels.com/photo/futuristic-gaming-mouse-on-dark-hexagonal-surface-28779691/",
+    "width": 6240,
+    "height": 4160,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:27"
+  },
+  "laptops": {
+    "query": "laptop keyboard closeup dark",
+    "alt": "A detailed close-up of a black laptop keyboard with soft lighting and selective focus.",
+    "photo_id": 785429,
+    "photographer": "Lukas Mayer",
+    "photographer_url": "https://www.pexels.com/@lmay",
+    "pexels_url": "https://www.pexels.com/photo/black-computer-keyboard-785429/",
+    "width": 6000,
+    "height": 4000,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:28"
+  },
+  "mechanical-keyboards": {
+    "query": "mechanical keyboard black keycaps dark",
+    "alt": "Close-up view of a red illuminated mechanical gaming keyboard in a dark room.",
+    "photo_id": 7915508,
+    "photographer": "RDNE Stock project",
+    "photographer_url": "https://www.pexels.com/@rdne",
+    "pexels_url": "https://www.pexels.com/photo/close-up-view-of-a-mechanical-keyboard-7915508/",
+    "width": 6559,
+    "height": 4373,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:29"
+  },
+  "smart-home": {
+    "query": "smart speaker product photography",
+    "alt": "Modern smart speaker device with illuminated ring, featured on a dark background.",
+    "photo_id": 14309805,
+    "photographer": "Jonathan Borba",
+    "photographer_url": "https://www.pexels.com/@jonathanborba",
+    "pexels_url": "https://www.pexels.com/photo/close-up-shot-of-an-alexa-echo-dot-14309805/",
+    "width": 5472,
+    "height": 3648,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:30"
+  },
+  "streaming-devices": {
+    "query": "smart tv remote product",
+    "alt": "Detailed macro shot of a sleek black remote control with microphone button and textured background.",
+    "photo_id": 5207514,
+    "photographer": "https://kaboompics.com/",
+    "photographer_url": "https://www.pexels.com/@karola-g",
+    "pexels_url": "https://www.pexels.com/photo/a-close-up-shot-of-a-television-controller-5207514/",
+    "width": 5472,
+    "height": 3648,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:30"
+  },
+  "webcams": {
+    "query": "computer camera closeup",
+    "alt": "A workspace featuring a laptop, tablet, camera, and lens, ideal for creative work and photography.",
+    "photo_id": 15977088,
+    "photographer": "Kawê  Rodrigues",
+    "photographer_url": "https://www.pexels.com/@kawerodriguess",
+    "pexels_url": "https://www.pexels.com/photo/camera-by-laptop-and-tablet-on-desk-15977088/",
+    "width": 5558,
+    "height": 3705,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:32"
+  },
+  "wireless-earbuds": {
+    "query": "earbuds dark",
+    "alt": "White wireless earbuds with a charging case, highlighted with red lighting on a reflective black surface.",
+    "photo_id": 30981655,
+    "photographer": "HS Studio By Hussnain",
+    "photographer_url": "https://www.pexels.com/@hs-studio-by-hussnain-595837849",
+    "pexels_url": "https://www.pexels.com/photo/wireless-earbuds-with-charging-case-on-black-background-30981655/",
+    "width": 6016,
+    "height": 4016,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:33"
+  },
+  "wireless-headphones": {
+    "query": "headphones product black background",
+    "alt": "Minimalist black headphones on a dark textured background, ideal for audio and music design themes.",
+    "photo_id": 3721941,
+    "photographer": "Daniel Reche",
+    "photographer_url": "https://www.pexels.com/@daniel-reche-718241",
+    "pexels_url": "https://www.pexels.com/photo/black-and-silver-headphones-on-black-surface-3721941/",
+    "width": 6000,
+    "height": 4000,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:34"
+  }
+}

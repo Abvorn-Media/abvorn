@@ -1293,6 +1293,33 @@ def carousel_img(niche_slug, b):
     return f"{b}/assets/{niche_slug}.svg"
 
 
+def hero_credit(niche_slug, b):
+    """Return staged-hero info when a real photo + credit manifest entry
+    exists, else None. Reads docs/assets/hero/credits.json written by
+    scripts/fetch_category_heroes.py; never raises on a bad manifest and
+    leaves the SVG fallback untouched."""
+    hero_path = f"docs/assets/hero/{niche_slug}.jpg"
+    if not os.path.exists(hero_path):
+        return None
+    try:
+        with open("docs/assets/hero/credits.json", encoding="utf-8") as fh:
+            credits = json.load(fh)
+    except (IOError, ValueError):
+        credits = {}
+    info = credits.get(niche_slug) or {}
+    photographer = info.get("photographer") or ""
+    url = info.get("pexels_url") or ""
+    alt = info.get("alt") or f"{niche_slug} product photograph"
+    if not photographer or not url:
+        return None
+    return {
+        "src": carousel_img(niche_slug, b),
+        "photographer": photographer,
+        "url": url,
+        "alt": alt,
+    }
+
+
 CAROUSEL_JS = """<script>(function(){var c=document.querySelector('.carousel');if(!c)return;var t=c.querySelector('.carousel-track');if(!t)return;var s=t.querySelectorAll('.carousel-slide');if(s.length<2)return;var dots=c.querySelectorAll('.carousel-dot');var prev=c.querySelector('.carousel-arrow.prev');var next=c.querySelector('.carousel-arrow.next');var i=0,n=s.length;var go=function(idx){i=((idx%n)+n)%n;t.style.transform='translateX(-'+(i*100)+'%)';dots.forEach(function(d){d.classList.toggle('active',parseInt(d.dataset.slide)===i)})};dots.forEach(function(d){d.addEventListener('click',function(){go(parseInt(this.dataset.slide))})});if(prev){prev.addEventListener('click',function(){go(i-1)})}if(next){next.addEventListener('click',function(){go(i+1)})};var iv=setInterval(function(){go(i+1)},5000);c.addEventListener('mouseenter',function(){clearInterval(iv)});c.addEventListener('mouseleave',function(){iv=setInterval(function(){go(i+1)},5000)})})();</script>"""
 
 
@@ -1381,6 +1408,18 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
     else:
         cta = '<span class="cat-hero__coming">Reviews coming soon — subscribe below to be first.</span>'
 
+    hero = hero_credit(niche_slug, b)
+    if hero:
+        stage = (
+            f'<div class="cat-hero__stage cat-hero__stage--photo">'
+            f'<img class="cat-hero__art" src="{hero["src"]}" alt="Photograph: {html_mod.escape(hero["alt"])}">'
+            f'<p class="cat-hero__credit"><span class="cat-hero__credit-dot" aria-hidden="true"></span>'
+            f'Photo: <a href="{hero["url"]}" target="_blank" rel="noopener">{html_mod.escape(hero["photographer"])}</a> \u2014 Pexels</p>'
+            f'</div>'
+        )
+    else:
+        stage = f'<div class="cat-hero__stage" aria-hidden="true"><img class="cat-hero__art" src="{carousel_img(niche_slug, b)}" alt=""></div>'
+
     hero_html = f'''<section class="cat-hero" style="--cat:{accent}">
     <div class="cat-hero__bg" aria-hidden="true"></div>
     <div class="container cat-hero__grid">
@@ -1395,7 +1434,7 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
             </div>
             <div class="cat-hero__cta">{cta}<span class="cat-hero__hint">Independent · Tested · Updated weekly</span></div>
         </div>
-        <div class="cat-hero__stage" aria-hidden="true"><img class="cat-hero__art" src="{carousel_img(niche_slug, b)}" alt=""></div>
+        {stage}
     </div>
 </section>'''
 
@@ -1528,6 +1567,12 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
         .cat-hero__coming {{ font-family:var(--font-body); font-size:0.95rem; color:#b9b9b4; }}
         .cat-hero__stage {{ position:relative; display:flex; align-items:center; justify-content:center; }}
         .cat-hero__art {{ width:100%; max-width:460px; height:auto; border-radius:20px; border:1px solid rgba(255,255,255,0.16); box-shadow:0 24px 70px rgba(0,0,0,0.55); background:#fff; }}
+        .cat-hero__stage--photo {{ display:block; }}
+        .cat-hero__stage--photo .cat-hero__art {{ max-width:480px; aspect-ratio:4/3; object-fit:cover; }}
+        .cat-hero__credit {{ display:flex; align-items:center; gap:8px; margin:12px 2px 0; font-family:var(--font-mono); font-size:0.6rem; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; color:#8a8a86; }}
+        .cat-hero__credit a {{ color:var(--cat); text-decoration:none; }}
+        .cat-hero__credit a:hover {{ text-decoration:underline; }}
+        .cat-hero__credit-dot {{ width:6px; height:6px; background:var(--cat); flex-shrink:0; }}
         @media (max-width:900px) {{ .cat-hero__grid {{ grid-template-columns:1fr; }} .cat-hero__stage {{ order:-1; max-width:340px; margin:0 auto; }} }}
 
         .category-index {{ background:color-mix(in srgb, var(--cat) 12%, var(--clr-off-white)); border-bottom:1px solid color-mix(in srgb, var(--cat) 34%, var(--clr-light-gray)); padding:10px 0; }}
