@@ -376,9 +376,9 @@ class AbvornDaemon:
             try:
                 from abvorn.core.gsc_ingestor import GSCIngestor
 
-                result = GSCIngestor().ingest_performance(days=7)
+                result = GSCIngestor().ingest_performance(days=30)
                 logger.info("GSC ingestion: %s", result.get("status"))
-                if result.get("status") == "success":
+                if result.get("status") in ("success", "no_data_yet"):
                     self.state.set_meta("gsc_last_run", datetime.now().isoformat())
             except Exception as e:
                 logger.warning("GSC ingestion error (non-fatal): %s", e)
