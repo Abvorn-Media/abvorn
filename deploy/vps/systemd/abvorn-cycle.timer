@@ -1,8 +1,11 @@
 [Unit]
-Description=Abvorn content cycle timer
+Description=Run Abvorn content cycle every 4 hours
 
 [Timer]
-OnCalendar=*-*-* 03:50,09:50,15:50,21:50
+OnCalendar=*-*-* 03:50:00
+OnCalendar=*-*-* 09:50:00
+OnCalendar=*-*-* 15:50:00
+OnCalendar=*-*-* 21:50:00
 Persistent=true
 
 [Install]
