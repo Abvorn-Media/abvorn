@@ -35,6 +35,11 @@ from .domination import DominationOrchestrator
 STATE_DB = Path.home() / ".abvorn" / "state.db"
 BUS_DB = Path.home() / ".abvorn" / "bus.db"
 
+# Cadence for the trend-driven full cycle (opportunity -> article -> social).
+# Lowered from 24h to 12h so the org ships more content per day when provider
+# quota allows; each run routes to whichever model has remaining budget.
+FULL_CYCLE_HOURS = 12
+
 class AbvornDaemon:
     """The daemon that keeps Abvorn alive 24/7."""
 
@@ -419,8 +424,9 @@ class AbvornDaemon:
 
     async def _full_cycle_loop(self):
         """Run the trend-driven full cycle (discover -> create page -> post
-        social) daily, or on bus signal. The first run is staggered an hour
-        so the daemon doesn't fire an AI content cycle at boot."""
+        social) every FULL_CYCLE_HOURS, or on bus signal. The first run is
+        staggered an hour so the daemon doesn't fire an AI content cycle at
+        boot."""
         logger.info("Full cycle loop starting")
         while self.running:
             try:
@@ -432,20 +438,20 @@ class AbvornDaemon:
                 if not last_run:
                     # First run is staggered an hour so the daemon doesn't fire an
                     # AI content cycle at boot; thereafter the loop below enforces
-                    # the 24h cadence.
+                    # the cadence.
                     await asyncio.sleep(3600)
                     last_run = self.state.get_meta("full_cycle_last_run", "")
                     if not last_run:
-                        last_run = (datetime.now() - timedelta(hours=24) - timedelta(minutes=1)).isoformat()
+                        last_run = (datetime.now() - timedelta(hours=FULL_CYCLE_HOURS) - timedelta(minutes=1)).isoformat()
                 last_time = datetime.fromisoformat(last_run)
                 if last_time.tzinfo is not None:
                     last_time = last_time.replace(tzinfo=None)
                 elapsed = datetime.now() - last_time
-                if elapsed < timedelta(hours=24):
-                    logger.info("Full cycle loop: next run in %.1fh", (timedelta(hours=24) - elapsed).total_seconds() / 3600)
+                if elapsed < timedelta(hours=FULL_CYCLE_HOURS):
+                    logger.info("Full cycle loop: next run in %.1fh", (timedelta(hours=FULL_CYCLE_HOURS) - elapsed).total_seconds() / 3600)
                     await asyncio.sleep(3600)
                     continue
-                logger.info("Full cycle loop: elapsed %.1fh >= 24h, running full cycle", elapsed.total_seconds() / 3600)
+                logger.info("Full cycle loop: elapsed %.1fh >= %dh, running full cycle", elapsed.total_seconds() / 3600, FULL_CYCLE_HOURS)
                 result = await self.run_full_cycle()
             except asyncio.CancelledError:
                 raise
@@ -458,7 +464,7 @@ class AbvornDaemon:
                     self.state.set_meta("full_cycle_last_run", datetime.now().isoformat())
             except Exception as e:
                 logger.warning("Full cycle result handling failed (non-fatal): %s", e)
-            await asyncio.sleep(86400)
+            await asyncio.sleep(3600)
 
     async def _analytics_feedback_loop(self):
         """Close the learning loop: pull GA4 traffic + affiliate clicks, feed
