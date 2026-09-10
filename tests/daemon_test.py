@@ -252,6 +252,38 @@ def test_full_cycle_loop_fires_first_run(tmp_path):
     assert d.state.get_meta("full_cycle_last_run") is not None
 
 
+def test_full_cycle_loop_handles_tz_aware_meta(tmp_path):
+    """A timezone-aware full_cycle_last_run must not crash the loop."""
+    import asyncio
+    from abvorn.daemon import AbvornDaemon
+
+    d = AbvornDaemon(state_db=str(tmp_path / "s.db"))
+    d.running = True
+    calls = []
+    aware = (datetime.now() - timedelta(hours=25)).isoformat() + "+00:00"
+    d.state.set_meta("full_cycle_last_run", aware)
+
+    async def fake_run_full_cycle():
+        calls.append(1)
+        return {"status": "nothing_to_do"}
+
+    async def fake_sleep(secs):
+        if calls:
+            d.running = False
+
+    orig_sleep = asyncio.sleep
+    asyncio.sleep = fake_sleep
+    d.run_full_cycle = fake_run_full_cycle
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(d._full_cycle_loop())
+    finally:
+        asyncio.sleep = orig_sleep
+        loop.close()
+    assert len(calls) == 1
+
+
 def test_daemon_email_dispatch_returns_list(state):
     from abvorn.daemon import OptimizationDaemon
     mock_sender = MagicMock()

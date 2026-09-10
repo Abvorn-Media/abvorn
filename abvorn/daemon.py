@@ -434,6 +434,8 @@ class AbvornDaemon:
                 if not last_run:
                     last_run = (datetime.now() - timedelta(hours=24) - timedelta(minutes=1)).isoformat()
             last_time = datetime.fromisoformat(last_run)
+            if last_time.tzinfo is not None:
+                last_time = last_time.replace(tzinfo=None)
             elapsed = datetime.now() - last_time
             if elapsed < timedelta(hours=24):
                 await asyncio.sleep(3600)
