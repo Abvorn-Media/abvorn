@@ -69,7 +69,7 @@ class SupervisorAgent(AgentBase):
             if name == self.name:
                 continue
             inst = info.get("instance")
-            if inst and hasattr(inst, "_last_heartbeat"):
+            if inst and hasattr(inst, "_last_heartbeat") and inst._last_heartbeat:
                 age = now - inst._last_heartbeat
                 if age > HEARTBEAT_TIMEOUT:
                     dead.append(name)
