@@ -217,3 +217,31 @@ def test_ask_does_not_wait_for_long_ban():
     router.providers = [a]
     result = router.ask("test prompt")
     assert result is None  # no wait, returns exhausted immediately
+
+
+def test_ask_prefers_least_used_verified_provider():
+    from abvorn.core.models import ModelRouter, AIProvider
+    router = ModelRouter.__new__(ModelRouter)
+    heavy = AIProvider("groq", "key", "http://fake", "openai/gpt-oss-120b")
+    heavy.verified = True
+    heavy.last_ok = time.time()
+    heavy._day_tokens = 150000  # nearly burned through today's TPD
+    heavy.client = MagicMock()
+    heavy.client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="still-alive"))],
+        usage=MagicMock(total_tokens=5),
+    )
+    light = AIProvider("groq-oss-20", "key", "http://fake", "openai/gpt-oss-20b")
+    light.verified = True
+    light.last_ok = time.time()
+    light._day_tokens = 1000  # fresh budget
+    light.client = MagicMock()
+    light.client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="fresh-model"))],
+        usage=MagicMock(total_tokens=5),
+    )
+    router.providers = [heavy, light]
+    result = router.ask("test prompt")
+    assert result == "fresh-model"
+    assert light.total_calls == 1
+    assert heavy.total_calls == 0

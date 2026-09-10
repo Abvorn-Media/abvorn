@@ -40,6 +40,25 @@ class AIProvider:
         self._lock = threading.RLock()
         self._last_call = 0.0
         self._min_gap = min_gap
+        self._day_key = time.strftime("%Y-%m-%d")
+        self._day_tokens = 0
+
+    def _tick_day(self):
+        """Reset the per-day token counter when UTC date rolls over (groq's
+        TPD cap resets at UTC midnight)."""
+        day = time.strftime("%Y-%m-%d")
+        if day != self._day_key:
+            self._day_key = day
+            self._day_tokens = 0
+
+    def _register_tokens(self, n: int):
+        self._tick_day()
+        self._day_tokens += n
+
+    @property
+    def day_tokens(self) -> int:
+        self._tick_day()
+        return self._day_tokens
 
     def _throttle(self):
         if self._min_gap > 0:
@@ -104,6 +123,7 @@ class AIProvider:
                 elapsed = time.time() - start
                 self.total_calls += 1
                 self.total_tokens += resp.usage.total_tokens if resp.usage else 0
+                self._register_tokens(resp.usage.total_tokens if resp.usage else 0)
                 self.total_time += elapsed
                 self.verified = True
                 self.last_ok = time.time()
@@ -140,6 +160,7 @@ class AIProvider:
             self.total_calls += 1
             usage = data.get("usageMetadata", {})
             self.total_tokens += usage.get("totalTokenCount", 0)
+            self._register_tokens(usage.get("totalTokenCount", 0))
             self.total_time += elapsed
             self.verified = True
             self.last_ok = time.time()
@@ -166,6 +187,7 @@ class AIProvider:
                     self.total_calls += 1
                     tokens = resp.usage.total_tokens if resp.usage else 0
                     self.total_tokens += tokens
+                    self._register_tokens(tokens)
                     self.total_time += elapsed
                     self.verified = True
                     self.last_ok = time.time()
@@ -229,11 +251,12 @@ class ModelRouter:
                             return p.call(messages, json_mode)
                         except Exception:
                             p.mark_error(sys.exc_info()[1])
-            # Order providers so verified-working ones are tried first, then
-            # recently-successful ones, then the rest.
+            # Order providers so verified-working ones are tried first; among
+            # those, prefer the model with the least daily token usage so the
+            # load spreads across models and delays hitting per-model TPD caps.
             ordered = sorted(
                 self.providers,
-                key=lambda p: (1 if p.verified else 0, p.last_ok),
+                key=lambda p: (1 if p.verified else 0, -p.day_tokens, p.last_ok),
                 reverse=True,
             )
             # Prefer providers whose capability tier matches the task
