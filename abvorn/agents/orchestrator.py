@@ -524,7 +524,23 @@ class DeployAgent(AgentBase):
 
     async def perceive(self):
         events = self.bus.get_recent_events("content.drafted")
-        return {"events": events}
+        if not events:
+            return {"events": []}
+        try:
+            stored = self.state.get_meta("handled_drafted_event_ids", []) if self.state else []
+            handled = set(stored)
+        except Exception:
+            handled = set()
+        fresh = [e for e in events if e["id"] not in handled]
+        return {"events": fresh}
+
+    def _mark_drafted_handled(self, event_ids):
+        try:
+            stored = self.state.get_meta("handled_drafted_event_ids", []) if self.state else []
+            updated = sorted(set(stored) | set(event_ids))
+            self.state.set_meta("handled_drafted_event_ids", updated[-200:])
+        except Exception as e:
+            logger.error(f"[DeployAgent] failed to mark drafted events handled: {e}")
 
     async def decide(self, perception):
         if perception.get("events"):
@@ -541,11 +557,13 @@ class DeployAgent(AgentBase):
             niche = decision.split(":", 1)[1]
             logger.info(f"[DeployAgent] Deploying content for: {niche}")
             events = self.bus.get_recent_events("content.drafted")
-            content_payload = {}
+            content_payload = None
+            handled_id = None
             for e in events:
                 if e['message'].get('niche') == niche and 'result' in e['message']:
-                    content_payload = e['message']['result']
-                    break
+                    if content_payload is None:
+                        content_payload = e['message']['result']
+                        handled_id = e["id"]
             if self.site_deployer and self.state:
                 all_niches_data = self.state.get_all_niches()
                 all_slugs = [n["slug"] for n in all_niches_data]
@@ -575,6 +593,8 @@ class DeployAgent(AgentBase):
                     niche_posts = [p for p in all_posts if p.get("niche_slug") == slug]
                     self.site_deployer.deploy_category_page(slug, posts=niche_posts, all_categories=all_slugs)
             self.bus.publish("content.published", {"niche": niche, "status": "deployed"})
+            if handled_id is not None:
+                self._mark_drafted_handled([handled_id])
             return {"niche": niche, "status": "deployed"}
 
     async def reflect(self, outcome):
