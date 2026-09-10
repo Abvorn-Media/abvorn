@@ -19,7 +19,7 @@ TIER_FOR_TASK = {
 
 class AIProvider:
     def __init__(self, name: str, api_key: str, base_url: str = None, model: str = None, timeout: float = None,
-                 tier: str = "standard", native_gemini: bool = False):
+                 tier: str = "standard", native_gemini: bool = False, min_gap: float = 2.0):
         self.name = name
         self.tier = tier
         self.model = model or "gpt-4o"
@@ -38,6 +38,15 @@ class AIProvider:
         self.verified = False
         self.last_ok = 0.0
         self._lock = threading.RLock()
+        self._last_call = 0.0
+        self._min_gap = min_gap
+
+    def _throttle(self):
+        if self._min_gap > 0:
+            wait = self._min_gap - (time.time() - self._last_call)
+            if wait > 0:
+                time.sleep(wait)
+        self._last_call = time.time()
 
     @property
     def available(self) -> bool:
@@ -75,6 +84,7 @@ class AIProvider:
 
     def call(self, messages: list, json_mode: bool = False) -> str:
         with self._lock:
+            self._throttle()
             start = time.time()
             if self.native_gemini:
                 return self._call_gemini_native(messages, start)
