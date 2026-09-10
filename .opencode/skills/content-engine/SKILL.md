@@ -27,6 +27,8 @@ Abvorn's content pipeline (`abvorn/content/pipeline.py`) generates buying guides
 - X/Twitter: Strongest claim first, 1-3 posts per article
 - LinkedIn: Expanded enough for non-niche readers, remove corporate cadence
 - YouTube: Script around visual sequence, show result early
+- Instagram (`viral_script_generator.py` → `social_publisher.py`): Carousel post, visual hook first, max 2200 chars. Feed images render at **1080x1350 (4:5 portrait)** — IG favors it over square; fallback square is 1080x1080, story 1080x1920. Needs **>=2 images** per carousel; frames that fail resize are dropped, never posted unresized. Caption is honest (real claim + real angle, no inflated promise) and includes the guide link + relevant hashtags.
+- Telegram (`_telegram_script` → Bot API `sendMessage`): Hook-only first line (curiosity), then body = first ~3 summary paragraphs (HTML stripped), capped at 1900 chars, closed with `Full guide: <url>`. `enable_preview=True` so the page og:image (current logo, `assets/logo.png?v=2`) renders — never strip the preview.
 
 ## Quality Gate
 Before delivery:

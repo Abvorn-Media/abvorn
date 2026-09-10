@@ -14,6 +14,30 @@ class PersuasionPipeline:
         """Generate a complete content bundle for one persona."""
         name = persona.get("name", "the reader")
 
+        brain_context = {}
+        if brain is not None:
+            try:
+                brain_context = brain.query_for_pipeline(niche, "", persona)
+            except Exception as e:
+                logger.warning(f"Brain consult failed (non-fatal): {e}")
+
+        copywriting_guidance = ""
+        psych_guidance = ""
+        seo_guidance = ""
+        if brain_context:
+            copy_principles = brain_context.get("copywriting_principles", [])
+            if copy_principles:
+                texts = [c["text"][:300] for c in copy_principles[:2]]
+                copywriting_guidance = "\nBRAIN COPYWRITING PRINCIPLES:\n" + "\n---\n".join(texts)
+            psych_triggers = brain_context.get("psychology_triggers", [])
+            if psych_triggers:
+                texts = [c["text"][:300] for c in psych_triggers[:2]]
+                psych_guidance = "\nBRAIN PSYCHOLOGY TRIGGERS:\n" + "\n---\n".join(texts)
+            seo_tactics = brain_context.get("seo_tactics", [])
+            if seo_tactics:
+                texts = [c["text"][:300] for c in seo_tactics[:2]]
+                seo_guidance = "\nBRAIN SEO TACTICS:\n" + "\n---\n".join(texts)
+
         prompt = f"""Write a persuasive buying guide for '{niche}' targeting ONE specific person: {name}.
 
 PERSONA PROFILE:
@@ -33,6 +57,9 @@ ABVORN VOICE RULES:
 
 BANNED PHRASES (never use these):
 {chr(10).join('- ' + p for p in BANNED_PHRASES)}
+{copywriting_guidance}
+{psych_guidance}
+{seo_guidance}
 
 Return JSON:
 {{
