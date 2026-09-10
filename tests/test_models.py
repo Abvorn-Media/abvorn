@@ -130,8 +130,12 @@ def test_mark_error_ban_durations():
     assert p._banned_until - time.time() > 12 * 3600 - 5
 
     p = AIProvider("test3", "sk-test-key", model="gpt-4o")
-    p.mark_error(RuntimeError("Error code: 429 - rate limit"))
-    assert 500 <= p._banned_until - time.time() <= 700
+    p.mark_error(RuntimeError("Error code: 429 - Rate limit reached for model"))
+    assert p._banned_until - time.time() <= 120
+
+    p = AIProvider("test5", "sk-test-key", model="gpt-4o")
+    p.mark_error(RuntimeError("Error code: 429 - you have no credits remaining"))
+    assert p._banned_until - time.time() > 1800
 
     p = AIProvider("test4", "sk-test-key", model="gpt-4o")
     p.mark_error(RuntimeError("Error code: 500 - server"))
