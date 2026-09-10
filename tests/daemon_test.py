@@ -284,6 +284,59 @@ def test_full_cycle_loop_handles_tz_aware_meta(tmp_path):
     assert len(calls) == 1
 
 
+def test_get_meta_tolerates_raw_non_json_value(tmp_path):
+    """A raw (unquoted) string stored in the meta table must not crash get_meta."""
+    import sqlite3
+    from abvorn.core.state import AbvornState
+
+    db = AbvornState(tmp_path / "s.db")
+    with sqlite3.connect(tmp_path / "s.db") as c:
+        c.execute(
+            "INSERT INTO meta (key, value) VALUES (?, ?)",
+            ("full_cycle_last_run", "2026-09-09T04:15:03.760284"),
+        )
+    assert db.get_meta("full_cycle_last_run") == "2026-09-09T04:15:03.760284"
+    assert db.get_meta("missing_key", "fallback") == "fallback"
+
+
+def test_full_cycle_loop_handles_raw_iso_meta(tmp_path):
+    """A raw (unquoted) ISO datetime in the meta table must not break the loop."""
+    import asyncio
+    import sqlite3
+    from abvorn.daemon import AbvornDaemon
+
+    d = AbvornDaemon(state_db=str(tmp_path / "s.db"))
+    d.running = True
+    raw_iso = (datetime.now() - timedelta(hours=25)).isoformat()
+    with sqlite3.connect(tmp_path / "s.db") as c:
+        c.execute(
+            "INSERT INTO meta (key, value) VALUES (?, ?)",
+            ("full_cycle_last_run", raw_iso),
+        )
+    assert d.state.get_meta("full_cycle_last_run") == raw_iso
+    calls = []
+
+    async def fake_run_full_cycle():
+        calls.append(1)
+        return {"status": "nothing_to_do"}
+
+    async def fake_sleep(secs):
+        if calls:
+            d.running = False
+
+    orig_sleep = asyncio.sleep
+    asyncio.sleep = fake_sleep
+    d.run_full_cycle = fake_run_full_cycle
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(d._full_cycle_loop())
+    finally:
+        asyncio.sleep = orig_sleep
+        loop.close()
+    assert len(calls) == 1
+
+
 def test_daemon_email_dispatch_returns_list(state):
     from abvorn.daemon import OptimizationDaemon
     mock_sender = MagicMock()

@@ -156,7 +156,12 @@ class AbvornState:
         with self._cursor() as c:
             c.execute("SELECT value FROM meta WHERE key=?", (key,))
             row = c.fetchone()
-            return json.loads(row[0]) if row else default
+            if not row:
+                return default
+            try:
+                return json.loads(row[0])
+            except (json.JSONDecodeError, TypeError):
+                return row[0]
 
     def set_meta(self, key: str, value):
         with self._cursor() as c:
