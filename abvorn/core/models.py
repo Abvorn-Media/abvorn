@@ -200,45 +200,76 @@ class ModelRouter:
                 is_gemini = (name == "gemini")
                 self.providers.append(AIProvider(name, key, url, model, timeout=timeout, tier=tier, native_gemini=is_gemini))
 
+    # When every provider is exhausted, only wait if the soonest recovery is
+    # close enough that retrying in-place will likely succeed (transient
+    # rate-limit bans are short-lived; auth/billing bans are not).
+    RETRY_WAIT_WINDOW = 90.0
+
     def ask(self, prompt: str, system: str = None, json_mode: bool = False,
             model_hint: str = None, task: str = None) -> str:
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
-        if model_hint:
-            for p in self.providers:
-                if model_hint in p.name and p.available:
-                    try:
-                        return p.call(messages, json_mode)
-                    except Exception:
-                        p.mark_error(sys.exc_info()[1])
-        # Order providers so verified-working ones are tried first, then
-        # recently-successful ones, then the rest.
-        ordered = sorted(
-            self.providers,
-            key=lambda p: (1 if p.verified else 0, p.last_ok),
-            reverse=True,
-        )
-        # If task is specified, prefer providers whose capability tier matches
-        # the task (fast for research/social/brain, strong for drafting and
-        # verification), then fall back to the remaining providers.
-        if task and task in TIER_FOR_TASK:
-            tier = TIER_FOR_TASK[task]
+
+        def _attempt() -> str:
+            if model_hint:
+                for p in self.providers:
+                    if model_hint in p.name and p.available:
+                        try:
+                            return p.call(messages, json_mode)
+                        except Exception:
+                            p.mark_error(sys.exc_info()[1])
+            # Order providers so verified-working ones are tried first, then
+            # recently-successful ones, then the rest.
+            ordered = sorted(
+                self.providers,
+                key=lambda p: (1 if p.verified else 0, p.last_ok),
+                reverse=True,
+            )
+            # Prefer providers whose capability tier matches the task
+            # (fast for research/social/brain, strong for drafting and
+            # verification), then fall back to the remaining providers.
+            if task and task in TIER_FOR_TASK:
+                tier = TIER_FOR_TASK[task]
+                for p in ordered:
+                    if p.tier == tier and p.available:
+                        try:
+                            return p.call(messages, json_mode)
+                        except Exception:
+                            p.mark_error(sys.exc_info()[1])
             for p in ordered:
-                if p.tier == tier and p.available:
-                    try:
-                        return p.call(messages, json_mode)
-                    except Exception:
-                        p.mark_error(sys.exc_info()[1])
-        for p in ordered:
-            if not p.available:
+                if not p.available:
+                    continue
+                try:
+                    return p.call(messages, json_mode)
+                except Exception:
+                    p.mark_error(sys.exc_info()[1])
+                    continue
+            return None
+
+        result = _attempt()
+        if result is not None:
+            return result
+        # All providers exhausted. If it is only because of bans that will
+        # clear shortly (i.e. transient rate limits), wait for the soonest one
+        # to lift and retry once, rather than failing the whole call (which a
+        # full content cycle interprets as hard failure + 24h backoff).
+        now = time.time()
+        soonest = None
+        for p in self.providers:
+            if not p.api_key:
                 continue
-            try:
-                return p.call(messages, json_mode)
-            except Exception:
-                p.mark_error(sys.exc_info()[1])
-                continue
+            recover_in = p._banned_until - now
+            if p._banned_until > now and 0 < recover_in <= ModelRouter.RETRY_WAIT_WINDOW:
+                if soonest is None or recover_in < soonest:
+                    soonest = recover_in
+        if soonest is not None:
+            logger.info(f"All providers banned; waiting {soonest:.0f}s for rate-limit recovery, then retrying")
+            time.sleep(soonest + 0.5)
+            result = _attempt()
+            if result is not None:
+                return result
         logger.error("All AI providers exhausted")
         return None
 
