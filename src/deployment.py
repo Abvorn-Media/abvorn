@@ -1210,7 +1210,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     <meta property="og:description" content="{meta_desc}">
     <meta property="og:url" content="{_SITE_URL}/{niche_slug}/">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="{_SITE_URL}/assets/logo.png"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png">
+    <meta property="og:image" content="{_SITE_URL}/assets/logo.png?v=2"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png?v=2">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{blog_title} | Abvorn">
     <meta name="twitter:description" content="{meta_desc}">
@@ -1781,7 +1781,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     <meta property="og:description" content="{meta_desc}">
     <meta property="og:url" content="{_SITE_URL}/categories/{category_slug}/">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="{_SITE_URL}/assets/logo.png"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png">
+    <meta property="og:image" content="{_SITE_URL}/assets/logo.png?v=2"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png?v=2">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{blog_title} | Abvorn">
     <meta name="twitter:description" content="{meta_desc}">
@@ -2157,7 +2157,7 @@ def _hub_page(b, meta_title, meta_desc, canonical_path, hero_html, index_nav, se
     <meta property="og:description" content="{meta_desc}">
     <meta property="og:url" content="{_SITE_URL}{canonical_path}">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="{_SITE_URL}/assets/logo.png"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png">
+    <meta property="og:image" content="{_SITE_URL}/assets/logo.png?v=2"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png?v=2">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{meta_title} | Abvorn">
     <meta name="twitter:description" content="{meta_desc}">
@@ -3547,7 +3547,7 @@ finish review, the verdict, and DESIGN.md
 <meta property="og:description" content="Watch Ab — Abvorn's AI — evolve, generation by generation. A live journal of the system writing itself smarter.">
 <meta property="og:url" content="{_SITE_URL}/journal/">
 <meta property="og:type" content="website">
-<meta property="og:image" content="{_SITE_URL}/assets/logo.png"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png">
+<meta property="og:image" content="{_SITE_URL}/assets/logo.png?v=2"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png?v=2">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Ab's Evolution Journal | Abvorn">
 <meta name="twitter:description" content="Watch Ab — Abvorn's AI — evolve, generation by generation. A live journal of the system writing itself smarter.">
@@ -3775,7 +3775,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <meta property="og:description" content="Independent product reviews and buying guides. We research before we recommend.">
     <meta property="og:url" content="__SITE_URL__/">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="__SITE_URL__/assets/logo.png"><meta name="twitter:image" content="__SITE_URL__/assets/logo.png">
+    <meta property="og:image" content="__SITE_URL__/assets/logo.png?v=2"><meta name="twitter:image" content="__SITE_URL__/assets/logo.png?v=2">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Abvorn – Reviews Based on Real Research, Not Spec Sheets">
     <meta name="twitter:description" content="Independent product reviews and buying guides. We research before we recommend.">

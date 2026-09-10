@@ -200,28 +200,29 @@ class SocialPublisher:
         return caption[:2200]
 
     def _resize_for_instagram(self, media_paths: list[str]) -> list[str]:
-        """Resize images to 1080x1080 (IG feed format) into the export cache."""
-        imported = False
+        """Resize images to 1080x1350 (IG 4:5 feed format) into the export cache.
+
+        Never returns an unresized original: a failed resize drops that image
+        instead of posting a wrong-size/low-quality frame."""
         try:
             from .cinematic_filter import CinematicFilter
-            imported = True
+            filter_ = CinematicFilter()
         except Exception:
-            pass
+            return []
         resized = []
         cache_dir = Path.home() / ".abvorn" / "exports" / "instagram"
         cache_dir.mkdir(parents=True, exist_ok=True)
         for i, path in enumerate(media_paths[:10]):
-            if imported:
-                import time
-                out = cache_dir / f"ig_{int(time.time() * 1000)}_{i}.jpg"
-                try:
-                    done = CinematicFilter().resize_for_platform(path, "instagram", str(out))
-                    if done:
-                        resized.append(str(out))
-                        continue
-                except Exception:
-                    pass
-            resized.append(str(path))
+            if not Path(path).exists():
+                continue
+            import time
+            out = cache_dir / f"ig_{int(time.time() * 1000)}_{i}.jpg"
+            try:
+                done = filter_.resize_for_platform(path, "instagram", str(out))
+                if done and Path(done).exists():
+                    resized.append(str(done))
+            except Exception as e:
+                logger.warning(f"instagram resize failed for {path}: {e}")
         return resized
 
     def _publish_telegram(self, params: dict, script: dict | list | str,
