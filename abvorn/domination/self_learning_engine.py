@@ -110,6 +110,14 @@ class SelfLearningEngine:
                   hook_id))
             conn.commit()
 
+    def posted_urls(self) -> set[str]:
+        """URLs already recorded as posted (used to avoid re-posting repeats)."""
+        with sqlite3.connect(str(self.db_path)) as conn:
+            rows = conn.execute(
+                "SELECT DISTINCT post_url FROM content_performance"
+            ).fetchall()
+            return {r[0] for r in rows if r[0]}
+
     def record_post_performance(self, url: str, niche: str, platform: str,
                                 hook: str = "", sentiment: str = "neutral",
                                 virality_score: float = 0.0,
