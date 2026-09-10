@@ -62,6 +62,7 @@ class SocialAmbassador(AgentBase):
 
     async def perceive(self) -> dict:
         events = self.bus.get_recent_events("content.published", limit=3)
+        events = self._filter_new(events)
         mentions = self.bus.get_recent_events("social.mention", limit=5)
         schedule = self.state.get_meta("current_schedule", []) if self.state else []
         now = datetime.now().isoformat()
@@ -81,6 +82,24 @@ class SocialAmbassador(AgentBase):
         }
         self._perception = p
         return p
+
+    def _filter_new(self, events: list) -> list:
+        if not events:
+            return []
+        try:
+            stored = self.state.get_meta("handled_promoted_event_ids", []) if self.state else []
+            handled = set(stored)
+        except Exception:
+            handled = set()
+        return [e for e in events if e["id"] not in handled]
+
+    def _mark_handled(self, event_ids):
+        try:
+            stored = self.state.get_meta("handled_promoted_event_ids", []) if self.state else []
+            updated = sorted(set(stored) | set(event_ids))
+            self.state.set_meta("handled_promoted_event_ids", updated[-200:])
+        except Exception as e:
+            logger.warning(f"[Ambassador] failed to mark events handled: {e}")
 
     async def decide(self, perception: dict) -> str:
         if perception.get("schedule_due"):
@@ -115,7 +134,9 @@ class SocialAmbassador(AgentBase):
             niche = ev.get("message", {}).get("niche", ev.get("niche", "general"))
             if not self.soul_check("promote_new_content", {"niche": niche}):
                 return {"action": "soul_blocked", "decision": "promote_new_content"}
-            return await self._promote_niche(niche)
+            result = await self._promote_niche(niche)
+            self._mark_handled([ev["id"]])
+            return result
 
         if decision == "engage":
             mentions = self._perception.get("mentions", [])
