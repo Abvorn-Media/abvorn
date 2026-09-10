@@ -453,7 +453,7 @@ class AbvornDaemon:
                 await asyncio.sleep(3600)
                 continue
             try:
-                if result.get("status") in ("complete", "nothing_to_do"):
+                if result.get("status") in ("complete", "success", "nothing_to_do"):
                     self.state.set_meta("full_cycle_last_run", datetime.now().isoformat())
             except Exception as e:
                 logger.warning("Full cycle result handling failed (non-fatal): %s", e)
