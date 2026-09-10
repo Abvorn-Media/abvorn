@@ -560,10 +560,11 @@ class DeployAgent(AgentBase):
             content_payload = None
             handled_id = None
             for e in events:
-                if e['message'].get('niche') == niche and 'result' in e['message']:
-                    if content_payload is None:
-                        content_payload = e['message']['result']
+                if e['message'].get('niche') == niche:
+                    if handled_id is None:
                         handled_id = e["id"]
+                    if content_payload is None and 'result' in e['message']:
+                        content_payload = e['message']['result']
             if self.site_deployer and self.state:
                 all_niches_data = self.state.get_all_niches()
                 all_slugs = [n["slug"] for n in all_niches_data]
