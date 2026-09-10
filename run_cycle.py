@@ -477,7 +477,7 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {HEAD_HTML(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}. Compare specs, prices, and Abvorn Verdict scores.')}
-{OG_META(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}.', f'{_SITE_URL}/comparisons/{niche_slug}/', f'{_SITE_URL}/assets/logo.png')}
+{OG_META(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}.', f'{_SITE_URL}/comparisons/{niche_slug}/', f'{_SITE_URL}/assets/logo.png?v=2')}
 <link rel="canonical" href="{_SITE_URL}/comparisons/{niche_slug}/">
 {bread}
 {ANALYTICS_HTML}
@@ -1506,7 +1506,7 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
     <meta property="og:description" content="{meta_desc}">
     <meta property="og:url" content="{_SITE_URL}/{niche_slug}/">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="{_SITE_URL}/assets/logo.png"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png">
+    <meta property="og:image" content="{_SITE_URL}/assets/logo.png?v=2"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png?v=2">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{blog_title} | Abvorn">
     <meta name="twitter:description" content="{meta_desc}">
@@ -2267,7 +2267,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     <title>{title_escaped} | Abvorn</title>
     <meta name="description" content="{meta_short_escaped}">
     <link rel="canonical" href="{article_url}">
-    {OG_META(title_escaped + ' | Abvorn', meta_short_escaped, article_url, f'{_SITE_URL}/assets/logo.png', og_type='article')}
+    {OG_META(title_escaped + ' | Abvorn', meta_short_escaped, article_url, f'{_SITE_URL}/assets/logo.png?v=2', og_type='article')}
     {FONT_LINK}
     <link rel="preconnect" href="https://m.media-amazon.com">
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
@@ -2530,7 +2530,7 @@ def build_methodology_page(all_slugs, form_url=""):
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {HEAD_HTML('How We Research — Abvorn', 'Our rigorous, independent research methodology. Every recommendation is earned through honest, evidence-based evaluation.')}
-{OG_META('How We Research — Abvorn', 'Our rigorous, independent research methodology. Every recommendation is earned through honest, evidence-based evaluation.', f'{_SITE_URL}/how-we-test/', f'{_SITE_URL}/assets/logo.png')}
+{OG_META('How We Research — Abvorn', 'Our rigorous, independent research methodology. Every recommendation is earned through honest, evidence-based evaluation.', f'{_SITE_URL}/how-we-test/', f'{_SITE_URL}/assets/logo.png?v=2')}
 <link rel="canonical" href="{f'{_SITE_URL}/how-we-test/'}">
 {ANALYTICS_HTML}
 <style>{UTILITY_PAGE_CSS}</style>
@@ -2955,7 +2955,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
 <meta property="og:description" content="{title} - Abvorn">
 <meta property="og:url" content="{_SITE_URL}/{page_name}">
 <meta property="og:type" content="website">
-<meta property="og:image" content="{_SITE_URL}/assets/logo.png"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png">
+<meta property="og:image" content="{_SITE_URL}/assets/logo.png?v=2"><meta name="twitter:image" content="{_SITE_URL}/assets/logo.png?v=2">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title} | Abvorn">
 <meta name="twitter:description" content="{title} - Abvorn">

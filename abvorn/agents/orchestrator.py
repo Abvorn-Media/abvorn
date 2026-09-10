@@ -453,7 +453,7 @@ class SiteDeployer:
 <style>{CSS_SHARED}</style>
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
-<nav><div class="inner"><a class="logo" href="{b}/"><img src="{b}/assets/logo.png" alt="Abvorn">Abvorn</a><button class="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="main-nav">☰</button><div class="nav-links" id="main-nav">{nav_links}{dropdown}</div></div></nav>
+<nav><div class="inner"><a class="logo" href="{b}/"><img src="{b}/assets/logo.png?v=2" alt="Abvorn">Abvorn</a><button class="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="main-nav">☰</button><div class="nav-links" id="main-nav">{nav_links}{dropdown}</div></div></nav>
 
 <article id="main">
 <h1>{post_title}</h1>

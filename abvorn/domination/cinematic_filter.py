@@ -129,7 +129,8 @@ class CinematicFilter:
                             output_path: str | None = None) -> str | None:
         dims = {
             "x": (1200, 675),
-            "instagram": (1080, 1080),
+            "instagram": (1080, 1350),  # 4:5 feed portrait — IG favors it over square
+            "instagram_square": (1080, 1080),
             "instagram_story": (1080, 1920),
             "tiktok": (1080, 1920),
             "linkedin": (1200, 627),
@@ -139,6 +140,7 @@ class CinematicFilter:
         size = dims.get(platform, (1080, 1080))
         try:
             img = Image.open(image_path)
+            img = img.convert("RGB")
             img.thumbnail(size, Image.LANCZOS)
             canvas = Image.new("RGB", size, BRAND_OVERLAY_COLOR)
             x = (size[0] - img.width) // 2
@@ -146,7 +148,12 @@ class CinematicFilter:
             canvas.paste(img, (x, y))
             output = output_path or image_path
             Path(output).parent.mkdir(parents=True, exist_ok=True)
-            canvas.save(output, quality=92)
+            canvas.save(output, quality=95, subsampling=0)
+            # verify the write produced the expected canvas
+            verify = Image.open(output)
+            if verify.size != size:
+                logger.warning(f"Resize verify failed for {output}: {verify.size} != {size}")
+                return None
             return output
         except Exception as e:
             logger.warning(f"Platform resize failed: {e}")
