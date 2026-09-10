@@ -155,7 +155,7 @@ class AbvornDaemon:
             logger.warning(f"Soul check blocked: {soul_check['violations']}")
             return {"status": "soul_blocked", "violations": soul_check["violations"]}
 
-        content = self.factory.run(niche, persona, self.router)
+        content = self.factory.run(niche, persona, self.router, brain=getattr(self, "brain", None))
         if not content:
             self.scheduler.mark_failed(opp["id"])
             self.notifier.report_error(niche, "Content factory returned None")
@@ -256,6 +256,7 @@ class AbvornDaemon:
                 logger.info("Brain loaded")
         except Exception as e:
             logger.warning(f"Brain init failed (non-fatal): {e}")
+        self.brain = brain
 
         pipeline = ContentPipeline(self.state)
         if brain:

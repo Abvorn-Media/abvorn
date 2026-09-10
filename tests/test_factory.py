@@ -48,3 +48,48 @@ def test_pipeline_without_brain():
     result = pipeline.run("test niche", persona, FakeRouter())
     assert result is not None
     assert result["post_title"] == "Test Post"
+
+
+def test_pipeline_injects_brain_context():
+    """Should consult the brain and inject principles into the prompt."""
+    pipeline = PersuasionPipeline()
+    persona = {"name": "Test", "psychology": {"anxieties": ["battery dying"]}}
+
+    class FakeBrain:
+        def query_for_pipeline(self, niche, angle, persona):
+            return {
+                "copywriting_principles": [{"text": "Hook with the reader's problem, not the product."}],
+                "psychology_triggers": [{"text": "Loss aversion: buyers fear wasted money more than a bad pick."}],
+                "seo_tactics": [{"text": "FAQ blocks win answer boxes."}],
+            }
+
+    seen = {}
+
+    class FakeRouter:
+        def ask(self, prompt, **kw):
+            seen["prompt"] = prompt
+            return {"post_title": "Brain Test", "tags": ["test"], "selected_angle": "review"}
+
+    result = pipeline.run("test niche", persona, FakeRouter(), brain=FakeBrain())
+    assert result["post_title"] == "Brain Test"
+    assert "BRAIN COPYWRITING PRINCIPLES" in seen["prompt"]
+    assert "loss aversion" in seen["prompt"].lower()
+    assert "FAQ" in seen["prompt"]
+
+
+def test_pipeline_brain_failure_is_nonfatal():
+    """A throwing brain must not break content generation."""
+    pipeline = PersuasionPipeline()
+    persona = {"name": "Test", "psychology": {}}
+
+    class BadBrain:
+        def query_for_pipeline(self, niche, angle, persona):
+            raise RuntimeError("brain down")
+
+    class FakeRouter:
+        def ask(self, prompt, **kw):
+            return {"post_title": "Resilient", "tags": ["test"], "selected_angle": "review"}
+
+    result = pipeline.run("test niche", persona, FakeRouter(), brain=BadBrain())
+    assert result is not None
+    assert result["post_title"] == "Resilient"
