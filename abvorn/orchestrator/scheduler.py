@@ -24,6 +24,10 @@ class Scheduler:
         """Mark an opportunity as complete."""
         self.state.update_opportunity_status(opp_id, "completed")
 
+    def mark_failed(self, opp_id: int):
+        """Mark an opportunity as failed so it doesn't block the queue."""
+        self.state.update_opportunity_status(opp_id, "failed")
+
     def queue_deploy(self, niche: str):
         """Queue a deploy for a specific niche (triggered by Telegram command)."""
         self.state.add_opportunity(niche, score=1.0)

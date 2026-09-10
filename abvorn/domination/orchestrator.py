@@ -74,10 +74,27 @@ class DominationOrchestrator:
                 logger.warning("No RSS entries found")
                 return {"cycle_id": cycle_id, "status": "no_content", "steps": steps}
 
+            posted = set()
+            try:
+                posted = self.learner.posted_urls()
+            except Exception as e:
+                logger.warning(f"[{cycle_id}] posted_urls lookup failed (non-fatal): {e}")
+
             if niche:
-                target = next((e for e in entries if e["niche"] == niche), entries[0])
+                target = next(
+                    (e for e in entries if e["niche"] == niche and e.get("url") not in posted),
+                    None,
+                )
+                if target is None:
+                    target = next(
+                        (e for e in entries if e["niche"] == niche), entries[0]
+                    )
             else:
-                target = entries[0]
+                target = next(
+                    (e for e in entries if e.get("url") not in posted), None
+                )
+                if target is None:
+                    target = entries[0]
 
             steps["intel"] = {
                 "status": "ok",
@@ -165,14 +182,14 @@ class DominationOrchestrator:
                     hook_id = self.learner.record_hook_test(
                         hook, target["niche"], platform_key
                     )
-                    self.learner.record_post_performance(
-                        url=target.get("url", ""),
-                        niche=target["niche"],
-                        platform=platform_key,
-                        hook=hook,
-                        sentiment=target.get("sentiment", "neutral"),
-                        virality_score=target.get("virality_score", 0),
-                    )
+                self.learner.record_post_performance(
+                    url=target.get("url", ""),
+                    niche=target["niche"],
+                    platform=platform_key,
+                    hook=hook,
+                    sentiment=target.get("sentiment", "neutral"),
+                    virality_score=target.get("virality_score", 0),
+                )
             self.learner.record_posting_time(target["niche"], "blog", target["virality_score"])
             steps["learning"] = {"status": "ok"}
             logger.info(f"[{cycle_id}] Learning data recorded")

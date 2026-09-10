@@ -83,13 +83,18 @@ class AmazonSource:
         "smart home": "https://www.amazon.com/gp/bestsellers/electronics/9811847011",
     }
 
+    def _get(self, url: str) -> str:
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        return resp.text
+
     def search(self, category: str, max_results: int = 5) -> list[dict]:
         url = self.AMAZON_URLS.get(category)
         if not url:
             return []
         try:
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-            resp = requests.get(url, headers=headers, timeout=10)
+            resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
             if resp.status_code != 200:
                 return []
             soup = BeautifulSoup(resp.text, "html.parser")
@@ -109,6 +114,41 @@ class AmazonSource:
             return results
         except Exception as e:
             logger.debug(f"Amazon scrape failed: {e}")
+            return []
+
+    def find_product(self, name: str, category: str = "", max_results: int = 3) -> list[dict]:
+        """Search Amazon for a specific product by name. Returns matches with
+        a real Amazon listing URL. Empty list on failure (never raises)."""
+        query = category.lower().strip() or name
+        url = f"https://www.amazon.com/s?k={requests.utils.quote(query)}"
+        try:
+            text = self._get(url)
+            soup = BeautifulSoup(text, "html.parser")
+            results = []
+            seen = set()
+            for item in soup.select("div.s-result-item")[: max_results * 3]:
+                title_el = item.select_one("h2 span") or item.select_one("span.a-size-medium")
+                link_el = item.select_one("a.a-link-normal.s-no-outline") or item.select_one("h2 a")
+                if not title_el:
+                    continue
+                name_ = title_el.get_text(strip=True)
+                if not name_ or name_ in seen:
+                    continue
+                seen.add(name_)
+                href = link_el.get("href", "") if link_el else ""
+                results.append({
+                    "product_name": name_,
+                    "category": category,
+                    "source": "amazon",
+                    "score": 75,
+                    "price_range": "",
+                    "url": "https://www.amazon.com" + href if href.startswith("/") else href,
+                })
+                if len(results) >= max_results:
+                    break
+            return results
+        except Exception as e:
+            logger.debug(f"Amazon product search failed for '{query}': {e}")
             return []
 
 

@@ -79,6 +79,10 @@ class AbvornDaemon:
         from .trends.scanner import TrendScanner
         self.trend_scanner = TrendScanner(state=self.state)
         self.notifier._trend_scanner = self.trend_scanner
+        from .trends.planner import ContentPlanner
+        self.content_planner = ContentPlanner()
+        from .trends.recon.providers import AmazonSource
+        self.amazon_source = AmazonSource()
         self.site_registry = SiteRegistry(self.state)
         self.notifier._site_registry = self.site_registry
         self.error_reporter = ErrorReporter(self.state, notifier=self.notifier)
@@ -113,8 +117,17 @@ class AbvornDaemon:
 
         opp = self.scheduler.get_next_opportunity()
         if not opp:
-            logger.info("No pending opportunities — running discovery")
-            self.scanner.discover_from_keywords(["wireless headphones", "gaming mouse"])
+            logger.info("No pending opportunities — running trend-driven discovery")
+            trends = await asyncio.to_thread(self.trend_scanner.scan)
+            if trends:
+                discovered = await asyncio.to_thread(
+                    self.scanner.discover_from_trends, trends
+                )
+                if discovered:
+                    self.notifier.report_cycle(
+                        "trend-discovery", "success",
+                        ", ".join(d["product_name"] for d in discovered),
+                    )
             opp = self.scheduler.get_next_opportunity()
             if not opp:
                 return {"status": "nothing_to_do"}
@@ -329,6 +342,9 @@ class AbvornDaemon:
         domination_task = asyncio.create_task(self._domination_loop())
         self._tasks.append(domination_task)
 
+        full_cycle_task = asyncio.create_task(self._full_cycle_loop())
+        self._tasks.append(full_cycle_task)
+
         gsc_task = asyncio.create_task(self._gsc_loop())
         self._tasks.append(gsc_task)
 
@@ -398,6 +414,28 @@ class AbvornDaemon:
             if result.get("status") == "complete":
                 self.state.set_meta("domination_last_run", datetime.now().isoformat())
             await asyncio.sleep(14400)
+
+    async def _full_cycle_loop(self):
+        """Run the trend-driven full cycle (discover -> create page -> post
+        social) daily, or on bus signal. The first run is staggered an hour
+        so the daemon doesn't fire an AI content cycle at boot."""
+        while self.running:
+            if self.is_paused():
+                await asyncio.sleep(3600)
+                continue
+            last_run = self.state.get_meta("full_cycle_last_run", "")
+            if not last_run:
+                await asyncio.sleep(3600)
+                continue
+            last_time = datetime.fromisoformat(last_run)
+            elapsed = datetime.now() - last_time
+            if elapsed < timedelta(hours=24):
+                await asyncio.sleep(3600)
+                continue
+            result = await self.run_full_cycle()
+            if result.get("status") in ("complete", "nothing_to_do"):
+                self.state.set_meta("full_cycle_last_run", datetime.now().isoformat())
+            await asyncio.sleep(86400)
 
     async def _analytics_feedback_loop(self):
         """Close the learning loop: pull GA4 traffic + affiliate clicks, feed
