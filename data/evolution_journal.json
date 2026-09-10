@@ -125,7 +125,52 @@
       "narrative": "Drive action 'generate_content': Top 3 Fitness Trackers for 2024: In‑Depth Review & Buying Guide",
       "graph_nodes": 2638,
       "graph_edges": 3994
+    },
+    {
+      "timestamp": "2026-09-10T03:50:07.122759+00:00",
+      "generation": 2,
+      "drive_score": 0.2075,
+      "action": "generate_content",
+      "narrative": "Drive action 'generate_content': Top 3 Laptops of 2024: Performance, Portability, and Value",
+      "graph_nodes": 2638,
+      "graph_edges": 3994
+    },
+    {
+      "timestamp": "2026-09-09T21:50:06.333112+00:00",
+      "generation": 2,
+      "drive_score": 0.2075,
+      "action": "generate_content",
+      "narrative": "Drive action 'generate_content': Top 3 4K Monitors for 2024: Ultra‑Sharp Detail, Color Accuracy, and Gaming Performance",
+      "graph_nodes": 2638,
+      "graph_edges": 3994
+    },
+    {
+      "timestamp": "2026-09-09T15:50:07.269871+00:00",
+      "generation": 2,
+      "drive_score": 0.2075,
+      "action": "generate_content",
+      "narrative": "Drive action 'generate_content': Top 3 Gaming Mice for 2024: Performance, Comfort, and Value",
+      "graph_nodes": 2638,
+      "graph_edges": 3994
+    },
+    {
+      "timestamp": "2026-09-09T09:50:06.049571+00:00",
+      "generation": 2,
+      "drive_score": 0.2075,
+      "action": "generate_content",
+      "narrative": "Drive action 'generate_content': Top 3 Wireless Headphones for 2024: Sound, Comfort, and Value Compared",
+      "graph_nodes": 2638,
+      "graph_edges": 3994
+    },
+    {
+      "timestamp": "2026-09-09T07:20:21.978266",
+      "generation": 2,
+      "drive_score": 0.0,
+      "action": "insight",
+      "narrative": "Search Console insight — Top performing content: https://abvorn-media.github.io/abvorn/; Highest CTR: 0.00% for https://abvorn-media.github.io",
+      "graph_nodes": 2638,
+      "graph_edges": 3994
     }
   ],
-  "last_update": "2026-09-09T03:50:05.145732+00:00"
+  "last_update": "2026-09-10T03:50:07.122759+00:00"
 }
