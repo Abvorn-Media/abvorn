@@ -426,8 +426,13 @@ class AbvornDaemon:
                 continue
             last_run = self.state.get_meta("full_cycle_last_run", "")
             if not last_run:
+                # First run is staggered an hour so the daemon doesn't fire an
+                # AI content cycle at boot; thereafter the loop below enforces
+                # the 24h cadence.
                 await asyncio.sleep(3600)
-                continue
+                last_run = self.state.get_meta("full_cycle_last_run", "")
+                if not last_run:
+                    last_run = (datetime.now() - timedelta(hours=24) - timedelta(minutes=1)).isoformat()
             last_time = datetime.fromisoformat(last_run)
             elapsed = datetime.now() - last_time
             if elapsed < timedelta(hours=24):
