@@ -37,6 +37,7 @@ class AIProvider:
         self.failures = 0
         self.verified = False
         self.last_ok = 0.0
+        self._lock = threading.RLock()
 
     @property
     def available(self) -> bool:
@@ -73,26 +74,27 @@ class AIProvider:
         logger.warning(f"{self.name}: marked error {code}, banned {duration}s: {str(exc)[:80]}")
 
     def call(self, messages: list, json_mode: bool = False) -> str:
-        start = time.time()
-        if self.native_gemini:
-            return self._call_gemini_native(messages, start)
-        fmt = {"type": "json_object"} if json_mode else None
-        if self.client is None:
-            raise RuntimeError(f"{self.name}: no API key configured")
-        try:
-            resp = self.client.chat.completions.create(
-                model=self.model, messages=messages, response_format=fmt
-            )
-            elapsed = time.time() - start
-            self.total_calls += 1
-            self.total_tokens += resp.usage.total_tokens if resp.usage else 0
-            self.total_time += elapsed
-            self.verified = True
-            self.last_ok = time.time()
-            return resp.choices[0].message.content
-        except Exception as e:
-            logger.warning(f"{self.name} failed: {str(e)[:80]}")
-            raise
+        with self._lock:
+            start = time.time()
+            if self.native_gemini:
+                return self._call_gemini_native(messages, start)
+            fmt = {"type": "json_object"} if json_mode else None
+            if self.client is None:
+                raise RuntimeError(f"{self.name}: no API key configured")
+            try:
+                resp = self.client.chat.completions.create(
+                    model=self.model, messages=messages, response_format=fmt
+                )
+                elapsed = time.time() - start
+                self.total_calls += 1
+                self.total_tokens += resp.usage.total_tokens if resp.usage else 0
+                self.total_time += elapsed
+                self.verified = True
+                self.last_ok = time.time()
+                return resp.choices[0].message.content
+            except Exception as e:
+                logger.warning(f"{self.name} failed: {str(e)[:80]}")
+                raise
 
     def _call_gemini_native(self, messages: list, start: float) -> str:
         """Call Gemini via native REST API (the OpenAI-compat endpoint is broken)."""
@@ -136,27 +138,28 @@ class AIProvider:
         last_error = None
         for attempt in range(max_retries + 1):
             try:
-                start = time.time()
-                fmt = {"type": "json_object"} if json_mode else None
-                if self.client is None:
-                    raise RuntimeError(f"{self.name}: no API key configured")
-                resp = self.client.chat.completions.create(
-                    model=self.model, messages=messages, response_format=fmt
-                )
-                elapsed = time.time() - start
-                self.total_calls += 1
-                tokens = resp.usage.total_tokens if resp.usage else 0
-                self.total_tokens += tokens
-                self.total_time += elapsed
-                self.verified = True
-                self.last_ok = time.time()
-                return resp.choices[0].message.content, {
-                    "model": self.model,
-                    "tokens": tokens,
-                    "time_ms": int(elapsed * 1000),
-                    "provider": self.name,
-                    "success": True,
-                }
+                with self._lock:
+                    start = time.time()
+                    fmt = {"type": "json_object"} if json_mode else None
+                    if self.client is None:
+                        raise RuntimeError(f"{self.name}: no API key configured")
+                    resp = self.client.chat.completions.create(
+                        model=self.model, messages=messages, response_format=fmt
+                    )
+                    elapsed = time.time() - start
+                    self.total_calls += 1
+                    tokens = resp.usage.total_tokens if resp.usage else 0
+                    self.total_tokens += tokens
+                    self.total_time += elapsed
+                    self.verified = True
+                    self.last_ok = time.time()
+                    return resp.choices[0].message.content, {
+                        "model": self.model,
+                        "tokens": tokens,
+                        "time_ms": int(elapsed * 1000),
+                        "provider": self.name,
+                        "success": True,
+                    }
             except openai.AuthenticationError:
                 raise
             except Exception as e:
