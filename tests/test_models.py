@@ -1,4 +1,5 @@
 """Tests for cost-aware model routing."""
+import time
 import pytest
 from unittest.mock import MagicMock
 
@@ -116,3 +117,67 @@ def test_call_wraps_call_with_metadata():
     )
     result = provider.call([{"role": "user", "content": "hi"}])
     assert result == "simple"
+
+
+def test_mark_error_ban_durations():
+    from abvorn.core.models import AIProvider
+    p = AIProvider("test", "sk-test-key", model="gpt-4o")
+    p.mark_error(RuntimeError("Error code: 401 - auth"))
+    assert p._banned_until - time.time() > 12 * 3600 - 5
+
+    p = AIProvider("test2", "sk-test-key", model="gpt-4o")
+    p.mark_error(RuntimeError("Error code: 402 - payment"))
+    assert p._banned_until - time.time() > 12 * 3600 - 5
+
+    p = AIProvider("test3", "sk-test-key", model="gpt-4o")
+    p.mark_error(RuntimeError("Error code: 429 - rate limit"))
+    assert 500 <= p._banned_until - time.time() <= 700
+
+    p = AIProvider("test4", "sk-test-key", model="gpt-4o")
+    p.mark_error(RuntimeError("Error code: 500 - server"))
+    assert p._banned_until - time.time() <= 120
+
+
+def test_probe_marks_dead_provider():
+    from abvorn.core.models import ModelRouter, AIProvider
+    router = ModelRouter.__new__(ModelRouter)
+    a = AIProvider("qwen", "key", "http://fake", "qwen3.5-flash")
+    a.client = MagicMock()
+    a.client.chat.completions.create.side_effect = RuntimeError("boom")
+    b = AIProvider("deepseek", "key", "http://fake", "deepseek-chat")
+    b.client = MagicMock()
+    b.client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="probe"))],
+        usage=MagicMock(total_tokens=5),
+    )
+    router.providers = [a, b]
+    router.probe()
+    import time
+    time.sleep(0.2)
+    assert not a.available
+    assert b.available
+    assert b.verified
+
+
+def test_ask_prefers_verified_provider():
+    from abvorn.core.models import ModelRouter, AIProvider
+    router = ModelRouter.__new__(ModelRouter)
+    a = AIProvider("qwen", "key", "http://fake", "qwen3.5-flash")
+    a.verified = True
+    a.last_ok = time.time()
+    a.client = MagicMock()
+    a.client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="verified_first"))],
+        usage=MagicMock(total_tokens=5),
+    )
+    b = AIProvider("deepseek", "key", "http://fake", "deepseek-chat")
+    b.client = MagicMock()
+    b.client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="unverified"))],
+        usage=MagicMock(total_tokens=5),
+    )
+    router.providers = [b, a]
+    result = router.ask("test prompt")
+    assert result == "verified_first"
+    assert a.total_calls == 1
+    assert b.total_calls == 0
