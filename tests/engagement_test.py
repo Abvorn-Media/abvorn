@@ -42,6 +42,71 @@ def test_no_key_returns_empty():
     assert mw.poll() == []
 
 
+def test_poll_respects_interval():
+    """poll() must not hit the API again within poll_interval."""
+    import time
+    mw = MentionWatcher(composio_key="test", state=None)
+    mw._last_poll = 0.0
+    mw.poll()  # first poll performs a fetch (or skips if client unavailable)
+    fetched = mw._last_poll
+    assert fetched > 0
+    mw.poll()  # immediately again — must not fetch
+    assert mw._last_poll == fetched
+
+
+def test_wait_decision_does_not_log_failure_to_drive():
+    """Agents that decide to wait should not inflate grit via reflect(None)."""
+    import asyncio
+    from abvorn.agents.base import AgentBase
+    from abvorn.core.bus import AgentBus
+    from abvorn.drive import Drive
+
+    bus = AgentBus(":memory:")
+
+    class IdleAgent(AgentBase):
+        async def perceive(self):
+            return {}
+        async def decide(self, perception):
+            return "wait"
+        async def act(self, decision):
+            raise AssertionError("act must not run on wait")
+        async def reflect(self, outcome):
+            self.reflected = outcome
+            self.drive.log_outcome("cycle", succeeded=bool(outcome))
+
+    drive = Drive("IdleAgent", "test")
+    agent = IdleAgent("idle", bus, drive=drive)
+    agent.cycle_count = 0
+    asyncio.run(agent.run_once())
+    assert drive.grit == 0
+    assert not hasattr(agent, "reflected")
+
+
+def test_heartbeat_updated_each_cycle():
+    """_last_heartbeat must advance so supervisor does not flag live agents dead."""
+    import asyncio, time
+    from abvorn.agents.base import AgentBase
+    from abvorn.core.bus import AgentBus
+
+    bus = AgentBus(":memory:")
+
+    class HBAgent(AgentBase):
+        async def perceive(self):
+            return {}
+        async def decide(self, perception):
+            return "wait"
+        async def act(self, decision):
+            pass
+        async def reflect(self, outcome):
+            pass
+
+    agent = HBAgent("hb", bus)
+    agent.cycle_count = 0
+    before = agent._last_heartbeat
+    asyncio.run(agent.run_once())
+    assert agent._last_heartbeat > before
+
+
 from abvorn.engagement.replier import ReplyGenerator, ReplyPoster
 
 
