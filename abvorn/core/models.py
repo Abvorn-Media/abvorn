@@ -73,7 +73,13 @@ class AIProvider:
         if code in (401, 402, 403):
             duration = 12 * 3600
         elif code == 429:
-            if "rate limit" in msg or "-1" in msg:
+            if "tokens per day" in msg or "per day (tpd)" in msg or "tpud" in msg or "tokens per month" in msg:
+                # Daily/monthly token quota exhausted — not going to recover in
+                # seconds. Ban until the next UTC midnight (when groq free-tier
+                # daily buckets reset).
+                now = time.time()
+                duration = int((86400 - (now % 86400)) + 60)
+            elif "rate limit" in msg or "-1" in msg:
                 duration = 60
             else:
                 duration = 3600
@@ -190,6 +196,9 @@ class ModelRouter:
             ("deepseek", secrets.get("DEEPSEEK_KEY"), "https://api.deepseek.com/v1", "deepseek-chat", "strong"),
             ("qwen", secrets.get("QWEN_KEY"), "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", "qwen3.5-flash", "fast"),
             ("groq", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "openai/gpt-oss-120b", "strong"),
+            ("groq-oss-20", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "openai/gpt-oss-20b", "strong"),
+            ("groq-qwen-27", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "qwen/qwen3.8-27b", "strong"),
+            ("groq-qwen-36", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "qwen/qwen3.6-27b", "fast"),
             ("glm", secrets.get("GLM_KEYS"), "https://open.bigmodel.cn/api/paas/v4/", "glm-4-flash", "fast"),
             ("gemini", secrets.get("GEMINI_KEY"), "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-3.6-flash", "fast"),
             ("openai", secrets.get("OPENAI_KEY"), None, "gpt-4o", "strong"),

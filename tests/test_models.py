@@ -137,6 +137,11 @@ def test_mark_error_ban_durations():
     p.mark_error(RuntimeError("Error code: 429 - you have no credits remaining"))
     assert p._banned_until - time.time() > 1800
 
+    p = AIProvider("test6", "sk-test-key", model="gpt-4o")
+    p.mark_error(RuntimeError("Error code: 429 - Rate limit reached for model `openai/gpt-oss-120b` on tokens per day (TPD): Limit 200000, Used 199645"))
+    # TPD exhaustion should ban until next UTC midnight (~hours), not 60s
+    assert p._banned_until - time.time() > 6 * 3600
+
     p = AIProvider("test4", "sk-test-key", model="gpt-4o")
     p.mark_error(RuntimeError("Error code: 500 - server"))
     assert p._banned_until - time.time() <= 120
