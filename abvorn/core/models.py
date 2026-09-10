@@ -50,8 +50,8 @@ class AIProvider:
         """Ban this provider for a duration based on the error class.
 
         Auth/billing errors (401/402/403) are not going to recover quickly;
-        rate limits and quota (429) may clear in minutes; anything else is
-        treated as transient.
+        429 rate limits may clear in seconds while quota/billing 429s are
+        longer-lived; anything else is treated as transient.
         """
         code = None
         for pat in (r"Error code: (\d+)", r"Gemini native API (\d+)"):
@@ -59,10 +59,14 @@ class AIProvider:
             if m:
                 code = int(m.group(1))
                 break
+        msg = str(exc).lower()
         if code in (401, 402, 403):
             duration = 12 * 3600
         elif code == 429:
-            duration = 600
+            if "rate limit" in msg or "-1" in msg:
+                duration = 60
+            else:
+                duration = 3600
         else:
             duration = 60
         self.ban(duration)
