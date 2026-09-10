@@ -420,29 +420,43 @@ class AbvornDaemon:
         """Run the trend-driven full cycle (discover -> create page -> post
         social) daily, or on bus signal. The first run is staggered an hour
         so the daemon doesn't fire an AI content cycle at boot."""
+        logger.info("Full cycle loop starting")
         while self.running:
-            if self.is_paused():
-                await asyncio.sleep(3600)
-                continue
-            last_run = self.state.get_meta("full_cycle_last_run", "")
-            if not last_run:
-                # First run is staggered an hour so the daemon doesn't fire an
-                # AI content cycle at boot; thereafter the loop below enforces
-                # the 24h cadence.
-                await asyncio.sleep(3600)
+            try:
+                if self.is_paused():
+                    logger.info("Full cycle loop: paused, retrying in 1h")
+                    await asyncio.sleep(3600)
+                    continue
                 last_run = self.state.get_meta("full_cycle_last_run", "")
                 if not last_run:
-                    last_run = (datetime.now() - timedelta(hours=24) - timedelta(minutes=1)).isoformat()
-            last_time = datetime.fromisoformat(last_run)
-            if last_time.tzinfo is not None:
-                last_time = last_time.replace(tzinfo=None)
-            elapsed = datetime.now() - last_time
-            if elapsed < timedelta(hours=24):
+                    # First run is staggered an hour so the daemon doesn't fire an
+                    # AI content cycle at boot; thereafter the loop below enforces
+                    # the 24h cadence.
+                    await asyncio.sleep(3600)
+                    last_run = self.state.get_meta("full_cycle_last_run", "")
+                    if not last_run:
+                        last_run = (datetime.now() - timedelta(hours=24) - timedelta(minutes=1)).isoformat()
+                last_time = datetime.fromisoformat(last_run)
+                if last_time.tzinfo is not None:
+                    last_time = last_time.replace(tzinfo=None)
+                elapsed = datetime.now() - last_time
+                if elapsed < timedelta(hours=24):
+                    logger.info("Full cycle loop: next run in %.1fh", (timedelta(hours=24) - elapsed).total_seconds() / 3600)
+                    await asyncio.sleep(3600)
+                    continue
+                logger.info("Full cycle loop: elapsed %.1fh >= 24h, running full cycle", elapsed.total_seconds() / 3600)
+                result = await self.run_full_cycle()
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                logger.exception("Full cycle loop crashed")
                 await asyncio.sleep(3600)
                 continue
-            result = await self.run_full_cycle()
-            if result.get("status") in ("complete", "nothing_to_do"):
-                self.state.set_meta("full_cycle_last_run", datetime.now().isoformat())
+            try:
+                if result.get("status") in ("complete", "nothing_to_do"):
+                    self.state.set_meta("full_cycle_last_run", datetime.now().isoformat())
+            except Exception as e:
+                logger.warning("Full cycle result handling failed (non-fatal): %s", e)
             await asyncio.sleep(86400)
 
     async def _analytics_feedback_loop(self):
