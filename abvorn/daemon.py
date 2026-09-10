@@ -46,6 +46,7 @@ class AbvornDaemon:
         self.bus = AgentBus(str(BUS_DB))
         self.secrets = load_secrets()
         self.router = ModelRouter(self.secrets)
+        self.router.probe()
         self.agents = []
         self._tasks = []
         self._phase3_inited = False

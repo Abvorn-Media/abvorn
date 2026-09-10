@@ -1,4 +1,4 @@
-import json, time, logging
+import json, re, sys, threading, time, logging
 from collections import defaultdict
 from openai import OpenAI
 
@@ -35,6 +35,8 @@ class AIProvider:
         self.total_tokens = 0
         self.total_time = 0.0
         self.failures = 0
+        self.verified = False
+        self.last_ok = 0.0
 
     @property
     def available(self) -> bool:
@@ -43,6 +45,28 @@ class AIProvider:
     def ban(self, duration: int = 60):
         self._banned_until = time.time() + duration
         self.failures += 1
+
+    def mark_error(self, exc: Exception):
+        """Ban this provider for a duration based on the error class.
+
+        Auth/billing errors (401/402/403) are not going to recover quickly;
+        rate limits and quota (429) may clear in minutes; anything else is
+        treated as transient.
+        """
+        code = None
+        for pat in (r"Error code: (\d+)", r"Gemini native API (\d+)"):
+            m = re.search(pat, str(exc))
+            if m:
+                code = int(m.group(1))
+                break
+        if code in (401, 402, 403):
+            duration = 12 * 3600
+        elif code == 429:
+            duration = 600
+        else:
+            duration = 60
+        self.ban(duration)
+        logger.warning(f"{self.name}: marked error {code}, banned {duration}s: {str(exc)[:80]}")
 
     def call(self, messages: list, json_mode: bool = False) -> str:
         start = time.time()
@@ -59,6 +83,8 @@ class AIProvider:
             self.total_calls += 1
             self.total_tokens += resp.usage.total_tokens if resp.usage else 0
             self.total_time += elapsed
+            self.verified = True
+            self.last_ok = time.time()
             return resp.choices[0].message.content
         except Exception as e:
             logger.warning(f"{self.name} failed: {str(e)[:80]}")
@@ -93,6 +119,8 @@ class AIProvider:
             usage = data.get("usageMetadata", {})
             self.total_tokens += usage.get("totalTokenCount", 0)
             self.total_time += elapsed
+            self.verified = True
+            self.last_ok = time.time()
             return text
         except urllib.error.HTTPError as e:
             body = e.read().decode()[:200]
@@ -116,6 +144,8 @@ class AIProvider:
                 tokens = resp.usage.total_tokens if resp.usage else 0
                 self.total_tokens += tokens
                 self.total_time += elapsed
+                self.verified = True
+                self.last_ok = time.time()
                 return resp.choices[0].message.content, {
                     "model": self.model,
                     "tokens": tokens,
@@ -165,28 +195,47 @@ class ModelRouter:
                     try:
                         return p.call(messages, json_mode)
                     except Exception:
-                        p.ban()
+                        p.mark_error(sys.exc_info()[1])
+        # Order providers so verified-working ones are tried first, then
+        # recently-successful ones, then the rest.
+        ordered = sorted(
+            self.providers,
+            key=lambda p: (1 if p.verified else 0, p.last_ok),
+            reverse=True,
+        )
         # If task is specified, prefer providers whose capability tier matches
         # the task (fast for research/social/brain, strong for drafting and
         # verification), then fall back to the remaining providers.
         if task and task in TIER_FOR_TASK:
             tier = TIER_FOR_TASK[task]
-            for p in self.providers:
+            for p in ordered:
                 if p.tier == tier and p.available:
                     try:
                         return p.call(messages, json_mode)
                     except Exception:
-                        p.ban()
-        for p in self.providers:
+                        p.mark_error(sys.exc_info()[1])
+        for p in ordered:
             if not p.available:
                 continue
             try:
                 return p.call(messages, json_mode)
             except Exception:
-                p.ban()
+                p.mark_error(sys.exc_info()[1])
                 continue
         logger.error("All AI providers exhausted")
         return None
+
+    def probe(self):
+        """Fire-and-forget health probe: mark verified-working providers and
+        ban dead ones so ask() prefers whichever providers actually respond."""
+        def _check(p):
+            try:
+                p.call([{"role": "user", "content": "Reply with the single word: probe"}])
+            except Exception as e:
+                p.mark_error(e)
+        threads = [threading.Thread(target=_check, args=(p,), daemon=True) for p in self.providers]
+        for t in threads:
+            t.start()
 
     def health(self) -> dict:
         """Kilo health check. Returns availability + recent failure count."""
