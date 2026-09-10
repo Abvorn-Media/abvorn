@@ -225,6 +225,9 @@ class ModelRouter:
             ("gemini", secrets.get("GEMINI_KEY"), "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-3.6-flash", "fast"),
             ("openai", secrets.get("OPENAI_KEY"), None, "gpt-4o", "strong"),
             ("kimi", secrets.get("KIMI_KEY"), "https://api.moonshot.cn/v1", "moonshot-v1-auto", "fast"),
+            ("nim", secrets.get("NVIDIA_KEY"), "https://integrate.api.nvidia.com/v1", "nvidia/nemotron-3-super-120b-a12b", "strong"),
+            ("nim-default", secrets.get("NVIDIA_KEY"), "https://integrate.api.nvidia.com/v1", "nvidia/nemotron-3.5-lightning-30b-a3b", "strong"),
+            ("nim-fast", secrets.get("NVIDIA_KEY"), "https://integrate.api.nvidia.com/v1", "openai/gpt-oss-20b", "fast"),
         ]
         for name, key, url, model, tier in configs:
             if key and "YOUR_" not in key:
