@@ -185,3 +185,30 @@ def test_ask_prefers_verified_provider():
     assert result == "verified_first"
     assert a.total_calls == 1
     assert b.total_calls == 0
+
+
+def test_ask_waits_for_transient_ban_and_retries():
+    from abvorn.core.models import ModelRouter, AIProvider
+    router = ModelRouter.__new__(ModelRouter)
+    a = AIProvider("groq", "key", "http://fake", "openai/gpt-oss-120b")
+    a.ban(2)  # recovers in ~2s (transient rate-limit-style ban)
+    a.client = MagicMock()
+    a.client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="recovered"))],
+        usage=MagicMock(total_tokens=5),
+    )
+    router.providers = [a]
+    result = router.ask("test prompt")
+    assert result == "recovered"
+    assert a.available  # ban has cleared
+
+
+def test_ask_does_not_wait_for_long_ban():
+    from abvorn.core.models import ModelRouter, AIProvider
+    router = ModelRouter.__new__(ModelRouter)
+    a = AIProvider("cerebras", "key", "http://fake", "gpt-oss-120b")
+    a.ban(12 * 3600)  # auth/billing-style long ban
+    a.client = MagicMock()
+    router.providers = [a]
+    result = router.ask("test prompt")
+    assert result is None  # no wait, returns exhausted immediately
