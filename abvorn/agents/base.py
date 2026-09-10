@@ -74,7 +74,8 @@ class AgentBase(ABC):
                     outcome = await self.act(decision)
                     act_time = time.time() - act_start
                     logger.info(f"[{self.name}] Cycle {self.cycle_count}: {decision} ({act_time:.1f}s)")
-                await self.reflect(outcome)
+                    await self.reflect(outcome)
+                self._last_heartbeat = time.time()
                 self.bus.publish("system.heartbeat", {"agent": self.name, "cycle": self.cycle_count})
                 return {"decision": decision, "outcome": outcome}
             except Exception as e:

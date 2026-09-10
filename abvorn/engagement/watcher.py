@@ -2,6 +2,7 @@
 
 import logging
 import os
+import time
 from datetime import datetime
 
 logger = logging.getLogger("abvorn.engagement.watcher")
@@ -23,12 +24,17 @@ class MentionWatcher:
         self.state = state
         self.handle = handle or os.environ.get("ABVORN_X_HANDLE", "Abvorn")
         self.poll_interval = 900
+        self._last_poll = 0.0
         self._replied_ids = set()
         self._raw_mentions = []
         self._client = ComposioClient(api_key=composio_key)
 
     def poll(self) -> list[dict]:
         """Poll for new mentions. Returns only substantive, unseen mentions."""
+        now = time.time()
+        if now - self._last_poll < self.poll_interval:
+            return []
+        self._last_poll = now
         if self._client.available:
             self._fetch_mentions()
         return self._filter_new()
