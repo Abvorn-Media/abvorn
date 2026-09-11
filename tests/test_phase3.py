@@ -10,6 +10,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+RUN_CYCLE_FILE = Path(__file__).resolve().parent.parent / "run_cycle.py"
+
 from src.agent_reach_adapter import (
     AgentReachAdapter,
     get_agent_reach_adapter,
@@ -121,20 +123,20 @@ def test_record_social_sentiment_creates_directories():
 
 
 def test_fetch_social_sentiment_in_run_cycle():
-    with open(r'C:\Users\Jean Mare\Documents\Default Project\run_cycle.py', encoding='utf-8', errors='replace') as f:
+    with open(RUN_CYCLE_FILE, encoding='utf-8', errors='replace') as f:
         c = f.read()
     assert_true('def fetch_social_sentiment' in c, "run_cycle.py has fetch_social_sentiment function")
 
 
 def test_process_single_niche_uses_social_data():
-    with open(r'C:\Users\Jean Mare\Documents\Default Project\run_cycle.py', encoding='utf-8', errors='replace') as f:
+    with open(RUN_CYCLE_FILE, encoding='utf-8', errors='replace') as f:
         c = f.read()
     assert_true('fetch_social_sentiment(niche_name)' in c, "process_single_niche fetches social data")
     assert_true('social_data=social_data' in c, "social_data passed to generate_outline and write_draft")
 
 
 def test_write_draft_accepts_social_data():
-    with open(r'C:\Users\Jean Mare\Documents\Default Project\run_cycle.py', encoding='utf-8', errors='replace') as f:
+    with open(RUN_CYCLE_FILE, encoding='utf-8', errors='replace') as f:
         c = f.read()
     idx = c.find('def write_draft')
     sig = c[idx:c.find('\n', idx)]
@@ -142,7 +144,7 @@ def test_write_draft_accepts_social_data():
 
 
 def test_generate_outline_accepts_social_data():
-    with open(r'C:\Users\Jean Mare\Documents\Default Project\run_cycle.py', encoding='utf-8', errors='replace') as f:
+    with open(RUN_CYCLE_FILE, encoding='utf-8', errors='replace') as f:
         c = f.read()
     idx = c.find('def generate_outline')
     sig = c[idx:c.find('\n', idx)]
