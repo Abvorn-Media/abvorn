@@ -1,6 +1,6 @@
 """SupervisorAgent — spawns, monitors, and rescues agents across platforms."""
 
-import asyncio, logging, time
+import logging, time
 from datetime import datetime
 from .base import AgentBase
 
@@ -118,7 +118,7 @@ class SupervisorAgent(AgentBase):
             for name in names:
                 info = self.registry.get(name)
                 if info:
-                    old_cls_name = info["class"]
+                    _old_cls_name = info["class"]
                     logger.info(f"[Supervisor] Respawning dead agent: {name}")
                     self.registry[name]["status"] = "respawn_pending"
                     self.registry[name]["instance"] = None

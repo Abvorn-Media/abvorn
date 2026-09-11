@@ -235,7 +235,7 @@ def test_full_cycle_loop_fires_first_run(tmp_path):
             d.running = False
 
     d.run_full_cycle = fake_run_full_cycle
-    mon = asyncio.MonkeyPatch() if hasattr(asyncio, "MonkeyPatch") else None
+    _mon = asyncio.MonkeyPatch() if hasattr(asyncio, "MonkeyPatch") else None
     orig_sleep = asyncio.sleep
     asyncio.sleep = fake_sleep
     try:

@@ -4,10 +4,8 @@ The system evolves itself by spawning child instances,
 evaluating their performance, and selecting the best.
 """
 import random
-import json
 from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from dataclasses import dataclass
 import logging
 
 from src.instance_spawner import InstanceSpawner, InstanceConfig, InstanceResult

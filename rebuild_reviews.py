@@ -11,14 +11,18 @@ Extraction is format-agnostic: it accepts legacy pages (``<div>`` verdict,
 YYYY``), and the hand-written pilot (``.product-review`` prose blocks).
 """
 import re
-import sys
 import json
 import os
 import html as html_lib
 from collections import Counter
-from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote, parse_qs, urlparse
+
+
+def _first_structural(body: str, pos: int) -> int:
+    """Position of the next structural element after ``pos`` (h2/h3/table/verdict/p)."""
+    m = re.search(r"<h2|<h3|<table|<div class=\"verdict|<p", body[pos:])
+    return pos + m.start() if m else len(body)
 
 import run_cycle
 from src.deployment import _title_slug
@@ -106,7 +110,7 @@ def extract_article(path):
     intro_h2 = body.find("<h2>Introduction</h2>")
     if intro_h2 >= 0:
         next_h2 = body.find("<h2>", intro_h2 + len("<h2>Introduction</h2>"))
-        intro_end = next_h2 if next_h2 > 0 else first_structural(intro_h2)
+        intro_end = next_h2 if next_h2 > 0 else _first_structural(body, intro_h2)
         intro = body[intro_h2:intro_end].strip()
         article_html = _clip_prose(body, intro_end)
     else:

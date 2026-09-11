@@ -1,7 +1,6 @@
 """HookGenerator — generates hook variants for headlines, social, email."""
 
 import logging
-from typing import Optional
 
 logger = logging.getLogger("abvorn.hooks.generator")
 

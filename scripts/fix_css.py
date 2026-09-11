@@ -111,7 +111,7 @@ def update_file(filepath):
     import re
     new_html = re.sub(r'<style>.*?</style>', f'<style>{CSS_SHARED}</style>', html, count=1, flags=re.DOTALL)
     
-    fixes = [
+    _fixes = [
         ('color:#888', 'color:var(--text-muted)'),
         ('color:#9ca3af', 'color:var(--text-muted)'),
         ('color:#555', 'color:var(--text-secondary)'),

@@ -2,6 +2,7 @@
 
 import sqlite3
 import logging
+import html as html_mod
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional

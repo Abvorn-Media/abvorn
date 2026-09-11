@@ -1,6 +1,6 @@
 """Abvorn daemon — runs all agents continuously."""
 
-import asyncio, logging, signal, sys, json, uuid
+import asyncio, logging, json, uuid
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -18,9 +18,9 @@ from .content.pipeline import ContentPipeline
 from .agents.orchestrator import ResearchAgent, ContentAgent, DeployAgent
 from .agents.supervisor import SupervisorAgent
 from .agents.platform import PlatformAgent
-from .brain.orchestrator import refresh_brain, get_brain_retriever
+from .brain.orchestrator import get_brain_retriever
 from .deploy.github import GitHubDeployer
-from .brand import check_soul, format_voice_rules
+from .brand import check_soul
 from .discovery.scanner import OpportunityScanner
 from .persona.engine import PersonaEngine
 from .persona.registry import PersonaRegistry
@@ -175,8 +175,8 @@ class AbvornDaemon:
         from .platform import registry
         from .exploder.email import generate_lead_magnet, generate_sequence
 
-        magnet = generate_lead_magnet(content)
-        sequence = generate_sequence(content, persona)
+        _magnet = generate_lead_magnet(content)
+        _sequence = generate_sequence(content, persona)
 
         # Email to matched persona subscribers
         try:
@@ -196,7 +196,7 @@ class AbvornDaemon:
             if platform in ("facebook", "youtube"):
                 logger.info(f"{platform}: stub ready — waiting for API keys")
                 continue
-            adapted = registry.adapter(platform)(content)
+            _adapted = registry.adapter(platform)(content)
             self.social.post(content, platform)
             logger.info(f"Deployed to {platform}")
 
@@ -365,7 +365,7 @@ class AbvornDaemon:
             events = self.bus.get_recent_events()
             for evt in events:
                 topic = evt.get("topic", "")
-                payload = evt.get("payload", {})
+                _payload = evt.get("payload", {})
                 if topic == "domination.signal" and not self.is_paused():
                     self._ensure_phase3()
                     asyncio.create_task(self.run_domination_cycle())

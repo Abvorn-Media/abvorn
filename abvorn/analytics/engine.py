@@ -1,7 +1,7 @@
 """AnalyticsEngine — merges GA4 data with internal signals for unified reporting."""
 
 import logging
-from datetime import datetime, time
+from datetime import datetime
 
 logger = logging.getLogger("abvorn.analytics.engine")
 
@@ -52,7 +52,7 @@ class AnalyticsEngine:
         """Generate a human-readable insight report."""
         if not self.data:
             self.collect(site_id=site_id)
-        lines = [f"# Abvorn Analytics Report", f"**Generated:** {self.data.get('collected_at', 'now')}", ""]
+        lines = ["# Abvorn Analytics Report", f"**Generated:** {self.data.get('collected_at', 'now')}", ""]
 
         traffic = self.data.get("traffic", {})
         if traffic.get("status") == "ok":

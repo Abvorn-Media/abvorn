@@ -1,7 +1,6 @@
 """Feedback loop — tracks engagement, measures performance, feeds insights back."""
 
 import json
-import os
 import logging
 import sqlite3
 from pathlib import Path

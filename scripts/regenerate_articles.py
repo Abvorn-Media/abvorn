@@ -1,5 +1,5 @@
 """Regenerate all review articles with premium CSS, social sharing, analytics, and proper affiliate links."""
-import re, json, os
+import re
 from pathlib import Path
 
 BASE = Path("docs")

@@ -56,7 +56,7 @@ class CommentModerator:
         # Link check
         urls = URL_PATTERN.findall(body)
         if urls and self.block_links:
-            flags.append(f"links_blocked")
+            flags.append("links_blocked")
             # Strip links from body
             filtered = URL_PATTERN.sub("[link removed]", body)
         else:

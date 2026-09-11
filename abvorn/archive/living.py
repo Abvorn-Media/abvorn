@@ -1,6 +1,4 @@
 import logging
-from typing import Optional
-from datetime import datetime
 from .tracker import ContentFreshnessTracker
 from .refresher import ContentRefresher
 logger = logging.getLogger("abvorn.archive.living")

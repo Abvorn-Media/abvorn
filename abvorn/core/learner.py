@@ -9,7 +9,7 @@ Closes the NDC 2.0 loop: Question → Experiment → Learn → Question again.
 import json
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from abvorn.core.reflection import Reflection, ReflectionStore, generate_reflection_id
 
@@ -87,12 +87,12 @@ def _analyze_experiment(experiment: dict) -> dict:
     }
 
     metrics = outcome.get("metrics", {})
-    primary_metric = outcome.get("success_criteria_met", None)
+    _primary_metric = outcome.get("success_criteria_met", None)
 
     # RPS Visibility Impact analysis
     if "RPS" in name or "rps" in name.lower():
         return_rate = metrics.get("return_rate_90d", {}).get("change_pct", 0)
-        conversion = metrics.get("conversion_rate", {}).get("change_pct", 0)
+        _conversion = metrics.get("conversion_rate", {}).get("change_pct", 0)
 
         if return_rate <= -10:
             result["confirmed"] = True

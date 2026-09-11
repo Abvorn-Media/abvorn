@@ -1,7 +1,7 @@
 """Viral Script Generator — converts blog content into platform-native scripts
 with hook-first architecture, tested against engagement benchmarks."""
 
-import logging, re, textwrap
+import logging, re
 from datetime import datetime
 
 logger = logging.getLogger("abvorn.domination.viral_script")
@@ -160,7 +160,7 @@ class ViralScriptGenerator:
         slides = [f"\U0001F4CC {hook}"]
         for h in hooks[:4]:
             slides.append(f"{h}\n\nSwipe for more \u2192")
-        slides.append(f"Which one is YOUR pick? \U0001F447\n\nFull guide in bio \U0001F517")
+        slides.append("Which one is YOUR pick? \U0001F447\n\nFull guide in bio \U0001F517")
         return slides
 
     def _linkedin_script(self, title: str, hook: str, summary: str,

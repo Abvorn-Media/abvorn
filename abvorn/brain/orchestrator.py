@@ -1,6 +1,6 @@
 """Full brain refresh orchestration: scan → extract → index → retrieve."""
 
-import json, logging
+import logging
 from pathlib import Path
 from .scanner import scan_brain, extract_text
 from .indexer import KnowledgeIndex

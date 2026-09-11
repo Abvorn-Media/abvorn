@@ -56,7 +56,7 @@ class TestCTATracker:
         tracker.track_click(post_id=post_id, cta_id="cta_4", niche="test")
         tracker.track_conversion(post_id=post_id, cta_id="cta_4", niche="test")
         stats = state.get_cta_stats(post_id=post_id)
-        cta = next(s for s in stats if s["cta_id"] == "cta_4")
+        _cta = next(s for s in stats if s["cta_id"] == "cta_4")
 
     def test_get_stats_empty(self):
         tracker = CTATracker(state=None)

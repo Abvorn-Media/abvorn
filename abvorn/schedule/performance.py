@@ -2,7 +2,6 @@
 
 import logging
 from datetime import datetime, timezone
-from typing import Optional
 
 logger = logging.getLogger("abvorn.schedule.performance")
 

@@ -81,7 +81,7 @@ def x_adapter(anchor: dict) -> list[str]:
     headings = _extract_headings(anchor.get("article_html", ""))
     thread = [
         f"🧵 {title}",
-        intro[:280] if intro else f"After comparing specs, prices, and real owner feedback, here's what we found.",
+        intro[:280] if intro else "After comparing specs, prices, and real owner feedback, here's what we found.",
     ]
     for h in headings[:5]:
         thread.append(f"{h} — The full breakdown in our guide.")
@@ -89,7 +89,7 @@ def x_adapter(anchor: dict) -> list[str]:
     if url:
         thread.append(f"Full breakdown: {url}")
     else:
-        thread.append(f"What's your experience with these?")
+        thread.append("What's your experience with these?")
     return [t[:280] for t in thread]
 
 
@@ -111,8 +111,8 @@ def linkedin_adapter(anchor: dict) -> dict:
 
     article = f"# {title}\n\n{description}\n\n{intro}\n\n{body[:2000]}"
 
-    hook = (description or intro or f"After digging through the specs, prices, and owner feedback, one thing got clear…")[:160]
-    summary = (intro or f"We compared the top options across specs, real prices, and verified owner feedback — here's what stands out.")[:260]
+    hook = (description or intro or "After digging through the specs, prices, and owner feedback, one thing got clear…")[:160]
+    summary = (intro or "We compared the top options across specs, real prices, and verified owner feedback — here's what stands out.")[:260]
     bullet_lines = [f"✅ {_shorten_heading(h)}" for h in headings[:3]]
     bullets = "\n".join(bullet_lines)
     question = (
@@ -158,7 +158,7 @@ def instagram_adapter(anchor: dict) -> list[str]:
     slides = [f"📌 {title}\n\nSwipe for the full breakdown →"]
     for h in headings[:5]:
         slides.append(f"{h}\n\nTap for details 👆")
-    slides.append(f"Which one is YOUR pick? Drop it below 👇\n\nFull guide in bio 🔗")
+    slides.append("Which one is YOUR pick? Drop it below 👇\n\nFull guide in bio 🔗")
     return slides
 
 

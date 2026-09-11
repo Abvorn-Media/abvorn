@@ -176,7 +176,7 @@ class ReflectionStore:
                 reflected_ids.add(cid)
 
         reflected_perf = []
-        non_reflected_perf = []
+        _non_reflected_perf = []
         for r in recent:
             perf = r.get("performance_data", {})
             clicks = perf.get("clicks", perf.get("total_clicks", 0)) or 0

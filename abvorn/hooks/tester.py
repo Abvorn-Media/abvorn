@@ -1,7 +1,6 @@
 """HookTester — tests hook variants and tracks performance."""
 
 import logging
-from typing import Optional
 from collections import defaultdict
 
 logger = logging.getLogger("abvorn.hooks.tester")
@@ -46,7 +45,7 @@ class HookTester:
         """Get top-performing hook types."""
         if not self.state:
             return []
-        all_meta = self.state.get_all_intel_patterns() if hasattr(self.state, 'get_all_intel_patterns') else []
+        _all_meta = self.state.get_all_intel_patterns() if hasattr(self.state, 'get_all_intel_patterns') else []
         # Query hook performance from meta
         hook_perfs = defaultdict(lambda: {"count": 0, "total_engagement": 0})
         try:

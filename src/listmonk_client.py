@@ -154,7 +154,6 @@ def get_listmonk() -> ListmonkClient:
         username = ""
         password = ""
         try:
-            import os
             from pathlib import Path
             secrets_path = Path("secrets.json")
             if not secrets_path.exists():

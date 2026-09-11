@@ -1,4 +1,4 @@
-import json, logging
+import logging
 from datetime import datetime
 from abvorn.agents.researcher import research_niche
 from abvorn.agents.writer import generate_outline, write_draft
@@ -85,7 +85,7 @@ class ContentPipeline:
         final_intro = polished.get("revised_intro") or fc_result.get("revised_intro") or draft.get("intro", "")
         final_article = polished.get("revised_article") or fc_result.get("revised_article") or draft.get("article_html", "")
         quality = polished.get("quality_score", {"overall": 7.0})
-        schema_data = polished.get("schema_markup", {}) or {}
+        _schema_data = polished.get("schema_markup", {}) or {}
 
         faqs = draft.get("faqs", [])
         faq_pairs = [(f.get("question", ""), f.get("answer", "")) for f in faqs if isinstance(f, dict)]

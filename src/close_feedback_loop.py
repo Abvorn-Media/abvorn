@@ -9,8 +9,6 @@ Production-ready implementation with data validation, actual training, evaluatio
 import json
 import logging
 import os
-import subprocess
-import sys
 from collections import defaultdict
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
@@ -398,7 +396,7 @@ class AnalyticsEngine:
         }
         for f in self.data_dir.glob("*.json"):
             try:
-                data = json.loads(f.read_text(encoding="utf-8"))
+                _data = json.loads(f.read_text(encoding="utf-8"))
                 metrics["total_interactions"] += 1
             except (json.JSONDecodeError, OSError):
                 pass

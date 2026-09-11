@@ -9,7 +9,7 @@ Separates what you want (the query) from how you get it (the provider).
 import logging, os, time
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 try:
     from src.energy_accounting import energy_accounting

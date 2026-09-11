@@ -40,7 +40,7 @@ def assert_equal(actual, expected, msg):
 
 def test_agent_reach_adapter_instantiation():
     try:
-        adapter = AgentReachAdapter()
+        _adapter = AgentReachAdapter()
         assert_true(True, "AgentReachAdapter instantiated")
     except RuntimeError:
         assert_true(True, "AgentReachAdapter raises RuntimeError when agent-reach not installed (expected)")

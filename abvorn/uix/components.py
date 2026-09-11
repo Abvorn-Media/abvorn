@@ -1,7 +1,6 @@
 """UIXComponents — generates interactive HTML/JS for blog posts."""
 
 import html
-import json
 from datetime import datetime
 from urllib.parse import quote
 

@@ -1,6 +1,5 @@
 import re, logging
-from datetime import datetime, timezone
-from .patterns import PersuasionPattern, PATTERN_TRIGGER, PATTERN_CTA, PATTERN_STRUCTURE, PATTERN_ANGLE, PATTERN_FORMAT, PATTERN_AVOID
+from .patterns import PersuasionPattern, PATTERN_TRIGGER, PATTERN_CTA, PATTERN_STRUCTURE, PATTERN_ANGLE
 
 logger = logging.getLogger("abvorn.intel.extractor")
 

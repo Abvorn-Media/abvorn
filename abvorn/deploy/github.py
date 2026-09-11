@@ -1,7 +1,5 @@
-import os, json, logging, base64, re, html
+import json, logging, re, html
 from pathlib import Path
-from datetime import datetime
-from urllib.parse import quote
 
 logger = logging.getLogger("abvorn.deploy")
 
@@ -104,7 +102,6 @@ class GitHubDeployer:
                 from ..persuasion.context import ContextParser
                 from ..persuasion.matcher import ProductMatcher
                 from ..persuasion.widget import PersuasionWidget
-                niche = content.get("niche", "") or ""
                 ctx = ContextParser().parse(content)
                 matcher = ProductMatcher(state)
                 recs = matcher.match(ctx)

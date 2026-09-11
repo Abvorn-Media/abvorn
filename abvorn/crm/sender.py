@@ -1,11 +1,10 @@
 """Email sender — sends persona-targeted emails via Gmail SMTP."""
 
-import logging, smtplib, re
+import logging, smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from pathlib import Path
-from datetime import datetime
 from .template import render_persona_update, render_lead_magnet_email, render_pdf_guide_email
 from ..core.secrets import load_secrets
 

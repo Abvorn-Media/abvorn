@@ -1,5 +1,5 @@
 """Minimal content cycle for Oracle server — refreshes state files using live LLM providers."""
-import json, os, sys, glob
+import json, sys, glob
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -166,8 +166,8 @@ Be specific and actionable."""
         conn = sqlite3.connect(str(db_path))
         now = datetime.now(timezone.utc).isoformat()
         total_posts = sum(n.get("posts", 0) for n in cycle.get("niches", []))
-        total_reflections = len(glob_reflections())
-        overhead = ROUTER.providers[0].total_time if ROUTER.providers else 0
+        _total_reflections = len(glob_reflections())
+        _overhead = ROUTER.providers[0].total_time if ROUTER.providers else 0
         conn.execute(
             "INSERT INTO system_metrics (drive_score, ambition_level, total_niches, total_articles, total_clicks, timestamp) VALUES (?,?,?,?,?,?)",
             (75.0, 90.0, len(NICHES), total_posts, cycle.get("affiliate_clicks", 0), now)

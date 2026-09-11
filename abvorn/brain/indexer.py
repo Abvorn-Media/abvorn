@@ -1,6 +1,6 @@
 """Indexes extracted text into a queryable SQLite store with keyword + semantic search."""
 
-import json, logging, hashlib, re, sqlite3, threading
+import logging, hashlib, re, sqlite3, threading
 from pathlib import Path
 from datetime import datetime
 from contextlib import contextmanager

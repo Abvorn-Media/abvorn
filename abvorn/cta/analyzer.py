@@ -1,7 +1,6 @@
 """CTAAnalyzer — analyzes CTA performance across dimensions."""
 
 import logging
-from typing import Optional
 from collections import defaultdict
 
 logger = logging.getLogger("abvorn.cta.analyzer")

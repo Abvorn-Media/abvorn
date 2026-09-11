@@ -9,8 +9,7 @@ actual data collection from available sources and computed proxies.
 import json
 import logging
 import os
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, field
+from typing import Dict, Any, List
 from datetime import datetime
 from pathlib import Path
 

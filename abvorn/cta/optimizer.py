@@ -1,8 +1,6 @@
 """CTAOptimizer — suggests CTA improvements based on performance data + brain CRO principles."""
 
 import logging
-from typing import Optional
-from abvorn.brain.principles import CRO_PRINCIPLES
 
 logger = logging.getLogger("abvorn.cta.optimizer")
 
@@ -32,7 +30,7 @@ class CTAOptimizer:
         for cta in low_performers[:3]:
             principle_hint = ""
             if cta["cta_type"] == "affiliate_link" and "price" not in (cta["cta_text"] or "").lower():
-                principle_hint = f" CRO principle: specificity — 'See price on Amazon' beats vague text."
+                principle_hint = " CRO principle: specificity — 'See price on Amazon' beats vague text."
             suggestions.append({
                 "type": "low_performance",
                 "cta_id": cta["cta_id"],
@@ -50,7 +48,7 @@ class CTAOptimizer:
                     "type": "weak_wording",
                     "cta_id": s["cta_id"],
                     "text": s["cta_text"],
-                    "principle": f"CRO principle: specificity — vague CTAs kill conversion. Be exact.",
+                    "principle": "CRO principle: specificity — vague CTAs kill conversion. Be exact.",
                     "suggestion": f"'{s['cta_text']}' violates specificity principle. Use action-oriented text like 'Check Price on Amazon'."
                 })
 
@@ -64,14 +62,14 @@ class CTAOptimizer:
                     "type": "best_type",
                     "niche": niche,
                     "best_cta_type": best_type,
-                    "principle": f"CRO principle: defaults — lean into what's already working.",
+                    "principle": "CRO principle: defaults — lean into what's already working.",
                     "suggestion": f"'{best_type}' performs best in '{niche}' niche. Double down on this type."
                 })
 
         # Add principle-based suggestions even without data
         suggestions.append({
             "type": "principle",
-            "principle": f"CRO principle: reduction — check that every CTA has one clear action. No dual-purpose buttons.",
+            "principle": "CRO principle: reduction — check that every CTA has one clear action. No dual-purpose buttons.",
             "suggestion": "Audit each CTA: one link = one action. Never make 'click to learn more and maybe buy'."
         })
 

@@ -8,7 +8,6 @@ into a single memory abstraction with automatic tiering.
 
 import json
 import logging
-import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, field

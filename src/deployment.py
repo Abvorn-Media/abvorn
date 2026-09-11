@@ -9,15 +9,11 @@ import os
 import re
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any, List, Optional
-from github import Github, Auth, InputGitTreeElement
+from typing import Dict, Any
 
-from src.article_design import (ARTICLE_DESIGN_CSS, PROD_SHOT_CSS,
+from src.article_design import (PROD_SHOT_CSS,
                                 upgrade_product_image,
-                                product_shot_html, info_dot,
-                                sanitize_article_html, inject_product_photos,
-                                build_faq, hero_pick_html, render_article_body,
-                                price_floor_for)
+                                product_shot_html)
 
 logger = logging.getLogger(__name__)
 
@@ -232,7 +228,7 @@ def product_card_html(product, pexels_key="", amazon_tag="", include_compare: bo
     from abvorn.core.verdict import clean_product_name
     name = clean_product_name(product.get("name", "Product"))
     price = product.get("price", "Check price")
-    features = product.get("features", [])
+    _features = product.get("features", [])
     summary = product.get("description", "")
     product_url = product.get("url", "")
     product_image = product.get("image", "")
@@ -298,7 +294,7 @@ def generate_click_url(article_id: str, product_index: int, product_url: str = "
 
 
 def rewrite_affiliate_urls(html: str, article_id: str) -> str:
-    import re, html as html_mod
+    import re
     from src.click_tracker import record_product_url
     # Static hosts (GitHub Pages) cannot resolve /click/<...>/ redirects, so the
     # default links straight to the tagged affiliate URL. Set
@@ -918,8 +914,6 @@ def HEAD_HTML(title, description):
     return f"""<title>{title}</title><meta name="description" content="{description}">"""
 
 
-def OG_META(title, description, url):
-    return f"""<meta property="og:title" content="{title}"><meta property="og:description" content="{description}"><meta property="og:url" content="{url}">"""
 
 
 ANALYTICS_HTML = ""
@@ -932,11 +926,8 @@ FOOTER_HTML = ""
 
 
 # Duplicate docstring/imports cleanup
-import json
 import logging
 from pathlib import Path
-from datetime import datetime
-from typing import Dict, Any, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -1026,7 +1017,7 @@ def _hero_slide_verdict(breakdown, overall, label, product, name):
 def build_homepage(state, form_url="", reviews=None, base=None):
     """Build the premium homepage with hero slider, stats, and category sections."""
     niches = sorted(state["niches"], key=lambda n: n["name"].lower())
-    all_slugs = sorted([n["slug"] for n in niches], key=lambda s: _slugify_title(s).lower())
+    _all_slugs = sorted([n["slug"] for n in niches], key=lambda s: _slugify_title(s).lower())
     b = base or SITE_BASE
 
     # Published reviews — one card per review page (up to 3 per category).
@@ -1193,7 +1184,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     form_url = os.environ.get("APPS_SCRIPT_URL", "")
 
     title_escaped = html_mod.escape(niche_name)
-    year_str = str(datetime.now().year)
+    _year_str = str(datetime.now().year)
 
     blog_title = f"Best {title_escaped} Reviews"
     meta_desc = f"Expert {niche_name.lower()} reviews and buying guides. Independent research, honest recommendations."
@@ -1536,7 +1527,7 @@ def _motif_computing(accent, breakdown, top_score):
         parts.append(_mono(f"{frac:.1f}", 278, ry, 10, "#ffffff", weight="700", anchor="start"))
         ry += 26
     parts.append(f'<rect x="196" y="228" width="28" height="14" fill="{accent}" opacity="0.7"/>')
-    parts.append(f'<rect x="150" y="242" width="120" height="8" rx="4" fill="rgba(255,255,255,0.15)"/>')
+    parts.append('<rect x="150" y="242" width="120" height="8" rx="4" fill="rgba(255,255,255,0.15)"/>')
     return '<svg viewBox="0 0 420 300" role="img" aria-label="Computing category review scores">' + "".join(parts) + "</svg>"
 
 
@@ -1689,7 +1680,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     form_url = os.environ.get("APPS_SCRIPT_URL", "")
 
     title_escaped = html_mod.escape(category_name)
-    year_str = str(datetime.now().year)
+    _year_str = str(datetime.now().year)
 
     blog_title = f"{title_escaped} Reviews"
     meta_desc = f"Independent {category_name.lower()} reviews and buying guides. We research before we recommend."
@@ -1766,7 +1757,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     sections_html = "".join(sections)
 
     index_nav = build_category_index(category_name, b, niche_slugs=niche_order or None) if items else ""
-    count = len(items)
+    _count = len(items)
 
     return f'''<!DOCTYPE html>
 <html lang="en">
@@ -2965,7 +2956,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
 
     # Write root index (premium homepage)
     write_checked(docs / "index.html", build_homepage(state, form_url, reviews=reviews, base=SITE_BASE), "homepage")
-    print(f"  Written: docs/index.html")
+    print("  Written: docs/index.html")
 
     # Write category listing pages (one per category, e.g. /categories/audio/)
     for cat_name, cat_slugs in CATEGORY_MAP.items():
@@ -3118,7 +3109,7 @@ footer a{{color:#aaa;text-decoration:none}}
     method_dir = docs / "how-we-test"
     method_dir.mkdir(exist_ok=True)
     write_checked(method_dir / "index.html", build_methodology_page(all_slugs, form_url), "methodology page")
-    print(f"  Written: docs/how-we-test/index.html")
+    print("  Written: docs/how-we-test/index.html")
 
     # Write robots.txt, llms.txt, RSS feed and sitemap
     items = []
@@ -3482,7 +3473,7 @@ def build_journal_page(b=""):
 
     header_html = build_site_header(b)
     footer_html = build_site_footer(b)
-    year_str = str(datetime.now().year)
+    _year_str = str(datetime.now().year)
 
     def _stat_chip(num, label, suffix=""):
         return (
@@ -3516,7 +3507,7 @@ def build_journal_page(b=""):
             'Ab writes its first journal entry the next time the core cycles.</p></div></li>'
         )
 
-    last_update_txt = summary["last_update"] or "—"
+    _last_update_txt = summary["last_update"] or "—"
     live_hint = (
         "Live on /api/evolution/public" if b.startswith("http") else "Polls the local evolution API"
     )
@@ -3779,6 +3770,12 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Abvorn – Reviews Based on Real Research, Not Spec Sheets">
     <meta name="twitter:description" content="Independent product reviews and buying guides. We research before we recommend.">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@graph":[
+      {"@type":"Organization","@id":"__SITE_URL__/#organization","name":"Abvorn","url":"__SITE_URL__/","logo":{"@type":"ImageObject","url":"__SITE_URL__/assets/logo.png"}},
+      {"@type":"WebSite","@id":"__SITE_URL__/#website","url":"__SITE_URL__/","name":"Abvorn – Reviews Based on Real Research, Not Spec Sheets","publisher":{"@id":"__SITE_URL__/#organization"},"inLanguage":"en-US"}
+    ]}
+    </script>
     ''' + FONT_LINK + '''
     <style>''' + CONSENT_CSS + '''</style>
     ''' + ANALYTICS_HTML + '''

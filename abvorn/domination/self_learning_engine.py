@@ -1,9 +1,9 @@
 """Self-Learning Engine — tracks hook performance, A/B test results,
 and engagement metrics per platform to optimize future content."""
 
-import logging, json, sqlite3, hashlib
+import logging, sqlite3
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 
 logger = logging.getLogger("abvorn.domination.self_learning")
 

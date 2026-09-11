@@ -3,7 +3,6 @@
 import json
 import logging
 import traceback
-import sys
 from datetime import datetime, timedelta
 
 logger = logging.getLogger("abvorn.monitor")
@@ -66,7 +65,7 @@ class ErrorReporter:
     def format_report(self) -> str:
         """Format error summary for Telegram."""
         summary = self.get_summary()
-        lines = [f"<b>Error Report</b>", f"Total errors: {summary['total']}", f"Unique types: {summary['unique_types']}", ""]
+        lines = ["<b>Error Report</b>", f"Total errors: {summary['total']}", f"Unique types: {summary['unique_types']}", ""]
         for key, count in sorted(summary["by_key"].items(), key=lambda x: -x[1]):
             lines.append(f"  {key}: {count}x")
         if summary["last_error"]:

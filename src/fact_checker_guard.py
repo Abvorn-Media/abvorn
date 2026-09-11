@@ -10,12 +10,9 @@ Every component that generates text MUST pass through this guard.
 """
 
 import re
-import json
 import logging
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
-from datetime import datetime
-from collections import defaultdict
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

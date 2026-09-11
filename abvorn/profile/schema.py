@@ -1,7 +1,6 @@
 """Per-platform profile schemas — defines what fields each platform supports."""
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from ..platform import registry
 

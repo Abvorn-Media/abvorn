@@ -1,6 +1,6 @@
 """Queries the knowledge index using keyword matching and returns relevant chunks."""
 
-import json, logging, re, sqlite3
+import logging, re
 
 logger = logging.getLogger("abvorn.brain.retriever")
 

@@ -1,5 +1,4 @@
 import json, re, sys, threading, time, logging
-from collections import defaultdict
 from openai import OpenAI
 
 logger = logging.getLogger("abvorn.models")

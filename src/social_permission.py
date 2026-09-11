@@ -7,8 +7,8 @@ Measures AI's earned social consent to consume resources and acts on scores.
 
 import json
 import logging
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, field
+from typing import Dict, Any, List
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 

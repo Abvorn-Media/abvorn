@@ -4,7 +4,6 @@ Every agent, pipeline, and deployer checks against this before acting.
 """
 
 import re, logging
-from abvorn.brain.principles import BRANDING_PRINCIPLES, COPYWRITING_PRINCIPLES
 
 logger = logging.getLogger("abvorn.brand")
 

@@ -6,12 +6,11 @@ through an execution agent (opencode or codex) and records state in data/fable_s
 
 import json
 import logging
-import os
 import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 

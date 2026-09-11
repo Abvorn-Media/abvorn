@@ -1,7 +1,5 @@
-import asyncio, json, logging, os
-from datetime import datetime
+import logging, os
 from .base import AgentBase
-from ..brain.retriever import KnowledgeRetriever
 from ..agents.researcher import research_niche
 from ..core.models import ModelRouter
 
@@ -51,7 +49,7 @@ class ResearchAgent(AgentBase):
             succeeded = bool(outcome and outcome.get("products_count", 0) > 0)
             self.drive.log_outcome("research", succeeded=succeeded)
         if outcome and outcome.get("products_count", 0) == 0:
-            logger.warning(f"[ResearchAgent] Zero products — consider switching search strategy")
+            logger.warning("[ResearchAgent] Zero products — consider switching search strategy")
 
 
 class ContentAgent(AgentBase):
@@ -368,7 +366,7 @@ class SiteDeployer:
                 slug = p.get("slug") or niche
                 product_name = p.get("product_name", "")
                 query = product_name.replace(" ", "+").replace("'","") if product_name else niche.replace("-","+")
-                rank_label = ["Our pick", "Budget pick", "Upgrade pick", f"Also great", f"Also great"][i] if i < 5 else ""
+                rank_label = ["Our pick", "Budget pick", "Upgrade pick", "Also great", "Also great"][i] if i < 5 else ""
                 rank_class = ["", "budget", "upgrade", "", ""][i] if i < 5 else ""
                 post_rows += f"""<div class="pick-card">
 <div class="rank {rank_class}">{i+1}</div>

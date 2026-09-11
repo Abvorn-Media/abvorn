@@ -75,7 +75,7 @@ def make_debate(v: dict, idx: int, total: int) -> dict:
 
     # The strongest criterion becomes the hook's thesis; the weakest a violation.
     sorted_criteria = sorted(criteria, key=lambda c: breakdown.get(c, 0), reverse=True)
-    strong = sorted_criteria[0] if sorted_criteria else "Value"
+    _strong = sorted_criteria[0] if sorted_criteria else "Value"
     weak = sorted_criteria[-1] if len(sorted_criteria) > 1 else None
 
     violations = []

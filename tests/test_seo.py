@@ -221,7 +221,7 @@ class TestSEOPipeline:
     def test_run_does_not_modify_original(self):
         original = dict(SAMPLE_CONTENT)
         pipeline = SEOPipeline()
-        result = pipeline.run(SAMPLE_CONTENT, "wireless headphones")
+        _result = pipeline.run(SAMPLE_CONTENT, "wireless headphones")
         assert SAMPLE_CONTENT == original
 
     def test_run_with_empty_content(self):

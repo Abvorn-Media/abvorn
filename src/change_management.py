@@ -1,7 +1,6 @@
-import json
 import hashlib
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass, field
 from enum import Enum
@@ -208,7 +207,6 @@ class ChangeManager:
 
     def _t_test_p_value(self, t_stat: float, df: int) -> float:
         """Approximate p-value for t-statistic using normal distribution (large sample)."""
-        import math
         abs_t = abs(t_stat)
         if abs_t > 5:
             return 0.0

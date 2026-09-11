@@ -4,11 +4,10 @@ Controls: name, bio, profile image, header image, website, pinned content.
 Every profile change enforces the brand soul (colors, voice, messaging).
 """
 
-import logging, json
+import logging
 from datetime import datetime
 from ..platform import registry
-from ..brand import COLORS, FONTS, MOTTO, MISSION
-from .schema import get_schema, list_schemas, PlatformProfileSchema
+from .schema import get_schema, PlatformProfileSchema
 
 logger = logging.getLogger("abvorn.profile.manager")
 
@@ -133,7 +132,7 @@ class ProfileManager:
         """Check a current profile against brand standards. Returns violations."""
         violations = []
         schema = get_schema(platform)
-        ideal = self.generate_profile(platform)
+        _ideal = self.generate_profile(platform)
 
         for field in schema.fields:
             if field.required and field.key not in current_profile:
@@ -144,7 +143,7 @@ class ProfileManager:
                     violations.append("Display name must contain 'Abvorn'")
             if field.key in ("bio", "about", "description") and field.key in current_profile:
                 if "buy with confidence" not in current_profile[field.key].lower() and "honest" not in current_profile[field.key].lower():
-                    violations.append(f"Bio must reference brand mission")
+                    violations.append("Bio must reference brand mission")
 
         return violations
 

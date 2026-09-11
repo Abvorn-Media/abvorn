@@ -4,8 +4,8 @@ Dedicated agents for different niche categories with optimized
 configurations and prompts.
 """
 
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, field
+from typing import Dict, Any, List
+from dataclasses import dataclass
 import logging
 
 logger = logging.getLogger("abvorn.specialized_agents")

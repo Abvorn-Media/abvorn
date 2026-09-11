@@ -1,6 +1,6 @@
 """UserInteractionCollector — tracks per-product user engagement signals."""
 
-import logging, json, os
+import logging, json
 from datetime import datetime, timedelta
 from pathlib import Path
 

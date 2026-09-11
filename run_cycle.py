@@ -15,32 +15,28 @@ import hashlib
 import time
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
-from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
-from src.quantum_content_engine import QuantumContentEngine, create_quantum_engine, Platform
-from src.nervous_system import NervousSystem, create_nervous_system, AlertLevel
+from src.fact_checker_guard import create_fact_checker
+from src.quantum_content_engine import create_quantum_engine, Platform
+from src.nervous_system import create_nervous_system, AlertLevel
 from src.living_knowledge_core import create_living_knowledge_core
-from src.ai_sql import AISQL, create_ai_sql, QueryPlan, QueryResult
-from src.agent_reach_adapter import AgentReachAdapter, get_agent_reach_adapter
-from src.unified_memory import UnifiedMemory, create_unified_memory, MemoryTier
+from src.ai_sql import create_ai_sql, QueryPlan
+from src.agent_reach_adapter import get_agent_reach_adapter
 from abvorn.core.verdict import render_verdict_card, clean_product_name
-from src.close_feedback_loop import ClosedFeedbackLoop, create_feedback_loop
-from src.tools_registry import create_tool_registry
+from src.close_feedback_loop import create_feedback_loop
 from src.change_management import create_change_manager, ChangeType, ChangeStatus
-from src.dag_scheduler import DAGScheduler
-from src.economic_surplus import EconomicSurplusTracker, create_economic_surplus_tracker
-from src.entitlements import EntitlementsFramework, create_entitlements_framework
-from src.workflow_engine import WorkflowEngine, create_workflow_engine
-from src.social_permission import SocialPermissionFramework, create_social_permission_framework
+from src.dag_scheduler import DAGScheduler, DAG, Task
+from src.economic_surplus import create_economic_surplus_tracker
+from src.workflow_engine import create_workflow_engine
+from src.social_permission import create_social_permission_framework
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
-from src.deployment import build_homepage, push_single_file, deploy_single_page, rewrite_affiliate_urls, generate_click_url, build_category_dropdown, build_footer_categories, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, build_reviews_hub_page, build_categories_hub_page, scan_published_reviews, _overlay_review, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS, review_card, CATEGORY_TAGLINES, DESIGN_SYSTEM_CSS, FONT_LINK
-from src.click_tracker import get_clicks, register_articles_batch
-from src.article_design import (ARTICLE_DESIGN_CSS, PROD_SHOT_CSS, upgrade_product_image, product_shot_html,
-                                info_dot, sanitize_article_html, inject_product_photos,
-                                build_faq, hero_pick_html, render_article_body, price_floor_for)
+from src.deployment import build_homepage, rewrite_affiliate_urls, build_category_dropdown, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, build_reviews_hub_page, build_categories_hub_page, scan_published_reviews, _overlay_review, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS, review_card, CATEGORY_TAGLINES, DESIGN_SYSTEM_CSS, FONT_LINK
+from src.click_tracker import register_articles_batch
+from src.article_design import (PROD_SHOT_CSS, upgrade_product_image, sanitize_article_html, inject_product_photos,
+                                build_faq, render_article_body, price_floor_for)
 from src.warm_editorial import (WARM_EDITORIAL_CSS, WARM_TOKEN_SHIM_CSS, WARM_PRODUCT_GRID_CSS,
                                 WARM_SHARE_HTML_T, warm_hero_pick_html, warm_product_card_html,
                                 warm_shop_cta_banner, warm_heading_ids, build_review_rail,
@@ -2145,7 +2141,7 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
             for r in related_niches
         )
 
-    year_str = str(datetime.now().year)
+    _year_str = str(datetime.now().year)
     today_str = datetime.now().strftime('%Y-%m-%d')
     pub_date = published_date or today_str
     upd_date = updated_date or today_str
@@ -2866,7 +2862,7 @@ def write_persona_content_plan(niche_name, matrix, docs_dir="docs/plans"):
             f"- **Angle**: {plan['angle']}",
             f"- **Keyword**: {plan['primary_keyword']}",
             f"- **Persuasion**: Cialdini={plan['persuasion_levers']['cialdini']}, Hoffeld={plan['persuasion_levers']['hoffeld']}",
-            f"- **Structure**:",
+            "- **Structure**:",
         ])
         for s in plan["suggested_structure"]:
             lines.append(f"  - {s}")
@@ -2907,7 +2903,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     # Write root index (premium homepage)
     from src.deployment import write_checked as _wc
     _wc(docs / "index.html", build_homepage(state, form_url, reviews=reviews, base=SITE_BASE), "homepage")
-    print(f"  Written: docs/index.html")
+    print("  Written: docs/index.html")
 
     # Write category listing pages (one per category, e.g. /categories/audio/)
     for cat_name, cat_slugs in CATEGORY_MAP.items():
@@ -2934,7 +2930,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
 
     # Generate static pages (always rewrite so header/footer stays in sync)
     b = SITE_BASE
-    year = datetime.now().year
+    _year = datetime.now().year
     static_pages = [
         ("store.html", "Store", "<h2>Our Niche Stores</h2><p>Select a niche to explore curated product recommendations.</p>"),
         ("about.html", "About Abvorn", "<h2>About Abvorn</h2><p>We are an AI-powered media network delivering expert product reviews and buying guides.</p>"),
@@ -2988,7 +2984,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
         journal_dir = docs / "journal"
         journal_dir.mkdir(exist_ok=True)
         _wc(journal_dir / "index.html", build_journal_page(b), "journal page")
-        print(f"  Written: docs/journal/index.html")
+        print("  Written: docs/journal/index.html")
     except Exception as e:
         logger.warning(f"Journal page skipped: {e}")
 
@@ -3076,7 +3072,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     method_dir = docs / "how-we-test"
     method_dir.mkdir(exist_ok=True)
     _wc(method_dir / "index.html", build_methodology_page(all_slugs, form_url), "methodology page")
-    print(f"  Written: docs/how-we-test/index.html")
+    print("  Written: docs/how-we-test/index.html")
 
     # Write robots.txt, llms.txt, RSS feed and sitemap
     items = []
@@ -3526,7 +3522,7 @@ def main(forced_niche=None, force=False, batch_mode=False):
     fact_checker = create_fact_checker(draft)
     fact_results = fact_checker.check_content(draft.get("article_html", ""), context={"niche": niche_slug})
     if fact_results["overall_status"] == "critical":
-        print(f"  CRITICAL: Article failed fact-check — blocking publication")
+        print("  CRITICAL: Article failed fact-check — blocking publication")
         logger.error(f"Fact-check CRITICAL for {niche_slug}: {len(fact_results['failed_claims'])} failed claims")
     elif fact_results["failed_claims"]:
         print(f"  WARNING: {len(fact_results['failed_claims'])} claims failed fact-check")
@@ -3549,7 +3545,7 @@ def main(forced_niche=None, force=False, batch_mode=False):
                 simulation = quantum_engine.simulate_content(draft, user_data, plat)
                 assembled = quantum_engine.assemble_content(simulation, draft, plat)
                 print(f"  {platform_str}: engagement={assembled['predictions']['engagement_score']:.0%} confidence={assembled['predictions']['confidence']:.0%}")
-        print(f"  Quantum simulation complete")
+        print("  Quantum simulation complete")
     except Exception as e:
         print(f"  Quantum simulation skipped: {e}")
 
@@ -3564,7 +3560,7 @@ def main(forced_niche=None, force=False, batch_mode=False):
     print(f"\n{'='*50}")
     print(f"[OK] Cycle complete: {niche_slug}")
     print(f"   Total posts on site: {total}")
-    print(f"   Next up: next niche in round-robin")
+    print("   Next up: next niche in round-robin")
     print(f"{'='*50}")
 
     # Batch mode: process remaining niches in parallel via DAG

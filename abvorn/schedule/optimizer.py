@@ -1,7 +1,6 @@
 """Schedule optimizer — uses real performance data to adjust platform schedules."""
 
 import logging
-from datetime import timezone
 from ..platform import registry
 from .performance import PostPerformanceTracker
 
@@ -86,7 +85,7 @@ class ScheduleOptimizer:
         total_records = self.tracker.record_count()
         platforms_ready = 0
         platforms_pending = 0
-        changes_made = 0
+        _changes_made = 0
 
         details = {}
         for platform in registry.list():

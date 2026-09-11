@@ -10,10 +10,9 @@ import json
 import logging
 import threading
 import time
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from datetime import datetime
 from dataclasses import dataclass, field
-from collections import defaultdict
 import random
 
 logging.basicConfig(level=logging.INFO)

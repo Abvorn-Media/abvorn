@@ -179,7 +179,7 @@ class DominationOrchestrator:
             for platform_key, script_data in scripts.items():
                 hook = script_data.get("hook", "")
                 if hook:
-                    hook_id = self.learner.record_hook_test(
+                    _hook_id = self.learner.record_hook_test(
                         hook, target["niche"], platform_key
                     )
                 self.learner.record_post_performance(

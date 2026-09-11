@@ -11,13 +11,12 @@ import json
 import time
 import logging
 import threading
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Callable
+from datetime import datetime
+from typing import Dict, Any, List, Callable
 from dataclasses import dataclass, field
 from enum import Enum
 
 try:
-    import numpy as np
     HAS_NUMPY = True
 except ImportError:
     HAS_NUMPY = False

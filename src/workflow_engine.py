@@ -9,8 +9,8 @@ using multi-armed bandit selection to continuously optimize.
 import json
 import logging
 import random
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, field
+from typing import Dict, Any, List
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from enum import Enum

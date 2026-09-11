@@ -1,25 +1,24 @@
 """Content pipeline — orchestrates product data into platform-optimized content assets."""
 
-import os
 import json
 import logging
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from datetime import datetime
 
 from src.humanizer_engine import HumanizerEngine
-from src.fact_checker_guard import FactCheckerGuard, create_fact_checker
-from src.quantum_content_engine import QuantumContentEngine, create_quantum_engine, Platform
+from src.fact_checker_guard import create_fact_checker
+from src.quantum_content_engine import create_quantum_engine, Platform
 from src.quality_guardian import create_quality_guardian
 from src.paradox_engine import create_paradox_engine
-from src.ai_sql import AISQL, create_ai_sql, QueryPlan, QueryResult
-from src.unified_memory import UnifiedMemory, create_unified_memory, MemoryTier
-from src.close_feedback_loop import ClosedFeedbackLoop, create_feedback_loop
-from src.economic_surplus import EconomicSurplusTracker, create_economic_surplus_tracker
-from src.entitlements import EntitlementsFramework, create_entitlements_framework
+from src.ai_sql import create_ai_sql, QueryPlan
+from src.unified_memory import create_unified_memory, MemoryTier
+from src.close_feedback_loop import create_feedback_loop
+from src.economic_surplus import create_economic_surplus_tracker
+from src.entitlements import create_entitlements_framework
 from src.tools_registry import create_tool_registry, ToolAccess
-from src.change_management import create_change_manager, ChangeType, ChangeStatus
+from src.change_management import create_change_manager, ChangeType
 from src.dag_scheduler import DAGScheduler, Task, DAG
 
 logger = logging.getLogger("abvorn.content_pipeline")
@@ -353,7 +352,7 @@ class ContentPipeline:
         """
         Full content pipeline for a niche: ingest data, score, create content.
         """
-        from src.data_ingestion import ingest_niche, ingest_product_data
+        from src.data_ingestion import ingest_niche
 
         logger.info(f"📥 Ingesting data for niche: {niche}")
         ingest_data = ingest_niche(niche, product_name)
@@ -361,7 +360,7 @@ class ContentPipeline:
         if product_name and ingest_data.get("product_data"):
             pid = ingest_data["product_data"].get("product_id", "")
         else:
-            articles = ingest_data.get("articles", [])
+            _articles = ingest_data.get("articles", [])
             pid = f"{niche}-rss-{datetime.now().strftime('%Y%m%d')}"
 
         content = self.create_content(pid)

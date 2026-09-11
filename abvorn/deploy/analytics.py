@@ -1,5 +1,4 @@
 import json, logging
-from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
 logger = logging.getLogger("abvorn.analytics")

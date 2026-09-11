@@ -17,7 +17,6 @@ the action is in the auto-approved list (configured per deployment).
 
 import json
 import logging
-import os
 from datetime import datetime
 from enum import IntEnum
 from pathlib import Path

@@ -5,7 +5,6 @@ Docs: https://docs.tavily.com
 """
 
 import json, logging, os, time
-from typing import Optional
 
 logger = logging.getLogger("abvorn.tavily")
 

@@ -4,7 +4,7 @@ Creates consistent visual identity across all social assets."""
 import logging
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont, ImageFilter as PILFilter
+from PIL import Image, ImageDraw, ImageFont
 
 logger = logging.getLogger("abvorn.domination.cinematic")
 

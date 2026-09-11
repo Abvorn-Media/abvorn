@@ -8,8 +8,7 @@ import os
 import re
 import time
 from datetime import datetime
-from typing import Dict, Any, List, Optional
-from pathlib import Path
+from typing import Dict, Any
 
 from src.ai_sql import QueryPlan
 from src.infrastructure import infra_reporter
@@ -28,6 +27,31 @@ _cost_per_1k = {
 }
 
 logger = logging.getLogger(__name__)
+
+# Canonical content-type map (mirrored in run_cycle.py's persona engine).
+CONTENT_TYPE_MAP = {
+    "unaware": {"type": "problem_discovery", "label": "Problem Discovery",
+        "purpose": "Catch the unaware — make them feel seen. Start with their frustration, name it, validate it.",
+        "example": "5 Signs Your Commute Is Draining You More Than You Realize"},
+    "problem_aware": {"type": "problem_deep_dive", "label": "Problem Deep-Dive",
+        "purpose": "Educate the problem-aware. Show them why the problem costs more than they think.",
+        "example": "Why Most Commuters Get Half the Battery Life They Could"},
+    "solution_aware": {"type": "how_to", "label": "How-To / Setup Guide",
+        "purpose": "Help the solution-aware implement. Step-by-step, actionable.",
+        "example": "How to Set Up Noise Cancelling Without Missing Your Train Stop"},
+    "solution_aware_comparison": {"type": "solution_comparison", "label": "Solution Comparison",
+        "purpose": "Help the solution-aware decide between approaches.",
+        "example": "Noise Cancelling vs Transparency Mode — Which Commuter Type Are You?"},
+    "product_aware": {"type": "product_review", "label": "Product Review",
+        "purpose": "Give the product-aware the final nudge. Real research, honest verdict.",
+        "example": "Sony XM6 Review: 30 Days as a Daily Commuter"},
+    "most_aware": {"type": "micro_comparison", "label": "Micro-Comparison",
+        "purpose": "Convert the most-aware. Quick, decisive head-to-head.",
+        "example": "XM6 vs AirPods Pro 3: The Commuter's Verdict"},
+    "cross_sell": {"type": "cross_sell", "label": "Cross-Sell Bundle",
+        "purpose": "Bundle cross-sell. Natural next-product recommendation.",
+        "example": "The 3-Gadget Commute Kit That Changed My Morning"},
+}
 
 # Reference to global ai_sql instance (set by run_cycle.py)
 ai_sql = None
@@ -520,7 +544,7 @@ def write_persona_content_plan(niche_name, matrix, docs_dir="docs/plans"):
             f"- **Angle**: {plan['angle']}",
             f"- **Keyword**: {plan['primary_keyword']}",
             f"- **Persuasion**: Cialdini={plan['persuasion_levers']['cialdini']}, Hoffeld={plan['persuasion_levers']['hoffeld']}",
-            f"- **Structure**:",
+            "- **Structure**:",
         ])
         for s in plan["suggested_structure"]:
             lines.append(f"  - {s}")

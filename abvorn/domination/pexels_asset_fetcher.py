@@ -3,7 +3,6 @@ for use in social posts, carousels, and video backgrounds."""
 
 import logging, os, json, hashlib
 from pathlib import Path
-from datetime import datetime
 
 import requests
 

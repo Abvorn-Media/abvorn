@@ -1,10 +1,8 @@
 """Content Intelligence — parses the blog RSS feed, scores each post for
 sentiment, engagement potential, and platform-specific virality signals."""
 
-import logging, re, json
-from datetime import datetime
+import logging, re
 from pathlib import Path
-from xml.etree import ElementTree
 
 import feedparser
 
@@ -220,7 +218,7 @@ class ContentIntelligence:
         elif platform == "instagram":
             hooks.append(f"Save this for your next {niche} purchase.")
             hooks.append(f"Which {niche} would you pick?")
-            hooks.append(f"Details in the caption \u2193")
+            hooks.append("Details in the caption \u2193")
         elif platform == "linkedin":
             hooks.append(f"I spent {num_str or 'months'} researching {niche}. Here's what matters.")
             hooks.append(f"The {niche} you're buying is probably wrong.")

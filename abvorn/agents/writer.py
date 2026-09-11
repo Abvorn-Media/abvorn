@@ -1,4 +1,4 @@
-import json, os, re, logging
+import json, os, logging
 
 logger = logging.getLogger("abvorn.writer")
 

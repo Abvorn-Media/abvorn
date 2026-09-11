@@ -8,7 +8,6 @@ All calls are optional and never fatal — a missing n8n returns a failed
 result dict instead of raising, matching the repo's integration convention.
 """
 
-import json
 import logging
 import os
 import socket

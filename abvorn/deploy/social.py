@@ -19,7 +19,7 @@ except ImportError:
     check_encoding = None
     repair_mojibake = None
 
-from .composio_client import ComposioClient, HAS_COMPOSIO
+from .composio_client import ComposioClient
 
 # Composio v3 (SDK >= 0.21) — tools are raw slugs on a modern REST API.
 # Only platforms with a live connected account get a backend here; the

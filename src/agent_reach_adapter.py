@@ -4,7 +4,7 @@ Agent-Reach installs and configures upstream tools (twitter-cli, yt-dlp, etc.).
 This adapter provides a clean Python API over those tools for the Abvorn pipeline.
 """
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 
 try:
     from agent_reach import twitter, reddit, youtube, github, xiaohongshu, bilibili

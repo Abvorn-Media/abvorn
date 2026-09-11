@@ -5,7 +5,7 @@ Outputs: structured experiment designs with metrics, duration, success criteria
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 def experimenter_agent(questions: list, model_ask=None) -> list:
@@ -35,7 +35,7 @@ def experimenter_agent(questions: list, model_ask=None) -> list:
 def _design_experiment(question: dict) -> dict:
     """Convert a single question into an experiment design."""
     exp_idea = question.get("experiment_idea", "")
-    severity = question.get("severity", "medium")
+    _severity = question.get("severity", "medium")
 
     base = {
         "source_question": question.get("question", ""),

@@ -219,7 +219,7 @@ def test_build_article_page_strips_dangling_p_before_decision_matrix():
     assert '<p</p>' not in html
     # the decision matrix must sit after a properly closed (or absent)
     # paragraph, not inside a dangling one
-    matrix = html[html.find('class="table-wrap decision-matrix"'):]
+    _matrix = html[html.find('class="table-wrap decision-matrix"'):]
     assert '<div class="table-wrap decision-matrix">' in html
     # no raw "<p\n<div" join anywhere in the body
     import re

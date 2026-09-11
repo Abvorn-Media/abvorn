@@ -1,7 +1,7 @@
 import json, threading, logging, uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional, List
+from typing import Optional
 
 logger = logging.getLogger("abvorn.intel.patterns")
 

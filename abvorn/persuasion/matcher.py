@@ -2,8 +2,7 @@
 
 import json
 import logging
-from dataclasses import dataclass, field
-from ..sites.model import BrandConfig
+from dataclasses import dataclass
 
 logger = logging.getLogger("abvorn.persuasion.matcher")
 MAX_PRODUCTS = 3

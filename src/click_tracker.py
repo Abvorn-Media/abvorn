@@ -3,12 +3,11 @@
 Logs clicks on Amazon affiliate links via SQLite, provides
 get_clicks(article_id) for economic surplus calculation.
 """
-import json
 import logging
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

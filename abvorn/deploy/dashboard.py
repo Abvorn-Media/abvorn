@@ -7,7 +7,7 @@ Deployed alongside content via GitHub Pages. Shows:
 - Schedule performance data
 """
 
-import logging, json
+import logging
 from datetime import datetime
 from pathlib import Path
 from html import escape

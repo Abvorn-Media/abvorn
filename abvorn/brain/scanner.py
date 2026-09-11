@@ -1,6 +1,6 @@
 """Walks the brain directory, detects new/modified PDFs, extracts text."""
 
-import hashlib, logging, json, os, re
+import hashlib, logging, os
 from pathlib import Path
 from datetime import datetime
 

@@ -1,7 +1,6 @@
 """Opportunity discovery — finds untapped affiliate niches."""
 
 import logging, re
-from datetime import datetime
 
 logger = logging.getLogger("abvorn.discovery")
 

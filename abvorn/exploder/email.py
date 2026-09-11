@@ -18,7 +18,7 @@ def generate_sequence(content: dict, persona: dict = None) -> list[dict]:
     """Generate a 5-7 email nurturing sequence tailored to persona."""
     niche = content.get("niche", content.get("post_title", "product"))
     name = persona.get("name", "the reader") if persona else "the reader"
-    title = content.get("post_title", niche)
+    _title = content.get("post_title", niche)
     pain = ""
     if persona:
         anxieties = persona.get("psychology", {}).get("anxieties", [])
@@ -31,8 +31,8 @@ def generate_sequence(content: dict, persona: dict = None) -> list[dict]:
          "body": f"Most people looking for {niche} make these 3 mistakes:\n\n1. Not defining their real needs\n2. Overlooking {pain}\n3. Buying on price alone\n\nHere's how to avoid them..."},
         {"day": 7, "subject": f"Why the right {niche} changes everything",
          "body": f"We did the research so you don't have to. Here's a deep dive into what separates a good {niche} from a great one...\n\n[Link to full guide]"},
-        {"day": 14, "subject": f"Still deciding? Here's our top pick",
+        {"day": 14, "subject": "Still deciding? Here's our top pick",
          "body": f"If you're still deciding, here's the {niche} that won our tests across every category:\n\n[Product name + affiliate link]\n\nIt's the one we'd recommend to our own friends."},
-        {"day": 30, "subject": f"Quick check-in — how's it going?",
+        {"day": 30, "subject": "Quick check-in — how's it going?",
          "body": f"It's been a month since your guide. How's the {niche} working out for you?\n\nAlso, we've got new guides coming for related products you might love..."},
     ]

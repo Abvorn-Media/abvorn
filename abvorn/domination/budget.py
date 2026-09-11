@@ -4,9 +4,9 @@ Tracks every external API call (Pexels, Open Web Ninja, Composio)
 against configurable monthly limits. Blocks calls when budget exhausted.
 """
 
-import logging, json, time
+import logging, json
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 
 logger = logging.getLogger("abvorn.domination.budget")
 

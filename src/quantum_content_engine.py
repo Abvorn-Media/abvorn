@@ -7,16 +7,14 @@ assembles optimal content from verified components,
 and learns from every publication to improve predictions.
 """
 
-import json
 import random
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 
 try:
-    import numpy as np
     HAS_NUMPY = True
 except ImportError:
     HAS_NUMPY = False

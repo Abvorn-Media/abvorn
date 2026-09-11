@@ -72,7 +72,7 @@ def _from_ci(ci_result: dict) -> list:
     label = classification.get("label", "")
     if label == "Underrated":
         return [{
-            "question": f"What if this product's low rating is caused by something other than the product itself (e.g., brand bias, poor marketing)?",
+            "question": "What if this product's low rating is caused by something other than the product itself (e.g., brand bias, poor marketing)?",
             "hypothesis": "The gap between Verdict score and sentiment is driven by perception, not performance.",
             "experiment_idea": "A/B test product presentation: same specs, different brand framing → measure sentiment shift.",
             "source_formula": "ci",
@@ -80,7 +80,7 @@ def _from_ci(ci_result: dict) -> list:
         }]
     if label == "Overrated":
         return [{
-            "question": f"What if users are inflating ratings because of brand loyalty or social pressure?",
+            "question": "What if users are inflating ratings because of brand loyalty or social pressure?",
             "hypothesis": "High sentiment doesn't reflect real satisfaction — it reflects identity signaling.",
             "experiment_idea": "Show anonymous vs identified review prompts → measure rating difference.",
             "source_formula": "ci",
@@ -118,7 +118,7 @@ def _from_ssi(ssi_result: dict) -> list:
     classification = ssi_result.get("classification", {})
     if isinstance(classification, str):
         classification = {"label": classification}
-    label = classification.get("label", "") if isinstance(classification, dict) else ""
+    _label = classification.get("label", "") if isinstance(classification, dict) else ""
     features = ssi_result.get("features", [])
     blind_spots = [f for f in features if f.get("gap", 0) < -3]
     noise = [f for f in features if f.get("gap", 0) > 3]

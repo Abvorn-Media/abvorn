@@ -6,11 +6,10 @@ No simulations. No fake APIs.
 
 import json
 import logging
-import os
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -242,10 +241,10 @@ class RelentlessCore:
         win_runs = win_metrics.get("total_runs", 0) if win_metrics else 0
 
         # Neural memory can enrich the decision with past insights
-        memory_context = []
+        _memory_context = []
         if self.memory is not None:
             try:
-                memory_context = self.memory.query(
+                _memory_context = self.memory.query(
                     f"What actions improve drive score when it's at {drive_score:.2f}?"
                 )
             except Exception as e:
@@ -411,7 +410,7 @@ class RelentlessCore:
             try:
                 from src.agent_reach_adapter import get_agent_reach
 
-                agent = get_agent_reach()
+                _agent = get_agent_reach()
                 return "New domain exploration triggered"
             except Exception:
                 return "Agent-Reach not available"

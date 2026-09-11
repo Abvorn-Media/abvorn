@@ -1,5 +1,4 @@
 import logging
-from .patterns import PersuasionPatternDB
 
 logger = logging.getLogger("abvorn.intel.report")
 

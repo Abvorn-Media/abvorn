@@ -1,7 +1,6 @@
 """HookOptimizer — picks the best hook for each context based on data."""
 
 import logging
-from typing import Optional
 
 logger = logging.getLogger("abvorn.hooks.optimizer")
 

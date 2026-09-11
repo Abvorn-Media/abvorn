@@ -50,7 +50,7 @@ def pdf_stem_for(page: Path) -> str:
         best_date = ""
         for p in dated:
             h = p.read_text(encoding="utf-8")
-            m = TITLE_RE.search(h)
+            _m = TITLE_RE.search(h)
             # published date tag on the page heading: "Published Mar 05, 2026"
             dm = re.search(r"Published\s+([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4})", h)
             d = dm.group(1) if dm else ""

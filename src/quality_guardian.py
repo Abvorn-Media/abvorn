@@ -7,9 +7,8 @@ readability, tone consistency, factual coherence, and
 platform-specific quality standards.
 """
 
-import re
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

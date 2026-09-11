@@ -3,8 +3,6 @@
 Spawns multiple system instances with different configurations
 to find the optimal setup through parallel experimentation.
 """
-import os
-import sys
 import json
 import time
 import concurrent.futures
@@ -113,16 +111,14 @@ class InstanceSpawner:
         start = time.time()
         try:
             from run_cycle import (
-                get_secrets, load_state, pick_niche, save_state,
+                get_secrets, load_state, save_state,
                 write_files, research_products, fetch_social_sentiment,
                 generate_outline, write_draft,
             )
-            from src.ai_sql import create_ai_sql, QueryPlan
+            from src.ai_sql import create_ai_sql
             from src.change_management import create_change_manager, ChangeType, ChangeStatus
-            from src.infrastructure import infra_reporter
-            from src.energy_accounting import energy_accounting
 
-            ai_sql = create_ai_sql()
+            _ai_sql = create_ai_sql()
             change_mgr = create_change_manager()
             change_id = change_mgr.create_change(
                 name=f"{instance_id}_cycle",

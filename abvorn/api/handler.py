@@ -1,7 +1,6 @@
 """Simple HTTP request handler for the subscribe API."""
 
 import json
-from urllib.parse import parse_qs
 from .subscribe import handle_subscribe
 
 def lambda_handler(event: dict, context=None, db_path=None) -> dict:

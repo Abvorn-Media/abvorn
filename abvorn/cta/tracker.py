@@ -1,8 +1,6 @@
 """CTATracker — records CTA events and feeds into the intelligence engine."""
 
 import logging
-from datetime import datetime
-from typing import Optional
 
 logger = logging.getLogger("abvorn.cta.tracker")
 

@@ -139,7 +139,7 @@ class TestPostingQueue:
     def test_priority_ordering(self):
         queue = PostingQueue()
         past = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
-        low = queue.enqueue("Low priority", "x", priority=1, scheduled_time=past)
+        _low = queue.enqueue("Low priority", "x", priority=1, scheduled_time=past)
         high = queue.enqueue("High priority", "x", priority=10, scheduled_time=past)
         first = queue.dequeue()
         assert first["id"] == high

@@ -49,5 +49,5 @@ class EnvMode:
         lines = [f"<b>Environment: {self.label}</b>"]
         lines.append(f"  Deploy to GitHub: {'YES' if self.should_deploy else 'NO (dry-run)'}")
         lines.append(f"  Post to social: {'YES' if self.should_post_social else 'NO'}")
-        lines.append(f"  Set ABVORN_ENV=production to go live")
+        lines.append("  Set ABVORN_ENV=production to go live")
         return "\n".join(lines)

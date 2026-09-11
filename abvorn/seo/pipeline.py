@@ -1,6 +1,5 @@
 import logging
 import json
-from typing import Any
 
 from .keywords import KeywordResearch
 from .schema import SchemaBuilder

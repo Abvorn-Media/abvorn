@@ -8,7 +8,7 @@ from typing import Optional
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import uvicorn
@@ -94,7 +94,7 @@ async def require_auth(request: Request, call_next):
                 status_code=503,
             )
         auth = request.headers.get("Authorization", "")
-        expected = f"Bearer {_API_TOKEN}"
+        _expected = f"Bearer {_API_TOKEN}"
         if not auth.startswith("Bearer "):
             return JSONResponse({"error": "Unauthorized"}, status_code=401)
         supplied = auth[len("Bearer "):]
@@ -1008,10 +1008,10 @@ if __name__ == "__main__":
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
     port = int(os.getenv("ABVORN_SERVER_PORT", "8080"))
-    print(f"\n  Abvorn Mobile Server running!")
+    print("\n  Abvorn Mobile Server running!")
     print(f"  Local:   http://localhost:{port}")
     print(f"  Network: http://{local_ip}:{port}")
-    print(f"  Open on your phone browser to access the PWA.\n")
+    print("  Open on your phone browser to access the PWA.\n")
     if _API_TOKEN:
         print(f"  Auth:    Bearer {_API_TOKEN} (set ABVORN_API_TOKEN in env or secrets)")
     else:

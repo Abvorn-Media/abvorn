@@ -213,7 +213,7 @@ class TitleEngine:
             except (TypeError, ValueError):
                 best_criterion = ""
 
-        label = str(verdict.get("label") or "")
+        _label = str(verdict.get("label") or "")
         overall = verdict.get("overall")
         try:
             score_float = float(overall or 0)

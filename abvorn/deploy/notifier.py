@@ -1,7 +1,7 @@
 """Telegram notifier — sends key metrics and alerts to your Telegram.
    Now supports bidirectional command processing."""
 
-import logging, requests, json, time
+import logging, requests, time
 
 logger = logging.getLogger("abvorn.deploy.notifier")
 
@@ -76,7 +76,7 @@ class TelegramNotifier:
                 text += f"\n\n📄 <b>{title[:100]}</b>"
             if revenue:
                 text += f"\n💰 Revenue: ${revenue:.2f}"
-            text += f"\n\nAlways learning, always improving. On to the next one! 🚀"
+            text += "\n\nAlways learning, always improving. On to the next one! 🚀"
         elif status == "failed":
             text = (
                 f"🤔 Hit a snag with <b>{niche}</b> — nothing we can't handle. "
