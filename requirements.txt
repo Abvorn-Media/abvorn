@@ -21,6 +21,11 @@ composio==0.21.1
 pdfplumber
 feedparser
 
+# Mobile server API (mobile_server.py + its tests)
+fastapi
+uvicorn
+pydantic
+
 networkx>=3.1
 python-louvain
 
