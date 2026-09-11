@@ -230,6 +230,12 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
         .cat-hero__coming { font-family:var(--font-body); font-size:0.95rem; color:#b9b9b4; }
         .cat-hero__stage { position:relative; display:flex; align-items:center; justify-content:center; }
         .cat-hero__art { width:100%; max-width:460px; height:auto; border-radius:20px; border:1px solid rgba(255,255,255,0.16); box-shadow:0 24px 70px rgba(0,0,0,0.55); background:#fff; }
+        .cat-hero__stage--photo { display:block; }
+        .cat-hero__stage--photo .cat-hero__art { max-width:480px; aspect-ratio:4/3; object-fit:cover; }
+        .cat-hero__credit { display:flex; align-items:center; gap:8px; margin:12px 2px 0; font-family:var(--font-mono); font-size:0.6rem; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; color:#8a8a86; }
+        .cat-hero__credit a { color:var(--cat); text-decoration:none; }
+        .cat-hero__credit a:hover { text-decoration:underline; }
+        .cat-hero__credit-dot { width:6px; height:6px; background:var(--cat); flex-shrink:0; }
         @media (max-width:900px) { .cat-hero__grid { grid-template-columns:1fr; } .cat-hero__stage { order:-1; max-width:340px; margin:0 auto; } }
 
         .category-index { background:color-mix(in srgb, var(--cat) 12%, var(--clr-off-white)); border-bottom:1px solid color-mix(in srgb, var(--cat) 34%, var(--clr-light-gray)); padding:10px 0; }
@@ -355,7 +361,7 @@ p { margin-bottom: var(--space-lg); max-width: 65ch; }
             </div>
             <div class="cat-hero__cta"><a class="cat-hero__btn" href="#latest">Browse the reviews<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></a><span class="cat-hero__hint">Independent · Tested · Updated weekly</span></div>
         </div>
-        <div class="cat-hero__stage" aria-hidden="true"><img class="cat-hero__art" src="/assets/laptops.svg" alt=""></div>
+        <div class="cat-hero__stage cat-hero__stage--photo"><img class="cat-hero__art" src="/assets/hero/laptops.jpg" alt="Photograph: A detailed close-up of a black laptop keyboard with soft lighting and selective focus."><p class="cat-hero__credit"><span class="cat-hero__credit-dot" aria-hidden="true"></span>Photo: <a href="https://www.pexels.com/photo/black-computer-keyboard-785429/" target="_blank" rel="noopener">Lukas Mayer</a> — Pexels</p></div>
     </div>
 </section>
 
