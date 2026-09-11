@@ -54,17 +54,30 @@ HOOK_TEMPLATES = {
 }
 
 
+def _humanize_niche(niche: str) -> str:
+    """Turn a URL-style slug into display copy: 'wireless-earbuds' -> 'Wireless earbuds'."""
+    niche = (niche or "").strip()
+    if not niche:
+        return "product"
+    if " " in niche:
+        return niche
+    words = niche.replace("-", " ").replace("_", " ").split()
+    words = [w.capitalize() for w in words]
+    return " ".join(words).capitalize() if words else "product"
+
+
 class ViralScriptGenerator:
     """Generates platform-optimized scripts with A/B hook variants."""
 
     def __init__(self):
         self._history: list[dict] = []
 
-    def generate(self, post: dict, platforms: list[str] | None = None) -> dict:
+    def generate(self, post: dict, platforms: list[str] | None = None,
+                 products: list[dict] | None = None) -> dict:
         targets = platforms or list(PLATFORM_SPECS.keys())
         result = {}
         for platform in targets:
-            result[platform] = self._generate_for_platform(post, platform)
+            result[platform] = self._generate_for_platform(post, platform, products=products)
         self._history.append({
             "post_title": post.get("title", ""),
             "platforms": targets,
@@ -72,13 +85,15 @@ class ViralScriptGenerator:
         })
         return result
 
-    def _generate_for_platform(self, post: dict, platform: str) -> dict:
+    def _generate_for_platform(self, post: dict, platform: str,
+                               products: list[dict] | None = None) -> dict:
         spec = PLATFORM_SPECS.get(platform, PLATFORM_SPECS["x"])
         title = post.get("title", "New Post")
         niche = post.get("niche", "product")
         summary = post.get("summary", "")
         url = post.get("url", "")
         hooks = post.get("hooks", {}).get(platform, [])
+        products = products or []
 
         price_match = re.search(r"\$\d+[\.,]?\d*", title + " " + summary)
         price = price_match.group(0) if price_match else "$XX"
@@ -90,6 +105,10 @@ class ViralScriptGenerator:
         brand = brand_match.group(1) if brand_match else "top"
 
         hook_variants = self._generate_hooks(title, niche, price, num, brand, spec["hook_priority"])
+        if products:
+            # Honest, product-first hook — references the real comparison set.
+            count = len(products)
+            hook_variants.insert(0, f"We compared {count} {_humanize_niche(niche)}. Here's what we'd actually buy.")
         selected_hook = hook_variants[0] if hook_variants else title[:100]
         hooks_for_testing = hook_variants[:3]
 
@@ -98,7 +117,7 @@ class ViralScriptGenerator:
         elif spec["style"] == "script":
             script = self._tiktok_script(title, selected_hook, summary, niche, url)
         elif spec["style"] == "carousel":
-            script = self._carousel_script(title, selected_hook, summary, niche, hooks)
+            script = self._carousel_script(title, selected_hook, summary, niche, hooks, products=products)
         elif spec["style"] == "story":
             script = self._linkedin_script(title, selected_hook, summary, niche, url)
         elif spec["style"] == "telegram":
@@ -156,7 +175,25 @@ class ViralScriptGenerator:
         }
 
     def _carousel_script(self, title: str, hook: str, summary: str,
-                         niche: str, hooks: list) -> list[str]:
+                         niche: str, hooks: list, products: list[dict] | None = None) -> list[str]:
+        products = products or []
+        if products:
+            slides = [
+                f"{hook}\n\nSwipe through the real options \u2192",
+            ]
+            for p in products[:4]:
+                name = p.get("name", "")
+                price = p.get("price", "")
+                role = p.get("role", "")
+                line = name
+                details = " · ".join(x for x in (role, price) if x)
+                if details:
+                    line = f"{name}\n{details}"
+                slides.append(line)
+            slides.append(
+                "Which one fits your budget? \U0001F447\n\nFull guide & prices in our bio \U0001F517"
+            )
+            return slides
         slides = [f"\U0001F4CC {hook}"]
         for h in hooks[:4]:
             slides.append(f"{h}\n\nSwipe for more \u2192")

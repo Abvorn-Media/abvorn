@@ -127,6 +127,10 @@ class CinematicFilter:
 
     def resize_for_platform(self, image_path: str, platform: str,
                             output_path: str | None = None) -> str | None:
+        """Resize *image_path* to the exact target dimensions using a center-crop
+        (cover-fit) rather than letterbox-padding, so output is always frame-filling
+        with no black bars.  Instagram carousels, LinkedIn link shares, etc. all
+        receive an edge-to-edge image this way."""
         dims = {
             "x": (1200, 675),
             "instagram": (1080, 1350),  # 4:5 feed portrait — IG favors it over square
@@ -139,17 +143,12 @@ class CinematicFilter:
         }
         size = dims.get(platform, (1080, 1080))
         try:
-            img = Image.open(image_path)
-            img = img.convert("RGB")
-            img.thumbnail(size, Image.LANCZOS)
-            canvas = Image.new("RGB", size, BRAND_OVERLAY_COLOR)
-            x = (size[0] - img.width) // 2
-            y = (size[1] - img.height) // 2
-            canvas.paste(img, (x, y))
+            from PIL import ImageOps
+            img = Image.open(image_path).convert("RGB")
+            canvas = ImageOps.fit(img, size, Image.LANCZOS, centering=(0.5, 0.5))
             output = output_path or image_path
             Path(output).parent.mkdir(parents=True, exist_ok=True)
             canvas.save(output, quality=95, subsampling=0)
-            # verify the write produced the expected canvas
             verify = Image.open(output)
             if verify.size != size:
                 logger.warning(f"Resize verify failed for {output}: {verify.size} != {size}")

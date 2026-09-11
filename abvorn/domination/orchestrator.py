@@ -109,8 +109,20 @@ class DominationOrchestrator:
             return {"cycle_id": cycle_id, "status": "intel_failed", "error": str(e)}
 
         # 2. Viral Script Generation
+        products: list[dict] = []
+        slide_url = target.get("url", "")
         try:
-            scripts = self.script_gen.generate(target, platforms=platforms)
+            from .product_assets import load_products_for_niche, slug_from_url
+            _slug = slug_from_url(slide_url) or target.get("niche", "")
+            products = load_products_for_niche(_slug)
+            steps["products"] = {"status": "ok", "count": len(products), "slug": _slug}
+            logger.info(f"[{cycle_id}] Products resolved for {_slug}: {len(products)}")
+        except Exception as e:
+            logger.warning(f"[{cycle_id}] Product resolution failed (non-fatal): {e}")
+            steps["products"] = {"status": "failed", "error": str(e)}
+
+        try:
+            scripts = self.script_gen.generate(target, platforms=platforms, products=products)
             steps["scripts"] = {
                 "status": "ok",
                 "platforms": list(scripts.keys()),
@@ -121,44 +133,68 @@ class DominationOrchestrator:
             steps["scripts"] = {"status": "failed", "error": str(e)}
             return {"cycle_id": cycle_id, "status": "script_failed", "steps": steps}
 
-        # 3. Pexels Asset Fetch
+        # 3. Asset fetch — real product photos for Instagram when they exist,
+        # Pexels stock as the fallback for when no products resolve.
         media_paths = []
+        needs_media = "instagram" in scripts
         try:
-            images = self.pexels.asset_for_niche(target["niche"], count=2)
-            if images:
-                for img in images[:2]:
-                    if img.get("src"):
-                        path = self.pexels.download_image(
-                            img["src"], niche=target["niche"]
-                        )
-                        if path:
-                            media_paths.append(path)
-                steps["pexels"] = {
-                    "status": "ok",
-                    "images_fetched": len(media_paths),
-                }
-            else:
-                steps["pexels"] = {"status": "no_images"}
-            logger.info(f"[{cycle_id}] Pexels: {len(media_paths)} assets")
-        except Exception as e:
-            logger.warning(f"[{cycle_id}] Pexels fetch failed (non-fatal): {e}")
-            steps["pexels"] = {"status": "failed", "error": str(e)}
-
-        # 4. Cinematic Filter
-        try:
-            for i, path in enumerate(media_paths):
-                branded = self.cinematic.apply_brand_overlay(
-                    path,
-                    text=target["title"][:80],
-                    niche=target["niche"],
+            if products and needs_media:
+                from .instagram_cards import compose_carousel
+                media_paths = compose_carousel(
+                    products,
+                    niche=_slug,
+                    title=target["title"],
+                    url=slide_url,
                 )
-                if branded:
-                    media_paths[i] = branded
-            steps["cinematic"] = {"status": "ok", "assets_processed": len(media_paths)}
-            logger.info(f"[{cycle_id}] Cinematic: {len(media_paths)} processed")
+                steps["assets"] = {
+                    "status": "ok",
+                    "source": "review_product_photos",
+                    "cards_composed": len(media_paths),
+                }
+                logger.info(f"[{cycle_id}] Product cards composed: {len(media_paths)}")
+            elif needs_media:
+                images = self.pexels.asset_for_niche(target["niche"], count=2)
+                if images:
+                    for img in images[:2]:
+                        if img.get("src"):
+                            path = self.pexels.download_image(
+                                img["src"], niche=target["niche"]
+                            )
+                            if path:
+                                media_paths.append(path)
+                    steps["assets"] = {
+                        "status": "ok",
+                        "source": "pexels_stock",
+                        "images_fetched": len(media_paths),
+                    }
+                else:
+                    steps["assets"] = {"status": "no_images"}
+                logger.info(f"[{cycle_id}] Pexels: {len(media_paths)} assets")
+            else:
+                steps["assets"] = {"status": "skipped", "reason": "no_media_platform"}
         except Exception as e:
-            logger.warning(f"[{cycle_id}] Cinematic filter failed (non-fatal): {e}")
-            steps["cinematic"] = {"status": "failed", "error": str(e)}
+            logger.warning(f"[{cycle_id}] Asset fetch failed (non-fatal): {e}")
+            steps["assets"] = {"status": "failed", "error": str(e)}
+
+        # 4. Cinematic Filter — brand overlay only on Pexels stock (product cards are final)
+        asset_source = steps.get("assets", {}).get("source", "")
+        if asset_source == "pexels_stock" and media_paths:
+            try:
+                for i, path in enumerate(media_paths):
+                    branded = self.cinematic.apply_brand_overlay(
+                        path,
+                        text=target["title"][:80],
+                        niche=target["niche"],
+                    )
+                    if branded:
+                        media_paths[i] = branded
+                steps["cinematic"] = {"status": "ok", "assets_processed": len(media_paths)}
+                logger.info(f"[{cycle_id}] Cinematic: {len(media_paths)} processed")
+            except Exception as e:
+                logger.warning(f"[{cycle_id}] Cinematic filter failed (non-fatal): {e}")
+                steps["cinematic"] = {"status": "failed", "error": str(e)}
+        else:
+            steps["cinematic"] = {"status": "skipped", "reason": asset_source or "no_media"}
 
         # 5. Audio System (voiceover script generation)
         try:
