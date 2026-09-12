@@ -112,3 +112,4 @@ var/og_logo_background.png
 var/svg_render.png
 notes/hero-visual-pass/
 notes/security_test.txt
+.gstack/

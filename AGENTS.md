@@ -51,3 +51,27 @@ Diagnosis recap (for future mojibake): UTF-8 bytes decoded as cp1252 then
 re-encoded as UTF-8. `find_mojibake()`/`repair_mojibake()` in
 `src/deployment.py` reverse it; the corruption entered the tree at commit
 `536f0d8` via a Windows regen and was repaired tree-wide in `1919d8c`.
+
+## Skill routing
+
+When a task matches one of these domains, load the corresponding skill
+before starting work — not after hitting a wall.
+
+| Domain | Skill to load | Trigger |
+|--------|--------------|---------|
+| Bug investigation / errors | `investigate` | "it broke", "why is this", error in console |
+| UI / frontend design | `impeccable` or `frontend-design` | building or redesigning pages, components, layouts |
+| Security audit | `cso` | "is this secure?", before deploy to production |
+| Content / copy | `brand-voice` + `content-engine` | writing any Abvorn content, product pages, blog posts |
+| QA / visual QA | `qa` | "does this work?", "test the site" |
+| Scraping / data pull | `scrape` | extracting data from a web page |
+| Ship / release | `ship` | ready to commit + push + open PR |
+| Email sequences | `emails` | drip campaigns, nurture flows |
+| SEO optimization | `ai-seo` | getting cited by LLMs, appearing in AI search |
+| Programmatic pages | `programmatic-seo` | generating many similar pages from templates |
+| Benchmarking | `benchmark` | measuring page performance, regression checks |
+| Design review | `design-review` | visual audit, spacing, hierarchy check |
+| Retro | `retro` | weekly engineering retrospective |
+
+Browse is available (daemon provisioned 2026-09-12). Browse-dependent
+skills (`qa`, `scrape`, `hackernews-frontpage`, `canary`) are operational.
