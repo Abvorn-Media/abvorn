@@ -1,5 +1,6 @@
 """Registry-aware social deployer — posts to any registered platform via Composio."""
 
+import json
 import logging
 import os
 import time
@@ -94,6 +95,59 @@ class TelegramDeployer:
             return {"status": "failed", "platform": "telegram", "error": str(e)[:200]}
         if resp.status_code == 200 and data.get("ok"):
             return {"status": "posted", "platform": "telegram", "chat_id": target}
+        return {"status": "failed", "platform": "telegram", "error": f"{resp.status_code} {str(data)[:200]}"}
+
+    def post_media_group(self, media_paths: list[str], caption: str = "") -> dict:
+        """Post product photos as a Telegram media group (album) via sendMediaGroup.
+
+        Up to 10 photos; the caption rides on the first. Requires local files —
+        the Bot API uploads them via multipart. Falls back to sendPhoto when a
+        path is unreadable."""
+        if not self.token:
+            return {"status": "error", "platform": "telegram", "reason": "no_telegram_token"}
+        target = self.channel or self.chat_id
+        if not target:
+            return {"status": "error", "platform": "telegram", "reason": "no_telegram_chat_id"}
+        from pathlib import Path
+        photos = []
+        for i, path in enumerate(media_paths[:10]):
+            p = Path(path)
+            if p.is_file():
+                photos.append((f"photo{i}", p.open("rb")))
+        if not photos:
+            return {"status": "failed", "platform": "telegram", "error": "no_readable_media"}
+        url = f"https://api.telegram.org/bot{self.token}/sendMediaGroup"
+        media_payload = [
+            {
+                "type": "photo",
+                "media": f"attach://{name}",
+                "caption": (caption[:1024] if i == 0 else ""),
+            }
+            for i, (name, _f) in enumerate(photos)
+        ]
+        try:
+            resp = requests.post(
+                url,
+                data={"chat_id": target, "media": json.dumps(media_payload)},
+                files=dict(photos),
+                timeout=30,
+            )
+            data = resp.json()
+            if resp.status_code == 429:
+                retry_after = int((data.get("parameters") or {}).get("retry_after") or 30)
+                time.sleep(min(retry_after, 60))
+                resp = requests.post(
+                    url,
+                    data={"chat_id": target, "media": json.dumps(media_payload)},
+                    files=dict(photos),
+                    timeout=30,
+                )
+                data = resp.json()
+        except Exception as e:
+            return {"status": "failed", "platform": "telegram", "error": str(e)[:200]}
+        if resp.status_code == 200 and data.get("ok"):
+            return {"status": "posted", "platform": "telegram", "chat_id": target,
+                    "photos": len(photos)}
         return {"status": "failed", "platform": "telegram", "error": f"{resp.status_code} {str(data)[:200]}"}
 
 

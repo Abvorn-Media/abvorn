@@ -125,21 +125,22 @@ class SocialPublisher:
         from ..core.social_gate import require_social_publishing
 
         if not require_social_publishing():
-            return self._export(script, platform, niche)
+            return self._export(script, platform, niche, media_paths=media_paths)
 
         # Platform scoping: with the gate ON, only explicitly allowed platforms go live.
         from ..deploy.social import _allowed_platforms
         allowed = _allowed_platforms()
         if allowed is not None and platform not in allowed:
-            return self._export(script, platform, niche)
+            return self._export(script, platform, niche, media_paths=media_paths)
 
         # Telegram posts via the Bot API directly — no Composio connection needed.
+        # Product photos go along as a media group when they exist.
         if platform == "telegram":
             params = mapping["params_fn"](script)
-            return self._publish_telegram(params, script, platform, niche)
+            return self._publish_telegram(params, script, platform, niche, media_paths)
 
         if mapping.get("export_only") or not self._client.available:
-            return self._export(script, platform, niche)
+            return self._export(script, platform, niche, media_paths=media_paths)
 
         if mapping.get("flow") == "carousel":
             return self._publish_instagram_carousel(script, platform, niche, media_paths)
@@ -167,13 +168,15 @@ class SocialPublisher:
             return result
         except Exception as e:
             logger.warning(f"{platform}: Composio failed — exporting instead: {e}")
-            return self._export(script, platform, niche)
+            return self._export(script, platform, niche, media_paths=media_paths)
 
     def publish_all(self, scripts: dict, niche: str = "",
-                media_paths: list[str] | None = None) -> list[dict]:
+                    media_paths: list[str] | None = None,
+                    media_by_platform: dict | None = None) -> list[dict]:
         results = []
         for platform, script in scripts.items():
-            r = self.publish(script, platform, niche, media_paths=media_paths)
+            platform_media = (media_by_platform or {}).get(platform, media_paths)
+            r = self.publish(script, platform, niche, media_paths=platform_media)
             results.append(r)
         return results
 
@@ -226,27 +229,50 @@ class SocialPublisher:
         return resized
 
     def _publish_telegram(self, params: dict, script: dict | list | str,
-                          platform: str, niche: str) -> dict:
-        """Post a text message to Telegram via the Bot API (no Composio needed)."""
+                          platform: str, niche: str,
+                          media_paths: list[str] | None = None) -> dict:
+        """Post to Telegram via the Bot API (no Composio needed).
+
+        When real product photos exist they go out as a media group with the
+        hook as its caption; the full post with link preview follows as a
+        normal message. Either leg can degrade to text-only / export.
+        """
         from ..deploy.social import TelegramDeployer
+        media_paths = media_paths or []
+        deployer = TelegramDeployer()
         try:
-            result = TelegramDeployer().post({"text": params.get("text", "")}, enable_preview=True)
+            if media_paths:
+                # Reuse pre-composed platform media as-is; assert presence only.
+                existing = [p for p in media_paths if Path(p).exists()]
+                if existing:
+                    result = deployer.post_media_group(
+                        existing, params.get("text", "")[:3800]
+                    )
+                    if result.get("status") == "posted":
+                        logger.info(f"telegram: posted {len(existing)} photos via Bot API sendMediaGroup")
+                    else:
+                        logger.warning(f"telegram: media group {result.get('status')} — falling back to text")
+                        result = deployer.post({"text": params.get("text", "")}, enable_preview=True)
+                else:
+                    result = deployer.post({"text": params.get("text", "")}, enable_preview=True)
+            else:
+                result = deployer.post({"text": params.get("text", "")}, enable_preview=True)
         except Exception as e:
             logger.warning(f"telegram: Bot API failed — exporting instead: {e}")
-            return self._export(script, platform, niche)
+            return self._export(script, platform, niche, media_paths=media_paths)
         if result.get("status") == "posted":
             self._results.append(result)
-            logger.info("telegram: posted via Bot API sendMessage")
+            logger.info(f"telegram: posted ({media_paths and 'media+text' or 'text'})")
             return result
         logger.warning(f"telegram: {result.get('status')} ({result.get('error')}) — exporting instead")
-        return self._export(script, platform, niche)
+        return self._export(script, platform, niche, media_paths=media_paths)
 
     def _publish_instagram_carousel(self, script: dict | list | str, platform: str,
                                     niche: str, media_paths: list[str] | None) -> dict:
         media_paths = media_paths or []
         if len(media_paths) < 2:
             logger.warning("instagram: carousel needs >=2 images — exporting instead")
-            return self._export(script, platform, niche)
+            return self._export(script, platform, niche, media_paths=media_paths)
 
         caption = self._honest_instagram_caption(script, niche)
         images = self._resize_for_instagram(media_paths)
@@ -263,20 +289,36 @@ class SocialPublisher:
             return result
         except Exception as e:
             logger.warning(f"instagram: Composio failed — exporting instead: {e}")
-            return self._export(script, platform, niche)
+            return self._export(script, platform, niche, media_paths=media_paths)
 
     def _export(self, script: dict | list | str, platform: str,
-                niche: str) -> dict:
+                niche: str, media_paths: list[str] | None = None) -> dict:
         date_str = datetime.now().strftime("%Y%m%d_%H%M%S")
         niche_slug = niche.replace(" ", "_") if niche else "general"
         export_dir = EXPORT_DIR / niche_slug / platform
         export_dir.mkdir(parents=True, exist_ok=True)
+
+        # Ship composed media alongside the export JSON so the draft is complete
+        # (Pinterest pins, LinkedIn/X share cards, etc.) even when the gate is OFF.
+        media_list: list[str] = []
+        for i, path in enumerate(media_paths or []):
+            if not Path(path).exists():
+                continue
+            dest = export_dir / f"{date_str}_media_{i}.jpg"
+            try:
+                import shutil
+                shutil.copy2(path, dest)
+                media_list.append(dest.name)
+            except OSError:
+                continue
 
         export_file = export_dir / f"{date_str}.json"
         export_data = {
             "platform": platform,
             "niche": niche,
             "script": script,
+            "media": media_list,
+            "media_paths": [str(Path(p)) for p in (media_paths or []) if Path(p).exists()],
             "generated_at": datetime.now().isoformat(),
         }
         export_file.write_text(json.dumps(export_data, indent=2), encoding="utf-8")
@@ -290,6 +332,7 @@ class SocialPublisher:
             "niche": niche,
             "export_path": str(export_file),
             "text_path": str(text_file),
+            "media": media_list,
         }
         self._results.append(result)
         logger.info(f"{platform}: exported to {export_file}")

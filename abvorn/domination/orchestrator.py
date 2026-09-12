@@ -144,25 +144,31 @@ class DominationOrchestrator:
             steps["scripts"] = {"status": "failed", "error": str(e)}
             return {"cycle_id": cycle_id, "status": "script_failed", "steps": steps}
 
-        # 3. Asset fetch — real product photos for Instagram when they exist,
-        # Pexels stock as the fallback for when no products resolve.
-        media_paths = []
-        needs_media = "instagram" in scripts
+        # 3. Asset fetch — real product photos for every image-capable platform
+        # when they exist, Pexels stock as the fallback for when no products resolve.
+        media_by_platform: dict[str, list[str]] = {}
+        media_paths: list[str] = []
+        image_platforms = [p for p in scripts if p in {"instagram", "telegram", "linkedin", "x", "pinterest", "facebook"}]
+        needs_media = bool(image_platforms)
         try:
             if products and needs_media:
-                from .instagram_cards import compose_carousel
-                media_paths = compose_carousel(
-                    products,
-                    niche=_slug,
-                    title=target["title"],
-                    url=slide_url,
-                )
+                from .instagram_cards import compose_platform_media
+                for p in image_platforms:
+                    paths = compose_platform_media(
+                        products,
+                        niche=_slug,
+                        title=target["title"],
+                        url=slide_url,
+                        platform=p,
+                    )
+                    media_by_platform[p] = paths
+                media_paths = media_by_platform.get("instagram", [])
                 steps["assets"] = {
                     "status": "ok",
                     "source": "review_product_photos",
-                    "cards_composed": len(media_paths),
+                    "platforms": {p: len(v) for p, v in media_by_platform.items()},
                 }
-                logger.info(f"[{cycle_id}] Product cards composed: {len(media_paths)}")
+                logger.info(f"[{cycle_id}] Product media composed: {media_by_platform.keys()}")
             elif needs_media:
                 images = self.pexels.asset_for_niche(target["niche"], count=2)
                 if images:
@@ -173,6 +179,7 @@ class DominationOrchestrator:
                             )
                             if path:
                                 media_paths.append(path)
+                                media_by_platform.setdefault("instagram", []).append(path)
                     steps["assets"] = {
                         "status": "ok",
                         "source": "pexels_stock",
@@ -252,7 +259,7 @@ class DominationOrchestrator:
                 publish_targets[platform_key] = script_obj
 
             publish_results = self.publisher.publish_all(
-                publish_targets, target["niche"], media_paths=media_paths
+                publish_targets, target["niche"], media_by_platform=media_by_platform
             )
             posted = [r for r in publish_results if r["status"] == "posted"]
             exported = [r for r in publish_results if r["status"] == "exported"]

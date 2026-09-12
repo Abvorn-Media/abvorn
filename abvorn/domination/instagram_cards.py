@@ -73,57 +73,77 @@ def _load_cover(path: str, box: int) -> Image.Image:
     return canvas
 
 
-def compose_product_card(product: dict, role: str, output_path: str | Path) -> str | None:
-    """Compose one 1080x1350 slide: role pill + real product photo + name + price."""
+# Canonical per-platform frame sizes: what should be attached when real
+# product photos are available. These match CinematicFilter.resize_for_platform
+# so the publishing pipeline uses one source of truth for framing.
+PLATFORM_DIMS = {
+    "instagram": (1080, 1350),
+    "telegram": (1080, 1350),
+    "linkedin": (1200, 627),
+    "x": (1200, 675),
+    "facebook": (1200, 630),
+    "pinterest": (1000, 1500),
+}
+LANDSCAPE_PLATFORMS = {"linkedin", "x", "facebook"}
+
+
+def compose_product_card(product: dict, role: str, output_path: str | Path,
+                         size: tuple[int, int] | None = None) -> str | None:
+    """Compose one vertical slide — role pill + real product photo + name + price — at
+    the requested size.  Defaults to the 1080x1350 (4:5) Instagram canvas; Pinterest
+    supplies (1000, 1500) so the same product photo card is produced in 2:3 form."""
+    W, H = size if size else CANVAS
+    sx, sy = W / CANVAS[0], H / CANVAS[1]
+    fs = max(0.7, min(sx, sy))
     try:
-        canvas = Image.new("RGB", CANVAS, BG)
+        canvas = Image.new("RGB", (W, H), BG)
         draw = ImageDraw.Draw(canvas)
 
         # thin accent rule across the top
-        draw.rectangle([0, 0, CANVAS[0], 14], fill=ACCENT)
+        draw.rectangle([0, 0, W, max(8, round(14 * sy))], fill=ACCENT)
 
         # role pill
-        pill_font = _font(bold=True, size=30)
+        pill_font = _font(bold=True, size=round(30 * fs))
         pill_text = role.upper()
-        pad = 34
+        pad = round(34 * fs)
         pb = draw.textbbox((0, 0), pill_text, font=pill_font)
         pill_w = (pb[2] - pb[0]) + pad * 2
-        pill_h = (pb[3] - pb[1]) + 18
-        pill_x = (CANVAS[0] - pill_w) // 2
-        pill_y = 86
+        pill_h = (pb[3] - pb[1]) + round(18 * fs)
+        pill_x = (W - pill_w) // 2
+        pill_y = round(86 * sy)
         draw.rounded_rectangle([pill_x, pill_y, pill_x + pill_w, pill_y + pill_h],
                                 radius=pill_h // 2, fill=ACCENT)
-        _text_centered(draw, CANVAS[0] // 2, pill_y + 9, pill_text, pill_font, fill=WHITE)
+        _text_centered(draw, W // 2, pill_y + round(9 * fs), pill_text, pill_font, fill=WHITE)
 
         # product photo on a white card with a soft shadow
-        box = 760
-        card_w, card_h = box + 60, box + 60
-        cx = (CANVAS[0] - card_w) // 2
-        cy = 250
+        box = round(760 * sx)
+        card_w, card_h = box + round(60 * fs), box + round(60 * fs)
+        cx = (W - card_w) // 2
+        cy = round(250 * sy)
         draw.rounded_rectangle([cx + 6, cy + 12, cx + card_w + 6, cy + card_h + 12],
                                radius=28, fill=SHADOW)
         draw.rounded_rectangle([cx, cy, cx + card_w, cy + card_h], radius=28, fill=CARD_BG)
 
         photo = _load_cover(_download_image(product), box)
-        draw.rounded_rectangle([cx + 32, cy + 32, cx + card_w - 32, cy + card_h - 32],
+        inset = round(32 * fs)
+        draw.rounded_rectangle([cx + inset, cy + inset, cx + card_w - inset, cy + card_h - inset],
                                radius=18)
-        canvas.paste(photo, (cx + 32, cy + 32))
+        canvas.paste(photo, (cx + inset, cy + inset))
 
         # name + price
         name = product.get("name", "") or "—"
-        name_font = _font(bold=True, size=44)
-        body = _font(size=36)
-        lines = _wrap(draw, name, name_font, CANVAS[0] - 140)
-        y = cy + card_h + 58
-        for i, line in enumerate(lines):
-            _text_centered(draw, CANVAS[0] // 2, y, line, name_font)
-            y += 54
+        name_font = _font(bold=True, size=round(44 * fs))
+        body = _font(size=round(36 * fs))
+        lines = _wrap(draw, name, name_font, W - round(140 * fs))
+        y = cy + card_h + round(58 * sy)
+        for line in lines:
+            _text_centered(draw, W // 2, y, line, name_font)
+            y += round(54 * sy)
         price = product.get("price", "") or "Check price"
-        price_y = y + 10
-        _text_centered(draw, CANVAS[0] // 2, price_y, price, body, fill=ACCENT)
+        _text_centered(draw, W // 2, y + round(10 * sy), price, body, fill=ACCENT)
 
         # micro-branding
-        _text_centered(draw, CANVAS[0] // 2, CANVAS[1] - 64,
+        _text_centered(draw, W // 2, H - round(64 * sy),
                        "abvorn.com  ·  real research, not spec sheets", body, fill=MUTED)
 
         out = Path(output_path)
@@ -132,6 +152,71 @@ def compose_product_card(product: dict, role: str, output_path: str | Path) -> s
         return str(out)
     except Exception as e:
         logger.warning(f"ig card compose failed: {e}")
+        return None
+
+
+def compose_landscape_card(product: dict, role: str, url: str,
+                           output_path: str | Path,
+                           size: tuple[int, int]) -> str | None:
+    """Compose a landscape share card (LinkedIn / X / Facebook share sizes):
+    product photo on the left, role + name + price + URL on the right."""
+    W, H = size
+    fs = W / 1200.0
+    try:
+        canvas = Image.new("RGB", (W, H), BG)
+        draw = ImageDraw.Draw(canvas)
+
+        # thin accent rule across the top
+        draw.rectangle([0, 0, W, max(8, round(14 * fs))], fill=ACCENT)
+
+        # left: product photo on a white card
+        box = round(min(H - 220, W * 0.42))
+        card_w, card_h = box + round(60 * fs), box + round(60 * fs)
+        cx = round(50 * fs)
+        cy = round((H - card_h) / 2)
+        draw.rounded_rectangle([cx + 6, cy + 12, cx + card_w + 6, cy + card_h + 12],
+                               radius=28, fill=SHADOW)
+        draw.rounded_rectangle([cx, cy, cx + card_w, cy + card_h], radius=28, fill=CARD_BG)
+        photo = _load_cover(_download_image(product), box)
+        inset = round(32 * fs)
+        draw.rounded_rectangle([cx + inset, cy + inset, cx + card_w - inset, cy + card_h - inset],
+                               radius=18)
+        canvas.paste(photo, (cx + inset, cy + inset))
+
+        # right: role pill, name, price, URL
+        tx = cx + card_w + round(56 * fs)
+        tw = W - tx - round(56 * fs)
+
+        pill_font = _font(bold=True, size=round(28 * fs))
+        pill_text = role.upper()
+        pad = round(28 * fs)
+        pb = draw.textbbox((0, 0), pill_text, font=pill_font)
+        pill_w = (pb[2] - pb[0]) + pad * 2
+        pill_h = (pb[3] - pb[1]) + round(16 * fs)
+        draw.rounded_rectangle([tx, cy, tx + pill_w, cy + pill_h], radius=pill_h // 2, fill=ACCENT)
+        draw.text((tx + pad, cy + round(8 * fs)), pill_text, font=pill_font, fill=WHITE)
+
+        name_font = _font(bold=True, size=round(44 * fs))
+        name_lines = _wrap(draw, product.get("name", "") or "—", name_font, tw, max_lines=3)
+        y = cy + pill_h + round(26 * fs)
+        for line in name_lines:
+            draw.text((tx, y), line, font=name_font, fill=INK)
+            y += round(56 * fs)
+
+        price_font = _font(size=round(38 * fs))
+        draw.text((tx, y), product.get("price", "") or "Check price",
+                  font=price_font, fill=ACCENT)
+
+        y = H - round(64 * fs)
+        body = _font(size=round(24 * fs))
+        draw.text((tx, y), url.strip(), font=body, fill=MUTED)
+
+        out = Path(output_path)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        canvas.save(out, quality=93)
+        return str(out)
+    except Exception as e:
+        logger.warning(f"landscape card compose failed: {e}")
         return None
 
 
@@ -195,3 +280,51 @@ def compose_carousel(products: list[dict], niche: str, title: str, url: str,
         if cta_path:
             paths.append(cta_path)
     return paths
+
+
+def compose_platform_media(products: list[dict], niche: str, title: str, url: str,
+                           platform: str,
+                           cache_dir: str | Path | None = None) -> list[str]:
+    """Build real-product-photo media for any image-capable platform.
+
+    Instagram & Telegram get a vertical carousel deck (1080x1350 cards); the
+    landscape share platforms (LinkedIn, X, Facebook) get one horizontal card
+    per product at their share size; Pinterest gets 2:3 pins.  Falls back to
+    [] when no products/photo resolve, leaving the caller's Pexels path intact.
+    """
+    if not products:
+        return []
+    root = Path(cache_dir) if cache_dir \
+        else Path.home() / ".abvorn" / "exports" / platform
+    root.mkdir(parents=True, exist_ok=True)
+
+    if platform in ("instagram", "telegram"):
+        return compose_carousel(products, niche, title, url, cache_dir=root)
+
+    if platform == "pinterest":
+        pin_dir = root / "pins"
+        paths = []
+        for product in products:
+            product = dict(product)
+            product["_slug"] = niche
+            out = compose_product_card(product, product.get("role", "Overall Winner"),
+                                       pin_dir / f"pin_{product.get('index', len(paths))}.jpg",
+                                       size=PLATFORM_DIMS["pinterest"])
+            if out:
+                paths.append(out)
+        return paths
+
+    dims = PLATFORM_DIMS.get(platform)
+    if platform in LANDSCAPE_PLATFORMS and dims:
+        paths = []
+        for product in products:
+            product = dict(product)
+            product["_slug"] = niche
+            out = compose_landscape_card(product, product.get("role", "Overall Winner"),
+                                         url,
+                                         root / f"share_{product.get('index', len(paths))}.jpg",
+                                         size=dims)
+            if out:
+                paths.append(out)
+        return paths
+    return []

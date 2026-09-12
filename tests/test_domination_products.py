@@ -237,6 +237,72 @@ def test_full_carousel_compose(tmp_path, monkeypatch):
         assert Image.open(p).size == (1080, 1350)
 
 
+def test_platform_media_landscape_sizes_for_share_platforms(tmp_path, monkeypatch):
+    """LinkedIn/X/Facebook must get horizontal product-photo share cards at their
+    canonical share dimensions, not the 4:5 Instagram canvas."""
+    from abvorn.domination import instagram_cards as igc
+    from PIL import Image
+    src = tmp_path / "src.jpg"
+    Image.new("RGB", (1200, 1200), (30, 60, 200)).save(src)
+    monkeypatch.setattr(igc, "_download_image", lambda p: str(src))
+    products = [
+        {"name": "Logitech G305", "price": "$29.99", "role": "Overall Winner", "index": 0},
+    ]
+    for platform, dims in [("linkedin", (1200, 627)), ("x", (1200, 675)), ("facebook", (1200, 630))]:
+        paths = igc.compose_platform_media(
+            products, "gaming-mice", "Best Gaming Mice",
+            "https://abvorn.com/gaming-mice/", platform, cache_dir=tmp_path / platform,
+        )
+        assert paths, f"{platform} produced no media"
+        assert Image.open(paths[0]).size == dims, f"{platform}: {Image.open(paths[0]).size}"
+
+
+def test_platform_media_pinterest_is_2x3(tmp_path, monkeypatch):
+    """Pinterest pins must be 1000x1500 (2:3), the platform's recommended ratio."""
+    from abvorn.domination import instagram_cards as igc
+    from PIL import Image
+    src = tmp_path / "src.jpg"
+    Image.new("RGB", (1200, 1200), (30, 60, 200)).save(src)
+    monkeypatch.setattr(igc, "_download_image", lambda p: str(src))
+    products = [
+        {"name": "Logitech G305", "price": "$29.99", "role": "Overall Winner", "index": 0},
+        {"name": "Razer Viper Mini", "price": "$39.99", "role": "Runner-Up", "index": 1},
+    ]
+    paths = igc.compose_platform_media(
+        products, "gaming-mice", "Best Gaming Mice",
+        "https://abvorn.com/gaming-mice/", "pinterest", cache_dir=tmp_path / "pinterest",
+    )
+    assert len(paths) == 2
+    for p in paths:
+        assert Image.open(p).size == (1000, 1500), f"got {Image.open(p).size}"
+
+
+def test_platform_media_telegram_reuses_vertical_deck(tmp_path, monkeypatch):
+    """Telegram consumes the same vertical product deck as IG (1080x1350 album)."""
+    from abvorn.domination import instagram_cards as igc
+    from PIL import Image
+    src = tmp_path / "src.jpg"
+    Image.new("RGB", (1200, 1200), (30, 60, 200)).save(src)
+    monkeypatch.setattr(igc, "_download_image", lambda p: str(src))
+    products = [
+        {"name": "Logitech G305", "price": "$29.99", "role": "Overall Winner", "index": 0},
+        {"name": "Razer Viper Mini", "price": "$39.99", "role": "Runner-Up", "index": 1},
+    ]
+    paths = igc.compose_platform_media(
+        products, "gaming-mice", "Best Gaming Mice",
+        "https://abvorn.com/gaming-mice/", "telegram", cache_dir=tmp_path / "telegram",
+    )
+    assert paths
+    for p in paths:
+        assert Image.open(p).size == (1080, 1350)
+
+
+def test_platform_media_empty_without_products(tmp_path, monkeypatch):
+    from abvorn.domination import instagram_cards as igc
+    assert igc.compose_platform_media([], "gaming-mice", "t", "u", "linkedin",
+                                      cache_dir=tmp_path) == []
+
+
 def test_cinematic_resize_cover_crops_wide_image(tmp_path):
     from abvorn.domination.cinematic_filter import CinematicFilter
     from PIL import Image

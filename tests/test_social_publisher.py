@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import pytest
 
 from abvorn.domination.social_publisher import (
@@ -164,6 +167,9 @@ def test_social_publisher_posts_telegram_without_composio(publisher, monkeypatch
         def post(self, adapted, enable_preview: bool = False):
             return {"status": "posted", "platform": "telegram", "chat_id": "@abvorn"}
 
+        def post_media_group(self, media_paths, caption=""):
+            return {"status": "posted", "platform": "telegram", "chat_id": "@abvorn", "photos": len(media_paths)}
+
     monkeypatch.setattr("abvorn.deploy.social.TelegramDeployer", FakeDeployer)
     result = publisher.publish(
         {"text": "Hot take: most laptops are overpriced.\n\nFull guide: https://abvorn.com/reviews/laptops/"},
@@ -171,6 +177,93 @@ def test_social_publisher_posts_telegram_without_composio(publisher, monkeypatch
         "laptops",
     )
     assert result["status"] == "posted"
+
+
+def test_telegram_attaches_product_photos(publisher, monkeypatch, tmp_path):
+    """Telegram must send a media group when product photos exist."""
+    monkeypatch.setenv("ABVORN_SOCIAL_PUBLISH", "1")
+    monkeypatch.setenv("ABVORN_SOCIAL_PLATFORMS", "telegram")
+
+    import json
+    from PIL import Image
+
+    img = tmp_path / "card.jpg"
+    Image.new("RGB", (1080, 1350), (30, 60, 200)).save(img)
+
+    calls = {}
+
+    class FakeDeployer:
+        def post(self, adapted, enable_preview: bool = False):
+            calls["method"] = "sendMessage"
+            return {"status": "posted", "platform": "telegram", "chat_id": "@abvorn"}
+
+        def post_media_group(self, media_paths, caption=""):
+            calls["method"] = "sendMediaGroup"
+            calls["paths"] = list(media_paths)
+            calls["caption"] = caption
+            return {"status": "posted", "platform": "telegram", "chat_id": "@abvorn", "photos": len(media_paths)}
+
+    monkeypatch.setattr("abvorn.deploy.social.TelegramDeployer", FakeDeployer)
+    result = publisher.publish(
+        {"text": "Hot take: most laptops are overpriced.\n\nFull guide: https://abvorn.com/reviews/laptops/"},
+        "telegram",
+        "laptops",
+        media_paths=[str(img)],
+    )
+    assert result["status"] == "posted"
+    assert calls["method"] == "sendMediaGroup"
+    assert str(img) in calls["paths"]
+    assert "Hot take" in calls["caption"]
+
+
+def test_export_includes_media_files(publisher, tmp_path, monkeypatch):
+    """Gate-off exports must ship the composed media alongside the JSON."""
+    from PIL import Image
+
+    img = tmp_path / "share.jpg"
+    Image.new("RGB", (1200, 627), (30, 60, 200)).save(img)
+
+    monkeypatch.setattr("abvorn.domination.social_publisher.EXPORT_DIR", tmp_path / "exports")
+    result = publisher.publish(
+        {"post": "Best laptops compared.", "url": "https://abvorn.com/reviews/laptops/"},
+        "linkedin",
+        "laptops",
+        media_paths=[str(img)],
+    )
+    assert result["status"] == "exported"
+    assert len(result["media"]) == 1
+    export_path = Path(result["export_path"])
+    assert export_path.exists()
+    data = json.loads(export_path.read_text(encoding="utf-8"))
+    assert len(data["media"]) == 1
+    assert data["media_paths"]
+    # the media file must actually be copied into the export dir
+    assert (export_path.parent / data["media"][0]).exists()
+
+
+def test_publish_all_routes_per_platform_media(publisher, monkeypatch, tmp_path):
+    """media_by_platform must route each platform its own photo set."""
+    monkeypatch.setenv("ABVORN_SOCIAL_PUBLISH", "0")
+    from PIL import Image
+
+    ig = tmp_path / "ig.jpg"
+    tg = tmp_path / "tg.jpg"
+    Image.new("RGB", (1080, 1350), (1, 2, 3)).save(ig)
+    Image.new("RGB", (1080, 1350), (4, 5, 6)).save(tg)
+
+    monkeypatch.setattr("abvorn.domination.social_publisher.EXPORT_DIR", tmp_path / "exports")
+    results = publisher.publish_all(
+        {"instagram": {"text": "ig"}, "telegram": {"text": "tg"}},
+        "laptops",
+        media_by_platform={"instagram": [str(ig)], "telegram": [str(tg)]},
+    )
+    by_platform = {r["platform"]: r for r in results}
+    assert by_platform["instagram"]["media"] and by_platform["telegram"]["media"]
+    ig_export = json.loads(Path(by_platform["instagram"]["export_path"]).read_text(encoding="utf-8"))
+    assert ig_export["media_paths"] == [str(ig)]
+    tg_export = json.loads(Path(by_platform["telegram"]["export_path"]).read_text(encoding="utf-8"))
+    assert tg_export["media_paths"] == [str(tg)]
+    assert by_platform["instagram"]["export_path"] != by_platform["telegram"]["export_path"]
 
 
 @pytest.fixture

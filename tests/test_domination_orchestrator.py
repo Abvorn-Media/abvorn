@@ -28,7 +28,11 @@ class _FakeIntel:
 class _FakePublisher:
     """Publish nothing; the test only cares about target selection."""
 
-    def publish_all(self, publish_targets, niche, media_paths=None):
+    def __init__(self):
+        self.last_media_by_platform = None
+
+    def publish_all(self, publish_targets, niche, media_paths=None, media_by_platform=None):
+        self.last_media_by_platform = media_by_platform
         return [{"status": "posted", "platform": p} for p in publish_targets]
 
 
@@ -103,6 +107,49 @@ def _entries():
             "sentiment": "positive",
         },
     ]
+
+
+def test_cycle_builds_media_for_all_image_platforms(learn_db, tmp_path, monkeypatch):
+    """When products resolve, real product-photo media must be composed for every
+    image-capable platform in the run (not just Instagram), each at its own size."""
+    from abvorn.domination import instagram_cards as igc
+    from abvorn.domination import product_assets as pa
+    from PIL import Image
+
+    src = tmp_path / "src.jpg"
+    Image.new("RGB", (1200, 1200), (30, 60, 200)).save(src)
+    monkeypatch.setattr(igc, "_download_image", lambda p: str(src))
+
+    def _fake_products(slug):
+        return [{
+            "name": "Dell XPS 13",
+            "price": "$1,099",
+            "role": "Overall Winner",
+            "index": 0,
+            "image": "https://example.invalid/xps.jpg",
+        }]
+
+    monkeypatch.setattr(pa, "load_products_for_niche", _fake_products)
+
+    orch = _make_orchestrator(_entries(), learn_db)
+    orch.publisher = _FakePublisher()
+
+    result = orch.run_cycle(platforms=["instagram", "telegram", "linkedin", "x", "pinterest"])
+    media_by_platform = orch.publisher.last_media_by_platform
+    assert media_by_platform, "publisher got no per-platform media"
+    assert "instagram" in media_by_platform and media_by_platform["instagram"]
+    assert "telegram" in media_by_platform and media_by_platform["telegram"]
+    assert "linkedin" in media_by_platform and media_by_platform["linkedin"]
+    assert "x" in media_by_platform and media_by_platform["x"]
+    assert "pinterest" in media_by_platform and media_by_platform["pinterest"]
+
+    sizes = {p: Image.open(media_by_platform[p][0]).size for p in media_by_platform}
+    assert sizes["linkedin"] == (1200, 627)
+    assert sizes["x"] == (1200, 675)
+    assert sizes["pinterest"] == (1000, 1500)
+    assert sizes["instagram"] == (1080, 1350)
+    assert sizes["telegram"] == (1080, 1350)
+    assert result["steps"]["assets"]["source"] == "review_product_photos"
 
 
 def test_cycle_picks_top_unposted_entry_on_second_run(learn_db):
