@@ -28,7 +28,7 @@
             }
           ]
         },
-
+        "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({}) }}",
@@ -59,44 +59,30 @@
     },
     {
       "parameters": {
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "value": "1bNNoYcFFIUe0ZCdj9iAwvFbvgTLc5fRcgD26mZLzmdM",
-          "mode": "list",
-          "cachedResultName": "GSC Weekly",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bNNoYcFFIUe0ZCdj9iAwvFbvgTLc5fRcgD26mZLzmdM/edit?usp=drivesdk"
+        "method": "POST",
+        "url": "={{ $env.ABVORN_URL }}/webhook/abvorn/gsc_append",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.ABVORN_WEBHOOK_TOKEN }}"
+            }
+          ]
         },
-        "sheetName": {
-          "__rl": true,
-          "value": "Sheet1",
-          "mode": "name"
-        },
-        "columns": {
-          "mappingMode": "autoMapInputData",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {},
-        "resource": "sheet"
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ row: $json }) }}",
+        "options": {}
       },
       "id": "sheets",
       "name": "Append to Sheet",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         560,
         0
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "IUdYYk9fxMf3Ajgo",
-          "name": "Google Sheets account"
-        }
-      }
+      ]
     }
   ],
   "connections": {

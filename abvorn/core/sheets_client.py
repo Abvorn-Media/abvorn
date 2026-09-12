@@ -31,6 +31,8 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive.readonly",
 ]
 
+WRITE_SCOPES = SCOPES + ["https://www.googleapis.com/auth/spreadsheets"]
+
 
 def _load_service_account_info() -> Optional[dict]:
     """Return parsed service-account JSON from env file or GA4 secret, else None."""
@@ -100,3 +102,48 @@ class AbvornSheets:
     def list_tabs(self, spreadsheet_id: str) -> List[str]:
         sh = self.open(spreadsheet_id)
         return [ws.title for ws in sh.worksheets()]
+
+
+def append_rows(
+    spreadsheet_id: str,
+    rows: List[dict],
+    worksheet: str = "Sheet1",
+    credentials: Optional[dict] = None,
+) -> int:
+    """Append dict rows to a spreadsheet tab using write-scoped service account.
+
+    Column order follows the keys of the first row dict. This is the
+    non-interactive path (no OAuth consent, no expiring refresh tokens), so the
+    n8n GSC Analysis workflow can keep writing its daily summary without
+    depending on a browser-authorized credential.
+
+    Returns the number of rows appended. Raises on auth/sharing/network
+    failures so callers can surface the error.
+    """
+    creds = credentials if credentials is not None else _load_service_account_info()
+    if not creds:
+        raise RuntimeError(
+            "No service-account credentials available. Set ABVORN_SERVICE_ACCOUNT "
+            "to the JSON key path, or configure GA4_CREDENTIALS_JSON."
+        )
+    if not rows:
+        logger.warning("append_rows called with no rows (spreadsheet %s)", spreadsheet_id)
+        return 0
+    import gspread
+    from google.oauth2.service_account import Credentials
+
+    gc = gspread.authorize(
+        Credentials.from_service_account_info(creds).with_scopes(WRITE_SCOPES)
+    )
+    ws = gc.open_by_key(spreadsheet_id).worksheet(worksheet)
+    if isinstance(rows[0], dict):
+        headers = list(rows[0].keys())
+        values = [
+            [row.get(h, "") if isinstance(row, dict) else "" for h in headers]
+            for row in rows
+        ]
+    else:
+        values = [list(r) if isinstance(r, (list, tuple)) else [r] for r in rows]
+    ws.append_rows(values, value_input_option="USER_ENTERED")
+    logger.info("Appended %d rows to '%s'/'%s'", len(rows), spreadsheet_id, worksheet)
+    return len(rows)

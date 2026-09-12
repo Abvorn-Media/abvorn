@@ -41,6 +41,11 @@ PUBLIC_API_PATHS = {
 
 _API_TOKEN = os.environ.get("ABVORN_API_TOKEN", "") or secrets.get("ABVORN_API_TOKEN", "")
 
+# GSC summary spreadsheet that the n8n GSC Analysis workflow appends to. Written
+# via the service account (abvorn.core.sheets_client) so the pipeline does not
+# depend on browser-authorized OAuth credentials that expire.
+_GSC_SUMMARY_SHEET_ID = "1bNNoYcFFIUe0ZCdj9iAwvFbvgTLc5fRcgD26mZLzmdM"
+
 # Defense-in-depth: the most dangerous endpoints (arbitrary shell execution and
 # arbitrary file writes) are masked UNLESS explicitly opted in at startup, even
 # when a token is set. A leaked/weak token must not expose remote code execution.
@@ -567,8 +572,8 @@ async def video_render_task(task_id: str):
 async def abvorn_webhook(action: str, request: Request):
     """Webhook endpoint for n8n to trigger Abvorn actions.
 
-    Actions: generate_reflection, publish_content, gsc_fetch,
-    evolution_check, journal_update.
+    Actions: generate_reflection, publish_content, gsc_fetch, gsc_append,
+    evolution_check, journal_update, render_video.
 
     Authenticated: requires a Bearer token in the Authorization header
     matching ABVORN_API_TOKEN or ABVORN_WEBHOOK_TOKEN. Fail-closed — if no
@@ -621,6 +626,31 @@ async def abvorn_webhook(action: str, request: Request):
         ingest = GSCIngestor().ingest_performance(30)
         summary = client.get_summary()
         return {"success": True, "ingest": ingest, **summary}
+
+    if action == "gsc_append":
+        from abvorn.core.sheets_client import append_rows
+
+        spreadsheet_id = (
+            data.get("spreadsheet_id")
+            or os.environ.get("ABVORN_GSC_SHEET_ID")
+            or secrets.get("ABVORN_GSC_SHEET_ID")
+            or _GSC_SUMMARY_SHEET_ID
+        )
+        worksheet = data.get("worksheet") or "Sheet1"
+        row = data.get("row")
+        rows = data.get("rows")
+        if rows is None and row is not None:
+            rows = [row]
+        if not isinstance(rows, list) or not rows:
+            return {"success": False, "error": "gsc_append: no row data"}
+        try:
+            appended = append_rows(str(spreadsheet_id), rows, worksheet=str(worksheet))
+        except Exception as e:
+            logger.error("gsc_append failed: %s", e)
+            return JSONResponse(
+                {"success": False, "error": f"gsc_append failed: {e}"}, status_code=500
+            )
+        return {"success": True, "rows_appended": appended}
 
     if action == "evolution_check":
         from abvorn.core.genesis_protocol import GenesisProtocol

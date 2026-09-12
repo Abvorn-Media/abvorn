@@ -278,6 +278,102 @@ def test_gsc_fetch_webhook_runs_ingest_and_returns_summary(monkeypatch):
     assert body["total_clicks"] == 12
 
 
+def test_gsc_append_webhook_appends_row(monkeypatch):
+    """gsc_append hands a normalized row to the service-account sheet writer.
+
+    The sheet write must go through the non-interactive service account so the
+    daily GSC summary no longer depends on expiring OAuth refresh tokens.
+    """
+    import os
+
+    import mobile_server
+    from fastapi.testclient import TestClient
+
+    calls = {}
+
+    def fake_append_rows(spreadsheet_id, rows, worksheet="Sheet1"):
+        calls["spreadsheet_id"] = spreadsheet_id
+        calls["rows"] = rows
+        calls["worksheet"] = worksheet
+        return len(rows)
+
+    monkeypatch.setattr("abvorn.core.sheets_client.append_rows", fake_append_rows)
+
+    os.environ["ABVORN_WEBHOOK_TOKEN"] = "test-webhook-token"
+    client = TestClient(mobile_server.app)
+    headers = {"Authorization": "Bearer test-webhook-token"}
+    row = {"date": "2026-09-12", "clicks": 5, "impressions": 120,
+           "ctr": 0.0416, "avgPosition": 3.2, "property": "sc-domain:abvorn.com",
+           "source": "gsc"}
+    response = client.post("/webhook/abvorn/gsc_append", json={"row": row}, headers=headers)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+    assert body["rows_appended"] == 1
+    assert calls["rows"] == [row]
+    assert calls["worksheet"] == "Sheet1"
+    assert isinstance(calls["spreadsheet_id"], str) and calls["spreadsheet_id"]
+
+
+def test_gsc_append_webhook_error_surfaces_500(monkeypatch):
+    """A sheet-write failure must error the n8n node so the watchdog notices."""
+    import os
+
+    import mobile_server
+    from fastapi.testclient import TestClient
+
+    def raise_permission_error(*args, **kwargs):
+        raise PermissionError("no write access")
+
+    monkeypatch.setattr("abvorn.core.sheets_client.append_rows", raise_permission_error)
+
+    os.environ["ABVORN_WEBHOOK_TOKEN"] = "test-webhook-token"
+    client = TestClient(mobile_server.app)
+    headers = {"Authorization": "Bearer test-webhook-token"}
+    response = client.post("/webhook/abvorn/gsc_append",
+                           json={"row": {"date": "x", "clicks": 1, "impressions": 2}},
+                           headers=headers)
+    assert response.status_code == 500
+    assert response.json()["success"] is False
+
+
+def test_gsc_append_webhook_requires_row(monkeypatch):
+    """Empty payload must not hit the sheet writer."""
+    import os
+
+    import mobile_server
+    from fastapi.testclient import TestClient
+
+    called = {"n": 0}
+
+    def fake_append_rows(*args, **kwargs):
+        called["n"] += 1
+        return 1
+
+    monkeypatch.setattr("abvorn.core.sheets_client.append_rows", fake_append_rows)
+
+    os.environ["ABVORN_WEBHOOK_TOKEN"] = "test-webhook-token"
+    client = TestClient(mobile_server.app)
+    headers = {"Authorization": "Bearer test-webhook-token"}
+    response = client.post("/webhook/abvorn/gsc_append", json={}, headers=headers)
+    assert response.status_code == 200
+    assert response.json()["success"] is False
+    assert called["n"] == 0
+
+
+def test_gsc_analysis_workflow_no_longer_uses_google_oauth():
+    """The GSC Analysis workflow must append via the service account webhook,
+    not the expiring googleSheets OAuth credential."""
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    path = repo / "n8n" / "workflows" / "abvorn-gsc-analysis.json"
+    text = path.read_text(encoding="utf-8")
+    assert "/webhook/abvorn/gsc_append" in text
+    assert "googleSheets" not in text
+    assert "IUdYYk9fxMf3Ajgo" not in text
+
+
 def test_webhook_rejects_unauthenticated_request():
     """Webhooks are a write/publish surface and must fail closed without a token."""
     import mobile_server
