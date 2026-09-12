@@ -1,6 +1,6 @@
 """Abvorn daemon — runs all agents continuously."""
 
-import asyncio, logging, json, uuid
+import asyncio, logging, json, subprocess, sys, uuid
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -411,9 +411,27 @@ class AbvornDaemon:
                 logger.info("GSC ingestion: %s", result.get("status"))
                 if result.get("status") in ("success", "no_data_yet"):
                     self.state.set_meta("gsc_last_run", datetime.now().isoformat())
+                    asyncio.create_task(self._win_trigger_check())
             except Exception as e:
                 logger.warning("GSC ingestion error (non-fatal): %s", e)
             await asyncio.sleep(43200)
+
+    async def _win_trigger_check(self):
+        """Fire the win.sh data->signal bridge after fresh GSC ingestion.
+        Non-fatal: skips when .win is not provisioned or win CLI is missing."""
+        script = Path(__file__).resolve().parents[1] / "scripts" / "win_trigger.py"
+        if not script.exists():
+            return
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                sys.executable, str(script), "--loop", "seo-growth",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            out, _ = await asyncio.wait_for(proc.communicate(), timeout=120)
+            logger.info("win_trigger: %s", out.decode(errors="replace").strip()[-200:])
+        except Exception as e:
+            logger.warning("win_trigger check error (non-fatal): %s", e)
 
     async def _domination_loop(self):
         """Run domination cycle every 4 hours (or on bus signal), aligned to

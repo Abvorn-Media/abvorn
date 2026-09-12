@@ -12,6 +12,23 @@ This repo has win.sh business loops installed. The most recently installed loop 
 - Record proof with `win artifact attach` or accept detected proof with `win artifact accept` after execution.
 <!-- win-loops:end -->
 
+### Loop triggers
+
+Loops never fire on their own — a data -> signal bridge must create a run brief.
+`scripts/win_trigger.py` is that bridge for `seo-growth`: it reads
+`data/gsc_latest_summary.json` and only runs `win run seo-growth
+--trigger signal` when the loop's minimum-evidence threshold is crossed
+(>=100 impressions or >=20 clicks over the window). It skips when evidence is
+below threshold or a run is already pending, so daily runs produce no spam.
+
+- Scheduled daily at 08:30 via Windows Task Scheduler task `Abvorn Win Trigger`
+  (`scripts/win_trigger.cmd`).
+- Also fired after a successful GSC ingest from the daemon
+  (`abvorn/daemon.py::_win_trigger_check`).
+- All signals must be **ASCII-only**: non-ASCII characters passed through the
+  Windows ANSI codepage get double-encoded to mojibake in the win.sh JSONL
+  ledgers (same failure mode as the published pages).
+
 ## Publishing: always check generated content before commit
 
 Mojibake (double-encoded UTF-8, e.g. `â€"` instead of `—`) has shipped to the
