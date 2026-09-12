@@ -118,3 +118,59 @@ def test_record_posting_time_at_buckets_by_datetime(learn_db):
     assert times[0]["hour"] == 14
     assert times[0]["sample_size"] == 2
     assert times[0]["avg_engagement"] == 10.0
+
+
+def test_alignment_delay_zero_on_empty_db(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    assert sle.next_alignment_delay() == 0
+
+
+def test_alignment_delay_returns_wait_until_best_hour(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    from datetime import datetime
+    # Thursday 14:00 was the learned best hour (multiple samples)
+    when = datetime(2026, 9, 10, 14, 0)
+    for _ in range(3):
+        sle.record_posting_time_at("laptops", "x", 10.0, when)
+    # Now it's Thursday 10:00 → 4h away
+    now = datetime(2026, 9, 10, 10, 0)
+    assert sle.next_alignment_delay(now=now, max_lookahead_hours=6) == 4 * 3600
+
+
+def test_alignment_delay_zero_if_best_hour_passed(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    from datetime import datetime
+    when = datetime(2026, 9, 10, 14, 0)
+    for _ in range(3):
+        sle.record_posting_time_at("laptops", "x", 10.0, when)
+    now = datetime(2026, 9, 10, 15, 0)  # past the best hour
+    assert sle.next_alignment_delay(now=now, max_lookahead_hours=6) == 0
+
+
+def test_alignment_delay_bounded_by_lookahead(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    from datetime import datetime
+    when = datetime(2026, 9, 10, 14, 0)
+    for _ in range(3):
+        sle.record_posting_time_at("laptops", "x", 10.0, when)
+    now = datetime(2026, 9, 10, 6, 0)  # 8h away > 6h lookahead
+    assert sle.next_alignment_delay(now=now, max_lookahead_hours=6) == 0
+
+
+def test_alignment_delay_ignores_weak_data(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    from datetime import datetime
+    when = datetime(2026, 9, 10, 14, 0)
+    sle.record_posting_time_at("laptops", "x", 10.0, when)  # 1 sample only
+    now = datetime(2026, 9, 10, 10, 0)
+    assert sle.next_alignment_delay(now=now, min_samples=3) == 0
+
+
+def test_alignment_delay_this_weekday_only(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    from datetime import datetime
+    friday = datetime(2026, 9, 11, 14, 0)  # different weekday
+    for _ in range(3):
+        sle.record_posting_time_at("laptops", "x", 10.0, friday)
+    thursday_now = datetime(2026, 9, 10, 10, 0)
+    assert sle.next_alignment_delay(now=thursday_now, max_lookahead_hours=6) == 0

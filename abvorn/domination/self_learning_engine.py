@@ -284,6 +284,45 @@ class SelfLearningEngine:
             """, (niche, platform, limit)).fetchall()
             return [dict(r) for r in rows]
 
+    def next_alignment_delay(self, now: datetime | None = None,
+                             max_lookahead_hours: float = 6.0,
+                             min_samples: int = 3) -> int:
+        """Seconds to wait until today's best learned posting hour.
+
+        Aggregates posting_insights across all niches/platforms for today's
+        day-of-week, weights engagement by sample size, and picks the best
+        hour. Returns 0 when:
+          - no credible data yet (total samples < min_samples),
+          - the best hour already passed today,
+          - the best hour is farther out than max_lookahead_hours
+            (so the 4h cadence is never starved by an alignment).
+        """
+        now = now or datetime.now()
+        day = now.strftime("%A")
+        with sqlite3.connect(str(self.db_path)) as conn:
+            row = conn.execute("""
+                SELECT hour,
+                       SUM(avg_engagement * sample_size) * 1.0 / SUM(sample_size)
+                           AS weighted_eng,
+                       SUM(sample_size) AS total_samples
+                FROM posting_insights
+                WHERE day_of_week = ?
+                GROUP BY hour
+                HAVING total_samples >= ?
+                ORDER BY weighted_eng DESC
+                LIMIT 1
+            """, (day, min_samples)).fetchone()
+        if not row:
+            return 0
+        hour, _, _ = row
+        target = now.replace(hour=hour, minute=0, second=0, microsecond=0)
+        if target <= now:
+            return 0  # inside/already past the best hour today
+        delay = (target - now).total_seconds()
+        if delay > max_lookahead_hours * 3600:
+            return 0
+        return int(delay)
+
     def hook_performance_summary(self, niche: str) -> dict:
         with sqlite3.connect(str(self.db_path)) as conn:
             total = conn.execute(

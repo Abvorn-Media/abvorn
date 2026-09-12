@@ -416,19 +416,47 @@ class AbvornDaemon:
             await asyncio.sleep(43200)
 
     async def _domination_loop(self):
-        """Run domination cycle every 4 hours (or on bus signal)."""
+        """Run domination cycle every 4 hours (or on bus signal), aligned to
+        today's best learned posting hour when the learner has real data."""
         while self.running:
+            if self.is_paused():
+                await asyncio.sleep(600)
+                continue
             last_run = self.state.get_meta("domination_last_run", "")
             if last_run:
-                last_time = datetime.fromisoformat(last_run)
-                elapsed = datetime.now() - last_time
-                if elapsed < timedelta(hours=4):
+                try:
+                    last_time = datetime.fromisoformat(last_run)
+                except ValueError:
+                    last_time = None
+                if last_time and datetime.now() - last_time < timedelta(hours=4):
                     await asyncio.sleep(600)
                     continue
+            align_delay = await self._domination_alignment_delay()
+            if align_delay > 0:
+                logger.info(
+                    "Domination aligned: waiting %ds for learned best posting hour",
+                    align_delay,
+                )
+                remaining = align_delay
+                while remaining > 0 and self.running:
+                    await asyncio.sleep(min(600, remaining))
+                    remaining -= 600
             result = await self.run_domination_cycle()
             if result.get("status") == "complete":
                 self.state.set_meta("domination_last_run", datetime.now().isoformat())
             await asyncio.sleep(14400)
+
+    async def _domination_alignment_delay(self) -> int:
+        """Ask the learner for the wait until today's best posting hour.
+        Non-fatal: any failure → 0 (plain 4h cadence)."""
+        learner = getattr(getattr(self, "domination", None), "learner", None)
+        if learner is None:
+            return 0
+        try:
+            return await asyncio.to_thread(learner.next_alignment_delay)
+        except Exception as e:
+            logger.warning("Domination alignment lookup failed (non-fatal): %s", e)
+            return 0
 
     async def _full_cycle_loop(self):
         """Run the trend-driven full cycle (discover -> create page -> post
