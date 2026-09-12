@@ -134,30 +134,129 @@ class SelfLearningEngine:
 
     def record_posting_time(self, niche: str, platform: str,
                             engagement: float):
-        now = datetime.now()
-        day = now.strftime("%A")
-        hour = now.hour
         with sqlite3.connect(str(self.db_path)) as conn:
-            existing = conn.execute("""
-                SELECT avg_engagement, sample_size FROM posting_insights
+            self._record_posting_time(conn, niche, platform, datetime.now(),
+                                      engagement)
+
+    def record_posting_time_at(self, niche: str, platform: str,
+                               engagement: float, when: datetime):
+        """Record a posting insight for a specific posted_at datetime, so
+        historical content (old cycles, GA4 feedback) lands in the right
+        day/hour bucket instead of today's."""
+        with sqlite3.connect(str(self.db_path)) as conn:
+            self._record_posting_time(conn, niche, platform, when, engagement)
+
+    def _record_posting_time(self, conn, niche: str, platform: str,
+                             when: datetime, engagement: float):
+        day = when.strftime("%A")
+        hour = when.hour
+        existing = conn.execute("""
+            SELECT avg_engagement, sample_size FROM posting_insights
+            WHERE niche = ? AND platform = ? AND day_of_week = ? AND hour = ?
+        """, (niche, platform, day, hour)).fetchone()
+        if existing:
+            avg, n = existing
+            new_avg = (avg * n + engagement) / (n + 1)
+            conn.execute("""
+                UPDATE posting_insights SET
+                    avg_engagement = ?, sample_size = ?,
+                    last_updated = datetime('now')
                 WHERE niche = ? AND platform = ? AND day_of_week = ? AND hour = ?
-            """, (niche, platform, day, hour)).fetchone()
-            if existing:
-                avg, n = existing
-                new_avg = (avg * n + engagement) / (n + 1)
-                conn.execute("""
-                    UPDATE posting_insights SET
-                        avg_engagement = ?, sample_size = ?,
-                        last_updated = datetime('now')
-                    WHERE niche = ? AND platform = ? AND day_of_week = ? AND hour = ?
-                """, (new_avg, n + 1, niche, platform, day, hour))
-            else:
-                conn.execute("""
-                    INSERT INTO posting_insights
-                        (niche, platform, day_of_week, hour, avg_engagement)
-                    VALUES (?, ?, ?, ?, ?)
-                """, (niche, platform, day, hour, engagement))
-            conn.commit()
+            """, (new_avg, n + 1, niche, platform, day, hour))
+        else:
+            conn.execute("""
+                INSERT INTO posting_insights
+                    (niche, platform, day_of_week, hour, avg_engagement)
+                VALUES (?, ?, ?, ?, ?)
+            """, (niche, platform, day, hour, engagement))
+        conn.commit()
+
+    def feed_ga4_engagement(self, analytics_by_slug: dict,
+                            clicks_by_slug: dict | None = None,
+                            site_url: str = "") -> int:
+        """Close the learning loop: map real GA4 page metrics onto the hooks
+        and posting times we actually recorded.
+
+        For every content_performance row (a URL we posted), look up the
+        page's views/users from GA4 and its affiliate clicks, then:
+          1. accumulate them into the matching hook_tests row
+             (impressions=views, likes=users, clicks=affiliate clicks) so
+             best_hooks() reflects real measured traction, and
+          2. fold the engagement into posting_insights under the _actual_
+             posted_at day/hour (record_posting_time_at), not "today".
+
+        Slugs are derived exactly like pull_ga4_analytics(): the first path
+        segment after the site's base path. Pass the site URL so the base
+        path (e.g. https://abvorn.com/reviews) is stripped the same way.
+
+        Returns the number of content rows consumed.
+        """
+        clicks_by_slug = clicks_by_slug or {}
+        if not analytics_by_slug:
+            return 0
+
+        from urllib.parse import urlparse
+
+        base_path = urlparse(site_url).path.rstrip("/")
+
+        def _slug(url: str) -> str:
+            u = urlparse(url)
+            path = u.path
+            if base_path and path.startswith(base_path + "/"):
+                path = path[len(base_path):]
+            parts = [p for p in path.strip("/").split("/") if p]
+            return parts[0] if parts else ""
+
+        consumed = 0
+        with sqlite3.connect(str(self.db_path)) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                "SELECT post_url, niche, platform, hook_used, posted_at "
+                "FROM content_performance ORDER BY id"
+            ).fetchall()
+            for row in rows:
+                slug = _slug(row["post_url"] or "")
+                ga = analytics_by_slug.get(slug)
+                if not ga:
+                    continue
+                views = int(ga.get("views", 0))
+                users = int(ga.get("users", 0))
+                clicks = int((clicks_by_slug.get(slug) or {}).get("clicks", 0))
+                engagement = float(views + users * 2 + clicks * 10)
+
+                hook_id = self._latest_hook_id(conn, row)
+                if hook_id is not None:
+                    self.record_engagement(
+                        hook_id,
+                        impressions=views or 1,
+                        likes=users,
+                        clicks=clicks,
+                    )
+
+                posted_at = row["posted_at"]
+                try:
+                    if not posted_at:
+                        when = datetime.now()
+                    else:
+                        when = datetime.fromisoformat(posted_at.strip().replace(" ", "T"))
+                except ValueError:
+                    when = datetime.now()
+                self._record_posting_time(conn, row["niche"], row["platform"],
+                                          when, engagement)
+                consumed += 1
+        return consumed
+
+    def _latest_hook_id(self, conn, perf_row) -> int | None:
+        """The most recent hook_tests row that matches a content_performance row."""
+        hook = perf_row["hook_used"]
+        if not hook:
+            return None
+        found = conn.execute("""
+            SELECT id FROM hook_tests
+            WHERE hook_text = ? AND niche = ? AND platform = ?
+            ORDER BY id DESC LIMIT 1
+        """, (hook, perf_row["niche"], perf_row["platform"])).fetchone()
+        return found["id"] if found else None
 
     def best_hooks(self, niche: str, platform: str, limit: int = 5) -> list[dict]:
         with sqlite3.connect(str(self.db_path)) as conn:

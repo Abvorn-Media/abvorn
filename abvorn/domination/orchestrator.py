@@ -132,7 +132,8 @@ class DominationOrchestrator:
             if persona:
                 logger.info(f"[{cycle_id}] Persona: {persona.get('name', '')} ({target.get('niche', '')})")
             scripts = self.script_gen.generate(
-                target, platforms=platforms, products=products, persona=persona
+                target, platforms=platforms, products=products, persona=persona,
+                learner=self.learner,
             )
             steps["scripts"] = {
                 "status": "ok",
@@ -244,7 +245,9 @@ class DominationOrchestrator:
                     sentiment=target.get("sentiment", "neutral"),
                     virality_score=target.get("virality_score", 0),
                 )
-            self.learner.record_posting_time(target["niche"], "blog", target["virality_score"])
+                self.learner.record_posting_time(
+                    target["niche"], platform_key, target.get("virality_score", 0)
+                )
             steps["learning"] = {"status": "ok"}
             logger.info(f"[{cycle_id}] Learning data recorded")
         except Exception as e:

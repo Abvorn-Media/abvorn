@@ -195,6 +195,35 @@ def test_no_persona_keeps_generic_copy():
     assert out.get("hook", "")  # generic template hook used
 
 
+class _FakeLearner:
+    def __init__(self, hooks):
+        self._hooks = hooks
+
+    def best_hooks(self, niche, platform, limit=3):
+        return self._hooks
+
+
+def test_learner_prepends_winning_hooks_to_variants():
+    gen = vsg.ViralScriptGenerator()
+    post = {"title": "Best Gaming Mice", "niche": "gaming-mice", "summary": "",
+            "url": "https://abvorn.com/gaming-mice/", "hooks": {}}
+    winner = {"hook_text": "This mouse wins rounds before it leaves the box", "score": 4.2}
+    loser = {"hook_text": "A boring hook that tested poorly", "score": 0}
+    learner = _FakeLearner([winner, loser])
+    out = gen.generate(post, platforms=["x"], learner=learner)["x"]
+    variants = out["hook_variants"]
+    assert winner["hook_text"] in variants
+    assert loser["hook_text"] not in variants  # score <= 0 filtered out
+
+
+def test_learner_absent_generates_normally():
+    gen = vsg.ViralScriptGenerator()
+    post = {"title": "Best Gaming Mice", "niche": "gaming-mice", "summary": "",
+            "url": "https://abvorn.com/gaming-mice/", "hooks": {}}
+    out = gen.generate(post, platforms=["x"])
+    assert out["x"]["hook_variants"]
+
+
 def test_ig_card_is_1080x1350_with_no_padding(tmp_path, monkeypatch):
     from abvorn.domination import instagram_cards as igc
 

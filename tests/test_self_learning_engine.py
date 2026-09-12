@@ -37,3 +37,84 @@ def test_post_urls_roundtrip_via_record(learn_db):
         platform="x",
     )
     assert sle.posted_urls() == {"https://abvorn.com/reviews/laptops/"}
+def test_best_hooks_empty_before_ga4_feedback(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    sle.record_hook_test("Buy now", "laptops", "x")
+    assert sle.best_hooks("laptops", "x") == []
+    # posting insights column absent until real engagement feeds in
+    assert sle.best_posting_times("laptops", "x") == []
+
+
+def test_feed_ga4_engagement_updates_hook_and_posting(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    sle.record_hook_test("We compared 6 laptops", "laptops", "x")
+    sle.record_post_performance(
+        url="https://abvorn.com/reviews/laptops/",
+        niche="laptops",
+        platform="x",
+        hook="We compared 6 laptops",
+    )
+    fed = sle.feed_ga4_engagement(
+        {"laptops": {"views": 120, "users": 30}},
+        {"laptops": {"clicks": 4}},
+        site_url="https://abvorn.com/reviews",
+    )
+    assert fed == 1
+    best = sle.best_hooks("laptops", "x")
+    assert best and best[0]["impressions"] >= 120
+    assert best[0]["clicks"] == 4
+    assert best[0]["score"] > 0
+    import sqlite3
+    with sqlite3.connect(learn_db) as conn:
+        row = conn.execute(
+            "SELECT sample_size, avg_engagement FROM posting_insights "
+            "WHERE niche='laptops' AND platform='x'"
+        ).fetchone()
+    assert row is not None
+    assert row[0] == 1
+    assert row[1] == 120 + 30 * 2 + 4 * 10  # views + 2*users + 10*clicks
+
+
+def test_feed_ga4_skips_unknown_slug(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    sle.record_post_performance(
+        url="https://abvorn.com/reviews/mice/",
+        niche="mice",
+        platform="x",
+        hook="hook A",
+    )
+    fed = sle.feed_ga4_engagement(
+        {"keyboards": {"views": 5}}, {}, site_url="https://abvorn.com/reviews"
+    )
+    assert fed == 0
+
+
+def test_feed_ga4_matches_latest_hook_variant(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    sle.record_hook_test("Old hook", "laptops", "x")
+    sle.record_hook_test("New hook", "laptops", "x")
+    sle.record_post_performance(
+        url="https://abvorn.com/reviews/laptops/",
+        niche="laptops",
+        platform="x",
+        hook="New hook",
+    )
+    sle.feed_ga4_engagement(
+        {"laptops": {"views": 50, "users": 10}}, {}, site_url="https://abvorn.com/reviews"
+    )
+    best = sle.best_hooks("laptops", "x")
+    assert len(best) == 1 and best[0]["hook_text"] == "New hook"
+
+
+def test_record_posting_time_at_buckets_by_datetime(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    from datetime import datetime
+    when = datetime(2026, 9, 10, 14, 30)
+    sle.record_posting_time_at("laptops", "x", 5.0, when)
+    sle.record_posting_time_at("laptops", "x", 15.0, when)
+    times = sle.best_posting_times("laptops", "x")
+    assert len(times) == 1
+    assert times[0]["day_of_week"] == "Thursday"
+    assert times[0]["hour"] == 14
+    assert times[0]["sample_size"] == 2
+    assert times[0]["avg_engagement"] == 10.0

@@ -75,12 +75,13 @@ class ViralScriptGenerator:
 
     def generate(self, post: dict, platforms: list[str] | None = None,
                  products: list[dict] | None = None,
-                 persona: dict | None = None) -> dict:
+                 persona: dict | None = None,
+                 learner=None) -> dict:
         targets = platforms or list(PLATFORM_SPECS.keys())
         result = {}
         for platform in targets:
             result[platform] = self._generate_for_platform(
-                post, platform, products=products, persona=persona
+                post, platform, products=products, persona=persona, learner=learner
             )
         self._history.append({
             "post_title": post.get("title", ""),
@@ -91,7 +92,8 @@ class ViralScriptGenerator:
 
     def _generate_for_platform(self, post: dict, platform: str,
                                products: list[dict] | None = None,
-                               persona: dict | None = None) -> dict:
+                               persona: dict | None = None,
+                               learner=None) -> dict:
         spec = PLATFORM_SPECS.get(platform, PLATFORM_SPECS["x"])
         title = post.get("title", "New Post")
         niche = post.get("niche", "product")
@@ -114,6 +116,9 @@ class ViralScriptGenerator:
             # Honest, product-first hook — references the real comparison set.
             count = len(products)
             hook_variants.insert(0, f"We compared {count} {_humanize_niche(niche)}. Here's what we'd actually buy.")
+        learned_hooks = self._learned_hooks(learner, niche, platform)
+        if learned_hooks:
+            hook_variants = learned_hooks + hook_variants
         persona_variants = self._persona_hooks(niche, persona, len(products or []))
         if persona_variants:
             hook_variants = persona_variants + hook_variants
@@ -166,6 +171,23 @@ class ViralScriptGenerator:
 
         hooks.append(title[:120])
         return list(dict.fromkeys(hooks))[:5]
+
+    def _learned_hooks(self, learner, niche: str, platform: str) -> list[str]:
+        """Reuse hooks that already performed on this niche+platform.
+
+        The learner's best_hooks() only ranks hooks with measured impressions,
+        so nothing is returned until real GA4 feedback lands."""
+        if not learner:
+            return []
+        try:
+            best = learner.best_hooks(niche, platform, limit=3)
+        except Exception as e:
+            logger.warning(f"best_hooks lookup failed (non-fatal): {e}")
+            return []
+        return [
+            b.get("hook_text", "") for b in best
+            if b.get("hook_text") and b.get("score", 0) > 0
+        ]
 
     def _persona_hooks(self, niche: str, persona: dict | None,
                        product_count: int = 0) -> list[str]:

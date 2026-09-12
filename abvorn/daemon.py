@@ -490,6 +490,18 @@ class AbvornDaemon:
                 clicks = await asyncio.to_thread(pull_ga4_affiliate_clicks, self.secrets, 28)
                 apply_analytics_feedback(self.state, analytics)
 
+                fed = 0
+                learner = getattr(self.domination, "learner", None)
+                if learner is not None:
+                    try:
+                        fed = await asyncio.to_thread(
+                            learner.feed_ga4_engagement, analytics, clicks,
+                            self.secrets.get("SITE_URL", ""),
+                        )
+                        logger.info("Self-learning fed %d content rows from GA4", fed)
+                    except Exception as e:
+                        logger.warning("Self-learning GA4 feed failed (non-fatal): %s", e)
+
                 clicks_total = sum(
                     v.get("clicks", 0) for v in clicks.values()
                 ) if isinstance(clicks, dict) else 0
