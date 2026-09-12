@@ -39,6 +39,63 @@ def test_slug_from_url_reviews_nested():
     assert pa.slug_from_url("https://abvorn.com/reviews/gaming-mice/") == "gaming-mice"
 
 
+def test_slug_from_url_reviews_dated_file():
+    # Real RSS feed links: /reviews/<niche>/<article>-<date>.html
+    assert (
+        pa.slug_from_url(
+            "https://abvorn.com/reviews/smart-home/"
+            "best-smart-home-devices-2026-echo-show-15-echo-show-5-"
+            "sujeet-night-light-compared-2026-08-26.html"
+        )
+        == "smart-home"
+    )
+    assert (
+        pa.slug_from_url(
+            "https://abvorn.com/reviews/4k-monitors/"
+            "best-4k-monitors-2026-dell-s2725qs-s2725qc-"
+            "lg-27up650k-w-compared-2026-08-07.html"
+        )
+        == "4k-monitors"
+    )
+
+
+def test_review_page_candidates_matches_dated_flat_file(tmp_path, monkeypatch):
+    # The site publishes dated flat files inside reviews/<niche>/ rather than
+    # only an index.html — the candidate list must surface them so the
+    # domination cycle can resolve real product photos from the article the
+    # RSS feed points at.
+    dated_dir = tmp_path / "reviews" / "webcams"
+    dated_dir.mkdir(parents=True)
+    dated = dated_dir / "top-3-webcams-2026-crisp-video-smooth-streaming-2026-09-08.html"
+    dated.write_text(SAMPLE_HTML, encoding="utf-8")
+    monkeypatch.setattr(pa, "_review_roots", lambda: [tmp_path])
+
+    cands = pa.review_page_candidates(dated.name)
+    assert dated in cands
+    html = pa.load_review_html(dated.name)
+    assert "application/ld+json" in html
+
+
+def test_load_products_from_dated_flat_file(tmp_path, monkeypatch):
+    # End-to-end: the exact slug the feed URL yields must resolve real products.
+    dated_dir = tmp_path / "reviews" / "webcams"
+    dated_dir.mkdir(parents=True)
+    dated = dated_dir / "top-3-webcams-2026-crisp-video-smooth-streaming-2026-09-08.html"
+    dated.write_text(SAMPLE_HTML, encoding="utf-8")
+    monkeypatch.setattr(pa, "_review_roots", lambda: [tmp_path])
+    monkeypatch.setattr(pa, "CACHE_FILES", [tmp_path / "cache.json"])
+
+    slug = pa.slug_from_url(
+        "https://abvorn.com/reviews/webcams/"
+        "top-3-webcams-2026-crisp-video-smooth-streaming-2026-09-08.html"
+    )
+    assert slug == "webcams"
+    products = pa.load_products_for_niche(dated.name)
+    assert len(products) >= 1
+    assert products[0]["name"].startswith("Logitech")
+    assert "_SL1500_" in products[0]["image"]
+
+
 def test_json_ld_product_parse():
     products = pa._parse_json_ld_products(SAMPLE_HTML)
     assert len(products) == 1

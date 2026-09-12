@@ -29,10 +29,12 @@ ROLES = ["Overall Winner", "Runner-Up", "Also Great", "Worth Considering"]
 
 
 def slug_from_url(url: str) -> str:
-    """Pull the review slug out of the article URL (the most reliable niche id).
+    """Pull the review niche out of an article URL (the most reliable niche id).
 
     ``https://abvorn.com/wireless-headphones/`` → ``wireless-headphones``
-    Handles ``/reviews/<slug>/`` style paths too.
+    ``https://abvorn.com/reviews/gaming-mice/`` → ``gaming-mice``
+    ``https://abvorn.com/reviews/smart-home/best-smart-home-...-2026-08-26.html``
+        → ``smart-home`` (dated article files live inside the niche folder)
     """
     if not url:
         return ""
@@ -40,25 +42,46 @@ def slug_from_url(url: str) -> str:
     parts = [p for p in path.split("/") if p]
     if not parts:
         return ""
-    if len(parts) >= 2 and parts[-2] == "reviews":
-        return parts[-1]
+    if "reviews" in parts:
+        idx = parts.index("reviews")
+        if idx + 1 < len(parts):
+            return parts[idx + 1]
     return parts[-1]
 
 
-def review_page_candidates(slug: str) -> list[Path]:
-    """Possible on-disk locations of the published review for a slug."""
-    roots = [
+def _review_roots() -> list[Path]:
+    """Possible repository roots holding ``docs/reviews/``."""
+    return [
         Path("docs"),
         Path("/opt/abvorn-core/repo-src/docs"),
         Path("/opt/abvorn-core/docs"),
         Path(__file__).resolve().parent.parent.parent / "docs",
     ]
+
+
+def review_page_candidates(slug: str) -> list[Path]:
+    """Possible on-disk locations of the published review for a slug.
+
+    Matches the ``reviews/<niche>/index.html`` layout (the always-current
+    mirror) plus the dated flat files ``reviews/<niche>/<slug>-<date>.html``
+    that the RSS feed links point at.
+    """
     seen: list[Path] = []
-    for root in roots:
+    for root in _review_roots():
         for sub in (f"reviews/{slug}", slug):
             p = root / sub / "index.html"
             if p not in seen:
                 seen.append(p)
+    # A bare dated filename (``best-...-2026-08-26.html``) may arrive from a
+    # URL like ``/reviews/<niche>/<dated>.html`` — hunt it across niche folders.
+    if slug.endswith(".html"):
+        for root in _review_roots():
+            try:
+                for hit in root.glob(f"reviews/*/{slug}"):
+                    if hit not in seen:
+                        seen.append(hit)
+            except OSError:
+                continue
     return seen
 
 
