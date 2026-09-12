@@ -12,8 +12,8 @@ EXPORT_DIR = Path.home() / ".abvorn" / "exports"
 from ..deploy.composio_client import ComposioClient
 
 # Composio v3 tool slugs. Only platforms with a live connected account get a
-# direct backend; everything else falls back to export files (TikTok/Pinterest
-# by design, Instagram whenever the image-container flow is not wired, and any
+# direct backend; everything else falls back to export files (TikTok by
+# design, Instagram whenever the image-container flow is not wired, and any
 # platform without a connected account).
 PLATFORM_ACTIONS = {
     "x": {
@@ -36,9 +36,13 @@ PLATFORM_ACTIONS = {
         "flow": "carousel",
         "slug": "INSTAGRAM_CREATE_POST",
     },
+    "pinterest": {
+        "toolkit": "pinterest",
+        "flow": "pin",
+        "slug": "PINTEREST_CREATE_PIN",
+    },
     "facebook": {"slug": None, "toolkit": None, "export_only": True},
     "tiktok": {"slug": None, "toolkit": None, "export_only": True},
-    "pinterest": {"slug": None, "toolkit": None, "export_only": True},
     "medium": {"slug": None, "toolkit": None, "export_only": True},
 }
 
@@ -103,7 +107,7 @@ class SocialPublisher:
     Falls back to export files when:
     - Composio is not installed
     - API key is not configured
-    - Platform is export-only (TikTok, Pinterest, Instagram)
+    - Platform is export-only (TikTok, Instagram, Medium)
     - No connected account exists for a platform
     """
 
@@ -144,6 +148,9 @@ class SocialPublisher:
 
         if mapping.get("flow") == "carousel":
             return self._publish_instagram_carousel(script, platform, niche, media_paths)
+
+        if mapping.get("flow") == "pin":
+            return self._publish_pinterest_pin(script, platform, niche, media_paths)
 
         params = mapping["params_fn"](script)
         if platform == "linkedin":
@@ -266,6 +273,69 @@ class SocialPublisher:
             return result
         logger.warning(f"telegram: {result.get('status')} ({result.get('error')}) — exporting instead")
         return self._export(script, platform, niche, media_paths=media_paths)
+
+    def _publish_pinterest_pin(self, script: dict | list | str, platform: str,
+                               niche: str, media_paths: list[str] | None) -> dict:
+        """Create a Pinterest pin from composed product photos.
+
+        Pins need a board and real imagery; without either we export. Copy is
+        honest (specs/prices/owner feedback), title <=100 chars, description
+        <=800, and the guide link rides on the pin when available.
+        """
+        media_paths = media_paths or []
+        existing = [p for p in media_paths if Path(p).is_file()]
+        if not existing:
+            return self._export(script, platform, niche, media_paths=media_paths)
+
+        script_dict = script if isinstance(script, dict) else {}
+        title = str(
+            script_dict.get("title") or script_dict.get("headline")
+            or (script[0] if isinstance(script, list) and script else "") or niche
+        )[:100]
+        description = self._honest_pinterest_description(script_dict, niche)
+        link = str(script_dict.get("url", "") or "").strip()[:2048]
+        alt_text = str(script_dict.get("title", "") or title)[:500]
+
+        try:
+            board_id = self._client.pinterest_board_id()
+            data = self._client.pinterest_publish_pin(
+                board_id=board_id,
+                image_paths=existing,
+                title=title,
+                description=description[:800],
+                link=link,
+                alt_text=alt_text[:500],
+            )
+        except Exception as e:
+            logger.warning(f"pinterest: Composio pin failed — exporting instead: {e}")
+            return self._export(script, platform, niche, media_paths=media_paths)
+
+        result = {
+            "status": "posted",
+            "platform": platform,
+            "tool": "PINTEREST_CREATE_PIN",
+            "data": data,
+        }
+        self._results.append(result)
+        logger.info(f"pinterest: pin posted (board {board_id})")
+        return result
+
+    def _honest_pinterest_description(self, script: dict, niche: str) -> str:
+        """Build an honest pin description: hook + summary + hashtags.
+
+        Strips HTML and replaces any physcial-testing claim with neutral,
+        factual phrasing before applying the platform hashtag block."""
+        from ..platform.adapters import _has_false_testing_claim
+
+        base = re.sub(r"<[^>]+>", "", str(script.get("description", "") or ""))
+        if not base.strip() or _has_false_testing_claim(base):
+            base = (
+                f"After comparing specs, prices, and real owner feedback for "
+                f"{niche or 'these products'}, here's what stands out."
+            )
+        niche_tag = niche.replace(" ", "").replace("-", "")
+        tag_block = f"#{niche_tag} #comparison #reviews #realprices"
+        return f"{base[:600].strip()}\n\n{tag_block}"
 
     def _publish_instagram_carousel(self, script: dict | list | str, platform: str,
                                     niche: str, media_paths: list[str] | None) -> dict:

@@ -119,20 +119,25 @@ class ViralScriptGenerator:
             hook_variants = persona_variants + hook_variants
         selected_hook = hook_variants[0] if hook_variants else title[:100]
         hooks_for_testing = hook_variants[:3]
+        product_count = len(products)
 
         if spec["style"] == "thread":
-            script = self._thread_script(title, selected_hook, summary, niche, url, spec["max_length"])
+            script = self._thread_script(title, selected_hook, summary, niche, url,
+                                         spec["max_length"],
+                                         persona=persona, product_count=product_count)
         elif spec["style"] == "script":
             script = self._tiktok_script(title, selected_hook, summary, niche, url)
         elif spec["style"] == "carousel":
             script = self._carousel_script(title, selected_hook, summary, niche, hooks,
                                             products=products, persona=persona)
         elif spec["style"] == "story":
-            script = self._linkedin_script(title, selected_hook, summary, niche, url)
+            script = self._linkedin_script(title, selected_hook, summary, niche, url,
+                                           persona=persona, product_count=product_count)
         elif spec["style"] == "telegram":
-            script = self._telegram_script(title, selected_hook, summary, niche, url)
+            script = self._telegram_script(title, selected_hook, summary, niche, url,
+                                           persona=persona, product_count=product_count)
         elif spec["style"] == "pin":
-            script = self._pin_script(title, selected_hook, summary, niche, num)
+            script = self._pin_script(title, selected_hook, summary, niche, url, num)
         else:
             script = {"text": selected_hook[:spec["max_length"]]}
 
@@ -217,10 +222,62 @@ class ViralScriptGenerator:
             f"real options on the table. Pick the one that fits your budget \U0001F447"
         )
 
+    def _persona_body(self, niche: str, persona: dict | None,
+                      product_count: int = 0, platform: str = "") -> str | None:
+        """Persona-shaped body copy (not just a hook) for text platforms.
+
+        Leads with the buyer's real problem and shapes the comparison around
+        their hopes — honest, factual, claims no physical testing. Returns
+        None when no persona is available so callers keep their generic body.
+        """
+        if not persona:
+            return None
+        psych = persona.get("psychology") or {}
+        anxieties = psych.get("anxieties") or []
+        hopes = psych.get("hopes") or []
+        niche_label = _humanize_niche(niche)
+        persona_name = persona.get("name", "")
+        pain = anxieties[0].lower() if anxieties else ""
+        want = hopes[0].lower() if hopes else ""
+        if not pain and not want:
+            return None
+
+        if platform == "x":
+            # One tight line for a 280-char-first-post world.
+            bits = []
+            if pain:
+                bits.append(f"if you\u2019re tired of {pain}")
+            if want:
+                bits.append(f"and just want {want}")
+            compare = (
+                f"we compared {product_count} {niche_label} side by side"
+                if product_count
+                else f"these {niche_label} got compared side by side"
+            )
+            return f"For everyone who said \u2014 {'; '.join(bits)} \u2014 {compare}. Specs, prices, owner feedback. No fluff."[:280]
+
+        pain_lead = f"{persona_name}: tired of {pain}." if (persona_name and pain) else (
+            f"Tired of {pain}." if pain else ""
+        )
+        want_line = f"Most buyers want {want} \u2014 and that\u2019s exactly the bar these {niche_label} were measured against." if want else ""
+        compare_line = (
+            f"We compared {product_count} {niche_label} on the specs, prices, and "
+            f"real owner feedback that actually matter."
+            if product_count
+            else f"These {niche_label} were compared on specs, prices, and real owner feedback."
+        )
+        lines = [ln for ln in (pain_lead, want_line, compare_line) if ln]
+        return "\n\n".join(lines) if lines else None
+
     def _thread_script(self, title: str, hook: str, summary: str,
-                       niche: str, url: str, max_len: int) -> list[str]:
+                       niche: str, url: str, max_len: int,
+                       persona: dict | None = None,
+                       product_count: int = 0) -> list[str]:
         paragraphs = [p for p in summary.split("\n") if p.strip()]
         thread = [hook[:max_len]]
+        persona_line = self._persona_body(niche, persona, product_count, platform="x")
+        if persona_line:
+            thread.append(persona_line[:max_len])
         for p in paragraphs[:5]:
             clean = re.sub(r"<[^>]+>", "", p).strip()
             if clean:
@@ -271,10 +328,16 @@ class ViralScriptGenerator:
         return slides
 
     def _linkedin_script(self, title: str, hook: str, summary: str,
-                         niche: str, url: str) -> dict:
+                         niche: str, url: str,
+                         persona: dict | None = None,
+                         product_count: int = 0) -> dict:
         clean = re.sub(r"<[^>]+>", "", summary)[:800]
         paragraphs = clean.split("\n")[:4]
         body = "\n\n".join(p for p in paragraphs if p.strip())
+        persona_body = self._persona_body(niche, persona, product_count, platform="linkedin")
+        if persona_body:
+            # Persona leads with the reader's problem, then the editorial body.
+            body = "\n\n".join(x for x in (persona_body, body) if x)
         if not body:
             body = (
                 f"After comparing real specs, prices, and owner "
@@ -300,10 +363,15 @@ class ViralScriptGenerator:
         return "\n\n".join([p for p in parts if p])[:3000]
 
     def _telegram_script(self, title: str, hook: str, summary: str,
-                         niche: str, url: str) -> dict:
+                         niche: str, url: str,
+                         persona: dict | None = None,
+                         product_count: int = 0) -> dict:
         clean = re.sub(r"<[^>]+>", "", summary)[:700]
         paragraphs = [p.strip() for p in clean.split("\n") if p.strip()]
         body = "\n\n".join(paragraphs[:3])
+        persona_body = self._persona_body(niche, persona, product_count, platform="telegram")
+        if persona_body:
+            body = "\n\n".join(x for x in (persona_body, body) if x)
         if not body:
             body = (
                 f"After comparing real specs, prices, and owner feedback "
@@ -317,10 +385,11 @@ class ViralScriptGenerator:
         return {"text": text}
 
     def _pin_script(self, title: str, hook: str, summary: str,
-                    niche: str, num: str) -> dict:
+                    niche: str, url: str, num: str) -> dict:
         return {
             "title": hook[:100],
             "description": f"{re.sub(r'<[^>]+>', '', summary)[:300]}\n\n#affiliatemarketing #{niche} #{niche.replace('-', '')}",
+            "url": url,
         }
 
     def get_history(self) -> list[dict]:

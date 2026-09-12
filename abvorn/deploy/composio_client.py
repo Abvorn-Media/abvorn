@@ -11,6 +11,8 @@ resolution, and version pinning live in one place.
 import logging
 import os
 
+from pathlib import Path
+
 logger = logging.getLogger("abvorn.deploy.composio_client")
 
 try:
@@ -27,6 +29,12 @@ INSTAGRAM_GET_USER_INFO_TOOL = "INSTAGRAM_GET_USER_INFO"
 INSTAGRAM_CAROUSEL_CONTAINER_TOOL = "INSTAGRAM_CREATE_CAROUSEL_CONTAINER"
 INSTAGRAM_CREATE_POST_TOOL = "INSTAGRAM_CREATE_POST"
 
+PINTEREST_TOOLKIT = "pinterest"
+PINTEREST_CREATE_PIN_TOOL = "PINTEREST_CREATE_PIN"
+PINTEREST_LIST_BOARDS_TOOL = "PINTEREST_LIST_BOARDS"
+PINTEREST_CREATE_BOARD_TOOL = "PINTEREST_CREATE_BOARD"
+PINTEREST_DEFAULT_BOARD = "Abvorn Finds"
+
 
 class ComposioConnectionError(RuntimeError):
     """Raised when a toolkit has no usable connected account / version."""
@@ -41,6 +49,7 @@ class ComposioClient:
         self._toolkit_state = {}  # toolkit -> (user_id, connected_account_id, version)
         self._linkedin_urn = ""
         self._instagram_user_id = ""
+        self._pinterest_board_id = ""
         if api_key and HAS_COMPOSIO:
             try:
                 os.environ["COMPOSIO_API_KEY"] = api_key
@@ -244,3 +253,118 @@ class ComposioClient:
             INSTAGRAM_CREATE_POST_TOOL,
             {"ig_user_id": user_id, "creation_id": creation_id},
         )
+
+    # ------------------------------------------------------------------
+    # Pinterest
+    # ------------------------------------------------------------------
+
+    def pinterest_board_id(self) -> str:
+        """Resolve the destination Pinterest board (numeric ID).
+
+        Priority: env PINTEREST_BOARD_ID, then the first existing board,
+        then auto-create PINTEREST_DEFAULT_BOARD. Cached in-memory so the
+        daemon posts to one stable board per process.
+        """
+        env_id = os.environ.get("PINTEREST_BOARD_ID", "").strip()
+        if env_id:
+            return env_id
+        if self._pinterest_board_id:
+            return self._pinterest_board_id
+        cached = self._pinterest_cached_board()
+        if cached:
+            self._pinterest_board_id = cached
+            return cached
+        self.resolve_connection(PINTEREST_TOOLKIT)
+        board = self.execute(
+            PINTEREST_TOOLKIT,
+            PINTEREST_CREATE_BOARD_TOOL,
+            {"name": PINTEREST_DEFAULT_BOARD,
+             "description": "Real specs, prices, and owner feedback across the products we compare."},
+        )
+        board_id = (board or {}).get("id") or (board or {}).get("board_id") or ""
+        if not board_id:
+            raise ComposioConnectionError(
+                "pinterest board auto-create returned no board id"
+            )
+        self._pinterest_board_id = str(board_id)
+        self._pinterest_persist_board(str(board_id))
+        logger.info(f"pinterest: using auto-created board '{PINTEREST_DEFAULT_BOARD}' ({board_id})")
+        return self._pinterest_board_id
+
+    def _pinterest_cached_board(self) -> str:
+        """First existing board id, or a previously persisted id."""
+        persist = Path.home() / ".abvorn" / "pinterest_board_id.txt"
+        if persist.exists():
+            existing = persist.read_text(encoding="utf-8").strip()
+            if existing:
+                return existing
+        if self._pinterest_board_id:
+            return self._pinterest_board_id
+        try:
+            self.resolve_connection(PINTEREST_TOOLKIT)
+            resp = self.execute(PINTEREST_TOOLKIT, PINTEREST_LIST_BOARDS_TOOL, {})
+            items = (resp or {}).get("items") or []
+            for b in items:
+                bid = b.get("id")
+                if bid:
+                    return str(bid)
+        except Exception as e:
+            logger.warning(f"pinterest: board discovery failed ({e}) — will auto-create")
+        return ""
+
+    def _pinterest_persist_board(self, board_id: str):
+        try:
+            persist = Path.home() / ".abvorn"
+            persist.mkdir(parents=True, exist_ok=True)
+            (persist / "pinterest_board_id.txt").write_text(board_id, encoding="utf-8")
+        except OSError:
+            pass
+
+    def pinterest_publish_pin(self, board_id: str, image_paths: list[str],
+                              title: str = "", description: str = "",
+                              link: str = "", alt_text: str = "") -> dict:
+        """Create a pin from local image files.
+
+        A single image uses the image_base64 source; 2-5 images become a
+        carousel via multiple_image_base64 (Pinterest carousels hold up to
+        five). The first pin image is the primary when index is omitted.
+        """
+        from pathlib import Path
+        from base64 import b64encode
+        import mimetypes
+
+        imgs = []
+        for path in image_paths[:5]:
+            p = Path(path)
+            if not p.is_file():
+                continue
+            data = p.read_bytes()
+            ctype = mimetypes.guess_type(p.name)[0] or "image/jpeg"
+            imgs.append({
+                "content_type": ctype,
+                "data": b64encode(data).decode("ascii"),
+            })
+        if not imgs:
+            raise RuntimeError("pinterest pin: no readable image files")
+
+        if len(imgs) == 1:
+            media_source = {
+                "source_type": "image_base64",
+                "content_type": imgs[0]["content_type"],
+                "data": imgs[0]["data"],
+            }
+        else:
+            media_source = {
+                "source_type": "multiple_image_base64",
+                "items": imgs,
+            }
+
+        args = {
+            "board_id": str(board_id),
+            "media_source": media_source,
+            "title": (title or "")[:100],
+            "description": (description or "")[:800],
+            "link": (link or "")[:2048],
+            "alt_text": (alt_text or "")[:500],
+        }
+        return self.execute(PINTEREST_TOOLKIT, PINTEREST_CREATE_PIN_TOOL, args)
