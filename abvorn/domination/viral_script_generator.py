@@ -55,16 +55,37 @@ HOOK_TEMPLATES = {
 }
 
 
+# Niche slugs whose plain humanization would be an adjective without a noun
+# ('smart-home' -> 'Smart home' reads as a broken sentence next to a count).
+NICHE_LABELS = {
+    "smart-home": "Smart home devices",
+    "smart home": "Smart home devices",
+}
+
+# Token-level case fixes applied after humanization so brand-ish tokens keep
+# their canonical spelling instead of being flattened by .capitalize().
+_NICHE_CASE_FIXES = {
+    "4k": "4K",
+}
+
+
 def _humanize_niche(niche: str) -> str:
     """Turn a URL-style slug into display copy: 'wireless-earbuds' -> 'Wireless earbuds'."""
     niche = (niche or "").strip()
     if not niche:
         return "product"
+    if niche in NICHE_LABELS:
+        return NICHE_LABELS[niche]
+    key = niche.lower().replace("-", " ").replace("_", " ")
+    if key in NICHE_LABELS:
+        return NICHE_LABELS[key]
     if " " in niche:
         return niche
-    words = niche.replace("-", " ").replace("_", " ").split()
-    words = [w.capitalize() for w in words]
-    return " ".join(words).capitalize() if words else "product"
+    words = key.split()
+    label = " ".join(w.capitalize() for w in words).capitalize() if words else "product"
+    for token, fix in _NICHE_CASE_FIXES.items():
+        label = label.replace(token, fix)
+    return label
 
 
 class ViralScriptGenerator:
@@ -203,8 +224,11 @@ class ViralScriptGenerator:
         hopes = psych.get("hopes") or []
         niche_label = _humanize_niche(niche)
         hooks = []
-        pain = anxieties[0].lower() if anxieties else ""
-        want = hopes[0].lower() if hopes else ""
+        # Keep authored casing: anxiety/hope phrases already use natural case
+        # for brands ("Matter certification delays"); lowercasing them would
+        # mangle proper nouns mid-sentence.
+        pain = anxieties[0] if anxieties else ""
+        want = hopes[0] if hopes else ""
 
         if product_count and pain:
             hooks.append(
@@ -236,7 +260,7 @@ class ViralScriptGenerator:
             return None
         psych = persona.get("psychology") or {}
         hopes = psych.get("hopes") or []
-        want = hopes[0].lower() if hopes else ""
+        want = hopes[0] if hopes else ""
         if not want:
             return None
         return (
@@ -259,8 +283,8 @@ class ViralScriptGenerator:
         hopes = psych.get("hopes") or []
         niche_label = _humanize_niche(niche)
         persona_name = persona.get("name", "")
-        pain = anxieties[0].lower() if anxieties else ""
-        want = hopes[0].lower() if hopes else ""
+        pain = anxieties[0] if anxieties else ""
+        want = hopes[0] if hopes else ""
         if not pain and not want:
             return None
 

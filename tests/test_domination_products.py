@@ -186,6 +186,48 @@ def test_persona_hook_matches_niche_slug_via_normalization():
     assert personas and personas[0]["name"] == "Creative Director Chloe"
 
 
+def test_humanize_niche_labels_and_brand_case():
+    assert vsg._humanize_niche("smart-home") == "Smart home devices"
+    assert vsg._humanize_niche("smart_home") == "Smart home devices"
+    assert vsg._humanize_niche("Smart-Home") == "Smart home devices"
+    assert vsg._humanize_niche("4k-monitors") == "4K monitors"
+    assert vsg._humanize_niche("gaming-mice") == "Gaming mice"
+
+
+def test_persona_hook_keeps_brand_case_and_niche_noun():
+    """The exact regression that posted broken copy: persona pain 'Matter
+    certification delays' + niche 'smart-home' must render as readable copy
+    (brand cased, countable noun after the count)."""
+    gen = vsg.ViralScriptGenerator()
+    post = {"title": "Best Smart Home Devices", "niche": "smart-home", "summary": "",
+            "url": "https://abvorn.com/smart-home/", "hooks": {}}
+    products = [
+        {"name": "Product A", "price": "$49.99", "role": "Overall Winner"},
+        {"name": "Product B", "price": "$39.99", "role": "Runner-Up"},
+        {"name": "Product C", "price": "$59.99", "role": "Best Value"},
+        {"name": "Product D", "price": "$79.99", "role": "Premium Pick"},
+    ]
+    persona = {
+        "name": "Aware Alex",
+        "psychology": {
+            "anxieties": ["Matter certification delays", "hub compatibility hell"],
+            "hopes": ["true local control no cloud"],
+        },
+    }
+    out = gen.generate(post, platforms=["instagram"], products=products, persona=persona)
+    hook = out["instagram"]["hook"]
+    joined = "\n".join(out["instagram"]["script"])
+    assert "Matter certification delays" in hook
+    assert "matter certification delays" not in hook
+    assert "Smart home devices" in hook
+    assert "compared 4 Smart home devices" in joined
+    # grammatical: the count sentence now has its noun
+    assert "compared 4 Smart home devices so you" in joined
+    # still honest: no physical-testing claims
+    for banned in ("we tested", "hands-on", "in our lab"):
+        assert banned.lower() not in joined.lower()
+
+
 def test_no_persona_keeps_generic_copy():
     gen = vsg.ViralScriptGenerator()
     post = {"title": "Best Gaming Mice", "niche": "gaming-mice", "summary": "",

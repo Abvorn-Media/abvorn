@@ -5,7 +5,7 @@ def build_pre_suade(persona: dict) -> str:
     """Cialdini: frame context and establish trust before the pitch."""
     anxieties = persona.get("psychology", {}).get("anxieties", [])
     if anxieties:
-        return f"You've been burned by bad {anxieties[0].lower()} before? We get it. That's why we dig into the real data before recommending."
+        return f"You've been burned by bad {anxieties[0]} before? We get it. That's why we dig into the real data before recommending."
     return "We dig through the real specs, prices, and owner feedback so you don't waste money on the wrong one."
 
 
@@ -43,8 +43,8 @@ def build_neuro_engage(persona: dict) -> str:
     """Lindstrom: mirror neuron language. Sensory-rich descriptions."""
     anxieties = persona.get("psychology", {}).get("anxieties", [])
     hopes = persona.get("psychology", {}).get("hopes", [])
-    pain = anxieties[0].lower() if anxieties else "the frustration"
-    hope = hopes[0].lower() if hopes else "the satisfaction"
+    pain = anxieties[0] if anxieties else "the frustration"
+    hope = hopes[0] if hopes else "the satisfaction"
     return f"Use sensory-rich language. Let them FEEL {pain} then imagine {hope}. Mirror neuron triggers: 'Imagine...', 'Picture this...', 'You know that feeling when...'"
 
 

@@ -22,7 +22,7 @@ def generate_sequence(content: dict, persona: dict = None) -> list[dict]:
     pain = ""
     if persona:
         anxieties = persona.get("psychology", {}).get("anxieties", [])
-        pain = anxieties[0].lower() if anxieties else "the frustration"
+        pain = anxieties[0] if anxieties else "the frustration"
 
     return [
         {"day": 1, "subject": f"Your {niche} guide is here",

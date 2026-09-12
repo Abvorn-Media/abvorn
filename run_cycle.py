@@ -952,6 +952,7 @@ SOCIAL_FOOTER_SVGS = {
     "instagram": '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="0.8" fill="currentColor" stroke="none"/></svg>',
     "youtube": '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5l5 2.5-5 2.5v-5z" fill="currentColor" stroke="none"/></svg>',
     "tiktok": '<svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3h2.3c.2 1.4 1 2.6 2.4 3.3.7.4 1.5.6 2.3.6v2.6c-1.5 0-3-.4-4.2-1.2v6.4c0 3-2.4 5.3-5.3 5.3S6.2 17.7 6.2 14.7c0-2.9 2.3-5.3 5.2-5.3.3 0 .6 0 .9.1v2.7a2.7 2.7 0 00-.9-.15 2.6 2.6 0 100 5.2c1.5 0 2.7-1.2 2.7-2.7V3z"/></svg>',
+    "pinterest": '<svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 0 0-2.915 15.452c-.07-.697-.128-1.77.028-2.53.141-.693.944-4.004.944-4.004s-.24-.48-.24-1.19c0-1.116.647-1.949 1.452-1.949.683 0 1.014.512 1.014 1.131 0 .689-.437 1.716-.663 2.67-.19.798.4 1.447 1.185 1.447 1.425 0 2.52-1.504 2.52-3.674 0-1.921-1.381-3.263-3.352-3.263-2.283 0-3.623 1.711-3.623 3.481 0 .69.265 1.43.596 1.83a.24.24 0 0 1 .056.283c-.062.235-.196.78-.233.886-.03.135-.147.163-.295.094A3.66 3.66 0 0 1 4.2 7.98c0-2.383 1.729-4.574 4.929-4.574 2.586 0 4.6 1.844 4.6 4.31 0 2.571-1.622 4.643-3.872 4.643-.755 0-1.466-.393-1.71-1.02l-.465 1.77c-.169.653-.625 1.472-.936 1.972A8 8 0 1 0 8 0z"/></svg>',
 }
 
 
@@ -1269,10 +1270,11 @@ async function submitHomepageSubscribe(e) {
 
 def render_footer_social():
     social_urls = {
-        "x": os.environ.get("SOCIAL_X_URL", ""),
-        "instagram": os.environ.get("SOCIAL_INSTAGRAM_URL", ""),
-        "youtube": os.environ.get("SOCIAL_YOUTUBE_URL", ""),
-        "tiktok": os.environ.get("SOCIAL_TIKTOK_URL", ""),
+        "x": os.environ.get("SOCIAL_X_URL", "https://x.com/Abvorn"),
+        "instagram": os.environ.get("SOCIAL_INSTAGRAM_URL", "https://www.instagram.com/abvorn/"),
+        "youtube": os.environ.get("SOCIAL_YOUTUBE_URL", "https://www.youtube.com/@Abvorn-Media"),
+        "tiktok": os.environ.get("SOCIAL_TIKTOK_URL", "https://www.tiktok.com/@abvorn"),
+        "pinterest": os.environ.get("SOCIAL_PINTEREST_URL", "https://www.pinterest.com/abvornhq/"),
     }
     return "".join(
         f'<a href="{url or "#"}" aria-label="{name.title()}" target="_blank" rel="noopener">{SOCIAL_FOOTER_SVGS[name]}</a>'
