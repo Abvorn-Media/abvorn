@@ -108,6 +108,8 @@ class AbvornDaemon:
             pexels_key=self.secrets.get("PEXELS_KEY", ""),
             composio_key=self.secrets.get("COMPOSIO_KEY", ""),
             db_path=str(self.state_path.parent / "domination.db"),
+            persona_engine=self.persona_engine,
+            persona_registry=self.persona_registry,
         )
         self._phase3_inited = True
 

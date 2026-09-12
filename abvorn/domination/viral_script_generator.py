@@ -1,6 +1,7 @@
 """Viral Script Generator — converts blog content into platform-native scripts
 with hook-first architecture, tested against engagement benchmarks."""
 
+import hashlib
 import logging, re
 from datetime import datetime
 
@@ -73,11 +74,14 @@ class ViralScriptGenerator:
         self._history: list[dict] = []
 
     def generate(self, post: dict, platforms: list[str] | None = None,
-                 products: list[dict] | None = None) -> dict:
+                 products: list[dict] | None = None,
+                 persona: dict | None = None) -> dict:
         targets = platforms or list(PLATFORM_SPECS.keys())
         result = {}
         for platform in targets:
-            result[platform] = self._generate_for_platform(post, platform, products=products)
+            result[platform] = self._generate_for_platform(
+                post, platform, products=products, persona=persona
+            )
         self._history.append({
             "post_title": post.get("title", ""),
             "platforms": targets,
@@ -86,7 +90,8 @@ class ViralScriptGenerator:
         return result
 
     def _generate_for_platform(self, post: dict, platform: str,
-                               products: list[dict] | None = None) -> dict:
+                               products: list[dict] | None = None,
+                               persona: dict | None = None) -> dict:
         spec = PLATFORM_SPECS.get(platform, PLATFORM_SPECS["x"])
         title = post.get("title", "New Post")
         niche = post.get("niche", "product")
@@ -109,6 +114,9 @@ class ViralScriptGenerator:
             # Honest, product-first hook — references the real comparison set.
             count = len(products)
             hook_variants.insert(0, f"We compared {count} {_humanize_niche(niche)}. Here's what we'd actually buy.")
+        persona_variants = self._persona_hooks(niche, persona, len(products or []))
+        if persona_variants:
+            hook_variants = persona_variants + hook_variants
         selected_hook = hook_variants[0] if hook_variants else title[:100]
         hooks_for_testing = hook_variants[:3]
 
@@ -117,7 +125,8 @@ class ViralScriptGenerator:
         elif spec["style"] == "script":
             script = self._tiktok_script(title, selected_hook, summary, niche, url)
         elif spec["style"] == "carousel":
-            script = self._carousel_script(title, selected_hook, summary, niche, hooks, products=products)
+            script = self._carousel_script(title, selected_hook, summary, niche, hooks,
+                                            products=products, persona=persona)
         elif spec["style"] == "story":
             script = self._linkedin_script(title, selected_hook, summary, niche, url)
         elif spec["style"] == "telegram":
@@ -131,6 +140,7 @@ class ViralScriptGenerator:
             "platform": platform,
             "hook": selected_hook,
             "hook_variants": hooks_for_testing,
+            "persona": persona.get("name", "") if persona else "",
             "script": script,
             "char_count": len(str(script)),
             "generated_at": datetime.now().isoformat(),
@@ -151,6 +161,61 @@ class ViralScriptGenerator:
 
         hooks.append(title[:120])
         return list(dict.fromkeys(hooks))[:5]
+
+    def _persona_hooks(self, niche: str, persona: dict | None,
+                       product_count: int = 0) -> list[str]:
+        """Honest, persona-aware hooks built from the buyer's anxieties/hopes.
+
+        Stays factual: references the real comparison set, never claims
+        physical testing.
+        """
+        if not persona:
+            return []
+        psych = persona.get("psychology") or {}
+        anxieties = psych.get("anxieties") or []
+        hopes = psych.get("hopes") or []
+        niche_label = _humanize_niche(niche)
+        hooks = []
+        pain = anxieties[0].lower() if anxieties else ""
+        want = hopes[0].lower() if hopes else ""
+
+        if product_count and pain:
+            hooks.append(
+                f"Tired of {pain}? We compared {product_count} {niche_label} "
+                f"so you don\u2019t have to guess. Here\u2019s the pick that finally "
+                f"addresses it."
+            )
+        if pain and want:
+            hooks.append(
+                f"If you\u2019re reading this, you want {want} \u2014 without {pain}. "
+                f"These are the {niche_label} worth comparing."
+            )
+        if want:
+            hooks.append(
+                f"Looking for {want}? We put the real {niche_label} options "
+                f"side by side so the choice is easy."
+            )
+        if pain:
+            hooks.append(
+                f"Stop settling for {niche_label} that still leave you dealing "
+                f"with {pain}. Here\u2019s what actually gets compared."
+            )
+        return list(dict.fromkeys(hooks))[:3]
+
+    def _persona_carousel_slide(self, persona: dict | None) -> str | None:
+        """A persona-driven closing slide — no testing claims, just the
+        buyer's real payoff for comparing ordinary options."""
+        if not persona:
+            return None
+        psych = persona.get("psychology") or {}
+        hopes = psych.get("hopes") or []
+        want = hopes[0].lower() if hopes else ""
+        if not want:
+            return None
+        return (
+            f"Whatever you\u2019re shopping for \u2014 {want} \u2014 these are the "
+            f"real options on the table. Pick the one that fits your budget \U0001F447"
+        )
 
     def _thread_script(self, title: str, hook: str, summary: str,
                        niche: str, url: str, max_len: int) -> list[str]:
@@ -175,7 +240,9 @@ class ViralScriptGenerator:
         }
 
     def _carousel_script(self, title: str, hook: str, summary: str,
-                         niche: str, hooks: list, products: list[dict] | None = None) -> list[str]:
+                         niche: str, hooks: list,
+                         products: list[dict] | None = None,
+                         persona: dict | None = None) -> list[str]:
         products = products or []
         if products:
             slides = [
@@ -190,6 +257,9 @@ class ViralScriptGenerator:
                 if details:
                     line = f"{name}\n{details}"
                 slides.append(line)
+            persona_slide = self._persona_carousel_slide(persona)
+            if persona_slide:
+                slides.append(persona_slide)
             slides.append(
                 "Which one fits your budget? \U0001F447\n\nFull guide & prices in our bio \U0001F517"
             )

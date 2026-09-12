@@ -38,6 +38,8 @@ class DominationOrchestrator:
         composio_key: str = "",
         db_path: str = "",
         budget=None,
+        persona_engine=None,
+        persona_registry=None,
     ):
         self.budget = budget or APIBudget()
         self.content_intel = ContentIntelligence(rss_url=rss_url, rss_path=rss_path)
@@ -47,6 +49,8 @@ class DominationOrchestrator:
         self.audio = AudioSystem()
         self.learner = SelfLearningEngine(db_path=db_path)
         self.publisher = SocialPublisher(composio_key=composio_key)
+        self.persona_engine = persona_engine
+        self.persona_registry = persona_registry
 
         self._cycle_count = 0
 
@@ -122,7 +126,14 @@ class DominationOrchestrator:
             steps["products"] = {"status": "failed", "error": str(e)}
 
         try:
-            scripts = self.script_gen.generate(target, platforms=platforms, products=products)
+            persona = self._resolve_persona(target.get("niche", ""))
+            steps["persona"] = {"status": "ok" if persona else "none",
+                                "name": persona.get("name", "") if persona else ""}
+            if persona:
+                logger.info(f"[{cycle_id}] Persona: {persona.get('name', '')} ({target.get('niche', '')})")
+            scripts = self.script_gen.generate(
+                target, platforms=platforms, products=products, persona=persona
+            )
             steps["scripts"] = {
                 "status": "ok",
                 "platforms": list(scripts.keys()),
@@ -277,6 +288,34 @@ class DominationOrchestrator:
             r = self.run_cycle(niche=niche, platforms=platforms)
             results.append(r)
         return results
+
+    def _resolve_persona(self, niche: str) -> dict | None:
+        """Pick the persona behind this cycle's copy.
+
+        Preference order: live registered persona for the niche (with
+        performance history) → engine template persona → None (generic copy).
+        """
+        try:
+            lookups: list[dict | None] = []
+            if self.persona_registry is not None:
+                for key in (niche, niche.replace("-", " ").replace("_", " ")):
+                    if key:
+                        try:
+                            lookups.append(self.persona_registry.select_best_persona(key))
+                        except Exception as e:
+                            logger.warning(f"Persona registry lookup failed: {e}")
+            if self.persona_engine is not None:
+                try:
+                    discovered = self.persona_engine.discover_personas(niche) or []
+                    lookups.extend(c for c in discovered if c)
+                except Exception as e:
+                    logger.warning(f"Persona engine discovery failed: {e}")
+            for candidate in lookups:
+                if candidate and candidate.get("psychology"):
+                    return candidate
+        except Exception as e:
+            logger.warning(f"Persona resolution failed (non-fatal): {e}")
+        return None
 
     def _script_to_voice_text(self, script_data: dict, target: dict) -> str:
         script = script_data.get("script", {})

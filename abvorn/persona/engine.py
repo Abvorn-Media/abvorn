@@ -155,12 +155,17 @@ PERSONA_TEMPLATES = {
 }
 
 
+def _normalize_niche(niche: str) -> str:
+    """'4k-monitors'/'4K_Monitors' -> '4k monitors' (PERSONA_TEMPLATES key form)."""
+    return (niche or "").lower().replace("-", " ").replace("_", " ").strip()
+
+
 class PersonaEngine:
     """Discovers buyer personas for niches using brain psychology frameworks."""
 
     def discover_personas(self, niche: str) -> list[dict]:
         """Derive 2-5 candidate personas for a niche."""
-        niche_lower = niche.lower()
+        niche_lower = _normalize_niche(niche)
         templates = PERSONA_TEMPLATES.get(niche_lower, [])
         if not templates:
             templates = self._generate_personas(niche)

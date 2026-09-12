@@ -153,6 +153,48 @@ def test_product_aware_carousel_slides():
         assert banned.lower() not in joined.lower()
 
 
+def test_persona_aware_carousel_uses_buyer_pain_and_hope():
+    gen = vsg.ViralScriptGenerator()
+    post = {"title": "Best Gaming Mice", "niche": "gaming-mice", "summary": "",
+            "url": "https://abvorn.com/gaming-mice/", "hooks": {}}
+    products = [{"name": "Logitech G305", "price": "$29.99", "role": "Overall Winner"}]
+    persona = {
+        "name": "Competitive Calvin",
+        "psychology": {
+            "anxieties": ["missed flick shots", "sensor jitter"],
+            "hopes": ["sub-50g wireless", "flawless tracking"],
+        },
+    }
+    out = gen.generate(post, platforms=["instagram"], products=products, persona=persona)
+    insta = out["instagram"]
+    assert insta["persona"] == "Competitive Calvin"
+    slides = insta["script"]
+    joined = "\n".join(slides)
+    # persona pain/hope phrases surface in the copy
+    assert "missed flick shots" in insta["hook"] or "sub-50g wireless" in insta["hook"]
+    assert "missed flick shots" in joined or "flawless tracking" in joined
+    # still product first + honest
+    assert "Logitech G305" in joined
+    for banned in ("we tested", "hands-on", "in our lab"):
+        assert banned.lower() not in joined.lower()
+
+
+def test_persona_hook_matches_niche_slug_via_normalization():
+    from abvorn.persona.engine import PersonaEngine
+    personas = PersonaEngine().discover_personas("4k-monitors")
+    # slug-normalized lookup hits the display-name template bank
+    assert personas and personas[0]["name"] == "Creative Director Chloe"
+
+
+def test_no_persona_keeps_generic_copy():
+    gen = vsg.ViralScriptGenerator()
+    post = {"title": "Best Gaming Mice", "niche": "gaming-mice", "summary": "",
+            "url": "https://abvorn.com/gaming-mice/", "hooks": {}}
+    out = gen.generate(post, platforms=["instagram"]).get("instagram", {})
+    assert out.get("persona", "") == ""
+    assert out.get("hook", "")  # generic template hook used
+
+
 def test_ig_card_is_1080x1350_with_no_padding(tmp_path, monkeypatch):
     from abvorn.domination import instagram_cards as igc
 
