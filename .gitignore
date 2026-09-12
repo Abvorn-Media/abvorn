@@ -100,3 +100,15 @@ _*.py
 _shot_*.png
 _*.png
 .impeccable/
+
+# Runtime/QA artifacts (not source; authored notes/distribution/*.md stays tracked)
+data/ab_journal_entries.jsonl
+data/gsc_ingestion_log.jsonl
+data/gsc_latest_summary.json
+data/gsc_top_performing.json
+data/openweb_usage.json
+var/patches*/
+var/og_logo_background.png
+var/svg_render.png
+notes/hero-visual-pass/
+notes/security_test.txt

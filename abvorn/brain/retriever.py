@@ -87,7 +87,7 @@ class KnowledgeRetriever:
         """Return a summary of what's in the brain."""
         with self._index._cursor() as c:
             c.execute("""
-                SELECT d.domain, COUNT(*) as doc_count, COUNT(c.id) as chunk_count
+                SELECT d.domain, COUNT(DISTINCT d.id) as doc_count, COUNT(c.id) as chunk_count
                 FROM documents d LEFT JOIN chunks c ON c.doc_id = d.id
                 GROUP BY d.domain ORDER BY doc_count DESC
             """)

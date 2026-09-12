@@ -81,10 +81,12 @@ class KnowledgeIndex:
 
     def ingest_text(self, domain: str, title: str, text: str, path: str = "", file_hash: str = "") -> int:
         chunks = self._chunk_text(text)
-        doc_hash = hashlib.md5(text[:8192].encode()).hexdigest()
+        # Store the scan-time file hash when available so incremental refresh can
+        # dedupe by path+hash; fall back to a content hash for text-only ingests.
+        stored_hash = file_hash or hashlib.md5(text[:8192].encode()).hexdigest()
         with self._cursor() as c:
             c.execute("INSERT INTO documents (domain, title, path, hash, indexed_at) VALUES (?, ?, ?, ?, ?)",
-                      (domain, title, path, doc_hash, datetime.now().isoformat()))
+                      (domain, title, path, stored_hash, datetime.now().isoformat()))
             doc_id = c.lastrowid
             for i, chunk in enumerate(chunks):
                 tokens = self._tokenize(chunk)
