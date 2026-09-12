@@ -30,6 +30,24 @@ def published_today(repo_docs: Path) -> int:
     return count, total
 
 
+def advisory_block_text(advisory: dict) -> str:
+    """Render brain advisory decisions into the digest block ('' when empty)."""
+    lines = []
+    for slug, info in list(advisory.items())[:2]:
+        decision = "📈 double down" if info.get("decision") == "double_down" else "🪂 pivot"
+        insight = ""
+        insights = info.get("insights") or []
+        if insights:
+            insight = insights[0].get("insight", "")
+        snippet = f"  · {slug}: {decision} (score {info.get('score', 0)})"
+        if insight:
+            snippet += f" — {insight[:120]}"
+        lines.append(snippet)
+    if not lines:
+        return ""
+    return "🧠 <b>Brain guidance:</b>\n" + "\n".join(lines) + "\n"
+
+
 def build_digest() -> dict:
     secrets = load_secrets()
     analytics = pull_ga4_analytics(secrets) or {}
@@ -58,6 +76,14 @@ def build_digest() -> dict:
     top = max(analytics.items(), key=lambda kv: kv[1].get("views", 0)) if analytics else None
     top_line = f"🏆 <b>Top niche:</b> {top[0]} — {top[1].get('views', 0)} views" if top else "🏆 No measurable traffic yet"
 
+    advisory = {}
+    try:
+        raw = state.get_meta("brain_advisory", "")
+        advisory = json.loads(raw) if raw else {}
+    except Exception:
+        advisory = {}
+    advisory_block = advisory_block_text(advisory)
+
     date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     text = (
         f"📊 <b>Abvorn Daily Digest</b>\n"
@@ -66,7 +92,8 @@ def build_digest() -> dict:
         f"📚 <b>Live reviews:</b> {reviews_total}\n"
         f"👀 <b>Traffic (28d):</b> {views} views · {users} users · {niches} niches\n"
         f"🛒 <b>Affiliate clicks (7d):</b> {clicks_total}\n"
-        f"{top_line}"
+        f"{top_line}\n"
+        f"{advisory_block}"
     )
     return {"text": text, "views": views, "niches": niches, "clicks": clicks_total}
 

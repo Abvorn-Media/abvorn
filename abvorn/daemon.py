@@ -111,6 +111,12 @@ class AbvornDaemon:
             persona_engine=self.persona_engine,
             persona_registry=self.persona_registry,
         )
+        try:
+            from .domination.brain_advisor import BrainAdvisor
+            self.brain_advisor = BrainAdvisor()
+        except Exception as e:
+            logger.warning(f"BrainAdvisor init failed (non-fatal): {e}")
+            self.brain_advisor = None
         self._phase3_inited = True
 
     def is_paused(self) -> bool:
@@ -489,6 +495,21 @@ class AbvornDaemon:
                 analytics = await asyncio.to_thread(pull_ga4_analytics, self.secrets)
                 clicks = await asyncio.to_thread(pull_ga4_affiliate_clicks, self.secrets, 28)
                 apply_analytics_feedback(self.state, analytics)
+
+                advisor = getattr(self, "brain_advisor", None)
+                if advisor is not None:
+                    try:
+                        from .domination.brain_advisor import run_brain_advisory
+                        advisory = await asyncio.to_thread(
+                            run_brain_advisory, advisor, analytics, self.state
+                        )
+                        if advisory:
+                            logger.info(
+                                "Brain advisory: %d decision(s) surfaced",
+                                len(advisory),
+                            )
+                    except Exception as e:
+                        logger.warning("Brain advisory failed (non-fatal): %s", e)
 
                 fed = 0
                 learner = getattr(self.domination, "learner", None)
