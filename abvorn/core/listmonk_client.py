@@ -68,9 +68,20 @@ class ListmonkClient:
         data = {"email": email, "name": name, "lists": list_ids or []}
         return self._request("post", "/api/subscribers", json=data)
 
+    def _gate_copy(self, subject: str, body_html: str) -> None:
+        """Run the copy gate (block mode) before any email leaves the system."""
+        from abvorn.core.copyguard import CopyGateError, gate_copy, html_to_text
+
+        text = f"{subject}\n{html_to_text(body_html)}"
+        res = gate_copy(text, "email", mode="block")
+        if not res.ok:
+            msgs = "; ".join(f"{i['rule']}: {i['message']}" for i in res.blocking[:6])
+            raise CopyGateError(f"copy gate blocked email send: {msgs}")
+
     def send_transactional_email(self, to_email: str, subject: str, body_html: str,
                                  from_email: str = "hello@abvorn.com",
                                  from_name: str = "Abvorn") -> Dict:
+        self._gate_copy(subject, body_html)
         data = {
             "to": [to_email],
             "subject": subject,
@@ -82,6 +93,7 @@ class ListmonkClient:
 
     def create_campaign(self, name: str, subject: str, body_html: str,
                         list_ids: List[int]) -> Dict:
+        self._gate_copy(subject, body_html)
         data = {
             "name": name,
             "subject": subject,

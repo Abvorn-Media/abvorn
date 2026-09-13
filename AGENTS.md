@@ -52,6 +52,39 @@ re-encoded as UTF-8. `find_mojibake()`/`repair_mojibake()` in
 `src/deployment.py` reverse it; the corruption entered the tree at commit
 `536f0d8` via a Windows regen and was repaired tree-wide in `1919d8c`.
 
+## Copy guard: always check copy before it is published
+
+Bad copy (grammar/spelling howlers, "We compared 4 Tv" for monitor content) has
+gone out on live social before. Every publish boundary now runs copy through a
+self-hosted LanguageTool server before the content leaves the system:
+
+- **Social** (`abvorn/domination/social_publisher.py::SocialPublisher.publish`):
+  HARD BLOCK on misspelling/grammar errors when the post would go live;
+  gate-off exports are report-only so drafts can still be reviewed.
+- **Email** (`abvorn/core/listmonk_client.py::send_transactional_email` and
+  `create_campaign`): HARD BLOCK on the subject + body before any send.
+- **Pages** (`src/deployment.py::write_checked`): REPORT ONLY — issues are
+  logged, never raised, because long LLM articles carry too many false
+  positives to hard-block.
+
+Enforcement on the copy gate:
+
+1. **Server**: `scripts/start_languagetool_server.cmd` (or `... spawn` for
+   background) starts the HTTP server on `127.0.0.1:8081`. It runs on the
+   portable Temurin JRE + LanguageTool 6.6 under `~\.abvorn\tools\` — no system
+   Java needed. The daemon calls `copyguard.ensure_server()` at startup, so
+   the gate is armed automatically.
+2. **Standalone scan** (before commit, like `check_publish_content.py`):
+   `python scripts/check_copy.py --dir docs` reports every flagged rule;
+   `--mode block` exits 1 on blocking-severity issues.
+3. **Disable**: `ABVORN_COPYGUARD=off`. **Ignore rules/products**:
+   `data/copyguard_ignore.txt` (a ruleId, or `/regex/` to redact spans).
+4. **Server down = fail open**: the gate never blocks publishing on its own
+   infra trouble; it logs a warning and skips.
+
+Module: `abvorn/core/copyguard.py`. Tests: `tests/test_copyguard.py`
+(fake backend — the test suite does not need a JVM or the server).
+
 ## Skill routing
 
 When a task matches one of these domains, load the corresponding skill

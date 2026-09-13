@@ -1,0 +1,13 @@
+# copyguard_ignore.txt — LanguageTool rule bypasses for the pre-publish copy gate.
+#
+# One entry per line:
+#   <ruleId>   ignore a LanguageTool rule entirely (e.g. WHITESPACE_RULE)
+#   /regex/    redact spans matching the regex before checking
+#
+# Lines starting with # are comments.
+
+# Known good brand/model tokens already handled by copyguard's redaction, kept
+# here as documentation of the names in our niche reviews.
+S2725QS
+S2725QC
+27UP650K

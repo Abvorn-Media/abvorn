@@ -731,6 +731,24 @@ def write_checked(path: Path, text: str, label: str, state=None) -> None:
     """
     check_encoding(text, label=label)
     try:
+        from abvorn.core.copyguard import check_text, enabled, html_to_text
+        if enabled() and text and len(text) <= 500_000:
+            plain = html_to_text(text)
+            if plain:
+                # Pages are REPORT ONLY: long LLM-generated articles carry too
+                # many false positives to hard-block on, but flagged copy must
+                # surface in the build log so it can be reviewed before commit.
+                issues = check_text(plain[:20_000])
+                if issues:
+                    rules = ", ".join(sorted({i["rule"] for i in issues[:8]}))
+                    logger.warning(
+                        "copyguard pages %s: %d issue(s) flagged (%s). "
+                        "Review before publishing.",
+                        label, len(issues), rules,
+                    )
+    except Exception:
+        logger.exception("copyguard page check failed for %s", label)
+    try:
         from abvorn.core.review_gate import write_gated
     except Exception:
         write_gated = None

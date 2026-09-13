@@ -263,6 +263,15 @@ class AbvornDaemon:
         self.running = True
         logger.info("Abvorn daemon starting...")
 
+        # Arm the pre-publish copy gate: launch the self-hosted LanguageTool
+        # server if it is not already running (non-fatal if it cannot start).
+        try:
+            from .core.copyguard import ensure_server
+            if not ensure_server():
+                logger.warning("Copy gate not armed: LanguageTool server unavailable")
+        except Exception as e:
+            logger.warning(f"Copy gate arm failed (non-fatal): {e}")
+
         brain = None
         try:
             brain = get_brain_retriever()

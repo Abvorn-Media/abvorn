@@ -119,11 +119,44 @@ class SocialPublisher:
         if self._client.available:
             self.composio = self._client.client
 
+    def _will_post_live(self, platform: str, mapping: dict) -> bool:
+        """True when this call will actually post to a live platform rather
+        than export a draft (mirrors the gate logic below without branching)."""
+        if not mapping:
+            return False
+        from ..core.social_gate import require_social_publishing
+        if not require_social_publishing():
+            return False
+        from ..deploy.social import _allowed_platforms
+        allowed = _allowed_platforms()
+        if allowed is not None and platform not in allowed:
+            return False
+        if platform == "telegram":
+            return True
+        if mapping.get("export_only"):
+            return False
+        return self._client.available
+
     def publish(self, script: dict, platform: str, niche: str = "",
                 media_paths: list[str] | None = None) -> dict:
         mapping = PLATFORM_ACTIONS.get(platform)
         if not mapping:
             return {"status": "error", "platform": platform, "reason": "unknown_platform"}
+
+        # COPY GATE: block copy that trips LanguageTool BEFORE it goes live;
+        # drafts (gate-off exports) are report-only so a human can still review.
+        text_check = _extract_text(script)
+        if text_check.strip():
+            from ..core.copyguard import CopyGateError, gate_copy
+            live = self._will_post_live(platform, mapping)
+            res = gate_copy(
+                text_check, f"social:{platform}", mode="block" if live else "report"
+            )
+            if not res.ok:
+                msgs = "; ".join(f"{i['rule']}: {i['message']}" for i in res.blocking[:6])
+                raise CopyGateError(
+                    f"copy gate blocked {platform} ('{niche or 'general'}', live={live}): {msgs}"
+                )
 
         # MASTER SWITCH: nothing posts to live social until explicitly enabled.
         from ..core.social_gate import require_social_publishing

@@ -162,6 +162,7 @@ def test_social_publisher_posts_telegram_without_composio(publisher, monkeypatch
     """Telegram must post via the Bot API even when Composio is unavailable."""
     monkeypatch.setenv("ABVORN_SOCIAL_PUBLISH", "1")
     monkeypatch.setenv("ABVORN_SOCIAL_PLATFORMS", "telegram")
+    monkeypatch.setenv("ABVORN_COPYGUARD", "off")  # hermetic: no LT server needed
 
     class FakeDeployer:
         def post(self, adapted, enable_preview: bool = False):
@@ -183,6 +184,7 @@ def test_telegram_attaches_product_photos(publisher, monkeypatch, tmp_path):
     """Telegram must send a media group when product photos exist."""
     monkeypatch.setenv("ABVORN_SOCIAL_PUBLISH", "1")
     monkeypatch.setenv("ABVORN_SOCIAL_PLATFORMS", "telegram")
+    monkeypatch.setenv("ABVORN_COPYGUARD", "off")  # hermetic: no LT server needed
 
     import json
     from PIL import Image
