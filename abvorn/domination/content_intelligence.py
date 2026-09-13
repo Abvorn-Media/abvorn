@@ -100,7 +100,7 @@ class ContentIntelligence:
     def _detect_niche(self, title: str, text: str, tags: list[str]) -> str:
         combined = (title + " " + text + " " + " ".join(tags)).lower()
         niches = {
-            "tv": ["tv", "television", "oled", "qled", "4k", "smart tv"],
+            "tv": ["tv", "television", "oled", "qled", "4k tv", "smart tv"],
             "laptop": ["laptop", "notebook", "macbook", "gaming laptop", "ultrabook"],
             "smart-home": ["smart home", "smart", "alexa", "google home", "homekit"],
             "monitor": ["monitor", "display", "ultrawide", "4k monitor"],
