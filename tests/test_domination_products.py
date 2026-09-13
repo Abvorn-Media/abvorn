@@ -328,6 +328,38 @@ def test_platform_media_landscape_sizes_for_share_platforms(tmp_path, monkeypatc
         assert Image.open(paths[0]).size == dims, f"{platform}: {Image.open(paths[0]).size}"
 
 
+def test_platform_media_linkedin_is_single_winner_card(tmp_path, monkeypatch):
+    """LinkedIn must carry exactly ONE share card — the Overall Winner — while
+    Instagram keeps the full carousel deck (product slides + Abvorn CTA)."""
+    from abvorn.domination import instagram_cards as igc
+    from PIL import Image
+    src = tmp_path / "src.jpg"
+    Image.new("RGB", (1200, 1200), (30, 60, 200)).save(src)
+    monkeypatch.setattr(igc, "_download_image", lambda p: str(src))
+    products = [
+        {"name": "Logitech G305", "price": "$29.99", "role": "Overall Winner", "index": 0},
+        {"name": "Razer Viper Mini", "price": "$39.99", "role": "Runner-Up", "index": 1},
+        {"name": "Pulsar X2", "price": "$49.99", "role": "Also Great", "index": 2},
+    ]
+    li = igc.compose_platform_media(
+        products, "gaming-mice", "Best Gaming Mice",
+        "https://abvorn.com/gaming-mice/", "linkedin",
+        cache_dir=tmp_path / "linkedin",
+    )
+    assert len(li) == 1, f"linkedin must get exactly one winner card, got {len(li)}"
+    assert Image.open(li[0]).size == (1200, 627)
+    # Winner (index 0) is the only card composed — the deck is its share card.
+    assert str(li[0]).endswith("share_0.jpg")
+
+    ig = igc.compose_platform_media(
+        products, "gaming-mice", "Best Gaming Mice",
+        "https://abvorn.com/gaming-mice/", "instagram",
+        cache_dir=tmp_path / "instagram",
+    )
+    assert len(ig) == len(products) + 1  # product slides + CTA stay intact
+    assert Image.open(ig[-1]).size == (1080, 1350)
+
+
 def test_platform_media_pinterest_is_2x3(tmp_path, monkeypatch):
     """Pinterest pins must be 1000x1500 (2:3), the platform's recommended ratio."""
     from abvorn.domination import instagram_cards as igc

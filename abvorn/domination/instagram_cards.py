@@ -471,10 +471,11 @@ def compose_platform_media(products: list[dict], niche: str, title: str, url: st
                            cache_dir: str | Path | None = None) -> list[str]:
     """Build real-product-photo media for any image-capable platform.
 
-    Instagram & Telegram get a vertical carousel deck (1080x1350 cards); the
-    landscape share platforms (LinkedIn, X, Facebook) get one horizontal card
-    per product at their share size; Pinterest gets 2:3 pins.  Falls back to
-    [] when no products/photo resolve, leaving the caller's Pexels path intact.
+    Instagram & Telegram get a vertical carousel deck (1080x1350 cards, product
+    slides + the Abvorn CTA card); LinkedIn gets exactly ONE horizontal share
+    card — the Overall Winner; X & Facebook get one horizontal card per product
+    at their share size; Pinterest gets 2:3 pins.  Falls back to [] when no
+    products/photo resolve, leaving the caller's Pexels path intact.
     """
     if not products:
         return []
@@ -500,8 +501,15 @@ def compose_platform_media(products: list[dict], niche: str, title: str, url: st
 
     dims = PLATFORM_DIMS.get(platform)
     if platform in LANDSCAPE_PLATFORMS and dims:
+        # LinkedIn carries a single image: the Overall Winner share card.
+        # Every other landscape platform keeps one card per product.
+        targets = products
+        if platform == "linkedin":
+            winners = [p for p in products
+                       if "winner" in str(p.get("role", "")).lower()]
+            targets = winners[:1] or products[:1]
         paths = []
-        for product in products:
+        for product in targets:
             product = dict(product)
             product["_slug"] = niche
             out = compose_landscape_card(product, product.get("role", "Overall Winner"),
