@@ -308,6 +308,74 @@ def test_full_carousel_compose(tmp_path, monkeypatch):
         assert Image.open(p).size == (1080, 1350)
 
 
+def test_cta_card_title_fits_and_no_overflow(tmp_path, monkeypatch):
+    """The finale card must wrap/shrink long guide titles so nothing bleeds
+    off the 1080x1350 canvas (regression for the one-line centered title)."""
+    from abvorn.domination import instagram_cards as igc
+    from PIL import Image
+    src = tmp_path / "src.jpg"
+    Image.new("RGB", (1500, 1500), (30, 60, 200)).save(src)
+    monkeypatch.setattr(igc, "_download_image", lambda p: str(src))
+
+    products = [{
+        "name": "Samsung Odyssey OLED G9 49-inch Ultra-Wide Gaming Monitor",
+        "price": "$1,299.99", "role": "Overall Winner", "score": 8.2, "index": 0,
+    }]
+    paths = igc.compose_carousel(
+        products, "4k-monitors",
+        "The Best 4K Monitors for Work, Gaming and Everything In Between",
+        "https://abvorn.com/", cache_dir=tmp_path)
+    cta = next(p for p in paths if p.endswith("cta.jpg"))
+    im = Image.open(cta).convert("RGB")
+    assert im.size == (1080, 1350)
+    px = im.load()
+
+    def is_ink(pq, x, y):
+        r, g, b = pq[x, y]
+        return r < 60 and g < 60 and b < 60
+
+    # 40px side guards + the bottom 10 rows must stay pure ink.
+    for y in range(60, 1340, 4):
+        for x in (0, 20, 1040, 1060):
+            assert is_ink(px, x, y), f"overflow pixel at {x, y}: {px[x, y]}"
+    for x in range(0, 1080, 16):
+        for y in range(1340, 1350):
+            assert is_ink(px, x, y), f"bottom overflow pixel at {x, y}: {px[x, y]}"
+
+    # The winner's verdict badge must be present as the deep-gold accent.
+    gold = sum(
+        1
+        for x in range(0, 1080, 3)
+        for y in range(0, 1350, 3)
+        if (lambda c: c[0] > 140 and 60 < c[1] < 190 and c[2] < 130)(px[x, y])
+    )
+    assert gold > 500
+
+
+def test_cta_card_winner_data_is_rendered(tmp_path):
+    from abvorn.domination import instagram_cards as igc
+    from PIL import Image
+    a = igc.compose_cta_card(
+        "mice", "Best Gaming Mice", "https://abvorn.com/mice/", tmp_path / "with.jpg",
+        winner={"name": "Logitech G305", "score": 9}, cache_dir=tmp_path)
+    b = igc.compose_cta_card(
+        "mice", "Best Gaming Mice", "https://abvorn.com/mice/", tmp_path / "without.jpg",
+        winner=None, cache_dir=tmp_path)
+    assert a and b
+    assert Image.open(a).size == (1080, 1350)
+    assert Image.open(a).tobytes() != Image.open(b).tobytes()
+
+
+def test_fmt_score_edges():
+    from abvorn.domination.instagram_cards import _fmt_score
+    assert _fmt_score(8) == "8"
+    assert _fmt_score(8.0) == "8"
+    assert _fmt_score(8.2) == "8.2"
+    assert _fmt_score("7.5") == "7.5"
+    assert _fmt_score(None) is None
+    assert _fmt_score("n/a") is None
+
+
 def test_platform_media_landscape_sizes_for_share_platforms(tmp_path, monkeypatch):
     """LinkedIn/X/Facebook must get horizontal product-photo share cards at their
     canonical share dimensions, not the 4:5 Instagram canvas."""

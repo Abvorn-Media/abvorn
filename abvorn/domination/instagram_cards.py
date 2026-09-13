@@ -379,47 +379,232 @@ def compose_landscape_card(product: dict, role: str, url: str,
         return None
 
 
+_WARM_SILVER = (163, 159, 151)  # dim warm silver for captions on ink
+
+
+def _fmt_score(score) -> str | None:
+    """Render a verdict score as '8.2' / '8' — mono numerals are brand data."""
+    try:
+        v = float(score)
+    except (TypeError, ValueError):
+        return None
+    return str(int(v)) if v == int(v) else f"{v:.1f}"
+
+
+def _soft_glow(canvas: Image.Image, cx: int, cy: int, radius: int,
+               color: tuple) -> None:
+    """Wide soft radial glow behind the winner ticket — the finale's light."""
+    overlay = Image.new("RGBA", (radius * 2, radius * 2), (0, 0, 0, 0))
+    od = ImageDraw.Draw(overlay)
+    steps = 5
+    for i in range(steps):
+        r = radius * (1 - i / steps)
+        alpha = int(26 * (steps - i) / steps)
+        od.ellipse(
+            [cx - r, cy - r, cx + r, cy + r]
+            if radius * 2 > 0 else [0, 0, 1, 1],
+            fill=(*color, alpha),
+        )
+    overlay = overlay.filter(ImageFilter.GaussianBlur(radius=max(1, radius // 3)))
+    canvas.alpha_composite(overlay, (cx - radius, cy - radius))
+
+
+def _render_logo(target_width: int, cache_dir: str | Path | None = None) -> str | None:
+    """Render the white Abvorn wordmark at *target_width*, cached.
+
+    Primary: assets/logo.png — the canonical wordmark in white on ink
+    (#0a0a0a), which is indistinguishable from the card ground, so the paste
+    is seamless with no transparency needed (and no native cairo dependency).
+    Fallback: rasterize the docs/logo.svg white mark when the asset is absent.
+    """
+    cache = Path(cache_dir) if cache_dir \
+        else Path.home() / ".abvorn" / "exports" / "instagram"
+    cache.mkdir(parents=True, exist_ok=True)
+    out = cache / f"abvorn_wordmark_{target_width}.png"
+    if out.exists() and out.stat().st_size > 0:
+        return str(out)
+    alt = _REPO_ROOT / "assets" / "logo.png"
+    if alt.exists():
+        try:
+            im = Image.open(alt).convert("RGB")
+            h = max(1, int(target_width * im.height / im.width))
+            im = im.resize((target_width, h), Image.LANCZOS)
+            im.save(out)
+            return str(out)
+        except Exception as e:
+            logger.warning(f"logo fallback failed: {e}")
+    svg = _REPO_ROOT / "docs" / "logo.svg"
+    try:
+        import cairosvg  # type: ignore[import-untyped]
+        # viewBox 450x150 → 3:1 wordmark.
+        cairosvg.svg2png(
+            url=str(svg),
+            write_to=str(out),
+            output_width=target_width,
+            output_height=max(1, int(target_width / 3.0)),
+        )
+        if out.exists() and out.stat().st_size > 0:
+            return str(out)
+    except Exception as e:
+        logger.warning(f"logo render failed: {e}")
+    return None
+
+
 def compose_cta_card(niche: str, title: str, url: str,
-                     output_path: str | Path) -> str | None:
-    """Final slide: dark bg, glow-dot 'BUYING GUIDE' eyebrow, title,
-    tagline, and URL."""
+                     output_path: str | Path,
+                     winner: dict | None = None,
+                     cache_dir: str | Path | None = None) -> str | None:
+    """Final slide: dark ground, glow-dot 'BUYING GUIDE' eyebrow, the guide
+    title in display type, then the WHITE VERDICT TICKET naming the deck's
+    Overall Winner with a gold /10 badge, and the Abvorn wordmark lockup.
+
+    The title is wrapped and auto-sized so long guide titles always fit.
+    """
     W, H = CANVAS
     try:
         canvas = Image.new("RGBA", (W, H), (*INK, 255))
         draw = ImageDraw.Draw(canvas)
 
+        # Brand top rule + eyebrow (mirrors the product slides).
         draw.rectangle([0, 0, W, max(8, round(14))], fill=ACCENT)
-
         _glow_dot(canvas, 60, 116, 10, ACCENT)
         draw = ImageDraw.Draw(canvas)
-        mono = _font("mono", 22)
-        _draw_tracked(draw, 78, 110, "BUYING GUIDE", mono, 2, ACCENT)
+        eyebrow = _font("mono", 22)
+        _draw_tracked(draw, 78, 110, "BUYING GUIDE", eyebrow, 2, ACCENT)
 
-        title_font = _font("display", 54)
-        tag_font = _font("body", 38)
-        url_font = _font("mono", 30)
+        title = (title or "").strip()
+        tagline = "with prices, specs and a pick for every budget."
+        display_h = "display"
 
-        _draw_tracked_centered(draw, W // 2, 280, title, title_font, -1, WHITE)
+        # ── Title: wrap + auto-size down until it sits on ≤2 lines. ────────
+        title_w = W - 2 * 96
+        sizes = [80, 70, 60, 52, 46, 40]
+        chosen = None
+        for size in sizes:
+            font = _font(display_h, size)
+            lines = _wrap_tracked(draw, title, font, title_w, -1, max_lines=2)
+            if len(lines) <= 2:
+                core_extra = 0
+                if winner and winner.get("name"):
+                    core_extra = 230
+                core_h = len(lines) * round(size * 1.14) + 78 + core_extra
+                if core_h <= 720:
+                    chosen = (font, lines, size)
+                    break
+        if chosen is None:
+            font, lines = _font(display_h, sizes[-1]), []
+        else:
+            font, lines, _size = chosen
+        if not lines:
+            lines = _wrap_tracked(draw, title, font, title_w, -1, max_lines=2) or [""]
+
+        line_h = [round(font.size * 1.14) for _ in lines]
+
+        # Winner recap data (real deck data, not decoration).
+        name = ""
+        score = None
+        if winner:
+            name = str(winner.get("name", "") or "").strip()
+            score = _fmt_score(winner.get("score"))
+
+        # ── Lockup (bottom band) heights ───────────────────────────────────
+        lockup_top = 1048
+        hairline_y = lockup_top
+        logo_w = int(W * 0.36)
+        logo_h = max(1, int(logo_w / 3.0))
+
+        # ── Vertical layout: centre the content core above the lockup. ─────
+        name_font = _font(display_h, 54) if name else None
+        name_lines = []
+        if name and len(name) > 30:
+            name_font = _font(display_h, 44)
+        if name:
+            name_lines = _wrap_tracked(draw, name, name_font, 960 - 2 * 48, -1, max_lines=2)
+            name_lines = name_lines or [name[:44]]
+        label_font = _font("mono", 24)
+        score_font = _font("mono", 46)
+
+        tag_font = _font("mono", 26)
+        title_h = sum(line_h)
+        tag_h = 34
+        ticket_h = 0
+        if name:
+            label_row = 34
+            name_block = len(name_lines) * round(58)
+            pad = 2 * 46
+            ticket_h = label_row + 24 + name_block + pad  # ~ 260 for 2 lines
+        core_h = title_h + 30 + tag_h + 46 + ticket_h
+        core_top = lockup_top - 60 - core_h
+        if core_top < 196:
+            core_top = 196
+        cursor = core_top
+
+        # Title lines, centered, tight tracking.
+        for i, line in enumerate(lines):
+            _draw_tracked_centered(draw, W // 2, cursor, line, font, -1, WHITE)
+            cursor += line_h[i]
+        cursor += 30
+
+        # Tagline.
+        if tagline:
+            _draw_tracked_centered(draw, W // 2, cursor, tagline, tag_font, 0, _WARM_SILVER)
+            cursor += tag_h + 46
+        else:
+            cursor += 46
+
+        # ── Verdict ticket (white enamel on ink) ───────────────────────────
+        if name:
+            glow_cx, glow_cy = W // 2, cursor + ticket_h // 2
+            _soft_glow(canvas, glow_cx, glow_cy, 320, ACCENT)
+            draw = ImageDraw.Draw(canvas)
+
+            tx, ty, tw = 60, cursor, W - 120
+            th = ticket_h
+            draw.rounded_rectangle(
+                [tx, ty, tx + tw, ty + th], radius=24, fill=WHITE,
+            )
+            # all content inside the ticket is INK (inverted grammar).
+            _glow_dot(canvas, 60 + 48 - 5, ty + 46 - 5, 6, ACCENT)
+            draw = ImageDraw.Draw(canvas)
+            _draw_tracked(draw, 60 + 66, ty + 40, "OVERALL WINNER", label_font, 4, ACCENT)
+            if score:
+                st = score_font
+                sw = 0
+                for ch in f"{score}/10":
+                    sw += draw.textlength(ch, font=st) + 1
+                draw.text((tx + tw - 48 - sw, ty + 22), f"{score}/10",
+                          font=st, fill=ACCENT_DARK)
+            ny = ty + 46 + 24
+            for i, line in enumerate(name_lines):
+                _draw_tracked_centered(draw, W // 2, ny, line, name_font, -1, INK)
+                ny += round(58)
+            cursor = ty + th + 8
+
+        # ── Wordmark lockup ────────────────────────────────────────────────
+        hair = ImageDraw.Draw(canvas)
+        hair.line([60, hairline_y, W - 60, hairline_y], fill=(140, 136, 128, 90), width=2)
+        logo = _render_logo(logo_w, cache_dir=cache_dir)
+        if logo:
+            lim = Image.open(logo)
+            lx = (W - lim.width) // 2
+            ly = hairline_y + 26
+            if lim.mode == "RGBA":
+                canvas.alpha_composite(lim, (lx, ly))
+            else:
+                canvas.paste(lim, (lx, ly))
+        else:
+            _draw_tracked_centered(
+                draw, W // 2, hairline_y + 40, "ABVORN",
+                _font(display_h, 56), 6, WHITE,
+            )
+        url_font = _font("mono", 26)
         _draw_tracked_centered(
-            draw,
-            W // 2,
-            380,
-            "with prices, specs and a pick for every budget.",
-            tag_font,
-            0,
-            (200, 200, 200),
+            draw, W // 2, hairline_y + 26 + logo_h + 30,
+            "abvorn.com/" + (niche or "guides"), url_font, 1, ACCENT,
         )
         _draw_tracked_centered(
-            draw, W // 2, 520, "abvorn.com/" + (niche or "guides"), url_font, 0, WHITE
-        )
-        _draw_tracked_centered(
-            draw,
-            W // 2,
-            620,
-            "real research, not spec sheets",
-            url_font,
-            1,
-            MUTED,
+            draw, W // 2, hairline_y + 26 + logo_h + 30 + 40,
+            "real research, not spec sheets", _font("mono", 20), 1, _WARM_SILVER,
         )
 
         out = Path(output_path)
@@ -460,7 +645,8 @@ def compose_carousel(products: list[dict], niche: str, title: str, url: str,
         if out:
             paths.append(out)
     if cta and products:
-        cta_path = compose_cta_card(niche, title, url, root / "cta.jpg")
+        cta_path = compose_cta_card(niche, title, url, root / "cta.jpg",
+                                    winner=products[0], cache_dir=root)
         if cta_path:
             paths.append(cta_path)
     return paths
