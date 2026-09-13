@@ -125,6 +125,21 @@ class DominationOrchestrator:
             logger.warning(f"[{cycle_id}] Product resolution failed (non-fatal): {e}")
             steps["products"] = {"status": "failed", "error": str(e)}
 
+        # Derive the platform set: with the gate ON the whitelist is the single
+        # source of truth so every cycle targets the same channels consistently.
+        effective_platforms = platforms
+        if effective_platforms is None:
+            try:
+                from ..core.social_gate import require_social_publishing
+                if require_social_publishing():
+                    from ..deploy.social import _allowed_platforms
+                    allowed = _allowed_platforms()
+                    if allowed is not None:
+                        from .viral_script_generator import PLATFORM_SPECS
+                        effective_platforms = sorted(allowed & set(PLATFORM_SPECS))
+            except Exception as e:
+                logger.warning(f"[{cycle_id}] platform scoping failed (non-fatal): {e}")
+
         try:
             persona = self._resolve_persona(target.get("niche", ""))
             steps["persona"] = {"status": "ok" if persona else "none",
@@ -132,7 +147,7 @@ class DominationOrchestrator:
             if persona:
                 logger.info(f"[{cycle_id}] Persona: {persona.get('name', '')} ({target.get('niche', '')})")
             scripts = self.script_gen.generate(
-                target, platforms=platforms, products=products, persona=persona,
+                target, platforms=effective_platforms, products=products, persona=persona,
                 learner=self.learner,
             )
             steps["scripts"] = {

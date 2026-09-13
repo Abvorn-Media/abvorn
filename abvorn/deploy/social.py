@@ -9,6 +9,7 @@ from pathlib import Path
 import requests
 
 from ..platform import registry
+from ..platform.adapters import fit_text
 
 logger = logging.getLogger("abvorn.deploy.social")
 
@@ -80,7 +81,7 @@ class TelegramDeployer:
         url = f"https://api.telegram.org/bot{self.token}/sendMessage"
         payload = {
             "chat_id": target,
-            "text": adapted.get("text", "")[:4000],
+            "text": fit_text(adapted.get("text", ""), 4000),
             "link_preview_options": {"is_disabled": not enable_preview},
         }
         try:
@@ -181,20 +182,20 @@ class SocialDeployer:
 
     def _params_for(self, platform: str, adapted) -> dict:
         if platform == "x":
-            text = adapted[0][:280] if isinstance(adapted, list) and adapted else str(adapted)[:280]
+            text = fit_text(adapted[0], 280) if isinstance(adapted, list) and adapted else fit_text(str(adapted), 280)
             return {"text": text}
         if platform == "linkedin":
             commentary = (
                 adapted.get("post", adapted.get("body", ""))
                 if isinstance(adapted, dict) else str(adapted)
             )
-            params = {"author": self._linkedin_author_urn(), "commentary": commentary[:3000]}
+            params = {"author": self._linkedin_author_urn(), "commentary": fit_text(commentary, 3000)}
             if isinstance(adapted, dict):
                 raw_url = str(adapted.get("url", "") or "").strip()
                 if raw_url:
                     params["url"] = raw_url
-                    params["title"] = str(adapted.get("title", ""))[:200]
-                    params["description"] = str(adapted.get("body", ""))[:350]
+                    params["title"] = fit_text(str(adapted.get("title", "")), 200)
+                    params["description"] = fit_text(str(adapted.get("body", "")), 350)
             return params
         raise ValueError(f"no params builder for {platform}")
 

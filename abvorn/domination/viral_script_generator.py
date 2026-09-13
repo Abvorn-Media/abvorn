@@ -1,9 +1,10 @@
 """Viral Script Generator — converts blog content into platform-native scripts
 with hook-first architecture, tested against engagement benchmarks."""
 
-import hashlib
 import logging, re
 from datetime import datetime
+
+from ..platform.adapters import fit_text
 
 logger = logging.getLogger("abvorn.domination.viral_script")
 
@@ -60,6 +61,9 @@ HOOK_TEMPLATES = {
 NICHE_LABELS = {
     "smart-home": "Smart home devices",
     "smart home": "Smart home devices",
+    "fitness-tracker": "Fitness trackers",
+    "fitness trackers": "Fitness trackers",
+    "general": "products",
 }
 
 # Token-level case fixes applied after humanization so brand-ish tokens keep
@@ -143,7 +147,7 @@ class ViralScriptGenerator:
         persona_variants = self._persona_hooks(niche, persona, len(products or []))
         if persona_variants:
             hook_variants = persona_variants + hook_variants
-        selected_hook = hook_variants[0] if hook_variants else title[:100]
+        selected_hook = hook_variants[0] if hook_variants else fit_text(title, 100)
         hooks_for_testing = hook_variants[:3]
         product_count = len(products)
 
@@ -190,7 +194,7 @@ class ViralScriptGenerator:
             hook = hook.replace("{year}", str(datetime.now().year))
             hooks.append(hook)
 
-        hooks.append(title[:120])
+        hooks.append(fit_text(title, 120))
         return list(dict.fromkeys(hooks))[:5]
 
     def _learned_hooks(self, learner, niche: str, platform: str) -> list[str]:
@@ -300,7 +304,10 @@ class ViralScriptGenerator:
                 if product_count
                 else f"these {niche_label} got compared side by side"
             )
-            return f"For everyone who said \u2014 {'; '.join(bits)} \u2014 {compare}. Specs, prices, owner feedback. No fluff."[:280]
+            return fit_text(
+                f"For everyone who said \u2014 {'; '.join(bits)} \u2014 {compare}. Specs, prices, owner feedback. No fluff.",
+                280,
+            )
 
         pain_lead = f"{persona_name}: tired of {pain}." if (persona_name and pain) else (
             f"Tired of {pain}." if pain else ""
@@ -320,20 +327,20 @@ class ViralScriptGenerator:
                        persona: dict | None = None,
                        product_count: int = 0) -> list[str]:
         paragraphs = [p for p in summary.split("\n") if p.strip()]
-        thread = [hook[:max_len]]
+        thread = [fit_text(hook, max_len)]
         persona_line = self._persona_body(niche, persona, product_count, platform="x")
         if persona_line:
-            thread.append(persona_line[:max_len])
+            thread.append(fit_text(persona_line, max_len))
         for p in paragraphs[:5]:
             clean = re.sub(r"<[^>]+>", "", p).strip()
             if clean:
-                thread.append(clean[:max_len])
+                thread.append(fit_text(clean, max_len))
         thread.append(f"Full breakdown: {url}")
         return thread
 
     def _tiktok_script(self, title: str, hook: str, summary: str,
                        niche: str, url: str) -> dict:
-        clean_summary = re.sub(r"<[^>]+>", "", summary)[:400]
+        clean_summary = fit_text(re.sub(r"<[^>]+>", "", summary), 400)
         return {
             "hook": hook,
             "body": clean_summary,
@@ -377,7 +384,7 @@ class ViralScriptGenerator:
                          niche: str, url: str,
                          persona: dict | None = None,
                          product_count: int = 0) -> dict:
-        clean = re.sub(r"<[^>]+>", "", summary)[:800]
+        clean = fit_text(re.sub(r"<[^>]+>", "", summary), 800)
         paragraphs = clean.split("\n")[:4]
         body = "\n\n".join(p for p in paragraphs if p.strip())
         persona_body = self._persona_body(niche, persona, product_count, platform="linkedin")
@@ -399,20 +406,20 @@ class ViralScriptGenerator:
         }
 
     def _linkedin_post_text(self, hook: str, body: str, niche: str, url: str) -> str:
-        hook = str(hook or "").lstrip(" .\u2022").strip()[:200]
+        hook = fit_text(str(hook or "").lstrip(" .\u2022").strip(), 200)
         parts = [hook, body]
         question = f"What\u2019s your experience with {niche}? Drop it below \U0001F447"
         if question:
             parts.append(question)
         if url:
             parts.append(f"Full guide: {url}")
-        return "\n\n".join([p for p in parts if p])[:3000]
+        return fit_text("\n\n".join([p for p in parts if p]), 3000)
 
     def _telegram_script(self, title: str, hook: str, summary: str,
                          niche: str, url: str,
                          persona: dict | None = None,
                          product_count: int = 0) -> dict:
-        clean = re.sub(r"<[^>]+>", "", summary)[:700]
+        clean = fit_text(re.sub(r"<[^>]+>", "", summary), 700)
         paragraphs = [p.strip() for p in clean.split("\n") if p.strip()]
         body = "\n\n".join(paragraphs[:3])
         persona_body = self._persona_body(niche, persona, product_count, platform="telegram")
@@ -427,14 +434,14 @@ class ViralScriptGenerator:
         parts = [str(hook or "").lstrip(" .\u2022").strip(), body]
         if url:
             parts.append(f"Full guide: {url}")
-        text = "\n\n".join([p for p in parts if p])[:1900]
+        text = fit_text("\n\n".join([p for p in parts if p]), 1900)
         return {"text": text}
 
     def _pin_script(self, title: str, hook: str, summary: str,
                     niche: str, url: str, num: str) -> dict:
         return {
-            "title": hook[:100],
-            "description": f"{re.sub(r'<[^>]+>', '', summary)[:300]}\n\n#affiliatemarketing #{niche} #{niche.replace('-', '')}",
+            "title": fit_text(hook, 100),
+            "description": f"{fit_text(re.sub(r'<[^>]+>', '', summary), 300)}\n\n#affiliatemarketing #{niche} #{niche.replace('-', '')}",
             "url": url,
         }
 

@@ -6,6 +6,8 @@ from pathlib import Path
 
 import feedparser
 
+from ..platform.adapters import fit_text
+
 logger = logging.getLogger("abvorn.domination.content_intel")
 
 SENTIMENT_KEYWORDS = {
@@ -83,7 +85,7 @@ class ContentIntelligence:
             entries.append({
                 "title": title,
                 "url": link,
-                "summary": summary[:500],
+                "summary": fit_text(summary, 500),
                 "niche": niche,
                 "virality_score": score["total"],
                 "sentiment": score["sentiment"],
@@ -102,7 +104,6 @@ class ContentIntelligence:
         niches = {
             "tv": ["tv", "television", "oled", "qled", "4k tv", "smart tv"],
             "laptop": ["laptop", "notebook", "macbook", "gaming laptop", "ultrabook"],
-            "smart-home": ["smart home", "smart", "alexa", "google home", "homekit"],
             "monitor": ["monitor", "display", "ultrawide", "4k monitor"],
             "robot-vacuum": ["robot vacuum", "roborock", "roomba", "vacuum"],
             "webcams": ["webcam", "camera", "logitech"],
@@ -110,6 +111,13 @@ class ContentIntelligence:
             "gaming-mouse": ["gaming mouse", "mouse", "razer", "logitech g"],
             "wireless-chargers": ["wireless charger", "charging pad", "qi charger"],
             "mechanical-keyboard": ["mechanical keyboard", "keyboard", "keychron"],
+            "fitness-tracker": [
+                "fitness tracker", "fitness trackers", "fitness-tracker",
+                "fitness-trackers", "fitness band", "smartwatch", "smart watch",
+                "apple watch", "fitbit", "garmin", "wearable", "activity tracker",
+                "heart rate",
+            ],
+            "smart-home": ["smart home", "smart", "alexa", "google home", "homekit"],
         }
         for niche, keywords in niches.items():
             if any(k in combined for k in keywords):

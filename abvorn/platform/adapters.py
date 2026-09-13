@@ -12,6 +12,31 @@ from . import registry
 from .voice import get_voice
 
 
+_SENTENCE_END = re.compile(r"[.!?][\"'\u2019\u201d)]*")
+_WORD_BOUNDARY = re.compile(r"\s+")
+
+
+def fit_text(text: str, max_chars: int, suffix: str = "\u2026") -> str:
+    """Trim text at a sentence boundary so truncation never ships a half
+    sentence (or half word). Short text is returned unchanged; truncated
+    text gets the suffix (default ellipsis). Falls back to the last word
+    boundary, then the hard cap, for one long unpunctuated stretch."""
+    text = str(text or "")
+    budget = max(max_chars - len(suffix), 1)
+    if len(text) <= budget:
+        return text
+    head = text[:budget]
+    cut = 0
+    for m in _SENTENCE_END.finditer(head):
+        cut = m.end()
+    if not cut:
+        stripped = head.rstrip()
+        ws = _WORD_BOUNDARY.search(stripped[::-1])
+        if ws:
+            cut = len(stripped) - ws.start()
+    return (head[:cut] if cut else head).rstrip() + suffix
+
+
 def _clean_text(html_text: str) -> str:
     return re.sub(r'<[^>]+>', '', html_text).strip()
 
@@ -81,7 +106,7 @@ def x_adapter(anchor: dict) -> list[str]:
     headings = _extract_headings(anchor.get("article_html", ""))
     thread = [
         f"🧵 {title}",
-        intro[:280] if intro else "After comparing specs, prices, and real owner feedback, here's what we found.",
+        fit_text(intro, 280) if intro else "After comparing specs, prices, and real owner feedback, here's what we found.",
     ]
     for h in headings[:5]:
         thread.append(f"{h} — The full breakdown in our guide.")
@@ -90,7 +115,7 @@ def x_adapter(anchor: dict) -> list[str]:
         thread.append(f"Full breakdown: {url}")
     else:
         thread.append("What's your experience with these?")
-    return [t[:280] for t in thread]
+    return [fit_text(t, 280) for t in thread]
 
 
 @registry.register("linkedin", label="LinkedIn", content_types=["article", "post"],
@@ -109,10 +134,10 @@ def linkedin_adapter(anchor: dict) -> dict:
     niche = anchor.get("niche", "")
     url = resolve_url(anchor)
 
-    article = f"# {title}\n\n{description}\n\n{intro}\n\n{body[:2000]}"
+    article = f"# {title}\n\n{description}\n\n{intro}\n\n{fit_text(body, 2000)}"
 
-    hook = (description or intro or "After digging through the specs, prices, and owner feedback, one thing got clear…")[:160]
-    summary = (intro or "We compared the top options across specs, real prices, and verified owner feedback — here's what stands out.")[:260]
+    hook = fit_text(description or intro or "After digging through the specs, prices, and owner feedback, one thing got clear…", 160)
+    summary = fit_text(intro or "We compared the top options across specs, real prices, and verified owner feedback — here's what stands out.", 260)
     bullet_lines = [f"✅ {_shorten_heading(h)}" for h in headings[:3]]
     bullets = "\n".join(bullet_lines)
     question = (
@@ -123,7 +148,7 @@ def linkedin_adapter(anchor: dict) -> dict:
 
     post = f"🛒 {hook}\n\n{summary}\n\n{bullets}\n\n{question}{link_line}\n\n#Reviews #RealPrices #SpecsMatter"
 
-    result = {"title": title, "body": article[:5000], "post": post[:1300]}
+    result = {"title": title, "body": fit_text(article, 5000), "post": fit_text(post, 1300)}
     if url:
         result["url"] = url
     return result
@@ -173,8 +198,8 @@ def pinterest_adapter(anchor: dict) -> dict:
     description = anchor.get("meta_description", "")
     tags = ", ".join(anchor.get("tags", []))
     return {
-        "title": title[:100],
-        "description": f"{description[:300]}\n\n#affiliatemarketing #{tags.replace(' ', '').replace(',', ' #')[:200]}",
+        "title": fit_text(title, 100),
+        "description": f"{fit_text(description, 300)}\n\n#affiliatemarketing #{tags.replace(' ', '').replace(',', ' #')[:200]}",
     }
 
 
@@ -188,7 +213,7 @@ def medium_adapter(anchor: dict) -> str:
     title = anchor.get("post_title", "New Post")
     intro = _honest_text(_clean_text(anchor.get("intro", "")))
     body = _honest_text(_clean_text(anchor.get("article_html", "")))
-    return f"# {title}\n\n{intro}\n\n{body[:3000]}"
+    return f"# {title}\n\n{intro}\n\n{fit_text(body, 3000)}"
 
 
 @registry.register("telegram", label="Telegram", content_types=["post", "link"],
@@ -201,9 +226,12 @@ def telegram_adapter(anchor: dict) -> dict:
     import os
     title = anchor.get("post_title", anchor.get("title", "New guide from Abvorn"))
     description = _honest_text(
-        (anchor.get("meta_description")
-         or anchor.get("intro")
-         or _clean_text(anchor.get("article_html", "")))[:900]
+        fit_text(
+            (anchor.get("meta_description")
+             or anchor.get("intro")
+             or _clean_text(anchor.get("article_html", ""))),
+            900,
+        )
     )
     text = str(title)
     if description:
@@ -216,7 +244,7 @@ def telegram_adapter(anchor: dict) -> dict:
             url = f"{site}/{slug}"
     if url:
         text = f"{text}\n\n{url}"
-    return {"text": text[:4000]}
+    return {"text": fit_text(text, 4000)}
 
 
 # ─── Future Platform Stubs ──────────────────────────────────────────

@@ -509,3 +509,80 @@ def test_load_products_from_html(tmp_path, monkeypatch):
     assert p["price"] == "$29.99"
     assert p["role"] == "Overall Winner"
     assert p["image"].endswith("_AC_SL1500_.jpg")
+
+
+# ─── Half-sentence "compared 4 General" regression guard ────────────────────
+
+
+def test_detect_niche_classifies_fitness_trackers():
+    """The exact bug that shipped 'We compared 4 General': the fitness-tracker
+    article resolved to the 'general' fallback niche because the keyword map
+    had no wearable keywords. It must classify as its own niche."""
+    from abvorn.domination.content_intelligence import ContentIntelligence
+    ci = ContentIntelligence(rss_path="")
+    assert (
+        ci._detect_niche(
+            "Best Fitness Trackers 2026: Top 3 Picks Compared for Heart Rate "
+            "and Sleep Health Tracking",
+            "fitness tracker smartwatch heart rate",
+            [],
+        )
+        == "fitness-tracker"
+    )
+    assert (
+        ci._detect_niche("Fitbit Charge 6 Review", "fitbit charge 6 fitness band", [])
+        == "fitness-tracker"
+    )
+
+
+def test_fitness_tracker_copy_never_reads_general():
+    """A fitness-tracker post with real products must render 'Fitness trackers'
+    everywhere the old niche fallback rendered 'General'."""
+    gen = vsg.ViralScriptGenerator()
+    post = {"title": "Best Fitness Trackers 2026", "niche": "fitness-tracker",
+            "summary": "", "url": "https://abvorn.com/reviews/fitness-trackers/",
+            "hooks": {}}
+    products = [
+        {"name": "Product A", "price": "$79.99", "role": "Overall Winner"},
+        {"name": "Product B", "price": "$49.99", "role": "Runner-Up"},
+        {"name": "Product C", "price": "$129.99", "role": "Premium Pick"},
+        {"name": "Product D", "price": "$39.99", "role": "Best Value"},
+    ]
+    out = gen.generate(post, platforms=["instagram", "telegram", "linkedin", "pinterest", "x"],
+                       products=products)
+    for platform in ("telegram", "linkedin"):
+        script = out[platform]["script"]
+        joined = "\n".join(script) if isinstance(script, list) else str(script)
+        assert "General" not in joined
+        assert "Fitness trackers" in joined or "fitness-tracker" in joined
+    assert "Fitness trackers" in out["telegram"]["script"]["text"]
+    assert "Fitness trackers" in out["instagram"]["hook"]
+    assert "4 General" not in out["instagram"]["hook"]
+    assert "compared 4 General" not in out["pinterest"]["script"]["description"]
+
+
+def test_humanize_niche_has_countable_noun():
+    assert vsg._humanize_niche("fitness-tracker") == "Fitness trackers"
+    assert vsg._humanize_niche("general") == "products"
+
+
+def test_fit_text_cuts_at_sentence_boundary():
+    from abvorn.platform.adapters import fit_text
+    text = "First sentence. Second sentence goes here. Third sentence."
+    out = fit_text(text, 30)
+    assert out.endswith("\u2026")
+    assert out.startswith("First sentence.")
+    assert "Second " not in out  # the second sentence must not hang half-cut
+    assert len(out) <= 30
+    # a long sentence with no boundary falls back to a word boundary, never a
+    # mid-word hard cut
+    assert fit_text("nospace" * 40, 30) == ("nospace" * 4 + "nospace")[:29] + "\u2026"
+
+
+def test_fit_text_leaves_short_text_untouched():
+    from abvorn.platform.adapters import fit_text
+    assert fit_text("Short copy that fits.", 50) == "Short copy that fits."
+    assert fit_text("", 50) == ""
+    # already-ending punctuation: no ellipsis added when the sentence fits
+    out = fit_text("Complete sentence.", 20)
+    assert out == "Complete sentence." and not out.endswith("\u2026")

@@ -10,6 +10,7 @@ logger = logging.getLogger("abvorn.domination.social_publisher")
 EXPORT_DIR = Path.home() / ".abvorn" / "exports"
 
 from ..deploy.composio_client import ComposioClient
+from ..platform.adapters import fit_text
 
 # Composio v3 tool slugs. Only platforms with a live connected account get a
 # direct backend; everything else falls back to export files (TikTok by
@@ -29,7 +30,7 @@ PLATFORM_ACTIONS = {
     },
     "telegram": {
         "toolkit": "telegram",
-        "params_fn": lambda script: {"text": _extract_text(script)[:3800]},
+        "params_fn": lambda script: {"text": fit_text(_extract_text(script), 3800)},
     },
     "instagram": {
         "toolkit": "instagram",
@@ -70,12 +71,12 @@ def _linkedin_params(script: dict) -> dict:
             str(script.get("headline") or script.get("title") or "").strip()
             or "After comparing real specs, prices, and owner feedback across the top options, here's what stands out."
         )
-    params = {"commentary": commentary[:3000]}
+    params = {"commentary": fit_text(commentary, 3000)}
     raw_url = str(script.get("url", "") or "").strip()
     if raw_url:
         params["url"] = raw_url
-        params["title"] = str(script.get("title", "") or "")[:200]
-        params["description"] = str(script.get("body", "") or "")[:350]
+        params["title"] = fit_text(str(script.get("title", "") or ""), 200)
+        params["description"] = fit_text(str(script.get("body", "") or ""), 350)
     return params
 
 
@@ -257,14 +258,14 @@ class SocialPublisher:
         else:
             caption = _extract_text(script)
         caption = caption.replace("\U0001F4CC", "").replace("\U0001F517", "").strip()
-        caption = re.sub(r"\s+", " ", caption)[:2000]
+        caption = fit_text(re.sub(r"\s+", " ", caption), 2000)
         from ..platform.adapters import _has_false_testing_claim
         if not caption or _has_false_testing_claim(caption):
             caption = (
                 f"After comparing specs, prices, and real owner feedback for "
                 f"{niche or 'these products'}, here's what stands out."
             )
-        return caption[:2200]
+        return fit_text(caption, 2200)
 
     def _resize_for_instagram(self, media_paths: list[str]) -> list[str]:
         """Resize images to 1080x1350 (IG 4:5 feed format) into the export cache.
@@ -310,7 +311,7 @@ class SocialPublisher:
                 existing = [p for p in media_paths if Path(p).exists()]
                 if existing:
                     result = deployer.post_media_group(
-                        existing, params.get("text", "")[:3800]
+                        existing, fit_text(params.get("text", ""), 3800)
                     )
                     if result.get("status") == "posted":
                         logger.info(f"telegram: posted {len(existing)} photos via Bot API sendMediaGroup")
@@ -345,13 +346,16 @@ class SocialPublisher:
             return self._export(script, platform, niche, media_paths=media_paths)
 
         script_dict = script if isinstance(script, dict) else {}
-        title = str(
-            script_dict.get("title") or script_dict.get("headline")
-            or (script[0] if isinstance(script, list) and script else "") or niche
-        )[:100]
+        title = fit_text(
+            str(
+                script_dict.get("title") or script_dict.get("headline")
+                or (script[0] if isinstance(script, list) and script else "") or niche
+            ),
+            100,
+        )
         description = self._honest_pinterest_description(script_dict, niche)
         link = str(script_dict.get("url", "") or "").strip()[:2048]
-        alt_text = str(script_dict.get("title", "") or title)[:500]
+        alt_text = fit_text(str(script_dict.get("title", "") or title), 500)
 
         try:
             board_id = self._client.pinterest_board_id()
@@ -359,9 +363,9 @@ class SocialPublisher:
                 board_id=board_id,
                 image_paths=existing,
                 title=title,
-                description=description[:800],
+                description=fit_text(description, 800),
                 link=link,
-                alt_text=alt_text[:500],
+                alt_text=fit_text(alt_text, 500),
             )
         except Exception as e:
             logger.warning(f"pinterest: Composio pin failed — exporting instead: {e}")
@@ -392,7 +396,7 @@ class SocialPublisher:
             )
         niche_tag = niche.replace(" ", "").replace("-", "")
         tag_block = f"#{niche_tag} #comparison #reviews #realprices"
-        return f"{base[:600].strip()}\n\n{tag_block}"
+        return f"{fit_text(base, 600).strip()}\n\n{tag_block}"
 
     def _publish_instagram_carousel(self, script: dict | list | str, platform: str,
                                     niche: str, media_paths: list[str] | None) -> dict:
