@@ -22,12 +22,14 @@ class GA4Client:
         try:
             from google.analytics.data_v1beta import BetaAnalyticsDataClient
             from google.oauth2.service_account import Credentials
+            from abvorn.core.gsc_client import _apply_system_proxy
+            _apply_system_proxy()
             if self.credentials_json:
                 import json
                 creds = Credentials.from_service_account_info(json.loads(self.credentials_json))
-                self._client = BetaAnalyticsDataClient(credentials=creds)
+                self._client = BetaAnalyticsDataClient(credentials=creds, transport="rest")
             else:
-                self._client = BetaAnalyticsDataClient()
+                self._client = BetaAnalyticsDataClient(transport="rest")
         except Exception as e:
             logger.warning(f"GA4 client init failed: {e}")
 

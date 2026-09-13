@@ -24,11 +24,13 @@ def pull_ga4_analytics(secrets: dict) -> dict:
         from google.analytics.data_v1beta import BetaAnalyticsDataClient
         from google.analytics.data_v1beta import RunReportRequest, Metric, DateRange, Dimension
         from google.oauth2 import service_account
+        from abvorn.core.gsc_client import _apply_system_proxy
 
+        _apply_system_proxy()
         creds = service_account.Credentials.from_service_account_info(
             json.loads(ga4_creds_json)
         )
-        client = BetaAnalyticsDataClient(credentials=creds)
+        client = BetaAnalyticsDataClient(credentials=creds, transport="rest")
 
         request = RunReportRequest(
             property=f"properties/{ga4_property_id}",
@@ -89,11 +91,13 @@ def pull_ga4_affiliate_clicks(secrets: dict, days: int = 28) -> dict:
         from google.analytics.data_v1beta import BetaAnalyticsDataClient
         from google.analytics.data_v1beta import RunReportRequest, Metric, DateRange, Dimension
         from google.oauth2 import service_account
+        from abvorn.core.gsc_client import _apply_system_proxy
 
+        _apply_system_proxy()
         creds = service_account.Credentials.from_service_account_info(
             json.loads(ga4_creds_json)
         )
-        client = BetaAnalyticsDataClient(credentials=creds)
+        client = BetaAnalyticsDataClient(credentials=creds, transport="rest")
 
         request = RunReportRequest(
             property=f"properties/{ga4_property_id}",

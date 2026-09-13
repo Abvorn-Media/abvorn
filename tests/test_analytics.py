@@ -48,7 +48,7 @@ def test_pull_ga4_slug_strips_base_path(path, expected, monkeypatch):
     from abvorn.deploy import analytics as deploy_analytics
 
     class FakeClient:
-        def __init__(self, credentials=None):
+        def __init__(self, credentials=None, transport=None):
             pass
         def run_report(self, request):
             return type("R", (), {"rows": [_Row(path, 5, 1, 10.0)]})()
@@ -74,7 +74,7 @@ class _ClickRow:
 
 def _fake_client_for(rows):
     class FakeClient:
-        def __init__(self, credentials=None):
+        def __init__(self, credentials=None, transport=None):
             pass
         def run_report(self, request):
             return type("R", (), {"rows": rows})()
