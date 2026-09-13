@@ -266,6 +266,24 @@ def test_learner_absent_generates_normally():
     assert out["x"]["hook_variants"]
 
 
+def test_learned_hook_outranks_persona_hook_when_measured():
+    """Measured engagement beats hypothesized persona psychology: the hook
+    the learner ranks from real GA4 feedback wins even when a persona is
+    present and would otherwise dominate the variant list."""
+    gen = vsg.ViralScriptGenerator()
+    post = {"title": "Best Gaming Mice", "niche": "gaming-mice", "summary": "",
+            "url": "https://abvorn.com/gaming-mice/", "hooks": {}}
+    winner = {"hook_text": "This mouse wins rounds before it leaves the box", "score": 4.2}
+    learner = _FakeLearner([winner])
+    persona = {
+        "name": "Competitive Calvin",
+        "psychology": {"anxieties": ["dead zones"], "hopes": ["raked wins"]},
+    }
+    out = gen.generate(post, platforms=["x"], learner=learner, persona=persona)["x"]
+    assert out["hook"] == winner["hook_text"]
+    assert out["hook_variants"][0] == winner["hook_text"]
+
+
 def test_ig_card_is_1080x1350_with_no_padding(tmp_path, monkeypatch):
     from abvorn.domination import instagram_cards as igc
 

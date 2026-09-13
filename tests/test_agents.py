@@ -47,3 +47,70 @@ def test_supervisor_does_not_flag_unstarted_agents_as_dead():
         "instance": fresh, "spawned_at": "x",
     }
     assert supervise.detect_dead_agents() == []
+
+
+def test_supervisor_respawns_dead_agent_from_factory():
+    """A dead agent must be rebuilt from its stored factory and restarted —
+    regression for the audit finding that respawn only marked the intent
+    (respawn_pending + None instance) without ever rebuilding."""
+    import asyncio
+    from abvorn.agents.supervisor import SupervisorAgent, HEARTBEAT_TIMEOUT
+
+    supervise = SupervisorAgent(AgentBus(":memory:"))
+    created = []
+
+    class TrackedAgent(AgentBase):
+        def __init__(self, tag="x"):
+            super().__init__("TrackedAgent", AgentBus(":memory:"))
+            self.tag = tag
+            self.spawned = len(created)
+            created.append(self)
+        async def perceive(self):
+            return {}
+        async def decide(self, perception):
+            return "wait"
+        async def act(self, decision):
+            pass
+        async def reflect(self, outcome):
+            pass
+
+    first = supervise.spawn_agent("tracked", TrackedAgent, "v1")
+    assert first is not None
+    assert len(created) == 1
+
+    # Simulate heartbeat death: stamp a heartbeat far older than the timeout.
+    import time
+    first._last_heartbeat = time.time() - (HEARTBEAT_TIMEOUT + 5)
+    assert supervise.detect_dead_agents() == ["tracked"]
+
+    async def run():
+        decided = await supervise.decide({"dead_agents": ["tracked"],
+                                          "pending_commands": [],
+                                          "registry_size": 2})
+        assert decided == "respawn:tracked"
+        outcome = await supervise.act(decided)
+        await supervise.reflect(outcome)
+
+    asyncio.run(run())
+
+    assert len(created) == 2, "respawn must build a new instance"
+    assert created[1].tag == "v1"
+    entry = supervise.registry["tracked"]
+    assert entry["status"] == "running"
+    assert entry["instance"] is created[1]
+    assert entry["class"] == "TrackedAgent"
+
+
+def test_supervisor_respawn_failure_reports_failed():
+    """No factory in the registry → respawn reports failure, not silence."""
+    import asyncio
+    from abvorn.agents.supervisor import SupervisorAgent
+
+    supervise = SupervisorAgent(AgentBus(":memory:"))
+    supervise.registry["ghost"] = {
+        "class": "GhostAgent", "status": "dead",
+        "instance": None, "spawned_at": "x",
+    }
+
+    outcome = asyncio.run(supervise.act("respawn:ghost"))
+    assert outcome == {"respawning": [], "failed": ["ghost"]}

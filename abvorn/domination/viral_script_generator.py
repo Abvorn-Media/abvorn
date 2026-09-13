@@ -142,11 +142,11 @@ class ViralScriptGenerator:
             count = len(products)
             hook_variants.insert(0, f"We compared {count} {_humanize_niche(niche)}. Here's what we'd actually buy.")
         learned_hooks = self._learned_hooks(learner, niche, platform)
-        if learned_hooks:
-            hook_variants = learned_hooks + hook_variants
         persona_variants = self._persona_hooks(niche, persona, len(products or []))
         if persona_variants:
             hook_variants = persona_variants + hook_variants
+        if learned_hooks:
+            hook_variants = learned_hooks + hook_variants
         selected_hook = hook_variants[0] if hook_variants else fit_text(title, 100)
         hooks_for_testing = hook_variants[:3]
         product_count = len(products)

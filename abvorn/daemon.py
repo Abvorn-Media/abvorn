@@ -1,6 +1,6 @@
 """Abvorn daemon — runs all agents continuously."""
 
-import asyncio, logging, json, subprocess, sys, uuid
+import asyncio, logging, json, sys, uuid
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -39,6 +39,10 @@ BUS_DB = Path.home() / ".abvorn" / "bus.db"
 # Lowered from 24h to 12h so the org ships more content per day when provider
 # quota allows; each run routes to whichever model has remaining budget.
 FULL_CYCLE_HOURS = 12
+
+# Cadence for the OptimizationDaemon (CTA/hook/brain/schedule/email tuning).
+# Rules-only analysis: no LLM calls unless a low performer needs a rewrite.
+OPTIMIZATION_INTERVAL = timedelta(hours=1)
 
 class AbvornDaemon:
     """The daemon that keeps Abvorn alive 24/7."""
@@ -307,47 +311,31 @@ class AbvornDaemon:
         except Exception as e:
             logger.warning(f"Site deploy at startup failed (non-fatal): {e}")
 
-        self.agents = [
-            ResearchAgent(self.bus, self.state, self.router, brain, will=self.will, drive=Drive("ResearchAgent", self.will.mission)),
-            ContentAgent(self.bus, self.state, self.router, pipeline, brain, will=self.will, drive=Drive("ContentAgent", self.will.mission)),
-            DeployAgent(self.bus, self.state, deployer, will=self.will, drive=Drive("DeployAgent", self.will.mission)),
-        ]
-
         self.supervisor = SupervisorAgent(self.bus, self.state, brain, will=self.will, drive=Drive("SupervisorAgent", self.will.mission))
-        self.supervisor.registry.update({
-            a.name: {
-                "class": a.__class__.__name__,
-                "status": "running",
-                "instance": a,
-                "spawned_at": datetime.now().isoformat(),
-            } for a in self.agents
-        })
-        self.agents.append(self.supervisor)
+        self.agents = [
+            self.supervisor.spawn_agent("ResearchAgent", ResearchAgent, self.bus, self.state, self.router, brain, will=self.will, drive=Drive("ResearchAgent", self.will.mission)),
+            self.supervisor.spawn_agent("ContentAgent", ContentAgent, self.bus, self.state, self.router, pipeline, brain, will=self.will, drive=Drive("ContentAgent", self.will.mission)),
+            self.supervisor.spawn_agent("DeployAgent", DeployAgent, self.bus, self.state, deployer, will=self.will, drive=Drive("DeployAgent", self.will.mission)),
+            self.supervisor,
+        ]
 
         active_platforms = [p for p in self._registry.list(category="social")
                             if p not in ("facebook", "youtube")]
         for pname in active_platforms:
             vp = self._registry.voice_profile(pname)
-            pagent = PlatformAgent(self.bus, self.state, self.router, pname,
-                                    voice_profile=vp, registry=self._registry, brain=brain,
-                                    will=self.will)
-            self.supervisor.spawn_agent(pagent.name, PlatformAgent,
-                                         self.bus, self.state, self.router,
-                                         pname, voice_profile=vp,
-                                         registry=self._registry, brain=brain,
-                                         will=self.will)
-            self.agents.append(pagent)
+            self.agents.append(
+                self.supervisor.spawn_agent(f"PlatformAgent_{pname}", PlatformAgent,
+                                            self.bus, self.state, self.router,
+                                            pname, voice_profile=vp,
+                                            registry=self._registry, brain=brain,
+                                            will=self.will)
+            )
 
         from .agents.ambassador import SocialAmbassador
-        self.ambassador = SocialAmbassador(
-            self.bus, self.state, self.router,
-            self.social, brain=brain, notifier=self.notifier,
-            will=self.will, drive=Drive("SocialAmbassador", self.will.mission),
-        )
-        self.supervisor.spawn_agent("SocialAmbassador", SocialAmbassador,
-                                     self.bus, self.state, self.router,
-                                     self.social, brain=brain, notifier=self.notifier,
-                                     will=self.will, drive=Drive("SocialAmbassador", self.will.mission))
+        self.ambassador = self.supervisor.spawn_agent("SocialAmbassador", SocialAmbassador,
+                                                     self.bus, self.state, self.router,
+                                                     self.social, brain=brain, notifier=self.notifier,
+                                                     will=self.will, drive=Drive("SocialAmbassador", self.will.mission))
         self.agents.append(self.ambassador)
 
         for agent in self.agents:
@@ -374,6 +362,9 @@ class AbvornDaemon:
 
         analytics_task = asyncio.create_task(self._analytics_feedback_loop())
         self._tasks.append(analytics_task)
+
+        optimization_task = asyncio.create_task(self._optimization_loop())
+        self._tasks.append(optimization_task)
 
         logger.info(f"Daemon running with {len(self.agents)} agents")
 
@@ -593,6 +584,49 @@ class AbvornDaemon:
             except Exception as e:
                 logger.warning("Analytics feedback error (non-fatal): %s", e)
             await asyncio.sleep(43200)
+
+    async def _optimization_loop(self):
+        """Run the OptimizationDaemon: tune CTAs, hooks, brain freshness,
+        trend schedule and scheduled emails. Hourly, gated by should_run.
+
+        The first run is staggered an hour after boot (same policy as the
+        full-cycle loop) so a fresh daemon doesn't fire a heavy real-web trend
+        scan while the site is still warming up, and so shutdown at boot time
+        is not blocked on that scan."""
+        logger.info("Optimization loop starting")
+        from .daemon import OptimizationDaemon
+        stagger = getattr(self, "optimization_first_run_stagger", 3600)
+        first = not bool(self.state.get_meta("optimization_last_run", ""))
+        while self.running:
+            try:
+                if first and stagger:
+                    first = False
+                    await asyncio.sleep(stagger)
+                    continue
+                if self.is_paused():
+                    await asyncio.sleep(3600)
+                    continue
+                optimizer = OptimizationDaemon(self.state)
+                if not optimizer.should_run(interval=int(OPTIMIZATION_INTERVAL.total_seconds())):
+                    await asyncio.sleep(3600)
+                    continue
+                result = await asyncio.to_thread(optimizer.run_cycle)
+                actions = result.get("actions", [])
+                if actions:
+                    summary = ", ".join(
+                        a.get("type", "?") for a in actions[:5]
+                    )
+                    logger.info(
+                        "Optimization cycle %s: %d action(s) [%s]",
+                        result.get("cycle_id", "?"), len(actions), summary,
+                    )
+                else:
+                    logger.info("Optimization cycle %s: no actions", result.get("cycle_id", "?"))
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                logger.exception("Optimization loop crash (non-fatal)")
+            await asyncio.sleep(3600)
 
     async def stop(self):
         """Graceful shutdown of all agents."""
