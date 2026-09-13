@@ -213,6 +213,31 @@ def _get_ga4_clicks_by_slug(secrets):
     return _GA4_CLICK_CACHE
 
 
+_GA4_SCORE_CACHE = None
+
+
+def _get_ga4_niche_scores(secrets):
+    """Memoized real GA4 engagement score per niche slug.
+
+    Uses the same slug/base-path logic as pull_ga4_analytics so scores align
+    with pick_niche's niche slugs. Returns {} on any failure so niche
+    selection still falls back to round-robin.
+    """
+    global _GA4_SCORE_CACHE
+    if _GA4_SCORE_CACHE is None:
+        try:
+            from abvorn.deploy.analytics import pull_ga4_analytics, compute_ga4_score
+            analytics = pull_ga4_analytics(secrets) or {}
+            _GA4_SCORE_CACHE = {
+                slug: compute_ga4_score(d["views"], d["users"], d["avg_duration"])
+                for slug, d in analytics.items()
+            }
+        except Exception as e:
+            logger.warning(f"GA4 niche scores unavailable: {e}")
+            _GA4_SCORE_CACHE = {}
+    return _GA4_SCORE_CACHE
+
+
 # ─── Image & affiliate helpers ──────────────────────────────────────────
 
 def fetch_product_image(query, pexels_key):
@@ -565,21 +590,50 @@ def save_state(state):
     with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=2)
 
-def pick_niche(state):
-    """Pick the niche with the fewest posts. Tie-break: round-robin from last."""
+def pick_niche(state, ga4_scores=None):
+    """Pick a niche: fewest posts first, GA4-proven performer breaks ties.
+
+    Coverage comes first: the floor is the niche(s) with the fewest posts, so
+    unproven niches still get content. Among niches at the floor, one with real
+    GA4 engagement (score > 0) wins over round-robin so production targets
+    proven demand. When no floor niche has proof, a niche one post above the
+    floor with strong engagement (score >= 20) can take the slot. Falls back to
+    the legacy round-robin tie-break when no GA4 scores are available.
+    """
     niches = state["niches"]
     last = state.get("last_processed")
+    ga4_scores = ga4_scores or {}
     # Find min posts
     min_posts = min(n["posts"] for n in niches)
     candidates = [n for n in niches if n["posts"] == min_posts]
-    # Prefer a niche after the last processed one (round-robin)
-    if last and len(candidates) > 1:
-        slugs = [n["slug"] for n in niches]
-        last_idx = slugs.index(last) if last in slugs else -1
-        after_last = [n for n in candidates if slugs.index(n["slug"]) > last_idx]
-        if after_last:
-            return after_last[0]
-    return candidates[0]
+
+    def _round_robin(choices):
+        """Legacy tie-break: prefer a candidate after the last processed one."""
+        if last and len(choices) > 1:
+            slugs = [n["slug"] for n in niches]
+            last_idx = slugs.index(last) if last in slugs else -1
+            after_last = [n for n in choices if slugs.index(n["slug"]) > last_idx]
+            if after_last:
+                return after_last[0]
+        return choices[0]
+
+    if ga4_scores:
+        # Prefer a proven performer at the coverage floor.
+        proven = [n for n in candidates if ga4_scores.get(n["slug"], 0) > 0]
+        if proven:
+            best_score = max(ga4_scores.get(n["slug"], 0) for n in proven)
+            top = [n for n in proven if ga4_scores.get(n["slug"], 0) == best_score]
+            return _round_robin(top)
+        # No floor proof: promote a niche one post up with strong engagement.
+        promoted = [
+            n for n in niches
+            if n["posts"] == min_posts + 1 and ga4_scores.get(n["slug"], 0) >= 20
+        ]
+        if promoted:
+            best_score = max(ga4_scores.get(n["slug"], 0) for n in promoted)
+            top = [n for n in promoted if ga4_scores.get(n["slug"], 0) == best_score]
+            return _round_robin(top)
+    return _round_robin(candidates)
 
 
 # ─── HTML template helpers ──────────────────────────────────────────────
@@ -3341,7 +3395,7 @@ def main(forced_niche=None, force=False, batch_mode=False):
             print(f"SKIP: {forced_niche} already has {niche['posts']} posts (use force=true to override)")
             sys.exit(0)
     else:
-        niche = pick_niche(state)
+        niche = pick_niche(state, ga4_scores=_get_ga4_niche_scores(secrets))
     niche_slug = niche["slug"]
     niche_name = niche["name"]
     print(f"Picked: {niche_slug} ({niche['posts']} existing posts)")
