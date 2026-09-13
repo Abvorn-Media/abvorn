@@ -158,6 +158,30 @@ class SocialPublisher:
 
         try:
             share_slug = mapping.get("url_share_slug") if platform == "linkedin" else None
+
+            # LinkedIn: composed product cards with real photos beat a bare
+            # link-preview card. Try the image post first, then fall back.
+            if platform == "linkedin" and media_paths:
+                existing = [p for p in media_paths if Path(p).is_file()]
+                if existing:
+                    try:
+                        data = self._client.linkedin_publish_image_post(
+                            commentary=params["commentary"],
+                            image_paths=existing,
+                            author_urn=params["author"],
+                        )
+                        result = {
+                            "status": "posted",
+                            "platform": platform,
+                            "tool": "LINKEDIN_CREATE_LINKED_IN_POST",
+                            "data": data,
+                        }
+                        self._results.append(result)
+                        logger.info(f"linkedin: posted {len(existing)} images")
+                        return result
+                    except Exception as e:
+                        logger.warning(f"linkedin: image post failed — falling back: {e}")
+
             share_args = _linkedin_url_share_args(params) if share_slug else None
             if share_args:
                 try:

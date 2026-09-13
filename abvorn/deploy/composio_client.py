@@ -254,6 +254,45 @@ class ComposioClient:
             {"ig_user_id": user_id, "creation_id": creation_id},
         )
 
+    def linkedin_publish_image_post(self, commentary: str,
+                                    image_paths: list[str],
+                                    author_urn: str = "") -> dict:
+        """Publish a LinkedIn post with attached images (media category IMAGE).
+
+        Uploads each local image through Composio's file-upload pipeline
+        (FileUploadable) and attaches them to LINKEDIN_CREATE_LINKED_IN_POST's
+        ``images`` array — a single image posts as media, 2+ as multiImage
+        (LinkedIn picks automatically). Returns the create-post response data
+        on success; raises on any step failure so the caller keeps its
+        export/URL-share fallback semantics.
+        """
+        uid, caid, version = self.resolve_connection("linkedin")
+        author = author_urn or self.linkedin_author_urn()
+
+        try:
+            from composio.core.models._files import FileUploadable
+        except ImportError as e:
+            raise RuntimeError(
+                f"composio FileUploadable unavailable: {e}"
+            ) from e
+
+        images = []
+        for path in image_paths[:20]:
+            fu = FileUploadable.from_path(
+                client=self.client.client,
+                file=path,
+                tool="LINKEDIN_CREATE_LINKED_IN_POST",
+                toolkit="linkedin",
+                sensitive_file_upload_protection=False,
+            )
+            images.append(fu.model_dump())
+
+        return self.execute(
+            "linkedin",
+            "LINKEDIN_CREATE_LINKED_IN_POST",
+            {"author": author, "commentary": commentary[:3000], "images": images},
+        )
+
     # ------------------------------------------------------------------
     # Pinterest
     # ------------------------------------------------------------------

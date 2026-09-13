@@ -277,7 +277,8 @@ class SocialDeployer:
             return adapted
         return adapted
 
-    def post(self, content: dict, platform: str) -> dict:
+    def post(self, content: dict, platform: str,
+             media_paths: list[str] | None = None) -> dict:
         """Post adapted content to a single platform."""
         if not registry.has(platform):
             return {"status": "error", "reason": f"unknown_platform:{platform}"}
@@ -345,6 +346,30 @@ class SocialDeployer:
             self._results.append(result)
             logger.warning(f"{platform}: params failed — {result['reason']}")
             return result
+
+        # LinkedIn: attach composed product cards as real images (media
+        # category IMAGE) before falling back to a URL-share/text post.
+        if platform == "linkedin" and media_paths:
+            existing = [p for p in media_paths if Path(p).is_file()]
+            if existing:
+                try:
+                    data = self._client.linkedin_publish_image_post(
+                        commentary=params["commentary"],
+                        image_paths=existing,
+                        author_urn=params["author"],
+                    )
+                    self._posted.append(platform)
+                    result = {
+                        "status": "posted",
+                        "platform": platform,
+                        "tool": "LINKEDIN_CREATE_LINKED_IN_POST",
+                        "data": data,
+                    }
+                    self._results.append(result)
+                    logger.info(f"{platform}: posted {len(existing)} images")
+                    return result
+                except Exception as e:
+                    logger.warning(f"{platform}: image post failed — falling back: {e}")
 
         try:
             resp = None
