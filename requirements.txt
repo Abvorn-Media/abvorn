@@ -28,6 +28,7 @@ pydantic
 
 networkx>=3.1
 python-louvain
+graphifyy==0.9.25
 
 # Symbiotic Cortex (Obsidian vault)
 watchdog>=3.0.0

@@ -105,11 +105,38 @@ class NeuralMemory:
                 logger.info("Graphify: no extractable files under %s", target)
                 return {"entities": 0, "relationships": 0}
 
-            extraction = extract(files, cache_root=self.graph_dir, root=self.repo_path)
+            extraction = extract(
+                files,
+                cache_root=self.graph_dir,
+                root=self.repo_path,
+                parallel=False,
+            )
             G = build_merge([extraction], graph_path=self.graph_file, root=str(self.repo_path))
             ok = to_json(G, {}, str(self.graph_file))
             if not ok:
-                logger.warning("Graphify to_json refused to persist (shrink guard?)")
+                # graphify refuses to persist a rebuilt graph with fewer nodes
+                # than the on-disk one (shrink guard, #479). ingest_all always
+                # re-extracts the whole corpus, so a small net change is usually
+                # legitimate fuzzy-dedup, not data loss. Force only when the new
+                # graph stays within 90% of the existing size.
+                existing = self._load_graph()
+                existing_n = existing.number_of_nodes() if existing is not None else 0
+                new_n = G.number_of_nodes()
+                if existing_n and new_n >= int(existing_n * 0.9):
+                    logger.warning(
+                        "Graphify shrink guard refused (existing %d, new %d); "
+                        "forcing persist of full-corpus rebuild",
+                        existing_n,
+                        new_n,
+                    )
+                    ok = to_json(G, {}, str(self.graph_file), force=True)
+                else:
+                    logger.warning(
+                        "Graphify shrink guard refused (existing %d, new %d); "
+                        "not forcing",
+                        existing_n,
+                        new_n,
+                    )
             entities = G.number_of_nodes()
             relationships = G.number_of_edges()
             state = self._load_state()

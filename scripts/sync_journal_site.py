@@ -30,8 +30,8 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(message)s")
 logger = logging.getLogger("sync_journal_site")
 
-REPO_DIR = Path("/opt/abvorn-core/repo-src")
-RUNTIME_DATA = Path("/opt/abvorn-core/data")
+REPO_DIR = Path(os.environ.get("ABVORN_SYNC_REPO_DIR", "/opt/abvorn-core/repo-src"))
+RUNTIME_DATA = Path(os.environ.get("ABVORN_SYNC_DATA_DIR", "/opt/abvorn-core/data"))
 SITE_BASE = os.environ.get("SITE_URL", "https://abvorn.com").rstrip("/")
 
 # Target the repo-tracked journal for both harvest and page rebuild.
@@ -70,6 +70,38 @@ def main() -> int:
     except Exception as e:
         logger.error("repo reset failed: %s", e)
         return 1
+
+    # Refresh neural-memory graph stats from the repo on disk so the journal
+    # page embeds live counters. graphify-out/ and data/neural_memory_state.json
+    # are gitignored, so the refresh must run wherever the repo actually lives
+    # (this script, on the VPS, or on a GitHub Actions runner). Best-effort: a
+    # missing graphifyy install skips the refresh without failing the sync.
+    try:
+        os.chdir(REPO_DIR)
+        from abvorn.core.neural_memory import NeuralMemory
+
+        memory = NeuralMemory(str(REPO_DIR))
+        result = memory.ingest_all()
+        counts = {
+            k: (v.get("entities"), v.get("relationships"))
+            for k, v in result.items()
+            if isinstance(v, dict)
+        }
+        logger.info("graph refresh: %s", counts)
+    except Exception as e:
+        logger.warning("graph refresh skipped: %s", e)
+
+    # Mirror the freshly computed graph state into the runtime data dir so the
+    # harvest stamps live counters onto any new entries it appends.
+    fresh_state = REPO_DIR / "data" / "neural_memory_state.json"
+    runtime_state = RUNTIME_DATA / "neural_memory_state.json"
+    if fresh_state.exists() and fresh_state.resolve() != runtime_state.resolve():
+        try:
+            RUNTIME_DATA.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(fresh_state, runtime_state)
+            logger.info("graph state mirrored -> %s", runtime_state)
+        except Exception as e:
+            logger.warning("graph state mirror failed: %s", e)
 
     # Sync the tracked journal from real runtime signals.
     try:
