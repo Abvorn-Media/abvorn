@@ -14,7 +14,6 @@ This advisor is strictly advisory:
 
 import json
 import logging
-from pathlib import Path
 
 logger = logging.getLogger("abvorn.domination.brain_advisor")
 

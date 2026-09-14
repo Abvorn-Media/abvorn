@@ -66,7 +66,10 @@ class ContentAgent(AgentBase):
     async def decide(self, perception):
         if perception.get("events"):
             last = max(perception["events"], key=lambda e: e["created_at"])
-            niche = last['niche']
+            envelope = last.get("message", {}) if isinstance(last.get("message"), dict) else last
+            niche = envelope.get("niche") or ""
+            if not niche:
+                return "wait"
             if not self.soul_check("generate_content", {"niche": niche}):
                 logger.info(f"[ContentAgent] Soul blocked content for {niche}")
                 return "wait"

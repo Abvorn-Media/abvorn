@@ -83,7 +83,6 @@ class TransitionInjector:
         injected = 0
 
         for i in range(1, len(paragraphs)):
-            prev_lower = paragraphs[i - 1].lower()
             curr = paragraphs[i]
             curr_lower = curr.lower()
 
@@ -96,7 +95,7 @@ class TransitionInjector:
                 result.append(curr)
                 continue
 
-            context = self._detect_context(prev_lower, curr_lower)
+            context = self._detect_context(curr_lower)
             if context and injected < max(1, len(paragraphs) // 3):
                 transition = random.choice(TRANSITIONS[context])
                 curr = transition + " " + curr[0].lower() + curr[1:] if curr[0].isupper() else transition + " " + curr
@@ -131,7 +130,7 @@ class TransitionInjector:
 
         return result_html
 
-    def _detect_context(self, prev_para: str, curr_para: str) -> str:
+    def _detect_context(self, curr_para: str) -> str:
         """Detect the conversational context between two paragraphs."""
         for signal, context in _CONTEXT_SIGNALS.items():
             if signal in curr_para[:100]:

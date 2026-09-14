@@ -194,7 +194,7 @@ def find_products(article_html, niche):
                 products.append(m)
     return products[:5]
 
-def make_nav_html(current_slug=None):
+def make_nav_html():
     featured = ALL_CATEGORIES[:4]
     rest = ALL_CATEGORIES[4:]
     featured_links = "".join(f'<a class="nav-link" href="{SITE_BASE}/{c}/">{c.replace("-"," ").title()}</a>' for c in featured)
@@ -250,7 +250,7 @@ def regenerate_article(niche, existing_html, products=None):
 <style>{CSS_SHARED}</style>
 </head><body>
 <a class="skip-link" href="#main">Skip to content</a>
-{make_nav_html(niche)}
+{make_nav_html()}
 
 <article id="main">
 {article_body}

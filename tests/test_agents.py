@@ -114,3 +114,38 @@ def test_supervisor_respawn_failure_reports_failed():
 
     outcome = asyncio.run(supervise.act("respawn:ghost"))
     assert outcome == {"respawning": [], "failed": ["ghost"]}
+
+
+def test_content_agent_decide_reads_wrapped_bus_message():
+    """ContentAgent.decide must read the 'message' envelope returned by
+    get_recent_events. Regression: bare `last['niche']` raised KeyError on
+    every event-bearing poll after the bus event-driven layer (d220d8b1)
+    wrapped payloads in a 'message' key."""
+    import asyncio
+    from abvorn.agents.orchestrator import ContentAgent
+
+    bus = AgentBus(":memory:")
+    agent = ContentAgent(bus, state=None, router=None, pipeline=None)
+    bus.publish("content.researched", {"niche": "webcams", "products": [{"title": "x"}], "count": 1})
+
+    async def run():
+        perception = await agent.perceive()
+        return await agent.decide(perception)
+
+    assert asyncio.run(run()) == "generate:webcams"
+
+
+def test_content_agent_decide_waits_when_niche_missing():
+    """A research envelope without 'niche' must be skipped, not crash."""
+    import asyncio
+    from abvorn.agents.orchestrator import ContentAgent
+
+    bus = AgentBus(":memory:")
+    agent = ContentAgent(bus, state=None, router=None, pipeline=None)
+    bus.publish("content.researched", {"products": []})
+
+    async def run():
+        perception = await agent.perceive()
+        return await agent.decide(perception)
+
+    assert asyncio.run(run()) == "wait"
