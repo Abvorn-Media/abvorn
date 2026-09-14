@@ -34,3 +34,24 @@ def test_4k_tv_still_recognized_as_tv():
 
 def test_tv_with_bare_word_matches_tv():
     assert _detect("Best TV deals 2026") == "tv"
+
+
+def test_hook_platform_count_contexts_use_plural_labels():
+    """'I compared 5 tv' / '5 things to check before buying tv' shipped via
+    content_intelligence._hook_for_platform because it interpolated the raw
+    slug. Count contexts must now use the plural label; one-noun contexts the
+    singular noun."""
+    import re
+    from abvorn.domination.content_intelligence import ContentIntelligence
+    ci = ContentIntelligence(rss_path="")
+    price = re.search(r"\$\d+", "$500")
+    num = re.search(r"\d+", "5")
+    x_hooks = ci._hook_for_platform("Best TVs compared", "tv", "x", price, num)
+    x_joined = " | ".join(x_hooks)
+    assert "I compared 5 TVs" in x_joined
+    assert not re.search(r"\b5 tv\b", x_joined, re.IGNORECASE)
+    tg_hooks = ci._hook_for_platform("Best TVs compared", "tv", "telegram", price, num)
+    tg_joined = " | ".join(tg_hooks)
+    assert "check before buying TVs" in tg_joined
+    assert "another TV," in tg_joined  # one-noun context stays singular
+    assert not re.search(r"\b5 tv\b", tg_joined, re.IGNORECASE)

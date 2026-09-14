@@ -116,6 +116,59 @@ def test_check_text_empty_when_server_unavailable(monkeypatch):
     assert check_text("anything") == []
 
 
+def test_number_agreement_flags_singular_after_count():
+    """The exact regression that shipped live: LanguageTool is blind to
+    'We compared 4 Monitor', so the deterministic guard must catch it."""
+    issues = copyguard._number_agreement_issues(
+        "Tired of Matter certification delays? We compared 4 Tv so you don't "
+        "have to guess. We compared 4 Smart home devices too."
+    )
+    keys = [i["rule"] for i in issues]
+    assert "NUMBER_NOUN_AGREEMENT" in keys
+    flagged = [i for i in issues if i["rule"] == "NUMBER_NOUN_AGREEMENT"]
+    assert any("Tv" in i["context"] for i in flagged)
+    # smart-home renders as "Smart home devices" (plural 'devices') -> clean
+    assert all("devices" not in i["context"] for i in flagged)
+
+
+def test_number_agreement_flags_bare_smart_home_phrase():
+    issues = copyguard._number_agreement_issues("We compared 4 Smart home so you don't have to guess.")
+    assert any(i["rule"] == "NUMBER_NOUN_AGREEMENT" for i in issues)
+
+
+def test_number_agreement_allows_plural_nouns():
+    issues = copyguard._number_agreement_issues(
+        "We compared 4 monitors. We tested 8 TVs. We reviewed 12 Mice side by side."
+    )
+    assert [i["rule"] for i in issues] == []
+
+
+def test_number_agreement_singular_count_passes():
+    assert copyguard._number_agreement_issues("We compared 1 Tv today.") == []
+
+
+def test_number_agreement_is_blocking():
+    issues = copyguard._number_agreement_issues("We compared 4 Monitor.")
+    assert issues and is_blocking(issues[0]) is True
+
+
+def test_check_text_deterministic_runs_without_server(monkeypatch):
+    monkeypatch.setattr(copyguard, "_Availability", type("_Av", (), {
+        "available": staticmethod(lambda: False)}))
+    issues = check_text("We compared 4 Monitor in our lab.")
+    assert any(i["rule"] == "NUMBER_NOUN_AGREEMENT" for i in issues)
+
+
+def test_gate_copy_block_mode_fails_on_number_agreement(monkeypatch):
+    """Block mode must fail on the deterministic guard even when the
+    LanguageTool server is down (server-independent net stays armed)."""
+    monkeypatch.setattr(copyguard, "_Availability", type("_Av", (), {
+        "available": staticmethod(lambda: False)}))
+    res = gate_copy("We compared 4 Monitor.", "t", mode="block")
+    assert res.ok is False
+    assert "NUMBER_NOUN_AGREEMENT" in {i["rule"] for i in res.blocking}
+
+
 def test_social_publisher_blocks_live_posts(monkeypatch):
     from abvorn.domination.social_publisher import SocialPublisher
 

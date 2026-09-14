@@ -7,6 +7,10 @@ from pathlib import Path
 import feedparser
 
 from ..platform.adapters import fit_text
+from .viral_script_generator import (
+    _humanize_niche,
+    _singular_niche_label,
+)
 
 logger = logging.getLogger("abvorn.domination.content_intel")
 
@@ -212,34 +216,36 @@ class ContentIntelligence:
 
         price_str = price_match.group(0) if price_match else ""
         num_str = number_match.group(0) if number_match else ""
+        niche_plural = _humanize_niche(niche)
+        niche_singular = _singular_niche_label(niche_plural)
 
         if platform == "x":
             if price_str:
-                hooks.append(f"This {price_str} {niche} changed my mind.")
-            hooks.append(f"I compared 5 {niche} so you don't have to.")
-            hooks.append(f"Stop overpaying for {niche}.")
+                hooks.append(f"This {price_str} {niche_singular} changed my mind.")
+            hooks.append(f"I compared 5 {niche_plural} so you don't have to.")
+            hooks.append(f"Stop overpaying for {niche_plural}.")
         elif platform == "tiktok":
             if price_str:
-                hooks.append(f"POV: You just found a {price_str} {niche} that actually works.")
-            hooks.append(f"Everyone is sleeping on this {niche}.")
-            hooks.append(f"The {niche} industry doesn't want you to know this.")
+                hooks.append(f"POV: You just found a {price_str} {niche_singular} that actually works.")
+            hooks.append(f"Everyone is sleeping on this {niche_singular}.")
+            hooks.append(f"The {niche_singular} industry doesn't want you to know this.")
         elif platform == "instagram":
-            hooks.append(f"Save this for your next {niche} purchase.")
-            hooks.append(f"Which {niche} would you pick?")
+            hooks.append(f"Save this for your next {niche_singular} purchase.")
+            hooks.append(f"Which {niche_singular} would you pick?")
             hooks.append("Details in the caption \u2193")
         elif platform == "linkedin":
-            hooks.append(f"I spent {num_str or 'months'} researching {niche}. Here's what matters.")
-            hooks.append(f"The {niche} you're buying is probably wrong.")
+            hooks.append(f"I spent {num_str or 'months'} researching {niche_plural}. Here's what matters.")
+            hooks.append(f"The {niche_singular} you're buying is probably wrong.")
         elif platform == "telegram":
             if price_str:
-                hooks.append(f"Don\u2019t buy {niche} until you\u2019ve seen this.")
-            hooks.append(f"Before you buy another {niche}, read this.")
-            hooks.append(f"The {niche} comparison worth your time.")
+                hooks.append(f"Don\u2019t buy {niche_plural} until you\u2019ve seen this.")
+            hooks.append(f"Before you buy another {niche_singular}, read this.")
+            hooks.append(f"The {niche_singular} comparison worth your time.")
             if num_str:
-                hooks.append(f"{num_str} things to check before buying {niche}.")
+                hooks.append(f"{num_str} things to check before buying {niche_plural}.")
         elif platform == "pinterest":
-            hooks.append(f"The ultimate {niche} guide for {num_str or '2026'}.")
-            hooks.append(f"{niche.title()} buying checklist \u2014 save this pin!")
+            hooks.append(f"The ultimate {niche_singular} guide for {num_str or '2026'}.")
+            hooks.append(f"{niche_singular} buying checklist \u2014 save this pin!")
 
         return list(dict.fromkeys(hooks))[:5]
 

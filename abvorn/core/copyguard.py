@@ -56,6 +56,80 @@ REDACT_PATTERNS = [
 
 IGNORE_FILE = Path("data/copyguard_ignore.txt")
 
+# ----
+# Deterministic guards. LanguageTool cannot flag every class of bad copy that
+# the generators can produce (it gave "We compared 4 Monitor." a clean bill of
+# health), so copyguard also runs a few local, server-independent rules. They
+# run even when the LanguageTool server is down, so infra trouble never
+# disables the deterministic net.
+# ----
+
+# A comparison verb followed by a count and a capitalized noun phrase:
+# "We compared 4 Monitor", "tested 8 Tv", "reviewed 12 Laptop". The phrase may
+# continue with lowercase tokens ("4 Tv so you don't...", "4 Monitors."), so
+# the capture is bounded to a few words and connector words are stripped
+# before the plural check.
+_NUMBER_AGREEMENT_RE = re.compile(
+    r"\b(compare\w*|test\w*|review\w*)\s+(\d{1,3})\s+"
+    r"([A-Z][A-Za-z'’-]*(?:\s+[A-Za-z][A-Za-z'’-]*){0,3})"
+)
+
+# Tail words that are not part of the count noun phrase — stripped from the
+# captured tokens so "We compared 4 Tv so you don't..." resolves to 'Tv'.
+_NP_TAIL_WORDS = {
+    "so", "you", "we", "they", "i", "don't", "do", "to", "the", "a", "an",
+    "and", "but", "or", "of", "for", "on", "in", "with", "that", "what",
+    "then", "here", "there", "guess", "have", "has", "side", "by", "both",
+    "today", "already", "when", "too", "it", "really",
+}
+
+# Plural nouns that do not end in 's' — singular-looking tokens that are
+# already correct after a count.
+_PLURAL_NOUN_WITHOUT_S = {
+    "mice", "people", "children", "men", "women", "feet", "teeth", "geese",
+    "data", "media", "criteria", "fish", "sheep", "deer", "series", "species",
+}
+
+
+def _number_agreement_issues(text: str) -> list[dict]:
+    """Flag a count next to a singular noun ('We compared 4 Monitor').
+
+    LanguageTool misses this class entirely (verified: it returns no matches
+    for "We compared 4 Monitor."), so it is enforced here deterministically.
+    The count must be >= 2 and the final token of the resolved noun phrase
+    must not be plural-shaped (ends in s/x/z/ch/sh or a known s-less plural).
+    """
+    issues = []
+    for m in _NUMBER_AGREEMENT_RE.finditer(text):
+        try:
+            count = int(m.group(2))
+        except ValueError:
+            continue
+        if count < 2:
+            continue
+        tokens = m.group(3).split()
+        while tokens and tokens[-1].lower().strip(".,!?;:") in _NP_TAIL_WORDS:
+            tokens.pop()
+        if not tokens:
+            continue
+        last = tokens[-1].strip(".,!?;:")
+        if last.endswith(("s", "x", "z", "ch", "sh")):
+            continue
+        if last.lower() in _PLURAL_NOUN_WITHOUT_S:
+            continue
+        issues.append({
+            "rule": "NUMBER_NOUN_AGREEMENT",
+            "category": "GRAMMAR",
+            "issue_type": "grammar",
+            "message": (
+                f"The count '{count}' is followed by the singular noun "
+                f"'{last}'; use a plural form (e.g. '{last}s')."
+            ),
+            "replacement": "",
+            "context": m.group(0),
+        })
+    return issues
+
 
 class CopyGateError(RuntimeError):
     """Raised when copy fails the block-mode gate."""
@@ -158,12 +232,19 @@ class _Availability:
 
 
 def check_text(text: str, *, ignore: set[str] | None = None) -> list[dict]:
-    """Run text through LanguageTool. Returns a list of issue dicts."""
-    if not _Availability.available():
-        return []
+    """Run text through LanguageTool plus the deterministic guards.
+
+    Returns a list of issue dicts. Deterministic rules (number/noun agreement)
+    run whether or not the LanguageTool server is reachable; the server-backed
+    checks are skipped when it is down (gate still fails open on the report
+    side, but the local net stays armed).
+    """
     ignore_entries = _env_ignore_rules() if ignore is None else ignore
     cleaned = _redact(text, ignore_entries)
     issues: list[dict] = []
+    issues.extend(_number_agreement_issues(cleaned))
+    if not _Availability.available():
+        return issues
     for chunk in _chunks(cleaned):
         if not chunk.strip():
             continue

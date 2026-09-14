@@ -6,6 +6,7 @@
 """
 
 import json
+import re
 from pathlib import Path
 
 from abvorn.domination import (
@@ -192,6 +193,45 @@ def test_humanize_niche_labels_and_brand_case():
     assert vsg._humanize_niche("Smart-Home") == "Smart home devices"
     assert vsg._humanize_niche("4k-monitors") == "4K monitors"
     assert vsg._humanize_niche("gaming-mice") == "Gaming mice"
+
+
+def test_humanize_niche_single_word_slugs_are_plural():
+    """'We compared 4 Monitor' shipped live because single-word content-intel
+    slugs ('tv', 'monitor', 'laptop', ...) humanized to bare singulars. Every
+    one must now render as a plural, countable noun."""
+    assert vsg._humanize_niche("tv") == "TVs"
+    assert vsg._humanize_niche("monitor") == "Monitors"
+    assert vsg._humanize_niche("laptop") == "Laptops"
+    assert vsg._humanize_niche("webcam") == "Webcams"
+    assert vsg._humanize_niche("headphone") == "Headphones"
+    assert vsg._humanize_niche("robot-vacuum") == "Robot vacuums"
+    assert vsg._humanize_niche("gaming-mouse") == "Gaming mice"
+    assert vsg._humanize_niche("wireless-chargers") == "Wireless chargers"
+    assert vsg._humanize_niche("mechanical-keyboard") == "Mechanical keyboards"
+    # the TypeError family: plural nouns ending in 's' must not double up
+    assert vsg._humanize_niche("wireless-mice") == "Wireless mice"
+
+
+def test_generate_hooks_count_context_uses_plural():
+    """'I compared 10 tv' would have shipped via the legacy HOOK_TEMPLATES
+    (raw slug into a count template) even after _humanize_niche was fixed.
+    Count contexts get the plural label, singular-noun templates do not."""
+    gen = vsg.ViralScriptGenerator()
+    hooks = gen._generate_hooks("Best TVs", "tv", "$500", "5", "Sony", "curiosity")
+    joined = " | ".join(hooks)
+    assert "I compared 10 TVs" in joined
+    assert not re.search(r"\bcompared 10 tv\b", joined, re.IGNORECASE)
+    # singular-noun templates stay singular ("The TV you're using is wrong")
+    assert "The TV you're using is probably wrong for you." in joined
+    assert "The TVs you\u2019re" not in joined
+
+
+def test_niche_for_template_edges():
+    assert vsg._niche_for_template("I compared 10 {niche} so you don't have to.", "monitor") == "Monitors"
+    assert vsg._niche_for_template("The {niche} you're using is wrong.", "monitor") == "Monitor"
+    assert vsg._niche_for_template("{num_steps} things to check before buying {niche}.", "smart-home") == "Smart home devices"
+    assert vsg._singular_niche_label("Gaming mice") == "Gaming mouse"
+    assert vsg._singular_niche_label("Smart home devices") == "Smart home device"
 
 
 def test_persona_hook_keeps_brand_case_and_niche_noun():

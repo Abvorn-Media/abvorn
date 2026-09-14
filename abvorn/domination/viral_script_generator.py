@@ -58,13 +58,105 @@ HOOK_TEMPLATES = {
 
 # Niche slugs whose plain humanization would be an adjective without a noun
 # ('smart-home' -> 'Smart home' reads as a broken sentence next to a count).
+# Labels are PLURAL product nouns so "We compared {count} {label}" is
+# grammatical ("We compared 4 TVs", never "We compared 4 Tv"). Covers every
+# slug content_intelligence._detect_niche can produce.
 NICHE_LABELS = {
     "smart-home": "Smart home devices",
     "smart home": "Smart home devices",
     "fitness-tracker": "Fitness trackers",
     "fitness trackers": "Fitness trackers",
     "general": "products",
+    "tv": "TVs",
+    "laptop": "Laptops",
+    "monitor": "Monitors",
+    "robot-vacuum": "Robot vacuums",
+    "webcams": "Webcams",
+    "headphones": "Headphones",
+    "gaming-mouse": "Gaming mice",
+    "wireless-chargers": "Wireless chargers",
+    "mechanical-keyboard": "Mechanical keyboards",
+    "4k-monitors": "4K monitors",
 }
+
+# Plural nouns that do not end in 's' — a generic -s suffix adder would corrupt
+# them ('Mice' -> 'Mices'), so keep them as-is in the fallback pluralizer.
+_PLURAL_EXCEPTIONS = {
+    "mice", "people", "children", "men", "women", "feet", "teeth", "geese",
+    "data", "media", "criteria", "series", "species", "sheep", "fish", "deer",
+}
+
+
+def _pluralize_noun(word: str) -> str:
+    """Best-effort plural for a single capitalized noun (fallback path).
+
+    Known content-intel niches are pinned in NICHE_LABELS; this only guards
+    future/unknown single-word niches so a count never sits next to a bare
+    singular noun again.
+    """
+    low = word.lower()
+    if low in _PLURAL_EXCEPTIONS:
+        return word
+    if word.endswith(("s", "x", "z", "ch", "sh")):
+        return word
+    if low.endswith("y") and len(low) > 1 and low[-2] not in "aeiou":
+        return word[:-1] + "ies"
+    return word + "s"
+
+
+# Reverse of _pluralize_noun for the known label set — used to render the
+# singular noun when a hook template reads in one-noun voice ("the {niche}
+# you're using is probably wrong" -> "the TV you're using...").
+_SINGULAR_LABELS = {
+    "TVs": "TV",
+    "Laptops": "Laptop",
+    "Monitors": "Monitor",
+    "Robot vacuums": "Robot vacuum",
+    "Webcams": "Webcam",
+    "Headphones": "Headphone",
+    "Gaming mice": "Gaming mouse",
+    "Wireless chargers": "Wireless charger",
+    "Mechanical keyboards": "Mechanical keyboard",
+    "Fitness trackers": "Fitness tracker",
+    "Smart home devices": "Smart home device",
+    "4K monitors": "4K monitor",
+    "Wireless earbuds": "Wireless earbud",
+    "Streaming devices": "Streaming device",
+    "products": "product",
+}
+
+
+def _singular_niche_label(label: str) -> str:
+    """Best-effort singular of a humanized niche label for one-noun templates."""
+    low = label.lower()
+    if low in ("mice", "people", "children", "men", "women", "feet", "teeth"):
+        return {
+            "mice": "mouse", "people": "person", "children": "child",
+            "men": "man", "women": "woman", "feet": "foot", "teeth": "tooth",
+        }[low]
+    if label in _SINGULAR_LABELS:
+        return _SINGULAR_LABELS[label]
+    if label.endswith("ies"):
+        return label[:-3] + "y"
+    if label.endswith(("s", "es")) and not label.endswith(("ss", "us")):
+        return label[:-1]
+    return label
+
+
+# Count-context markers: templates that embed a number ("I compared 10 {niche}")
+# must use the plural noun, every other template the singular.
+_COUNT_CONTEXT_RE = re.compile(
+    r"(compare\w*\s+\d+\s+\{niche\}|(?:\d+|\{num_steps\})\s+things)"
+)
+
+
+def _niche_for_template(template: str, niche: str) -> str:
+    """Pick the plural or singular label a {niche} template needs."""
+    label = _humanize_niche(niche)
+    if _COUNT_CONTEXT_RE.search(template):
+        return label
+    return _singular_niche_label(label)
+
 
 # Token-level case fixes applied after humanization so brand-ish tokens keep
 # their canonical spelling instead of being flattened by .capitalize().
@@ -74,7 +166,12 @@ _NICHE_CASE_FIXES = {
 
 
 def _humanize_niche(niche: str) -> str:
-    """Turn a URL-style slug into display copy: 'wireless-earbuds' -> 'Wireless earbuds'."""
+    """Turn a URL-style slug into display copy: 'wireless-earbuds' -> 'Wireless earbuds'.
+
+    The result is always a plural, countable product noun so it can safely sit
+    after a count ("We compared 4 TVs") or in a generic plural context
+    ("These are the TVs worth comparing").
+    """
     niche = (niche or "").strip()
     if not niche:
         return "product"
@@ -83,12 +180,16 @@ def _humanize_niche(niche: str) -> str:
     key = niche.lower().replace("-", " ").replace("_", " ")
     if key in NICHE_LABELS:
         return NICHE_LABELS[key]
-    if " " in niche:
-        return niche
     words = key.split()
-    label = " ".join(w.capitalize() for w in words).capitalize() if words else "product"
+    if not words:
+        return "product"
+    label = " ".join(w.capitalize() for w in words).capitalize()
     for token, fix in _NICHE_CASE_FIXES.items():
         label = label.replace(token, fix)
+    # Single-token slugs ('webcam', 'monitor', 'tv') pluralize so count copy is
+    # grammatical; multi-word labels already read as noun phrases.
+    if len(words) == 1:
+        label = _pluralize_noun(label)
     return label
 
 
@@ -186,7 +287,7 @@ class ViralScriptGenerator:
         templates = HOOK_TEMPLATES.get(priority, HOOK_TEMPLATES["curiosity"])
         hooks = []
         for tmpl in templates:
-            hook = tmpl.replace("{niche}", niche)
+            hook = tmpl.replace("{niche}", _niche_for_template(tmpl, niche))
             hook = hook.replace("{price}", price)
             hook = hook.replace("{brand_name}", brand)
             hook = hook.replace("{num_steps}", num)
@@ -341,10 +442,11 @@ class ViralScriptGenerator:
     def _tiktok_script(self, title: str, hook: str, summary: str,
                        niche: str, url: str) -> dict:
         clean_summary = fit_text(re.sub(r"<[^>]+>", "", summary), 400)
+        niche_noun = _singular_niche_label(_humanize_niche(niche))
         return {
             "hook": hook,
             "body": clean_summary,
-            "cta": f"Link in bio for the full {niche} breakdown. Follow for more honest reviews.",
+            "cta": f"Link in bio for the full {niche_noun} breakdown. Follow for more honest reviews.",
             "suggested_duration_s": 45,
             "caption": f"{hook}\n\nFull guide: {url}\n\n#affiliate #{niche.replace('-', '')} #productreview",
         }
@@ -392,15 +494,17 @@ class ViralScriptGenerator:
             # Persona leads with the reader's problem, then the editorial body.
             body = "\n\n".join(x for x in (persona_body, body) if x)
         if not body:
+            niche_noun = _singular_niche_label(_humanize_niche(niche))
             body = (
                 f"After comparing real specs, prices, and owner "
-                f"feedback across the leading {niche} options, here's what "
+                f"feedback across the leading {niche_noun} options, here's what "
                 f"actually stands out \u2014 and what to skip."
             )
+        niche_label = _humanize_niche(niche)
         return {
             "headline": hook,
             "body": body,
-            "engagement_question": f"What\u2019s your experience with {niche}? Drop it below \U0001F447",
+            "engagement_question": f"What\u2019s your experience with {niche_label}? Drop it below \U0001F447",
             "url": url,
             "post": self._linkedin_post_text(hook, body, niche, url),
         }
@@ -408,7 +512,8 @@ class ViralScriptGenerator:
     def _linkedin_post_text(self, hook: str, body: str, niche: str, url: str) -> str:
         hook = fit_text(str(hook or "").lstrip(" .\u2022").strip(), 200)
         parts = [hook, body]
-        question = f"What\u2019s your experience with {niche}? Drop it below \U0001F447"
+        niche_label = _humanize_niche(niche)
+        question = f"What\u2019s your experience with {niche_label}? Drop it below \U0001F447"
         if question:
             parts.append(question)
         if url:
@@ -426,9 +531,10 @@ class ViralScriptGenerator:
         if persona_body:
             body = "\n\n".join(x for x in (persona_body, body) if x)
         if not body:
+            niche_noun = _singular_niche_label(_humanize_niche(niche))
             body = (
                 f"After comparing real specs, prices, and owner feedback "
-                f"across the leading {niche} options, here's what actually "
+                f"across the leading {niche_noun} options, here's what actually "
                 f"stands out \u2014 and what to skip."
             )
         parts = [str(hook or "").lstrip(" .\u2022").strip(), body]

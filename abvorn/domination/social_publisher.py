@@ -11,6 +11,7 @@ EXPORT_DIR = Path.home() / ".abvorn" / "exports"
 
 from ..deploy.composio_client import ComposioClient
 from ..platform.adapters import fit_text
+from .viral_script_generator import _humanize_niche
 
 # Composio v3 tool slugs. Only platforms with a live connected account get a
 # direct backend; everything else falls back to export files (TikTok by
@@ -263,7 +264,7 @@ class SocialPublisher:
         if not caption or _has_false_testing_claim(caption):
             caption = (
                 f"After comparing specs, prices, and real owner feedback for "
-                f"{niche or 'these products'}, here's what stands out."
+                f"{_humanize_niche(niche) if niche else 'these products'}, here's what stands out."
             )
         return fit_text(caption, 2200)
 
@@ -392,7 +393,7 @@ class SocialPublisher:
         if not base.strip() or _has_false_testing_claim(base):
             base = (
                 f"After comparing specs, prices, and real owner feedback for "
-                f"{niche or 'these products'}, here's what stands out."
+                f"{_humanize_niche(niche) if niche else 'these products'}, here's what stands out."
             )
         niche_tag = niche.replace(" ", "").replace("-", "")
         tag_block = f"#{niche_tag} #comparison #reviews #realprices"

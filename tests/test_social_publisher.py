@@ -95,7 +95,8 @@ def test_linkedin_post_text_is_hook_led_and_complete():
     post_text = script["post"]
     assert script["headline"].lstrip(" .\u2022").strip() in post_text
     assert "Sharp picture" in post_text
-    assert "experience with webcams" in post_text
+    assert "experience with Webcams" in post_text
+    assert "experience with webcams" not in post_text
     assert "Full guide:" in post_text
     assert post["url"] in post_text
     assert _linkedin_params(script)["commentary"] == post_text
