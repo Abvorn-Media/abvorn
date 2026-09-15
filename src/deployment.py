@@ -330,7 +330,7 @@ def _slugify_title(s):
 
 
 # ── Category navigation (mega-menu + footer) ────────────────────────────
-CATEGORY_MAP = {
+STATIC_CATEGORY_MAP = {
     "Audio": ["wireless-earbuds", "wireless-headphones"],
     "Computing & Monitors": ["4k-monitors", "laptops"],
     "Fitness & Health": ["fitness-trackers"],
@@ -358,7 +358,7 @@ def category_color(name):
     """Resolve a category to its banner color, with a brand-gold fallback."""
     return CATEGORY_COLORS.get(name, CATEGORY_COLOR_FALLBACK)
 
-CATEGORY_NAMES = {
+STATIC_CATEGORY_NAMES = {
     "4k-monitors": "4K Monitors",
     "fitness-trackers": "Fitness Trackers",
     "gaming-mice": "Gaming Mice",
@@ -370,6 +370,115 @@ CATEGORY_NAMES = {
     "wireless-earbuds": "Wireless Earbuds",
     "wireless-headphones": "Wireless Headphones",
 }
+
+# --- Category taxonomy: state.db owns which categories EXIST ----------------
+# The static maps above own the six curated display groups; the daemon's
+# opportunity pipeline adds categories at runtime (e.g. 'tv'). Any niche slug
+# in state.db that is missing from the static map is folded into a group (by
+# category-label rule, then keyword rule, else its own labelled group) so
+# daemon-created categories survive feed rebuilds. Both builders derive from
+# the same registry — no more live-vs-feed taxonomy drift.
+
+_CATEGORY_LABEL_GROUPS = {
+    "accessories": "Webcams & Accessories",
+    "audio": "Audio",
+    "computers": "Computing & Monitors",
+    "computing": "Computing & Monitors",
+    "displays": "Computing & Monitors",
+    "fitness & health": "Fitness & Health",
+    "gaming": "Gaming",
+    "health": "Fitness & Health",
+    "home": "Home & Lifestyle",
+    "monitors": "Computing & Monitors",
+    "smart home": "Home & Lifestyle",
+    "tv & video": "Computing & Monitors",
+    "wearables": "Fitness & Health",
+}
+
+CATEGORY_KEYWORD_GROUPS = [
+    ("tv", "Computing & Monitors"),
+    ("televis", "Computing & Monitors"),
+    ("display", "Computing & Monitors"),
+    ("monitor", "Computing & Monitors"),
+    ("laptop", "Computing & Monitors"),
+    ("computer", "Computing & Monitors"),
+    ("headphone", "Audio"),
+    ("earbud", "Audio"),
+    ("speaker", "Audio"),
+    ("soundbar", "Audio"),
+    ("keyboard", "Gaming"),
+    ("mice", "Gaming"),
+    ("mouse", "Gaming"),
+    ("robot", "Home & Lifestyle"),
+    ("vacuum", "Home & Lifestyle"),
+    ("smart", "Home & Lifestyle"),
+    ("stream", "Home & Lifestyle"),
+    ("fitness", "Fitness & Health"),
+    ("tracker", "Fitness & Health"),
+    ("watch", "Fitness & Health"),
+    ("wearable", "Fitness & Health"),
+    ("webcam", "Webcams & Accessories"),
+    ("camera", "Webcams & Accessories"),
+]
+
+
+def _rich_state_db_path():
+    return os.environ.get("ABVORN_STATE_DB") or str(Path.home() / ".abvorn" / "state.db")
+
+
+def _state_db_niches() -> list:
+    """Read the canonical niche registry from state.db (tolerant, read-only)."""
+    try:
+        import sqlite3
+        conn = sqlite3.connect(_rich_state_db_path(), timeout=2.0)
+        try:
+            rows = conn.execute("SELECT slug, name, category FROM niches").fetchall()
+        finally:
+            conn.close()
+        return [{"slug": r[0], "name": r[1], "category": r[2]} for r in rows]
+    except Exception:
+        return []
+
+
+def _category_group_for(slug, name, category):
+    text = f"{slug} {name} {category or ''}".lower()
+    label = _CATEGORY_LABEL_GROUPS.get((category or "").strip().lower())
+    if label:
+        return label
+    for keyword, group in CATEGORY_KEYWORD_GROUPS:
+        if keyword in text:
+            return group
+    display = (name or re.sub(r"[^a-z0-9]+", " ", slug).strip()).strip()
+    return display[:1].upper() + display[1:] if display else "More"
+
+
+def _effective_category_map(niches=None):
+    """Merge state.db niches into the curated groups for feed rebuilds.
+
+    Returns (CATEGORY_MAP, CATEGORY_NAMES). Already-known slugs are left in
+    their curated groups untouched; brand-new categories are folded in.
+    """
+    base = {label: [s for s in slugs] for label, slugs in STATIC_CATEGORY_MAP.items()}
+    names = dict(STATIC_CATEGORY_NAMES)
+    known = {s for slugs in base.values() for s in slugs}
+    for n in (niches if niches is not None else _state_db_niches()):
+        slug, name, category = n.get("slug"), n.get("name"), n.get("category")
+        if not slug or slug in known:
+            continue
+        label = _category_group_for(slug, name, category)
+        if label not in base:
+            base[label] = []
+        if slug not in base[label]:
+            base[label].append(slug)
+        known.add(slug)
+        names.setdefault(
+            slug,
+            name or re.sub(r"[^a-z0-9]+", " ", slug).strip().title(),
+        )
+    return base, names
+
+
+CATEGORY_MAP, CATEGORY_NAMES = _effective_category_map()
 
 
 def _niche_name(slug):

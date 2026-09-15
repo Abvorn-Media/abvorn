@@ -1,7 +1,12 @@
 """Tests for TrendScanner — trending product detection."""
+import json
 import pytest
 from unittest.mock import MagicMock
-from abvorn.trends.scanner import TrendScanner
+from abvorn.trends.scanner import (
+    TrendScanner,
+    DEFAULT_SUBCATEGORIES,
+    data_driven_subcategories,
+)
 from abvorn.trends.planner import ContentPlanner
 
 _SEED_DATA = {
@@ -90,6 +95,47 @@ def test_cache_expiry():
     time.sleep(0.01)
     s.scan(subcategories=["tv"])
     assert s._cache_hits >= first_cache
+
+
+# === Data-driven scan scope ===
+
+def test_default_scope_keeps_baseline_first():
+    subs = data_driven_subcategories(cap_extra=2)
+    assert subs[:len(DEFAULT_SUBCATEGORIES)] == DEFAULT_SUBCATEGORIES
+
+
+def test_default_scope_covers_whole_taxonomy():
+    from abvorn.discovery.scanner import SITE_CATEGORY_MAP
+    subs = set(data_driven_subcategories())
+    slugs = {SITE_CATEGORY_MAP[k] for k in subs if k in SITE_CATEGORY_MAP}
+    assert SITE_CATEGORY_MAP["keyboard"] in slugs
+    assert SITE_CATEGORY_MAP["webcam"] in slugs
+    assert SITE_CATEGORY_MAP["streaming"] in slugs
+    assert SITE_CATEGORY_MAP["headphones"] in slugs
+
+
+def test_default_scope_prefers_gsc_demand(tmp_path):
+    gsc = tmp_path / "gsc_top_performing.json"
+    gsc.write_text(json.dumps({"items": [
+        {"url": "https://abvorn-media.github.io/abvorn/reviews/webcams/logitech-x.html", "clicks": 3},
+        {"url": "https://abvorn-media.github.io/abvorn/tv/", "clicks": 5},
+        {"url": "https://abvorn-media.github.io/abvorn/reviews/garbagecategory/x.html", "clicks": 99},
+    ]}), encoding="utf-8")
+    subs = list(data_driven_subcategories(cap_extra=3, data_dir=tmp_path))
+    assert "webcam" in subs
+    assert "garbagecategory" not in subs
+    assert subs.index("webcam") < subs.index("keyboard")
+
+
+def test_default_scope_has_no_duplicates():
+    subs = data_driven_subcategories()
+    assert len(subs) == len(set(subs))
+
+
+def test_trend_scanner_default_scope_is_data_driven():
+    s = _make_scanner()
+    assert s.subcategories[:len(DEFAULT_SUBCATEGORIES)] == DEFAULT_SUBCATEGORIES
+    assert set(DEFAULT_SUBCATEGORIES).issubset(s.subcategories)
 
 
 # === ContentPlanner Tests ===

@@ -1,7 +1,11 @@
 """TrendScanner — uses real web providers for trending tech product discovery."""
 
+import json
 import logging
+import re
 import time
+from pathlib import Path
+
 from .recon.providers import DuckDuckGoSource, AmazonSource, RedditSource, GoogleTrendsSource
 from .predict.snapshotter import SignalSnapshotter
 from .predict.velocity import VelocityTracker
@@ -9,7 +13,112 @@ from .predict.booster import ScoreBooster
 
 logger = logging.getLogger("abvorn.trends.scanner")
 
+# Proven baseline scan scope. `data_driven_subcategories()` widens this to the
+# rest of the site's taxonomy (plus Search Console demand) so discovery hunts
+# where the site actually publishes instead of a fixed handful of niches.
 DEFAULT_SUBCATEGORIES = ["tv", "robot vacuum", "laptop", "monitor", "smart home"]
+
+
+def _repo_data_dir() -> Path:
+    """Repo-root data/ dir (the daemon and feed both write discovery data there)."""
+    return Path(__file__).resolve().parents[2] / "data"
+
+
+_REVIEWS_SEG = re.compile(r"/reviews/([a-z0-9-]+)", re.I)
+
+
+def _last_path_segment(url: str) -> str:
+    path = url.split("?", 1)[0].rstrip("/").rsplit("/", 1)
+    return path[-1].strip().lower() if path else ""
+
+
+def _gsc_category_phrases(data_dir=None) -> list:
+    """Site categories with Search Console demand, from gsc_top_performing.json.
+
+    Only segments that resolve to a real site category slug count — anything
+    else (article slugs, the repo root) is ignored so we never mint junk scope.
+    """
+    d = Path(data_dir) if data_dir else (_repo_data_dir() or Path("data"))
+    try:
+        payload = json.loads((d / "gsc_top_performing.json").read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    items = payload.get("items", []) if isinstance(payload, dict) else []
+
+    from ..discovery.scanner import SITE_CATEGORY_MAP
+    valid = set(SITE_CATEGORY_MAP.values())
+    segs = []
+    for it in items:
+        url = (it or {}).get("url") or ""
+        for m in _REVIEWS_SEG.finditer(url):
+            seg = m.group(1).strip().lower()
+            if seg in valid and seg not in segs:
+                segs.append(seg)
+        seg = _last_path_segment(url)
+        if seg in valid and seg not in segs:
+            segs.append(seg)
+
+    # Turn a site slug back into the canonical discovery phrase for that category.
+    phrase_by_slug = {}
+    for key, slug in SITE_CATEGORY_MAP.items():
+        phrase_by_slug.setdefault(slug, key)
+    return [phrase_by_slug[seg] for seg in segs]
+
+
+def _covered_slugs(phrases, site_map) -> set:
+    """Site category slugs already covered by a given phrase set."""
+    covered = set()
+    for key, slug in site_map.items():
+        if key in phrases:
+            covered.add(slug)
+    return covered
+
+
+def data_driven_subcategories(cap_extra=None, data_dir=None) -> list:
+    """Compose the trending scan scope from Google signals + the full taxonomy.
+
+    Rules:
+    * DEFAULT_SUBCATEGORIES is always the baseline.
+    * Categories with Search Console demand come next (one phrase each).
+    * Then the rest of the site's discovery taxonomy, one representative phrase
+      per category, in SITE_CATEGORY_MAP order.
+    * `cap_extra` (int) truncates the extras; None keeps them all.
+    """
+    from ..discovery.scanner import SITE_CATEGORY_MAP
+
+    seen, result = set(), []
+    for phrase in DEFAULT_SUBCATEGORIES:
+        key = phrase.strip().lower()
+        if key and key not in seen:
+            seen.add(key)
+            result.append(key)
+
+    extras = []
+    covered = _covered_slugs(seen, SITE_CATEGORY_MAP)
+    for phrase in _gsc_category_phrases(data_dir):
+        key = phrase.strip().lower()
+        if key and key not in seen:
+            seen.add(key)
+            extras.append(key)
+    for phrase, slug in SITE_CATEGORY_MAP.items():
+        key = phrase.strip().lower()
+        if not key or key in seen or slug in covered:
+            continue
+        covered.add(slug)  # one phrase per category keeps the pool bounded
+        seen.add(key)
+        extras.append(key)
+
+    if cap_extra is not None:
+        extras = extras[:max(0, cap_extra)]
+    return result + extras
+
+
+def _default_subcategories() -> list:
+    try:
+        return data_driven_subcategories() or DEFAULT_SUBCATEGORIES
+    except Exception as e:
+        logger.debug(f"Falling back to baseline subcategories: {e}")
+        return DEFAULT_SUBCATEGORIES
 
 
 class TrendScanner:
@@ -20,7 +129,7 @@ class TrendScanner:
                  state=None):
         self.min_score = min_score
         self.cache_seconds = cache_seconds
-        self.subcategories = subcategories or DEFAULT_SUBCATEGORIES
+        self.subcategories = subcategories if subcategories else _default_subcategories()
         self._cache = {}
         self._cache_hits = 0
         self._state = state
