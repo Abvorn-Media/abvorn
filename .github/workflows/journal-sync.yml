@@ -1,0 +1,59 @@
+name: Journal Sync
+
+on:
+  schedule:
+    # Daily 06:45 UTC — mirrors the VPS systemd timer (abvorn-journal-sync)
+    # so the Evolution Journal page keeps going live even if the server-side
+    # job stops publishing.
+    - cron: "45 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: journal-sync-lock
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Configure git bot
+        run: |
+          git config user.name "Abvorn Bot"
+          git config user.email "bot@abvorn.com"
+
+      - name: Sync + publish journal
+        env:
+          ABVORN_SYNC_REPO_DIR: ${{ github.workspace }}
+          ABVORN_SYNC_DATA_DIR: ${{ github.workspace }}/data
+          SITE_URL: https://abvorn.com
+        run: python scripts/sync_journal_site.py
+
+      - name: Notify failure on Telegram
+        if: failure()
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            -d "chat_id=${TG_CHAT}" \
+            --data-urlencode "text=🚨 <b>Journal Sync</b> failed on ${GITHUB_REF} (run #${GITHUB_RUN_NUMBER}). Logs: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            -d "parse_mode=HTML"
