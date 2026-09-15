@@ -180,3 +180,52 @@ def test_cycle_all_posted_falls_back_to_first_entry(learn_db):
     # all three posted -> next run falls back to entries[0]
     fourth = orch.run_cycle()
     assert fourth["title"] == "Top Laptops"
+
+
+def test_cycle_shares_canonical_niche_url_not_stale_dated_article(learn_db, monkeypatch):
+    """The social link must point at the canonical /reviews/<niche>/ hub — never
+    the stale dated flat file pulled from the RSS feed — so shared links look
+    like the proper niche page."""
+    from abvorn.domination import product_assets as pa
+    monkeypatch.setattr(pa, "load_products_for_niche", lambda slug: [])
+
+    entries = [{
+        "title": "Best Gaming Mice 2026: Logitech vs Razer Compared",
+        "niche": "webcams",
+        "url": "https://abvorn.com/reviews/gaming-mice/best-gaming-mice-2026-logitech-vs-razer-compared-2026-08-17.html",
+        "virality_score": 90,
+        "sentiment": "positive",
+    }]
+    orch = _make_orchestrator(entries, learn_db)
+
+    captured = {}
+
+    class _CapPub:
+        def publish_all(self, publish_targets, niche, media_paths=None, media_by_platform=None):
+            captured.update(publish_targets)
+            return [{"status": "posted", "platform": p} for p in publish_targets]
+
+    orch.publisher = _CapPub()
+    orch.run_cycle(platforms=["x"])
+
+    thread = captured["x"]
+    assert thread[-1] == "Full breakdown: https://abvorn.com/reviews/gaming-mice/"
+    # recorded for dedupe as the canonical hub, not the dated flat file
+    assert orch.learner.posted_urls() == {"https://abvorn.com/reviews/gaming-mice/"}
+
+
+def test_cycle_deduplicates_by_canonical_hub_across_cycle_runs(learn_db, monkeypatch):
+    """After one cycle posts a niche hub, a second cycle must skip it (the
+    posted set now contains the canonical URL) and pick the next niche."""
+    from abvorn.domination import product_assets as pa
+    monkeypatch.setattr(pa, "load_products_for_niche", lambda slug: [])
+
+    entries = _entries()
+    orch = _make_orchestrator(entries, learn_db)
+    first = orch.run_cycle()
+    second = orch.run_cycle()
+    assert first["title"] != second["title"]
+    # both recorded canonical URLs for their niches
+    urls = orch.learner.posted_urls()
+    assert "https://abvorn.com/reviews/laptops/" in urls
+    assert "https://abvorn.com/reviews/mice/" in urls

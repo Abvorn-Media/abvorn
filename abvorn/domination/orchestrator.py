@@ -13,6 +13,7 @@ Designed to run as a scheduled task within the Abvorn daemon.
 """
 
 import logging
+import os
 from datetime import datetime
 
 from .content_intelligence import ContentIntelligence
@@ -54,6 +55,24 @@ class DominationOrchestrator:
 
         self._cycle_count = 0
 
+    def _share_url(self, target: dict) -> str:
+        """Canonical /reviews/<niche>/ URL for a target, falling back to its raw link.
+
+        Dated flat files (''.../reviews/gaming-mice/best-gaming-mice-...-2026-08-17.html'')
+        are stale copies of the niche hub. The hub page — /reviews/gaming-mice/ — is the
+        always-current mirror, so that is what gets shared and recorded for dedupe.
+        """
+        try:
+            from .product_assets import slug_from_url
+            slug = slug_from_url(str(target.get("url") or "")) or str(target.get("niche") or "")
+        except Exception:
+            slug = str(target.get("niche") or "")
+        slug = (slug or "").strip().strip("/")
+        if not slug:
+            return str(target.get("url") or "")
+        site = os.environ.get("SITE_URL", "https://abvorn.com").rstrip("/")
+        return f"{site}/reviews/{slug}/"
+
     def run_cycle(self, niche: str | None = None,
                   platforms: list[str] | None = None) -> dict:
         """Run one domination cycle: parse → generate → fetch → filter → publish.
@@ -86,7 +105,7 @@ class DominationOrchestrator:
 
             if niche:
                 target = next(
-                    (e for e in entries if e["niche"] == niche and e.get("url") not in posted),
+                    (e for e in entries if e["niche"] == niche and self._share_url(e) not in posted),
                     None,
                 )
                 if target is None:
@@ -95,7 +114,7 @@ class DominationOrchestrator:
                     )
             else:
                 target = next(
-                    (e for e in entries if e.get("url") not in posted), None
+                    (e for e in entries if self._share_url(e) not in posted), None
                 )
                 if target is None:
                     target = entries[0]
@@ -114,7 +133,9 @@ class DominationOrchestrator:
 
         # 2. Viral Script Generation
         products: list[dict] = []
-        slide_url = target.get("url", "")
+        slide_url = self._share_url(target)
+        # Share + record the canonical hub, not the stale dated flat file.
+        target["url"] = slide_url
         try:
             from .product_assets import load_products_for_niche, slug_from_url
             _slug = slug_from_url(slide_url) or target.get("niche", "")

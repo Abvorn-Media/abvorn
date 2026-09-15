@@ -82,7 +82,7 @@ class ContentIntelligence:
             if hasattr(entry, "tags"):
                 tags = [t.get("term", "") for t in entry.tags]
 
-            niche = self._detect_niche(title, content_text, tags)
+            niche = self._niche_for_entry(link, title, content_text, tags)
             score = self._score_virality(title, content_text)
             platform_hooks = self._generate_platform_hooks(title, content_text, niche)
 
@@ -110,7 +110,7 @@ class ContentIntelligence:
             "laptop": ["laptop", "notebook", "macbook", "gaming laptop", "ultrabook"],
             "monitor": ["monitor", "display", "ultrawide", "4k monitor"],
             "robot-vacuum": ["robot vacuum", "roborock", "roomba", "vacuum"],
-            "webcams": ["webcam", "camera", "logitech"],
+            "webcams": ["webcam", "camera"],
             "headphones": ["headphone", "earphone", "airpods", "sony wh"],
             "gaming-mouse": ["gaming mouse", "mouse", "razer", "logitech g"],
             "wireless-chargers": ["wireless charger", "charging pad", "qi charger"],
@@ -127,6 +127,28 @@ class ContentIntelligence:
             if any(k in combined for k in keywords):
                 return niche
         return "general"
+
+    _NON_NICHE_SLUGS = {"reviews", "about", "blog", "feed"}
+
+    def _niche_for_entry(self, url: str, title: str, text: str,
+                         tags: list[str]) -> str:
+        """Niche from the review URL folder when one exists; keyword fallback.
+
+        The URL folder is the ground-truth niche id (the same source the
+        products loader's ``slug_from_url`` uses), so a dated
+        ``/reviews/gaming-mice/...`` link can never be labeled ``webcams`` by
+        a stray brand keyword in the title. Keyword detection only fires when
+        the URL is not a review URL.
+        """
+        slug = ""
+        try:
+            from .product_assets import slug_from_url
+            slug = (slug_from_url(url) or "").strip().strip("/")
+        except Exception:
+            slug = ""
+        if slug and slug not in self._NON_NICHE_SLUGS:
+            return slug
+        return self._detect_niche(title, text, tags)
 
     def _score_virality(self, title: str, text: str) -> dict:
         combined = (title + " " + text).lower()
