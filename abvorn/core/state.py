@@ -92,7 +92,8 @@ class AbvornState:
                     commission REAL DEFAULT 0.0,
                     status TEXT DEFAULT 'pending',
                     created_at TEXT NOT NULL,
-                    last_post_at TEXT
+                    last_post_at TEXT,
+                    category TEXT DEFAULT ''
                 );
                 CREATE TABLE IF NOT EXISTS subscribers (
                     email TEXT PRIMARY KEY,
@@ -144,6 +145,13 @@ class AbvornState:
             """)
             try:
                 c.execute("ALTER TABLE subscribers ADD COLUMN tracking_consent INT DEFAULT 0")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                c.execute("PRAGMA table_info(opportunities)")
+                opp_cols = {row[1] for row in c.fetchall()}
+                if "category" not in opp_cols:
+                    c.execute("ALTER TABLE opportunities ADD COLUMN category TEXT DEFAULT ''")
             except sqlite3.OperationalError:
                 pass  # column already exists
 
@@ -319,19 +327,20 @@ class AbvornState:
                 SELECT * FROM opportunities WHERE status=? ORDER BY score DESC LIMIT ?
             """, (status, limit))
             keys = ["id", "niche", "score", "search_volume", "buying_intent",
-                    "competition", "commission", "status", "created_at", "last_post_at"]
+                    "competition", "commission", "status", "created_at", "last_post_at",
+                    "category"]
             return [dict(zip(keys, row)) for row in c.fetchall()]
 
     def add_opportunity(self, niche: str, score: float, search_volume: int = 0,
                         buying_intent: float = 0.0, competition: float = 0.0,
-                        commission: float = 0.0, **kwargs):
+                        commission: float = 0.0, category: str = "", **kwargs):
         with self._cursor() as c:
             c.execute("""
                 INSERT INTO opportunities (niche, score, search_volume, buying_intent,
-                            competition, commission, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                            competition, commission, created_at, category)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, (niche, score, search_volume, buying_intent, competition,
-                  commission, datetime.now().isoformat()))
+                  commission, datetime.now().isoformat(), category))
 
     def update_opportunity_status(self, opp_id: int, status: str):
         with self._cursor() as c:

@@ -15,3 +15,44 @@ def test_new_tables_exist():
         assert "opportunities" in tables
         assert "subscribers" in tables
         assert "email_sequences" in tables
+
+
+def test_opportunities_carry_category():
+    """Opportunities store their resolved site category."""
+    with tempfile.TemporaryDirectory() as tmp:
+        db = Path(tmp) / "test.db"
+        state = AbvornState(db)
+        state.add_opportunity("insignia-50-fire-tv", 0.9, category="tv")
+        opp = state.get_opportunities(limit=1)[0]
+        assert opp["category"] == "tv"
+        state.close()
+
+
+def test_opportunities_migration_adds_category_column():
+    """Pre-existing state.db files must gain the category column."""
+    with tempfile.TemporaryDirectory() as tmp:
+        db = Path(tmp) / "old.db"
+        conn = sqlite3.connect(str(db))
+        conn.execute("""
+            CREATE TABLE opportunities (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                niche TEXT NOT NULL,
+                score REAL NOT NULL,
+                search_volume INT DEFAULT 0,
+                buying_intent REAL DEFAULT 0.0,
+                competition REAL DEFAULT 0.0,
+                commission REAL DEFAULT 0.0,
+                status TEXT DEFAULT 'pending',
+                created_at TEXT NOT NULL,
+                last_post_at TEXT
+            )
+        """)
+        conn.execute("INSERT INTO opportunities (niche, score, created_at) VALUES ('old-niche', 0.5, '2026-01-01T00:00:00')")
+        conn.commit()
+        conn.close()
+
+        state = AbvornState(db)
+        opp = state.get_opportunities()[0]
+        assert opp["niche"] == "old-niche"
+        assert opp["category"] == ""
+        state.close()

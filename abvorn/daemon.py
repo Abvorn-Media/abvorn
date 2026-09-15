@@ -179,10 +179,16 @@ class AbvornDaemon:
             self.notifier.report_error(niche, "Content factory returned None")
             return {"status": "content_failed"}
 
-        # Canonical article URL so every platform adapter carries a real link
-        # (the site deployer publishes one guide per niche under /reviews/<niche>/).
+        # Canonical URL: opportunity content resolves to its site category
+        # hub (/reviews/<category>/), and the category is created if missing
+        # so the page always fits the navigation model instead of floating as
+        # an orphan product page.
         from .platform.adapters import resolve_url
-        content.setdefault("url", resolve_url({**content, "niche": niche}))
+        from .discovery.scanner import ensure_site_category, make_slug
+
+        site_cat, site_cat_created = ensure_site_category(self.state, opp)
+        article_slug = make_slug(opp.get("product_name") or content.get("product_name", "") or niche)
+        content["url"] = resolve_url({**content, "niche": site_cat})
 
         from .platform import registry
         from .exploder.email import generate_lead_magnet, generate_sequence
@@ -212,16 +218,21 @@ class AbvornDaemon:
             self.social.post(content, platform)
             logger.info(f"Deployed to {platform}")
 
-        # Deploy content to site
+        # Deploy content to site under its category, then rebuild nav + hubs
         try:
             from .agents.orchestrator import SiteDeployer
             site_dep = SiteDeployer(GitHubDeployer(
                 token=self.secrets.get("GITHUB_TOKEN", ""),
                 repo=self.secrets.get("GITHUB_REPO", ""),
             ), self.state)
-            site_dep.deploy_content(niche, content)
             all_niches = self.state.get_all_niches()
             all_slugs = [n["slug"] for n in all_niches]
+            site_dep.deploy_content(site_cat, content, all_categories=all_slugs,
+                                    article_filename=f"{article_slug}.html")
+            self.state.add_post(site_cat, content.get("post_title", niche),
+                                f"{article_slug}.html",
+                                product_name=content.get("product_name", ""),
+                                angle="buying guide", quality_score=7.0)
             all_posts = []
             for s in all_slugs:
                 all_posts.extend(self.state.get_posts_for_niche(s))
@@ -229,7 +240,10 @@ class AbvornDaemon:
             for slug in all_slugs:
                 niche_posts = [p for p in all_posts if p.get("niche_slug") == slug]
                 site_dep.deploy_category_page(slug, posts=niche_posts, all_categories=all_slugs)
-            logger.info(f"Deployed {niche} to site")
+            if site_cat_created:
+                hub_posts = [p for p in all_posts if p.get("niche_slug") == site_cat]
+                site_dep.deploy_category_hub(site_cat, posts=hub_posts, all_categories=all_slugs)
+            logger.info(f"Deployed {niche} to site under category {site_cat}")
         except Exception as e:
             logger.warning(f"Site deploy failed (non-fatal): {e}")
 

@@ -103,3 +103,50 @@ def test_discover_from_trends_empty():
         assert scanner.discover_from_trends([]) == []
         assert state.get_opportunities() == []
         state.close()
+
+
+def test_discover_from_trends_stores_site_category():
+    """Discovery category must map to a real site category on the row."""
+    from abvorn.core.state import AbvornState
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as tmp:
+        db_path = Path(tmp) / "test.db"
+        state = AbvornState(db_path)
+        scanner = OpportunityScanner(state)
+        results = scanner.discover_from_trends(TREND_SAMPLE)
+        by_niche = {r["niche"]: r for r in results}
+        assert by_niche["4k-gaming-monitor-under-300"]["category"] == "4k-monitors"
+        assert by_niche["4k-gaming-monitor-under-300"]["source_category"] == "monitor"
+        assert by_niche["mechanical-keyboard-guide-2026"]["category"] == "mechanical-keyboards"
+        cats = {o["niche"]: o["category"] for o in state.get_opportunities()}
+        assert cats["4k-gaming-monitor-under-300"] == "4k-monitors"
+        assert cats["mechanical-keyboard-guide-2026"] == "mechanical-keyboards"
+        state.close()
+
+
+def test_slugify_never_leaves_dangling_hyphen():
+    """60-char truncation must cut at a word boundary, not mid-word."""
+    from abvorn.discovery.scanner import make_slug
+
+    slug = make_slug(
+        "Insignia 50-Class F50 Series LED 4K UHD Smart Fire TV Voice Assistant"
+    )
+    assert slug
+    assert len(slug) <= 60
+    assert not slug.endswith("-")
+    assert slug.split("-")[-1] == "voice"  # full word, partial "assistant" dropped
+
+
+def test_resolve_site_category_infers_from_legacy_niche():
+    """Opportunities without a stored category still land in the right one."""
+    from abvorn.discovery.scanner import resolve_site_category
+
+    assert resolve_site_category({"niche": "insignia-50-class-f50-series-led-4k-uhd-smart-fire-tv-voice",
+                                  "category": ""}) == "tv"
+    assert resolve_site_category({"niche": "amazon-echo-show-5-newest-model-smart-display",
+                                  "category": ""}) == "smart-home"
+    assert resolve_site_category({"niche": "roku-55-4k-qled", "category": "tv"}) == "tv"
+    assert resolve_site_category({"niche": "roku-40-smart-tv",
+                                  "product_name": "Roku 40 Inch Select Series Smart TV"}) == "tv"

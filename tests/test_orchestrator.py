@@ -47,6 +47,65 @@ def test_deploy_category_page_deploys_with_posts():
     deployer.deploy_html.assert_called_once()
 
 
+def test_deploy_category_page_links_article_file():
+    """Read-full-review link must point at the article file when recorded."""
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    ok = sd.deploy_category_page("tv", posts=[{
+        "title": "Insignia 50 Fire TV Review",
+        "filename": "insignia-50-fire-tv.html",
+        "product_name": "Insignia 50",
+    }], all_categories=["tv"])
+    assert ok is True
+    html, path = deployer.deploy_html.call_args[0]
+    assert path == "tv/index.html"
+    assert "/abvorn/tv/insignia-50-fire-tv.html" in html
+
+
+def test_deploy_category_hub_writes_canonical_reviews_path():
+    """Brand-new category hubs deploy at the canonical /reviews/<niche>/ location."""
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    ok = sd.deploy_category_hub("tv", posts=[{
+        "title": "Insignia 50 Fire TV Review",
+        "filename": "insignia-50-fire-tv.html",
+        "product_name": "Insignia 50",
+    }], all_categories=["tv", "smart-home"])
+    assert ok is True
+    html, path = deployer.deploy_html.call_args[0]
+    assert path == "reviews/tv/index.html"
+    assert "smart-home" in html  # nav carries other categories
+
+
+def test_deploy_content_article_filename_write_path():
+    """Opportunity articles write inside the category, canonical stays the hub."""
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    ok = sd.deploy_content(
+        "tv",
+        {"post_title": "Insignia 50 Fire TV Review",
+         "article_html": "<p>review</p>",
+         "meta_description": "A first-time buyer guide.",
+         "product_name": "Insignia 50"},
+        all_categories=["tv", "4k-monitors"],
+        article_filename="insignia-50-fire-tv.html",
+    )
+    assert ok is True
+    html, path = deployer.deploy_html.call_args[0]
+    assert path == "reviews/tv/insignia-50-fire-tv.html"
+    assert 'href="https://abvorn.com/reviews/tv/"' in html  # canonical is the category hub
+    assert "4k-monitors" in html  # nav built from all_categories
+
+
+def test_deploy_content_defaults_to_index():
+    """Without an article_filename, behaviour is unchanged."""
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    sd.deploy_content("laptops", {"post_title": "T", "article_html": "<p>x</p>"})
+    html, path = deployer.deploy_html.call_args[0]
+    assert path == "reviews/laptops/index.html"
+
+
 def test_scheduler_queue():
     """Should return the highest-priority item from queue."""
     with tempfile.TemporaryDirectory() as tmp:

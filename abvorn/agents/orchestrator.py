@@ -356,36 +356,35 @@ class SiteDeployer:
             logger.error(f"[SiteDeployer] Root index failed: {e}")
             return False
 
-    def deploy_category_page(self, niche: str, posts: list = None, all_categories: list = None) -> bool:
-        try:
-            posts = posts or []
-            all_categories = all_categories or []
-            if not posts:
-                logger.warning(f"[SiteDeployer] Skipping category deploy for {niche}: no posts available (would deploy placeholder)")
-                return False
-            b = SITE_BASE
-            post_rows = ""
-            for i, p in enumerate(posts[:5]):
-                title = p.get("title") or p.get("post_title", "")
-                slug = p.get("slug") or niche
-                product_name = p.get("product_name", "")
-                query = product_name.replace(" ", "+").replace("'","") if product_name else niche.replace("-","+")
-                rank_label = ["Our pick", "Budget pick", "Upgrade pick", "Also great", "Also great"][i] if i < 5 else ""
-                rank_class = ["", "budget", "upgrade", "", ""][i] if i < 5 else ""
-                post_rows += f"""<div class="pick-card">
+    def _category_page_html(self, niche: str, posts: list = None, all_categories: list = None) -> str:
+        """Build a Wirecutter-style category hub (used for both deploy paths)."""
+        posts = posts or []
+        all_categories = all_categories or []
+        b = SITE_BASE
+        post_rows = ""
+        for i, p in enumerate(posts[:5]):
+            title = p.get("title") or p.get("post_title", "")
+            slug = p.get("slug") or niche
+            filename = p.get("filename", "")
+            review_link = f"{b}/{niche}/{filename}" if filename else f"{b}/{slug}/"
+            product_name = p.get("product_name", "")
+            query = product_name.replace(" ", "+").replace("'","") if product_name else niche.replace("-","+")
+            rank_label = ["Our pick", "Budget pick", "Upgrade pick", "Also great", "Also great"][i] if i < 5 else ""
+            rank_class = ["", "budget", "upgrade", "", ""][i] if i < 5 else ""
+            post_rows += f"""<div class="pick-card">
 <div class="rank {rank_class}">{i+1}</div>
 <div class="info">
 <div class="badge {rank_class}">{rank_label}</div>
 <h3>{title}</h3>
 <p>In-depth testing and honest comparison. See why this made our list.</p>
 <a class="buy-btn" href="https://www.amazon.com/s?k={query}&tag={_amazon_tag()}" target="_blank" rel="sponsored">Check Price</a>
-<a href="{b}/{slug}/" style="margin-left:12px">Read full review →</a>
+<a href="{review_link}" style="margin-left:12px">Read full review →</a>
 </div></div>"""
 
-            nav_links = "".join(f'<a class="nav-link" href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in all_categories[:4])
-            more_items = "".join(f'<a href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in all_categories[4:])
-            dropdown = f'<div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu">{more_items}</div></div>' if all_categories[4:] else ""
-            html = f"""<!DOCTYPE html>
+        nav_links = "".join(f'<a class="nav-link" href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in all_categories[:4])
+        more_items = "".join(f'<a href="{b}/{c}/">{c.replace("-"," ").title()}</a>' for c in all_categories[4:])
+        dropdown = f'<div class="dropdown"><button class="dropdown-btn">More</button><div class="dropdown-menu">{more_items}</div></div>' if all_categories[4:] else ""
+        return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Best {niche.replace("-"," ").title()} — Abvorn</title>
@@ -415,6 +414,14 @@ class SiteDeployer:
 
 <footer><p>Abvorn · Independent reviews</p>{SOCIAL_HTML}</footer>
 {NAV_SCRIPT}</body></html>"""
+
+    def deploy_category_page(self, niche: str, posts: list = None, all_categories: list = None) -> bool:
+        try:
+            posts = posts or []
+            if not posts:
+                logger.warning(f"[SiteDeployer] Skipping category deploy for {niche}: no posts available (would deploy placeholder)")
+                return False
+            html = self._category_page_html(niche, posts, all_categories)
             self.deployer.deploy_html(html, f"{niche}/index.html")
             logger.info(f"[SiteDeployer] Deployed category page for {niche}")
             return True
@@ -422,7 +429,27 @@ class SiteDeployer:
             logger.error(f"[SiteDeployer] Category page failed: {e}")
             return False
 
-    def deploy_content(self, niche: str, content: dict, all_categories: list = None) -> bool:
+    def deploy_category_hub(self, niche: str, posts: list = None, all_categories: list = None) -> bool:
+        """Deploy a brand-new category hub at its canonical /reviews/<niche>/ location.
+
+        Used only when a category did not previously exist; existing category
+        hubs are generated by the richer site pipeline and are never overwritten.
+        """
+        try:
+            posts = posts or []
+            if not posts:
+                logger.warning(f"[SiteDeployer] Skipping new category hub for {niche}: no posts available")
+                return False
+            html = self._category_page_html(niche, posts, all_categories)
+            self.deployer.deploy_html(html, f"reviews/{niche}/index.html")
+            logger.info(f"[SiteDeployer] Deployed new category hub for {niche}")
+            return True
+        except Exception as e:
+            logger.error(f"[SiteDeployer] Category hub failed: {e}")
+            return False
+
+    def deploy_content(self, niche: str, content: dict, all_categories: list = None,
+                       article_filename: str = None) -> bool:
         try:
             all_categories = all_categories or []
             post_title = content.get("post_title", niche)
@@ -508,8 +535,9 @@ window.postComment=function(){{var n=document.getElementById('comment-name');var
 
 <footer><p>Abvorn · Independent reviews since 2026</p>{SOCIAL_HTML}</footer>
 {NAV_SCRIPT}</body></html>"""
-            self.deployer.deploy_html(html, f"reviews/{niche}/index.html")
-            logger.info(f"[SiteDeployer] Deployed article for {niche}")
+            self.deployer.deploy_html(html, f"reviews/{niche}/{'index.html' if not article_filename else article_filename}")
+            logger.info(f"[SiteDeployer] Deployed article for {niche}" +
+                        (f" as reviews/{niche}/{article_filename}" if article_filename else ""))
             return True
         except Exception as e:
             logger.error(f"[SiteDeployer] Article deploy failed: {e}")

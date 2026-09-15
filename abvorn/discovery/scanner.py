@@ -5,6 +5,91 @@ import logging, re
 
 logger = logging.getLogger("abvorn.discovery")
 
+# Maps trend-scanner subcategories onto the site's category taxonomy. An
+# opportunity must land under a real site category (creating it if missing)
+# so every shared page fits the navigation and category model.
+SITE_CATEGORY_MAP = {
+    "tv": "tv",
+    "television": "tv",
+    "televisions": "tv",
+    "4k tv": "tv",
+    "4k tvs": "tv",
+    "monitor": "4k-monitors",
+    "monitors": "4k-monitors",
+    "laptop": "laptops",
+    "laptops": "laptops",
+    "smart home": "smart-home",
+    "smart-home": "smart-home",
+    "smart home devices": "smart-home",
+    "echo": "smart-home",
+    "robot vacuum": "robot-vacuums",
+    "robot vacuums": "robot-vacuums",
+    "keyboard": "mechanical-keyboards",
+    "keyboards": "mechanical-keyboards",
+    "mouse": "gaming-mice",
+    "mice": "gaming-mice",
+    "gaming mouse": "gaming-mice",
+    "headphones": "wireless-headphones",
+    "earbuds": "wireless-earbuds",
+    "webcam": "webcams",
+    "webcams": "webcams",
+    "fitness tracker": "fitness-trackers",
+    "fitness trackers": "fitness-trackers",
+    "smart watch": "fitness-trackers",
+    "streaming": "streaming-devices",
+    "streaming device": "streaming-devices",
+}
+
+
+def make_slug(name: str, max_len: int = 60) -> str:
+    """Slugify without mid-word truncation or dangling hyphens."""
+    if not name:
+        return ""
+    parts = [p for p in re.split(r"[^a-z0-9]+", name.lower()) if p]
+    slug = "-".join(parts)
+    if len(slug) > max_len:
+        trunc = slug[:max_len]
+        if trunc.endswith("-"):
+            slug = trunc.rstrip("-")  # cut landed on a word boundary
+        else:
+            cut = trunc.rfind("-")  # mid-word cut: drop the partial fragment
+            slug = trunc[:cut] if cut > 0 else trunc
+    return slug.strip("-")
+
+
+def resolve_site_category(opportunity: dict) -> str:
+    """Resolve an opportunity to its site category.
+
+    Prefers the discovery category stored on the opportunity; falls back to
+    keyword inference from product/niche so legacy rows land somewhere sane
+    instead of becoming orphan product pages.
+    """
+    cat = (opportunity.get("category") or "").strip().lower()
+    if cat:
+        return SITE_CATEGORY_MAP.get(cat, make_slug(cat) or "general")
+    source = " ".join(filter(None, [
+        opportunity.get("product_name"), opportunity.get("niche"),
+    ])).lower()
+    for key, slug in SITE_CATEGORY_MAP.items():
+        if re.search(r"\b" + re.escape(key) + r"\b", source):
+            return slug
+    return make_slug(str(opportunity.get("niche", ""))) or "general"
+
+
+def ensure_site_category(state, opportunity: dict) -> tuple:
+    """Resolve and register the site category, creating it when missing.
+
+    Returns (category_slug, created). New categories are upserted into the
+    niches table so the site deployer includes them in every nav and the root
+    index; created=True tells callers a brand-new hub must be deployed.
+    """
+    slug = resolve_site_category(opportunity)
+    created = state.get_niche(slug) is None
+    if created:
+        state.upsert_niche(slug, slug.replace("-", " ").title(), category="Other")
+        logger.info(f"Created site category for opportunity: {slug}")
+    return slug, created
+
 
 def score_opportunity(search_demand: int, buying_intent: float,
                       commission: float, competition: float) -> float:
@@ -61,7 +146,9 @@ class OpportunityScanner:
         for item in planned:
             if item["content_type"] not in ("buying_guide", "comparison"):
                 continue
-            niche = self._slugify(item["product_name"]) or item["category"]
+            source_cat = (item.get("category") or "").strip()
+            site_cat = SITE_CATEGORY_MAP.get(source_cat.lower(), make_slug(source_cat)) if source_cat else "general"
+            niche = self._slugify(item["product_name"]) or site_cat
             if any(e["niche"] == niche for e in existing) or niche in existing_niches:
                 continue
             if len(results) >= max_opportunities:
@@ -69,21 +156,20 @@ class OpportunityScanner:
             score = self._trend_score(item["score"])
             self.state.add_opportunity(niche, score, search_volume=0,
                                        buying_intent=0.5, competition=0.4,
-                                       commission=20.0)
+                                       commission=20.0, category=site_cat)
             results.append({
                 "niche": niche,
                 "product_name": item["product_name"],
-                "category": item["category"],
+                "category": site_cat,
+                "source_category": source_cat,
                 "score": round(item["score"], 1),
                 "sources": item.get("sources", []),
             })
-            logger.info(f"Trend discovery: {niche} (trend score {item['score']})")
+            logger.info(f"Trend discovery: {niche} -> category {site_cat} (trend score {item['score']})")
         return results
 
     def _slugify(self, name: str) -> str:
-        slug = name.strip().lower()
-        slug = re.sub(r"[^a-z0-9]+", "-", slug).strip("-")
-        return slug[:60]
+        return make_slug(name)
 
     def _trend_score(self, trend_score: int) -> float:
         """Map a trend score (0-100) onto the opportunity 0-1 scale."""
