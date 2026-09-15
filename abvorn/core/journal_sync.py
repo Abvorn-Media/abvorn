@@ -10,9 +10,13 @@ actions (data/relentless_state.json history), and daily reflections
 
 This module harvests those sources and appends them to the tracked journal.
 The journal target honors ABVORN_JOURNAL_PATH (as evolution_journal does), so
-the same code runs in tests against a temp path and on the server against the
-repo-tracked copy.
-"""
+    the same code runs in tests against a temp path and on the server against the
+    repo-tracked copy.
+
+    Dedup is timestamp-driven: only rows newer than the journal's newest entry
+    are harvested, so sources that repeat narrative text across ingests (GSC
+    insight rows carry the same top-page copy) still record each new event.
+    """
 
 from __future__ import annotations
 
@@ -162,10 +166,10 @@ def sync_journal_from_sources(data_dir: Path) -> int:
     """Append fresh runtime signals to the tracked journal. Returns count added.
 
     The journal target comes from ABVORN_JOURNAL_PATH (falling back to
-    data/evolution_journal.json relative to CWD). Idempotent: rows already
-    represented (timestamp <= the newest entry, or a byte-identical narrative)
-    are skipped. last_update is normalized to the newest entry after writing so
-    a future harvest never re-appends an older batch row. Never raises.
+    data/evolution_journal.json relative to CWD). Idempotent: rows that are not
+    strictly newer than the newest entry are skipped. last_update is
+    normalized to the newest entry after writing so a future harvest never
+    re-appends an older batch row. Never raises.
     """
     from abvorn.core import evolution_journal as ej
 
@@ -175,7 +179,12 @@ def sync_journal_from_sources(data_dir: Path) -> int:
     added = 0
     for entry in harvest_entries(Path(data_dir), since=newest):
         try:
-            if ej.append_entry(entry):
+            # The harness already filters rows to timestamps newer than the
+            # newest journal entry, so narrative reuse across ingests (e.g.
+            # GSC insights carrying the same top-page text) is a distinct
+            # event, not a duplicate. Dedupe by timestamp via `since`, not by
+            # narrative bytes.
+            if ej.append_entry(entry, dedupe_narrative=False):
                 added += 1
         except Exception as e:
             logger.warning("journal_sync: append failed: %s", e)

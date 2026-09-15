@@ -61,6 +61,21 @@ def test_identical_duplicate_narrative_is_skipped(journal):
     assert len(ej.load_entries()) == 1
 
 
+def test_synced_ingest_with_same_narrative_is_appended_when_dedupe_off(journal):
+    ej.append_entry(_entry(timestamp="2026-08-01T00:00:00"))
+    # Journal sync rows carry fresh timestamps even when the source repeats the
+    # same narrative text (GSC insights reuse top-page copy every ingest), so
+    # the sync path disables the byte-narrative dedupe and timestamp-filtered
+    # rows land as distinct events.
+    assert ej.append_entry(
+        _entry(timestamp="2026-08-03T00:00:00"), dedupe_narrative=False
+    ) is True
+    assert ej.append_entry(
+        _entry(timestamp="2026-08-03T00:00:01"), dedupe_narrative=False
+    ) is True
+    assert len(ej.load_entries()) == 3
+
+
 def test_empty_narrative_is_rejected(journal):
     assert ej.append_entry(_entry(narrative="   ")) is False
     assert len(ej.load_entries()) == 0

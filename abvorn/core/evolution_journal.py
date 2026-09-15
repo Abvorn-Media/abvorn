@@ -77,12 +77,16 @@ def load_entries(limit: Optional[int] = None) -> List[Dict[str, Any]]:
     return sorted_entries
 
 
-def append_entry(entry: Dict[str, Any]) -> bool:
+def append_entry(entry: Dict[str, Any], dedupe_narrative: bool = True) -> bool:
     """Append one entry and rewrite the tracked journal atomically.
 
-    Appends every call (each drive cycle leaves a trace) but skips an entry
-    whose narrative is byte-identical to the most recent one, to avoid literal
-    duplicates from an unchanged cycle. Keeps only the newest MAX_ENTRIES.
+    Appends every call (each drive cycle leaves a trace) but, when
+    ``dedupe_narrative`` is true (default), skips an entry whose narrative is
+    byte-identical to the most recent one, to avoid literal duplicates from an
+    unchanged cycle. Pass ``dedupe_narrative=False`` when timestamps are the
+    source of truth (the journal_sync harvester already filters rows by the
+    newest entry timestamp, so a repeated narrative over a new ingest is a
+    distinct event, not a duplicate). Keeps only the newest MAX_ENTRIES.
 
     Returns False (no entry written) when the entry is empty or a duplicate of
     the latest, True on success. Never raises.
@@ -97,7 +101,7 @@ def append_entry(entry: Dict[str, Any]) -> bool:
         narrative = str(entry.get("narrative") or "").strip()
         if not narrative:
             return False
-        if entries and entries[-1].get("narrative") == narrative:
+        if dedupe_narrative and entries and entries[-1].get("narrative") == narrative:
             return False
 
         candidate = {
