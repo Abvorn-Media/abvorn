@@ -85,6 +85,32 @@ Enforcement on the copy gate:
 Module: `abvorn/core/copyguard.py`. Tests: `tests/test_copyguard.py`
 (fake backend — the test suite does not need a JVM or the server).
 
+## Evidence gate: no page without real demand
+
+The autonomous daemon path (`AbvornDaemon.run_full_cycle`) must not burn an
+LLM call or publish a page from a demand-less opportunity.
+
+- **Discovery gate** (`abvorn/discovery/scanner.py`): `OpportunityScanner`
+  takes `min_trend_score=60` / `min_sources=1` — weak or single-provider
+  trend blips never become opportunities.
+- **Cycle backstop** (`abvorn/daemon.py::satisfies_evidence`): an opportunity
+  is gated before personas/content. Manual Telegram deploys (score 1.0) always
+  pass; a marginal trend score can be rescued by real Search Console demand in
+  its category. Failing the gate marks the opportunity failed (no retry spam).
+- **GSC demand bridge** (`discover_from_gsc_demand`): when trend providers
+  surface nothing and a category's `/reviews/<seg>/` URLs clear
+  `min_impressions=100` or `min_clicks=5`, a fresh annual buying-guide
+  opportunity is minted. On a young site this is a strict no-op by design.
+- **Honest quality**: `quality_from_opportunity` derives the stored quality
+  score (0-10) from the opportunity's demand + GSC bonus instead of a hardcoded
+  7.0. A score-0.5 opportunity with no evidence still lands on 7.0 so existing
+  rows stay comparable.
+- Env overrides: `ABVORN_MIN_TREND_SCORE`, `ABVORN_MIN_TREND_SOURCES`,
+  `ABVORN_MIN_OPPORTUNITY_SCORE`, `ABVORN_GSC_MIN_IMPRESSIONS`,
+  `ABVORN_GSC_MIN_CLICKS`.
+- GSC demand parsing lives in `abvorn/core/gsc_ingestor.py::category_evidence`.
+  Tests: `tests/test_evidence_gate.py`, `tests/test_discovery.py`.
+
 ## Skill routing
 
 When a task matches one of these domains, load the corresponding skill

@@ -1,6 +1,7 @@
 """Opportunity discovery — finds untapped affiliate niches."""
 
 import logging, re
+from datetime import datetime
 
 
 logger = logging.getLogger("abvorn.discovery")
@@ -187,3 +188,56 @@ class OpportunityScanner:
         """Map a trend score (0-100) onto the opportunity 0-1 scale."""
         score = min(max(trend_score / 100, 0.0), 1.0)
         return round(max(score, 0.5), 2)
+
+    def discover_from_gsc_demand(self, data_dir=None, min_impressions: int = 100,
+                                 min_clicks: int = 5, max_opportunities: int = 3) -> list[dict]:
+        """Mint buying-guide opportunities from real Search Console demand.
+
+        Demand is read from the top-performing URLs (page-level). A category
+        whose /reviews/<segment>/ pages clear the impression/click floor gets a
+        fresh annual buying guide — but only for segments that map onto the
+        site's category taxonomy and have no pending opportunity or published
+        page yet. On a young, lightly-trafficked site this is a strict no-op,
+        which is correct: the bridge fires only on demand a human would act on.
+        """
+        from ..core.gsc_ingestor import category_evidence
+
+        site_categories = {v for v in SITE_CATEGORY_MAP.values()}
+        evidence = category_evidence(data_dir)
+        if not evidence:
+            return []
+
+        existing = self.state.get_opportunities("pending")
+        existing_slugs = set(n["slug"] for n in self.state.get_all_niches())
+        year = datetime.now().year
+        results = []
+
+        for seg, ev in sorted(evidence.items()):
+            if ev["impressions"] < min_impressions and ev["clicks"] < min_clicks:
+                continue
+            if seg not in site_categories:
+                logger.info("GSC demand on non-category segment %s — skipped", seg)
+                continue
+            niche = make_slug(f"{seg.replace('-', ' ')} {year} buying guide")
+            if any(e["niche"] == niche for e in existing) or niche in existing_slugs:
+                continue
+            if len(results) >= max_opportunities:
+                break
+            raw = score_opportunity(ev["impressions"], buying_intent=0.7,
+                                    commission=20.0, competition=0.4)
+            # Floor at 0.5 so a minted opportunity clears satisfies_evidence's
+            # default cycle gate; demand beyond the floor lifts it further.
+            score = round(max(raw, 0.5), 2)
+            self.state.add_opportunity(niche, score, search_volume=ev["impressions"],
+                                       buying_intent=0.7, competition=0.4,
+                                       commission=20.0, category=seg)
+            results.append({
+                "niche": niche, "category": seg, "source_category": "gsc",
+                "score": score,
+                "impressions": ev["impressions"], "clicks": ev["clicks"],
+            })
+            logger.info(
+                "GSC demand discovery: %s -> %s (imps %s, clicks %s)",
+                niche, seg, ev["impressions"], ev["clicks"],
+            )
+        return results

@@ -1,6 +1,6 @@
 """Abvorn daemon — runs all agents continuously."""
 
-import asyncio, logging, json, os, re, sys, uuid
+import asyncio, logging, json, os, sys, uuid
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -52,21 +52,8 @@ OPTIMIZATION_INTERVAL = timedelta(hours=1)
 
 def _gsc_evidence(data_dir=None) -> dict:
     """Search Console demand per site category (from /reviews/<seg>/ URLs)."""
-    d = Path(data_dir) if data_dir else Path(__file__).resolve().parents[1] / "data"
-    try:
-        payload = json.loads((d / "gsc_top_performing.json").read_text(encoding="utf-8"))
-    except Exception:
-        return {}
-    evidence = {}
-    for it in payload.get("items", []) if isinstance(payload, dict) else []:
-        url = (it or {}).get("url") or ""
-        m = re.search(r"/reviews/([a-z0-9-]+)/", url)
-        if not m:
-            continue
-        ev = evidence.setdefault(m.group(1), {"impressions": 0, "clicks": 0})
-        ev["impressions"] += int(it.get("impressions") or 0)
-        ev["clicks"] += int(it.get("clicks") or 0)
-    return evidence
+    from .core.gsc_ingestor import category_evidence
+    return category_evidence(data_dir)
 
 
 def satisfies_evidence(opp: dict, min_score: float = 0.5, data_dir=None) -> bool:
@@ -213,7 +200,30 @@ class AbvornDaemon:
                         "trend-discovery", "success",
                         ", ".join(d["product_name"] for d in discovered),
                     )
-            opp = self.scheduler.get_next_opportunity()
+                opp = self.scheduler.get_next_opportunity()
+            if not opp:
+                # GSC demand bridge: when the trend providers surface nothing,
+                # real Search Console traffic can mint opportunities directly
+                # (each must clear the demand floor before it becomes a page).
+                try:
+                    gsc_discovered = await asyncio.to_thread(
+                        self.scanner.discover_from_gsc_demand,
+                        min_impressions=int(
+                            os.environ.get("ABVORN_GSC_MIN_IMPRESSIONS", "100")
+                        ),
+                        min_clicks=int(
+                            os.environ.get("ABVORN_GSC_MIN_CLICKS", "5")
+                        ),
+                    )
+                except Exception as e:
+                    gsc_discovered = []
+                    logger.warning("GSC demand discovery failed (non-fatal): %s", e)
+                if gsc_discovered:
+                    self.notifier.report_cycle(
+                        "gsc-demand", "success",
+                        ", ".join(d["niche"] for d in gsc_discovered),
+                    )
+                opp = self.scheduler.get_next_opportunity()
             if not opp:
                 return {"status": "nothing_to_do"}
 

@@ -186,3 +186,96 @@ def test_resolve_site_category_infers_from_legacy_niche():
     assert resolve_site_category({"niche": "roku-55-4k-qled", "category": "tv"}) == "tv"
     assert resolve_site_category({"niche": "roku-40-smart-tv",
                                   "product_name": "Roku 40 Inch Select Series Smart TV"}) == "tv"
+
+
+def _write_gsc_demand(tmp_path, items):
+    import json
+
+    (tmp_path / "gsc_top_performing.json").write_text(
+        json.dumps({"type": "gsc_insight", "subtype": "top_performing", "items": items}),
+        encoding="utf-8",
+    )
+    return str(tmp_path)
+
+
+def test_discover_gsc_demand_mints_above_floor(tmp_path):
+    """Real category demand above the floor becomes a buying-guide opportunity."""
+    from abvorn.core.state import AbvornState
+
+    data_dir = _write_gsc_demand(tmp_path, [{
+        "url": "https://abvorn.com/reviews/webcams/best-webcam-2026.html",
+        "clicks": 9, "impressions": 600, "ctr": 0.015, "position": 11,
+    }])
+    state = AbvornState(tmp_path / "d.db")
+    scanner = OpportunityScanner(state)
+    results = scanner.discover_from_gsc_demand(data_dir=data_dir)
+    assert len(results) == 1
+    assert results[0]["category"] == "webcams"
+    stored = [o for o in state.get_opportunities() if o["niche"] == results[0]["niche"]]
+    assert len(stored) == 1
+    assert stored[0]["status"] == "pending"
+    assert stored[0]["category"] == "webcams"
+    assert stored[0]["score"] >= 0.5
+    state.close()
+
+
+def test_discover_gsc_demand_below_floor_noop(tmp_path):
+    """A young site's few impressions/clicks never mint a page."""
+    from abvorn.core.state import AbvornState
+
+    data_dir = _write_gsc_demand(tmp_path, [
+        {"url": "https://abvorn.com/", "clicks": 0, "impressions": 3},
+        {"url": "https://abvorn.com/reviews/tv/best-tv-2026.html",
+         "clicks": 0, "impressions": 3},
+    ])
+    state = AbvornState(tmp_path / "d.db")
+    scanner = OpportunityScanner(state)
+    results = scanner.discover_from_gsc_demand(data_dir=data_dir)
+    assert results == []
+    assert state.get_opportunities() == []
+    state.close()
+
+
+def test_discover_gsc_demand_skips_existing(tmp_path):
+    """A category already targeted by a pending opportunity is not re-minted."""
+    from datetime import datetime
+    from abvorn.core.state import AbvornState
+    from abvorn.discovery.scanner import make_slug
+
+    data_dir = _write_gsc_demand(tmp_path, [{
+        "url": "https://abvorn.com/reviews/webcams/best-webcam-2026.html",
+        "clicks": 9, "impressions": 600, "ctr": 0.015, "position": 11,
+    }])
+    state = AbvornState(tmp_path / "d.db")
+    existing_niche = make_slug(f"webcams {datetime.now().year} buying guide")
+    state.add_opportunity(existing_niche, 0.6)
+    scanner = OpportunityScanner(state)
+    results = scanner.discover_from_gsc_demand(data_dir=data_dir)
+    assert results == []
+    state.close()
+
+
+def test_discover_gsc_demand_ignores_non_category_segments(tmp_path):
+    """Demand on pages outside the category taxonomy is not actionable."""
+    from abvorn.core.state import AbvornState
+
+    data_dir = _write_gsc_demand(tmp_path, [{
+        "url": "https://abvorn.com/reviews/unicorn-stuff/x.html",
+        "clicks": 50, "impressions": 12000, "ctr": 0.004, "position": 8,
+    }])
+    state = AbvornState(tmp_path / "d.db")
+    scanner = OpportunityScanner(state)
+    results = scanner.discover_from_gsc_demand(data_dir=data_dir)
+    assert results == []
+    state.close()
+
+
+def test_discover_gsc_demand_missing_file_noop(tmp_path):
+    """No GSC file -> no opportunities, no error."""
+    from abvorn.core.state import AbvornState
+
+    state = AbvornState(tmp_path / "d.db")
+    scanner = OpportunityScanner(state)
+    assert scanner.discover_from_gsc_demand(data_dir=str(tmp_path / "absent")) == []
+    assert state.get_opportunities() == []
+    state.close()

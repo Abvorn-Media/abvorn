@@ -6,6 +6,7 @@ Neural Memory (Graphify), and records insights to Ab's Evolution Journal.
 
 import json
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
@@ -20,6 +21,31 @@ DATA_DIR = Path("data")
 SUMMARY_FILE = DATA_DIR / "gsc_latest_summary.json"
 INGESTION_LOG = DATA_DIR / "gsc_ingestion_log.jsonl"
 JOURNAL_FILE = DATA_DIR / "ab_journal_entries.jsonl"
+
+
+def category_evidence(data_dir=None) -> Dict[str, Dict[str, int]]:
+    """Search Console demand per site category from top-performing URLs.
+
+    Each item's /reviews/<segment>/ path is rolled up into {segment:
+    {impressions, clicks}}. Empty when the file is missing/unreadable or the
+    site is too young to have rows — that is a valid state, not an error.
+    """
+    base = Path(data_dir) if data_dir else DATA_DIR
+    try:
+        payload = json.loads((base / "gsc_top_performing.json").read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    evidence: Dict[str, Dict[str, int]] = {}
+    for it in payload.get("items", []) if isinstance(payload, dict) else []:
+        url = (it or {}).get("url") or ""
+        m = re.search(r"/reviews/([a-z0-9-]+)/", url)
+        if not m:
+            continue
+        seg = m.group(1)
+        ev = evidence.setdefault(seg, {"impressions": 0, "clicks": 0})
+        ev["impressions"] += int(it.get("impressions") or 0)
+        ev["clicks"] += int(it.get("clicks") or 0)
+    return evidence
 
 
 class GSCIngestor:
