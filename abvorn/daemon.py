@@ -1,6 +1,6 @@
 """Abvorn daemon — runs all agents continuously."""
 
-import asyncio, logging, json, sys, uuid
+import asyncio, logging, json, os, re, sys, uuid
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -44,6 +44,66 @@ FULL_CYCLE_HOURS = 12
 # Rules-only analysis: no LLM calls unless a low performer needs a rewrite.
 OPTIMIZATION_INTERVAL = timedelta(hours=1)
 
+
+# --- Opportunity evidence gate ----------------------------------------------
+# The autonomous publish path only burns an article once an opportunity carries
+# demand evidence. Weak/stale opportunities are gated out; real Search Console
+# demand in an opportunity's category can rescue a marginal score.
+
+def _gsc_evidence(data_dir=None) -> dict:
+    """Search Console demand per site category (from /reviews/<seg>/ URLs)."""
+    d = Path(data_dir) if data_dir else Path(__file__).resolve().parents[1] / "data"
+    try:
+        payload = json.loads((d / "gsc_top_performing.json").read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    evidence = {}
+    for it in payload.get("items", []) if isinstance(payload, dict) else []:
+        url = (it or {}).get("url") or ""
+        m = re.search(r"/reviews/([a-z0-9-]+)/", url)
+        if not m:
+            continue
+        ev = evidence.setdefault(m.group(1), {"impressions": 0, "clicks": 0})
+        ev["impressions"] += int(it.get("impressions") or 0)
+        ev["clicks"] += int(it.get("clicks") or 0)
+    return evidence
+
+
+def satisfies_evidence(opp: dict, min_score: float = 0.5, data_dir=None) -> bool:
+    """True when an opportunity passes the evidence bar.
+
+    Manual deploys (score 1.0, no demand fields) always pass; a trend
+    opportunity must meet min_score on its own or be rescued by real GSC
+    demand in its category.
+    """
+    try:
+        score = float(opp.get("score") or 0.0)
+    except (TypeError, ValueError):
+        score = 0.0
+    if score >= min_score:
+        return True
+    ev = _gsc_evidence(data_dir).get((opp.get("category") or "").lower())
+    if ev and (ev["impressions"] > 0 or ev["clicks"] > 0):
+        score += min(0.5, (ev["impressions"] / 1000.0) + ev["clicks"] * 0.05)
+    return score >= min_score
+
+
+def quality_from_opportunity(opp: dict, data_dir=None) -> float:
+    """Evidence-derived 0-10 post quality, replacing the hardcoded 7.0.
+
+    Starts from the opportunity's own demand score (0-1 -> 4-10) and adds a
+    small Search Console demand bonus capped at +1.0.
+    """
+    try:
+        score = float(opp.get("score") or 0.0)
+    except (TypeError, ValueError):
+        score = 0.0
+    quality = 4.0 + 6.0 * score
+    ev = _gsc_evidence(data_dir).get((opp.get("category") or "").lower())
+    if ev and (ev["impressions"] > 0 or ev["clicks"] > 0):
+        quality += min(1.0, (ev["impressions"] / 500.0) + ev["clicks"] * 0.1)
+    return round(min(quality, 10.0), 1)
+
 class AbvornDaemon:
     """The daemon that keeps Abvorn alive 24/7."""
 
@@ -59,6 +119,9 @@ class AbvornDaemon:
         self.agents = []
         self._tasks = []
         self._phase3_inited = False
+        self.min_opportunity_score = float(
+            os.environ.get("ABVORN_MIN_OPPORTUNITY_SCORE", "0.5")
+        )
 
     def _ensure_phase3(self):
         """Lazy init of Phase 3 subsystems. Only runs once."""
@@ -69,7 +132,11 @@ class AbvornDaemon:
 
     def _init_phase3(self):
         """Initialize Phase 3 subsystems."""
-        self.scanner = OpportunityScanner(self.state)
+        self.scanner = OpportunityScanner(
+            self.state,
+            min_trend_score=float(os.environ.get("ABVORN_MIN_TREND_SCORE", "60")),
+            min_sources=int(os.environ.get("ABVORN_MIN_TREND_SOURCES", "1")),
+        )
         self.persona_engine = PersonaEngine()
         self.persona_registry = PersonaRegistry(str(self.state_path.parent / "personas.db"))
         self.factory = PersuasionPipeline()
@@ -153,6 +220,19 @@ class AbvornDaemon:
         niche = opp["niche"]
         logger.info(f"Starting cycle for: {niche}")
 
+        if not satisfies_evidence(opp, self.min_opportunity_score):
+            self.scheduler.mark_failed(opp["id"])
+            self.notifier.report_cycle(
+                niche, "no_evidence",
+                f"score {opp.get('score')} below gate {self.min_opportunity_score}",
+            )
+            logger.warning(
+                "Skipping %s: no real demand evidence "
+                "(score=%s, gate=%s)", niche, opp.get("score"),
+                self.min_opportunity_score,
+            )
+            return {"status": "no_evidence", "opportunity": niche}
+
         personas = self.persona_engine.discover_personas(niche)
         if not personas:
             self.scheduler.mark_failed(opp["id"])
@@ -232,7 +312,7 @@ class AbvornDaemon:
             self.state.add_post(site_cat, content.get("post_title", niche),
                                 f"{article_slug}.html",
                                 product_name=content.get("product_name", ""),
-                                angle="buying guide", quality_score=7.0)
+                                angle="buying guide", quality_score=quality_from_opportunity(opp))
             all_posts = []
             for s in all_slugs:
                 all_posts.extend(self.state.get_posts_for_niche(s))
@@ -249,7 +329,9 @@ class AbvornDaemon:
 
         self.scheduler.mark_complete(opp["id"])
         self.health.log_cycle(niche, success=True, duration_s=120)
-        self.persona_registry.update_performance(persona_id, converted=False, quality_score=7.0)
+        self.persona_registry.update_performance(
+            persona_id, converted=False, quality_score=quality_from_opportunity(opp)
+        )
         self.notifier.report_cycle(niche, "success", content.get("post_title", ""))
 
         self.bus.publish("content.drafted", {"niche": niche, "title": content.get("post_title", "")})

@@ -105,8 +105,16 @@ def score_opportunity(search_demand: int, buying_intent: float,
 class OpportunityScanner:
     """Scans for untapped affiliate opportunities."""
 
-    def __init__(self, state):
+    def __init__(self, state, min_trend_score: int = 60, min_sources: int = 1):
+        """Evidence gate for trend discovery.
+
+        Only trends scoring at or above min_trend_score (0-100) that were also
+        seen in at least min_sources providers become opportunities — a weak or
+        single-source blip never mints a page.
+        """
         self.state = state
+        self.min_trend_score = min_trend_score
+        self.min_sources = min_sources
 
     def discover_from_keywords(self, keywords: list[str],
                                 base_demand: int = 1000,
@@ -145,6 +153,10 @@ class OpportunityScanner:
         results = []
         for item in planned:
             if item["content_type"] not in ("buying_guide", "comparison"):
+                continue
+            if item["score"] < self.min_trend_score:
+                continue
+            if len(item.get("sources") or []) < self.min_sources:
                 continue
             source_cat = (item.get("category") or "").strip()
             site_cat = SITE_CATEGORY_MAP.get(source_cat.lower(), make_slug(source_cat)) if source_cat else "general"

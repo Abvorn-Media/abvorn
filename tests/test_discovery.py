@@ -90,6 +90,42 @@ def test_discover_from_trends_skips_existing_niches():
         state.close()
 
 
+def test_discover_from_trends_skips_weak_trends():
+    """A weak trend must never mint an opportunity, regardless of content type."""
+    from abvorn.core.state import AbvornState
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as tmp:
+        db_path = Path(tmp) / "test.db"
+        state = AbvornState(db_path)
+        scanner = OpportunityScanner(state, min_trend_score=80)
+        results = scanner.discover_from_trends(TREND_SAMPLE)
+        prods = {r["product_name"] for r in results}
+        assert "4K Gaming Monitor Under $300" in prods
+        assert "Mechanical Keyboard Guide 2026" not in prods
+        assert "Cheap Gaming Mouse" not in prods
+        state.close()
+
+
+def test_discover_from_trends_requires_single_source():
+    """min_sources > 1 rejects trends seen by only one provider."""
+    from abvorn.core.state import AbvornState
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as tmp:
+        db_path = Path(tmp) / "test.db"
+        state = AbvornState(db_path)
+        scanner = OpportunityScanner(state, min_sources=2)
+        results = scanner.discover_from_trends(TREND_SAMPLE)
+        prods = {r["product_name"] for r in results}
+        assert "4K Gaming Monitor Under $300" in prods  # 2 sources
+        assert "Mechanical Keyboard Guide 2026" not in prods  # 1 source
+        assert "Cheap Gaming Mouse" not in prods
+        state.close()
+
+
 def test_discover_from_trends_empty():
     """No trends -> no opportunities, no error."""
     from abvorn.core.state import AbvornState
