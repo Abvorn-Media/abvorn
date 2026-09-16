@@ -2962,17 +2962,39 @@ Sitemap: https://abvorn.com/sitemap.xml
 """
 
 
-def write_site_metadata(docs_dir, items):
+def write_site_metadata(docs_dir, items, categories=None):
     """Write robots.txt, llms.txt, feed.xml and sitemap.xml into the site root.
 
     robots.txt deliberately ALLOWS AI search bots (citation) and blocks only
     training-only crawlers (CCBot) plus known content scrapers.
     llms.txt is the machine-readable site map for AI agents (llmstxt.org).
+
+    Category listing pages (docs/categories/<slug>/) are emitted into llms.txt
+    and the sitemap so the taxonomy hubs are discoverable, not just the reviews
+    hanging off them. `categories` accepts explicit slugs; when omitted the
+    effective site category map (state.db-derived) supplies them.
     """
     docs_dir = Path(docs_dir)
     docs_dir.mkdir(exist_ok=True)
 
     write_checked(docs_dir / "robots.txt", SITE_ROBOTS_TXT, "robots.txt")
+
+    # Category (label, slug) pairs for llms.txt / llms-full.txt / sitemap.
+    # Explicit `categories` (tests) carries slugs; otherwise the effective
+    # taxonomy map supplies the real display labels so the meta files stay in
+    # sync with the categories actually listed on the site.
+    category_pairs = []
+    if categories is not None:
+        for c in categories:
+            _slug = str(c).strip("/")
+            if _slug:
+                category_pairs.append((_slug.replace("-", " ").title(), _slug))
+    else:
+        _eff_map, _ = _effective_category_map()
+        category_pairs = [(label, _category_slug(label)) for label in _eff_map.keys() if label]
+    seen = set()
+    category_pairs = [p for p in category_pairs if not (p[1] in seen or seen.add(p[1]))]
+    category_slugs = [s for _, s in category_pairs]
 
     # Core non-review pages (always emitted) so llms.txt / sitemap cover the
     # whole site, not just product reviews.
@@ -2990,31 +3012,39 @@ def write_site_metadata(docs_dir, items):
         f"- {it.get('title', 'Review')} — {SITE_BASE}/{it['slug'].lstrip('/')}"
         for it in items[:50]
     )
-    llms_txt = (
+    category_lines = (
+        "## Categories\n"
+        + "\n".join(f"- {label} — {SITE_BASE}/categories/{slug}/"
+                    for label, slug in category_pairs)
+        + "\n"
+    ) if category_pairs else ""
+
+    llms_sections = [
         "# Abvorn\n\n"
-"> Independent product reviews and buying guides. We research before we recommend "
-            "— verdicts are based on real specs, real prices, and verified owner feedback, not spec sheets.\n\n"
+        "> Independent product reviews and buying guides. We research before we recommend "
+            "— verdicts are based on real specs, real prices, and verified owner feedback, not spec sheets.\n",
         "## Core pages\n"
-        + "\n".join(f"- {title} — {SITE_BASE}/{path}" for title, path in core_pages)
-        + "\n\n"
-        "## Latest reviews\n" + latest + "\n"
-    )
+        + "\n".join(f"- {title} — {SITE_BASE}/{path}" for title, path in core_pages),
+        category_lines,
+        "## Latest reviews\n" + latest,
+    ]
+    llms_txt = "\n\n".join(part for part in llms_sections if part) + "\n"
     write_checked(docs_dir / "llms.txt", llms_txt, "llms.txt")
 
     # llms-full.txt — the full, agent-citable index (every review, not a short list).
-    llms_full = (
+    llms_full_sections = [
         "# Abvorn Full Index\n\n"
-        "> Machine-readable index of every page on Abvorn for AI agents (llmstxt.org).\n\n"
+        "> Machine-readable index of every page on Abvorn for AI agents (llmstxt.org).\n",
         "## Core pages\n"
-        + "\n".join(f"- {title} — {SITE_BASE}/{path}" for title, path in core_pages)
-        + "\n\n"
+        + "\n".join(f"- {title} — {SITE_BASE}/{path}" for title, path in core_pages),
+        category_lines,
         "## All reviews\n"
         + "\n".join(
             f"- {it.get('title', 'Review')} — {SITE_BASE}/{it['slug'].lstrip('/')}"
             for it in items
-        )
-        + "\n"
-    )
+        ),
+    ]
+    llms_full = "\n\n".join(part for part in llms_full_sections if part) + "\n"
     write_checked(docs_dir / "llms-full.txt", llms_full, "llms-full.txt")
 
     rss_xml = '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Abvorn Reviews</title><link>https://abvorn.com</link><description>Product reviews you can trust</description>'
@@ -3046,9 +3076,13 @@ def write_site_metadata(docs_dir, items):
         if path.endswith(".html") or path.endswith("/"):
             loc = f"{SITE_BASE}/{path}".rstrip("/") or SITE_BASE
             core_urls.append(f"<url><loc>{_xml_escape(loc)}</loc>{_lastmod({})}</url>")
+    category_urls = [
+        f'<url><loc>{_xml_escape(f"{SITE_BASE}/categories/{s}/")}</loc>{_lastmod({})}</url>'
+        for s in category_slugs
+    ]
     sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     sitemap += f'<url><loc>{_xml_escape(SITE_BASE)}</loc>{_lastmod({})}</url>\n'
-    sitemap += "\n".join(core_urls) + "\n" if core_urls else ""
+    sitemap += "\n".join(core_urls + category_urls) + "\n" if (core_urls or category_urls) else ""
     for it in items:
         item_loc = f'{SITE_BASE}/{it["slug"]}'
         sitemap += f'<url><loc>{_xml_escape(item_loc)}</loc>{_lastmod(it)}</url>\n'

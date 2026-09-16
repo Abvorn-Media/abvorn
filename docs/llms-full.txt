@@ -2,6 +2,7 @@
 
 > Machine-readable index of every page on Abvorn for AI agents (llmstxt.org).
 
+
 ## Core pages
 - Home — https://abvorn.com/
 - All Reviews — https://abvorn.com/reviews/
@@ -10,6 +11,15 @@
 - About — https://abvorn.com/about.html
 - Privacy Policy — https://abvorn.com/privacy.html
 - Journal — https://abvorn.com/journal/
+
+## Categories
+- Audio — https://abvorn.com/categories/audio/
+- Computing & Monitors — https://abvorn.com/categories/computing-and-monitors/
+- Fitness & Health — https://abvorn.com/categories/fitness-and-health/
+- Gaming — https://abvorn.com/categories/gaming/
+- Home & Lifestyle — https://abvorn.com/categories/home-and-lifestyle/
+- Webcams & Accessories — https://abvorn.com/categories/webcams-and-accessories/
+
 
 ## All reviews
 - Best 4K Monitors 2026: Dell S2725QS, S2725QC, and LG 27UP650K-W Compared — https://abvorn.com/reviews/4k-monitors/best-4k-monitors-2024-dell-s2725qs-s2725qc-and-lg-27up650k-w-compared-2026-08-07.html
@@ -25,6 +35,7 @@
 - The Ultimate 4K Monitor Buying Guide 2026: Compare Dell S2725QS, Dell S2725QC & LG 27UP650K-W — https://abvorn.com/reviews/4k-monitors/the-ultimate-4k-monitor-buying-guide-2024-compare-dell-s2725qs-dell-s2725qc-lg-27up650k-w-2026-08-10.html
 - The Ultimate 4K Monitor Buying Guide: Compare Top Picks — https://abvorn.com/reviews/4k-monitors/the-ultimate-4k-monitor-buying-guide-compare-top-picks-2026-08-12.html
 - The Ultimate Buying Guide to 4K Monitors: Find Your Perfect Display — https://abvorn.com/reviews/4k-monitors/the-ultimate-buying-guide-to-4k-monitors-find-your-perfect-display-2026-07-27.html
+- Amazon Echo Show 5 Newest Model Smart Display Designed For A — https://abvorn.com/reviews/amazon-echo-show-5-newest-model-smart-display-designed-for-a/
 - Best fitness-trackers 2026 — https://abvorn.com/reviews/fitness-trackers/best-fitness-trackers-2026-2026-09-03.html
 - Best Fitness Trackers 2026: Compare Features & Find Your Ideal Health Tracker — https://abvorn.com/reviews/fitness-trackers/best-fitness-trackers-2026-compare-features-find-your-ideal-health-tracker-2026-08-23.html
 - Best Fitness Trackers 2026: Expert Reviews & Buying Guide — https://abvorn.com/reviews/fitness-trackers/best-fitness-trackers-2026-expert-reviews-buying-guide-2026-08-29.html
@@ -48,6 +59,7 @@
 - The Ultimate Gaming Mouse Buying Guide: Top Picks and Expert Reviews — https://abvorn.com/reviews/gaming-mice/the-ultimate-gaming-mouse-buying-guide-top-picks-and-expert-reviews-2026-07-27.html
 - Top 3 Gaming Mice of 2026: Logitech G305, G502 Hero, and Razer Basilisk V3 – A Complete Comparison Guide — https://abvorn.com/reviews/gaming-mice/top-3-gaming-mice-of-2026-logitech-g305-g502-hero-and-razer-basilisk-v3-a-complete-comparison-guide-2026-08-09.html
 - Ultimate Gaming Mice Buying Guide: Compare Performance, Features & Value — https://abvorn.com/reviews/gaming-mice/ultimate-gaming-mice-buying-guide-compare-performance-features-value-2026-08-07.html
+- Insignia 50 Class F50 Series Led 4K Uhd Smart Fire Tv Voice  — https://abvorn.com/reviews/insignia-50-class-f50-series-led-4k-uhd-smart-fire-tv-voice-/
 - Best 15.6" Laptops 2026: Lenovo vs HP vs jumper Compared — https://abvorn.com/reviews/laptops/best-15-6-laptops-2026-lenovo-vs-hp-vs-jumper-compared-2026-08-31.html
 - Best Laptops 2026: A Comprehensive Buying Guide and Review Comparison — https://abvorn.com/reviews/laptops/best-laptops-2026-a-comprehensive-buying-guide-and-review-comparison-2026-08-22.html
 - Best Laptops 2026: Top 3 Picks for Work, School & Everyday Use — https://abvorn.com/reviews/laptops/best-laptops-2026-top-3-picks-for-work-school-everyday-use-2026-09-02.html
@@ -71,6 +83,8 @@
 - Mechanical Gaming Keyboard Showdown: Redragon vs AULA - Which One Wins? — https://abvorn.com/reviews/mechanical-keyboards/mechanical-gaming-keyboard-showdown-redragon-vs-aula-which-one-wins-2026-08-08.html
 - The Ultimate Buying Guide to Mechanical Keyboards: Expert Tips and Recommendations — https://abvorn.com/reviews/mechanical-keyboards/the-ultimate-buying-guide-to-mechanical-keyboards-expert-tips-and-recommendations-2026-07-27.html
 - The Ultimate Mechanical Keyboard Buying Guide: Redragon K668 vs K552 vs AULA F75 Pro Reviewed — https://abvorn.com/reviews/mechanical-keyboards/the-ultimate-mechanical-keyboard-buying-guide-redragon-k668-vs-k552-vs-aula-f75-pro-reviewed-2026-08-13.html
+- Roku 40 Inch Select Series Smart Tv 2026 1080P Full Hd Tv Ro — https://abvorn.com/reviews/roku-40-inch-select-series-smart-tv-2026-1080p-full-hd-tv-ro/
+- Roku 55 Inch Select Series Smart Tv 2026 4K Qled Tv Roku Tv  — https://abvorn.com/reviews/roku-55-inch-select-series-smart-tv-2026-4k-qled-tv-roku-tv-/
 - Best smart-home 2026 — https://abvorn.com/reviews/smart-home/best-smart-home-2026-2026-08-30.html
 - Best Smart Home Devices 2026: Amazon Echo Show 15 vs Echo Show 5 vs Sujeet Night Light Compared — https://abvorn.com/reviews/smart-home/best-smart-home-devices-2024-amazon-echo-show-15-vs-echo-show-5-vs-sujeet-night-light-compared-2026-08-09.html
 - Best smart-home devices 2026: Amazon Echo Show & Sujeet Night Light compared — https://abvorn.com/reviews/smart-home/best-smart-home-devices-2026-amazon-echo-show-sujeet-night-light-compared-2026-09-03.html
@@ -80,6 +94,7 @@
 - Best Smart Home Devices 2026: Top Picks & Buying Guide — https://abvorn.com/reviews/smart-home/best-smart-home-devices-2026-top-picks-buying-guide-2026-08-21.html
 - Best Smart Home Devices 2026: Top Picks for Every Home — https://abvorn.com/reviews/smart-home/best-smart-home-devices-2026-top-picks-for-every-home-2026-08-16.html
 - Best Smart-Home Devices 2026: Your Ultimate Buying Guide — https://abvorn.com/reviews/smart-home/best-smart-home-devices-2026-your-ultimate-buying-guide-2026-09-01.html
+- First-Time Buyer Guide: Echo Show 5 Review & Best Deal — https://abvorn.com/reviews/smart-home/first-time-buyer-guide-echo-show-5-review-best-deal.html
 - Smart Home Devices Compared: Amazon Echo Show 15 vs Sujeet Night Light vs Amazon Echo Show 5 – Ultimate Buying Guide — https://abvorn.com/reviews/smart-home/smart-home-devices-compared-amazon-echo-show-15-vs-sujeet-night-light-vs-amazon-echo-show-5-ultimate-buying-guide-2026-08-14.html
 - Smart Home Hub Guide: Choosing Between Echo Show 15, Echo Show 5, and Essential Smart Lighting — https://abvorn.com/reviews/smart-home/smart-home-hub-guide-choosing-between-echo-show-15-echo-show-5-and-essential-smart-lighting-2026-08-11.html
 - Transform Your Space: The Complete Smart Home Buying Guide — https://abvorn.com/reviews/smart-home/transform-your-space-the-complete-smart-home-buying-guide-2026-07-27.html
@@ -94,6 +109,9 @@
 - Roku Streaming Devices Buying Guide: Choose the Perfect Roku for Your TV — https://abvorn.com/reviews/streaming-devices/roku-streaming-devices-buying-guide-choose-the-perfect-roku-for-your-tv-2026-08-10.html
 - Roku Streaming Devices Compared: HD, Plus, and Ultra – Choose the Perfect Streaming Device for Your TV — https://abvorn.com/reviews/streaming-devices/roku-streaming-devices-compared-hd-plus-and-ultra-choose-the-perfect-streaming-device-for-your-tv-2026-08-08.html
 - Roku Streaming Stick Showdown: Which Device Delivers the Best Value and Performance? — https://abvorn.com/reviews/streaming-devices/roku-streaming-stick-showdown-which-device-delivers-the-best-value-and-performance-2026-08-15.html
+- First‑Time Buyer’s Guide to the Insignia 50" F50 Series 4K Fire TV – Get It Right — https://abvorn.com/reviews/tv/first-time-buyer-s-guide-to-the-insignia-50-f50-series-4k.html
+- First‑Time Buyer’s Guide to the Roku 55‑inch Select Series 2026 4K QLED TV — https://abvorn.com/reviews/tv/first-time-buyer-s-guide-to-the-roku-55-inch-select-series.html
+- Roku 40″ Select Series TV Buying Guide for First‑Time Buyers — https://abvorn.com/reviews/tv/roku-40-select-series-tv-buying-guide-for-first-time-buyers.html
 - Best Webcams 2026: How to Choose the Perfect Webcam for Streaming, Meetings & Video Calls — https://abvorn.com/reviews/webcams/best-webcams-2024-how-to-choose-the-perfect-webcam-for-streaming-meetings-video-calls-2026-07-31.html
 - Best Webcams — https://abvorn.com/reviews/webcams/best-webcams-2026-07-30.html
 - Best Webcams — https://abvorn.com/reviews/webcams/best-webcams-2026-08-30.html

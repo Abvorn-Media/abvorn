@@ -2,6 +2,7 @@
 
 > Independent product reviews and buying guides. We research before we recommend — verdicts are based on real specs, real prices, and verified owner feedback, not spec sheets.
 
+
 ## Core pages
 - Home — https://abvorn.com/
 - All Reviews — https://abvorn.com/reviews/
@@ -10,6 +11,15 @@
 - About — https://abvorn.com/about.html
 - Privacy Policy — https://abvorn.com/privacy.html
 - Journal — https://abvorn.com/journal/
+
+## Categories
+- Audio — https://abvorn.com/categories/audio/
+- Computing & Monitors — https://abvorn.com/categories/computing-and-monitors/
+- Fitness & Health — https://abvorn.com/categories/fitness-and-health/
+- Gaming — https://abvorn.com/categories/gaming/
+- Home & Lifestyle — https://abvorn.com/categories/home-and-lifestyle/
+- Webcams & Accessories — https://abvorn.com/categories/webcams-and-accessories/
+
 
 ## Latest reviews
 - Best 4K Monitors 2026: Dell S2725QS, S2725QC, and LG 27UP650K-W Compared — https://abvorn.com/reviews/4k-monitors/best-4k-monitors-2024-dell-s2725qs-s2725qc-and-lg-27up650k-w-compared-2026-08-07.html
@@ -25,6 +35,7 @@
 - The Ultimate 4K Monitor Buying Guide 2026: Compare Dell S2725QS, Dell S2725QC & LG 27UP650K-W — https://abvorn.com/reviews/4k-monitors/the-ultimate-4k-monitor-buying-guide-2024-compare-dell-s2725qs-dell-s2725qc-lg-27up650k-w-2026-08-10.html
 - The Ultimate 4K Monitor Buying Guide: Compare Top Picks — https://abvorn.com/reviews/4k-monitors/the-ultimate-4k-monitor-buying-guide-compare-top-picks-2026-08-12.html
 - The Ultimate Buying Guide to 4K Monitors: Find Your Perfect Display — https://abvorn.com/reviews/4k-monitors/the-ultimate-buying-guide-to-4k-monitors-find-your-perfect-display-2026-07-27.html
+- Amazon Echo Show 5 Newest Model Smart Display Designed For A — https://abvorn.com/reviews/amazon-echo-show-5-newest-model-smart-display-designed-for-a/
 - Best fitness-trackers 2026 — https://abvorn.com/reviews/fitness-trackers/best-fitness-trackers-2026-2026-09-03.html
 - Best Fitness Trackers 2026: Compare Features & Find Your Ideal Health Tracker — https://abvorn.com/reviews/fitness-trackers/best-fitness-trackers-2026-compare-features-find-your-ideal-health-tracker-2026-08-23.html
 - Best Fitness Trackers 2026: Expert Reviews & Buying Guide — https://abvorn.com/reviews/fitness-trackers/best-fitness-trackers-2026-expert-reviews-buying-guide-2026-08-29.html
@@ -48,6 +59,7 @@
 - The Ultimate Gaming Mouse Buying Guide: Top Picks and Expert Reviews — https://abvorn.com/reviews/gaming-mice/the-ultimate-gaming-mouse-buying-guide-top-picks-and-expert-reviews-2026-07-27.html
 - Top 3 Gaming Mice of 2026: Logitech G305, G502 Hero, and Razer Basilisk V3 – A Complete Comparison Guide — https://abvorn.com/reviews/gaming-mice/top-3-gaming-mice-of-2026-logitech-g305-g502-hero-and-razer-basilisk-v3-a-complete-comparison-guide-2026-08-09.html
 - Ultimate Gaming Mice Buying Guide: Compare Performance, Features & Value — https://abvorn.com/reviews/gaming-mice/ultimate-gaming-mice-buying-guide-compare-performance-features-value-2026-08-07.html
+- Insignia 50 Class F50 Series Led 4K Uhd Smart Fire Tv Voice  — https://abvorn.com/reviews/insignia-50-class-f50-series-led-4k-uhd-smart-fire-tv-voice-/
 - Best 15.6" Laptops 2026: Lenovo vs HP vs jumper Compared — https://abvorn.com/reviews/laptops/best-15-6-laptops-2026-lenovo-vs-hp-vs-jumper-compared-2026-08-31.html
 - Best Laptops 2026: A Comprehensive Buying Guide and Review Comparison — https://abvorn.com/reviews/laptops/best-laptops-2026-a-comprehensive-buying-guide-and-review-comparison-2026-08-22.html
 - Best Laptops 2026: Top 3 Picks for Work, School & Everyday Use — https://abvorn.com/reviews/laptops/best-laptops-2026-top-3-picks-for-work-school-everyday-use-2026-09-02.html
@@ -60,5 +72,3 @@
 - Top 3 15.6-inch Laptops: Lenovo vs HP vs Jumper 2026 — https://abvorn.com/reviews/laptops/top-3-15-6-inch-laptops-lenovo-vs-hp-vs-jumper-2025-2026-08-15.html
 - Top 3 Budget 15.6" Laptops Under $500: Lenovo vs HP vs Jumper — https://abvorn.com/reviews/laptops/top-3-budget-15-6-laptops-under-500-lenovo-vs-hp-vs-jumper-2026-08-12.html
 - Top 3 Laptops Compared: Lenovo, HP & Jumper – Best Laptops 2026 Review — https://abvorn.com/reviews/laptops/top-3-laptops-compared-lenovo-hp-jumper-best-laptops-2026-review-2026-08-25.html
-- Best Mechanical Keyboards — https://abvorn.com/reviews/mechanical-keyboards/best-mechanical-keyboards-2026-08-15.html
-- Best Mechanical Keyboards — https://abvorn.com/reviews/mechanical-keyboards/best-mechanical-keyboards-2026-08-23.html

@@ -45,6 +45,45 @@ def test_unknown_category_gets_own_group():
     assert names["tv"] == "TV"
 
 
+def test_sitemap_and_llms_cover_category_pages(tmp_path):
+    """Category listing pages must be discoverable, not just the reviews."""
+    from src.deployment import write_site_metadata
+
+    docs = tmp_path / "docs"
+    (docs / "reviews").mkdir(parents=True)
+    write_site_metadata(
+        docs,
+        [{"title": "Best TV 2026", "slug": "reviews/tv/best-tv.html", "date": "2026-09-01"}],
+        categories=["computing-and-monitors", "audio"],
+    )
+
+    sitemap = (docs / "sitemap.xml").read_text(encoding="utf-8")
+    for url in ("/categories/computing-and-monitors/", "/categories/audio/"):
+        assert f"https://abvorn.com{url}" in sitemap
+    assert "https://abvorn.com/reviews/tv/best-tv.html" in sitemap
+
+    llms = (docs / "llms.txt").read_text(encoding="utf-8")
+    assert "## Categories" in llms
+    assert "https://abvorn.com/categories/computing-and-monitors/" in llms
+    assert "Computing And Monitors" in llms
+
+
+def test_sitemap_categories_match_live_tree(tmp_path):
+    """Auto-derived category URLs match the categories actually on the site."""
+    from src.deployment import write_site_metadata
+
+    docs = tmp_path / "docs"
+    (docs / "reviews").mkdir(parents=True)
+    write_site_metadata(docs, [])
+
+    sitemap = (docs / "sitemap.xml").read_text(encoding="utf-8")
+    for expected in (
+        "https://abvorn.com/categories/computing-and-monitors/",
+        "https://abvorn.com/categories/home-and-lifestyle/",
+    ):
+        assert expected in sitemap
+
+
 def test_merge_never_duplicates_slugs():
     effects, _ = _effective_category_map(_NICHES + [
         {"slug": "tv", "name": "TV", "category": "Other"},
