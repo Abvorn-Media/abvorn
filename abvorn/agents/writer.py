@@ -1,4 +1,5 @@
 import json, os, logging
+from datetime import date
 
 logger = logging.getLogger("abvorn.writer")
 
@@ -18,6 +19,19 @@ CONTENT_ANGLES = {
     "objection_buster": "Directly address the #1 objection. Dismantle it with facts.",
     "seasonal": "Connect product to current event, season, or trend.",
 }
+
+# Today's real date, injected into every LLM prompt so generated copy anchors
+# itself to the actual current year instead of hallucinating a stale one
+# (e.g. "Best X 2025" shipping in 2026).
+def _today_note() -> str:
+    today = date.today()
+    return (
+        f"TODAY IS {today.strftime('%B %d, %Y')}. The current year is "
+        f"{today.year}. Use the CURRENT year ({today.year}) anywhere a year "
+        f"belongs in this content — titles, images, date-stamped claims. Never "
+        f"reuse an earlier year ('{today.year - 1}' is wrong if {today.year} "
+        "is today's year of record). Hard rule, not a suggestion."
+    )
 
 def generate_outline(niche: str, products: list, persona: dict, router,
                      knowledge_chunks: list = None, reflection_learnings: list = None) -> dict:
@@ -53,6 +67,8 @@ Products: {json.dumps(product_names)}
 
 Available content angles and when to use them:
 {json.dumps(CONTENT_ANGLES, indent=2)}
+
+{_today_note()}
 
 Select the BEST angle for this niche and persona. Then produce a detailed outline.
 
@@ -126,6 +142,8 @@ AI-SEO RULES (make content extractable so AI answers/LLMs can cite it):
             )
 
     prompt = f"""Write a comprehensive buying guide for '{niche}'.
+
+{_today_note()}
 
 PRODUCTS TO FEATURE:
 {product_json}
