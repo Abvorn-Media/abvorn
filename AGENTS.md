@@ -111,6 +111,27 @@ LLM call or publish a page from a demand-less opportunity.
 - GSC demand parsing lives in `abvorn/core/gsc_ingestor.py::category_evidence`.
   Tests: `tests/test_evidence_gate.py`, `tests/test_discovery.py`.
 
+## Daemon operations
+
+The daemon is not a background process you spawn — it is owned by Windows Task
+Scheduler as the **"Abvorn Daemon"** task (`python.exe run_daemon.py`,
+`StartWhenAvailable=true`). "Abvorn Dashboard", "Abvorn Journal Sync", and
+"Abvorn Win Trigger" are the other tasks; win.sh runs live in `.win/`.
+
+- **Restart it with the scheduler, not by hand.** Use
+  `schtasks /end /tn "Abvorn Daemon"` then `schtasks /run /tn "Abvorn Daemon"`.
+  A manual `Start-Process python run_daemon.py` creates a second instance that
+  fights the task-spawned one over the 12h cadence, LLM quota, and state.db
+  journal rows. If you must spawn, verify afterwards that exactly one
+  `run_daemon.py` process exists and it is the task's child.
+- After deploying new code, confirm the restart took the new behavior: a
+  post-cycle row in state.db whose `quality_score` changed off the old 7.0
+  hardcode (evidence-gate posts are 8+), and `meta.trend_last_scan`/
+  `optimization_last_run` advancing.
+- There is **no sitemap submission in the repo** — GSC work (search console
+  access, sitemap submission, indexing requests) is done in the Google
+  console, not from code. The bridge reacts to whatever demand GSC records.
+
 ## Skill routing
 
 When a task matches one of these domains, load the corresponding skill
