@@ -159,7 +159,7 @@ header { background:#0a0a0a; padding:18px 0; position:sticky; top:0; z-index:100
 .footer-social a:hover { background: var(--clr-accent); color:#0a0a0a; }
 .footer-social svg { width:16px; height:16px; }
 .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
-@media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 760px) { .footer-grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } }
 """
 
 VERDICT_CARD_CSS = """
@@ -4130,7 +4130,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .footer-social a:hover { background: var(--clr-accent); color:#0a0a0a; }
         .footer-social svg { width:16px; height:16px; }
         .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
-        @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 760px) { .footer-grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } }
     </style>
 </head>
  <body>

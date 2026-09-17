@@ -65,7 +65,7 @@ FOOTER_CSS = """        .footer { background:#0a0a0a; color:#999; padding: var(-
         .footer-social a:hover { background: var(--clr-accent); color:#0a0a0a; }
         .footer-social svg { width:16px; height:16px; }
         .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
-        @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 760px) { .footer-grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } }
 """
 
 # Literal-value footer CSS for pages lacking the design tokens
@@ -81,7 +81,7 @@ FOOTER_CSS_LITERAL = """        .footer { background:#0a0a0a; color:#999; paddin
         .footer-social a:hover { background:var(--clr-accent,#c98a2c); color:#0a0a0a; }
         .footer-social svg { width:16px; height:16px; }
         .footer-bottom { border-top:1px solid #222; padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:0.85rem; color:#777; }
-        @media (max-width:760px) { .footer-grid { grid-template-columns:1fr 1fr; } }
+        @media (max-width:760px) { .footer-grid { grid-template-columns:minmax(0,1fr) minmax(0,1fr); } }
 """
 
 # Header CSS for minimal pages (literal values, self-contained)
@@ -194,7 +194,7 @@ def transform_footer_css(html):
     # Media query: normalize any footer-grid breakpoint to 1fr 1fr (tolerant of formatting).
     html, n = re.subn(
         r'@media \(max-width:\s*760px\)\s*\{\s*\.footer-grid\s*\{\s*grid-template-columns:[^}]*\}\s*\}',
-        '@media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }',
+        '@media (max-width: 760px) { .footer-grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } }',
         html, count=1)
     if n == 0:
         print("  !! footer media query not found")
