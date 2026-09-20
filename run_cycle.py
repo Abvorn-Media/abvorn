@@ -492,14 +492,14 @@ def build_comparison_page(niche_slug, niche_name, post_title, products, all_slug
     bread = breadcrumb_schema([
         ("Abvorn", "/"),
         (f"Best {niche_name}", f"/{niche_slug}/"),
-        ("Comparison", f"/comparisons/{niche_slug}/"),
+        ("Comparison", f"/comparisons/{niche_slug}.html"),
     ])
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {HEAD_HTML(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}. Compare specs, prices, and Abvorn Verdict scores.')}
-{OG_META(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}.', f'{_SITE_URL}/comparisons/{niche_slug}/', f'{_SITE_URL}/assets/logo.png?v=2')}
-<link rel="canonical" href="{_SITE_URL}/comparisons/{niche_slug}/">
+ {OG_META(html_mod.escape(post_title) + ' - Abvorn', f'Side-by-side comparison of the best {niche_name.lower()}.', f'{_SITE_URL}/comparisons/{niche_slug}.html', f'{_SITE_URL}/assets/logo.png?v=2')}
+ <link rel="canonical" href="{_SITE_URL}/comparisons/{niche_slug}.html">
 {bread}
 {ANALYTICS_HTML}
 <style>{UTILITY_PAGE_CSS}</style>
@@ -2931,6 +2931,26 @@ def write_persona_content_plan(niche_name, matrix, docs_dir="docs/plans"):
 
 
 # ─── Document writer ────────────────────────────────────────────────────
+def apply_ai_seo(docs) -> int:
+    """Run the post-build AI-SEO injector over *docs*; best-effort, never raises.
+
+    Adds Article/WebPage/Organization JSON-LD, machine-readable dates and
+    <main> landmarks to already-written pages. Idempotent. Kept out of the
+    writer bodies so both the content cycle and rebuild_reviews share it.
+    """
+    try:
+        import importlib.util as _ilu
+        _seo_path = Path(__file__).resolve().parent / "scripts" / "inject_ai_seo.py"
+        _spec = _ilu.spec_from_file_location("inject_ai_seo", _seo_path)
+        _seo = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_seo)
+        changed, _ = _seo.inject_tree(docs)
+        return changed
+    except Exception as e:  # noqa: BLE001 - post-build enhancement is best-effort
+        logger.warning(f"AI-SEO inject skipped: {e}")
+        return 0
+
+
 def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_url="", hero_images=None, google_client_id=""):
     """Write all HTML files to docs/ directory."""
     all_slugs = sorted([n["slug"] for n in state["niches"]], key=lambda s: _slugify_title(s).lower())
@@ -3139,6 +3159,14 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
                       "date": datetime.now().date().isoformat()})
     from src.deployment import write_site_metadata
     write_site_metadata(docs, items)
+
+    # AI-SEO post-build: Article/WebPage/Organization JSON-LD, machine-readable
+    # dates and <main> landmarks on the freshly written pages. Idempotent and
+    # best-effort — a failure here must never break publishing.
+    # See scripts/inject_ai_seo.py.
+    _seo_changed = apply_ai_seo(docs)
+    if _seo_changed:
+        print(f"  AI-SEO: schema/freshness applied to {_seo_changed} page(s)")
 
 
 # ─── Newsletter Automation ──────────────────────────────────────────

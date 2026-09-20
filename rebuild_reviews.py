@@ -454,6 +454,10 @@ def main():
 
     print(f"Done. Rebuilt {built} review pages, mirrored {mirrored} indexes.")
 
+    changed = run_cycle.apply_ai_seo(DOCS)
+    if changed:
+        print(f"  AI-SEO: schema/freshness applied to {changed} page(s)")
+
 
 NICHES = [
     "4k-monitors",
