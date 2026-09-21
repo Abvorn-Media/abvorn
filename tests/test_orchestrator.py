@@ -59,7 +59,7 @@ def test_deploy_category_page_links_article_file():
     assert ok is True
     html, path = deployer.deploy_html.call_args[0]
     assert path == "tv/index.html"
-    assert "/abvorn/tv/insignia-50-fire-tv.html" in html
+    assert "/reviews/tv/insignia-50-fire-tv.html" in html
 
 
 def test_deploy_category_hub_writes_canonical_reviews_path():
@@ -75,6 +75,29 @@ def test_deploy_category_hub_writes_canonical_reviews_path():
     html, path = deployer.deploy_html.call_args[0]
     assert path == "reviews/tv/index.html"
     assert "smart-home" in html  # nav carries other categories
+
+
+def test_deploy_category_hub_mirrors_newest_article():
+    """A new-category hub after a content deploy mirrors that article, not a
+    category listing, and keeps the /reviews/<niche>/ canonical."""
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    sd.deploy_content(
+        "tv",
+        {"post_title": "Insignia 50 Fire TV Review",
+         "article_html": "<p>review</p>",
+         "meta_description": "A first-time buyer guide.",
+         "product_name": "Insignia 50"},
+        all_categories=["tv"],
+        article_filename="insignia-50-fire-tv.html",
+    )
+    ok = sd.deploy_category_hub("tv", posts=[
+        {"title": "Insignia 50 Fire TV Review", "filename": "insignia-50-fire-tv.html"}
+    ], all_categories=["tv"])
+    assert ok is True
+    html, path = deployer.deploy_html.call_args[0]
+    assert path == "reviews/tv/index.html"
+    assert 'rel="canonical" href="https://abvorn.com/reviews/tv/"' in html
 
 
 def test_deploy_content_article_filename_write_path():
