@@ -85,6 +85,36 @@ Enforcement on the copy gate:
 Module: `abvorn/core/copyguard.py`. Tests: `tests/test_copyguard.py`
 (fake backend — the test suite does not need a JVM or the server).
 
+## Without a live page, no card: gate state-posts on the remote tree
+
+The daemon deploys through the GitHub API and never updates `docs/` locally, so
+the **remote branch tree is the only source of truth** for what actually
+published. A stale state.db row can carry a `filename` whose article page was
+never pushed — the phantom "Coffee Grinder Buying Guide" card
+(`https://abvorn.com/reviews/laptops/coffee-grinder.html`, born in commit
+`1b25bfab`, still 404s live). `_reviews()` (card builder in
+`abvorn/agents/orchestrator.py`) worked only from local disk + state, so a
+fresh daemon on an old state.db would fabricate the dead card again.
+
+- **Gate** (`abvorn/agents/orchestrator.py::_reviews`): a state-post with a
+  `filename` is only appended when
+  `deployer.file_exists("reviews/<slug>/<filename>")` is true. The daemon
+  pushes the article (`deploy_content`) before `add_post`/`deploy_root_index`,
+  so legit new posts always pass.
+- **`GitHubDeployer.file_exists`** (`abvorn/deploy/github.py`): one recursive
+  git-tree fetch (cached 30s, `_remote_paths()`) instead of an API call per
+  file; returns only True/False, re-raises on real API errors so callers fail
+  open and keep real cards during a GitHub outage.
+- **VPS deploy path**: changes ship via `sync-runtime.sh` (systemd timer
+  `abvorn-runtime-sync.timer`), which pulls → mirrors `abvorn/` → reinstalls
+  deps → import-canary → restarts `abvorn-daemon`. `run_cycle.sh` alone does
+  NOT reload the running daemon.
+- **Recurrence guard**: this bug came back from the VPS daemon's own state.db
+  (`/opt/abvorn-core/.abvorn/state.db`), which is independent of the local
+  one. The gate makes it moot: any daemon drops cards whose page is absent
+  from the remote tree.
+- Tests: `tests/test_orchestrator.py::test_reviews_gates_phantom_post_cards`.
+
 ## Evidence gate: no page without real demand
 
 The autonomous daemon path (`AbvornDaemon.run_full_cycle`) must not burn an
