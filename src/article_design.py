@@ -222,6 +222,13 @@ _CHART_SECTION_RE = re.compile(
 _EMBEDDED_BODY_RE = re.compile(r"(?is)<body[^>]*>(.*?)</body>")
 _EMBEDDED_DOC_RE = re.compile(r"(?is)<!DOCTYPE html>.*?</head>\s*(.*?)\s*(?:</body>\s*)?</html>")
 _LEADING_INTRO_RE = re.compile(r"(?is)^\s*<h2>\s*Introduction\s*</h2>\s*")
+
+# Real Amazon ASINs are 10 chars from [A-Z0-9] (e.g. B0H69PVMKC). LLM drafts
+# fabricate placeholders like B0BXYZ123 or "example" — purge/downgrade them so
+# no article link can resolve to a nonexistent product.
+_AMAZON_DP_RE = re.compile(r"(?i)<a\b(?=[^>]*\bhref=[\"']https?://www\.amazon\.com/dp/[^\"']*[\"'])" r"[^>]*>.*?</a>")
+_AMAZON_HREF_RE = re.compile(r"(?i)https?://www\.amazon\.com/dp/([\w]{7,})")
+_AMAZON_ALL_RE = re.compile(r"(?i)<a\b(?=[^>]*\bhref=[\"']https?://www\.amazon\.com/(?:dp/|s\?k=)[^\"']*[\"'])" r"[^>]*>.*?</a>")
 # LLM drafts often include their own FAQ Q&A block (either an <h2>FAQ</h2> or
 # <h2 id="frequently-asked-questions">Frequently Asked Questions</h2>), but the
 # template owns a guaranteed branded FAQ section (build_faq) with matching
@@ -274,6 +281,61 @@ def _close_unclosed_lists(html):
     return html.rstrip() + "\n" + closes
 
 
+# Real Amazon ASINs are exactly 10 alphanumeric chars (e.g. B0H69PVMKC).
+# Placeholder/fabricated ASINs from LLM drafts (B0BXYZ123) fail that shape — a
+# <10 char ASIN, or one whose <a> element carries an empty tag= on its search
+# href, is re-written so the article never points users at a dead product or an
+# affiliate-tag-less purchase.
+def _normalize_amazon_links(html):
+    """Force valid, tagged Amazon affiliate links on AI-authored draft HTML.
+
+    One corruption mode is cleaned here: fabricated / placeholder ASINs
+    (e.g. ``dp/B0BXYZ123``) that point at a product that does not exist. The
+    whole factory-checked link is de-linked: the anchor text survives as plain
+    text so the sentence still reads, but the href is dropped. A 10-char ASIN
+    matching the real Amazon shape is left untouched. Empty ``tag=`` clauses
+    are also stripped so a downstream append can add the real tag.
+    """
+    if "amazon.com" not in html:
+        return html
+
+    def _purge_placeholder_asin(m):
+        href = _AMAZON_HREF_RE.search(m.group(0))
+        asin = href.group(1).upper() if href else ""
+        if asin and asin.isalnum() and len(asin) == 10:
+            return m.group(0)  # plausible real ASIN — leave untouched
+        return html_mod.unescape(re.sub(r"<[^>]+>", "", m.group(0)))
+
+    text = _AMAZON_DP_RE.sub(_purge_placeholder_asin, html)
+
+    # Strip empty tag= clauses (tag= not followed by a value before & or end).
+    # Both raw and HTML-escaped ampersands appear in drafts.
+    text = re.sub(r"(?i)(?:&amp;|&)tag=(?=(?:&amp;|&)|[\"']|\s|$)", "", text)
+    return text
+
+
+def enforce_amazon_tag(html, tag):
+    """Ensure every in-body Amazon link carries the affiliate tag.
+
+    LLM-authored article bodies sometimes contain ``/s?k=...`` links with an
+    empty ``tag=`` or no tag at all (the empty clause is stripped by
+    ``_normalize_amazon_links``). This pass appends the real tag so a trusted
+    purchase link never ships without attribution. Only www.amazon.com hrefs
+    are touched; everything else (internal links, other domains) is left alone.
+    """
+    if "amazon.com" not in html or not tag:
+        return html
+
+    def _rewrite(m):
+        prefix, href, quote = m.group(1), m.group(2), m.group(3)
+        if re.search(r"(?i)(?:\?|&amp;|&)tag=", href):
+            return m.group(0)
+        sep = "&amp;" if quote == '"' else "&"
+        return f'{prefix}{href}{sep}tag={tag}{quote}'
+
+    return re.sub(r'(?i)(href=["\'])(https?://www\.amazon\.com/(?:dp/|s\?k=)[^"\']*)(["\'])', _rewrite, html)
+
+
 def sanitize_article_html(html, strip_leading_intro=True):
     """Clean dirty AI-generated article HTML.
 
@@ -299,6 +361,11 @@ def sanitize_article_html(html, strip_leading_intro=True):
     # Drop duplicated chart fragments — the template owns its own.
     text = _CHART_SECTION_RE.sub("", text)
     text = _CHART_NOTE_RE.sub("", text)
+
+    # Normalize Amazon affiliate links: purge placeholder/fabricated ASINs and
+    # force the affiliate tag so no LLM-authored link can ship untagged or to a
+    # non-existent product (e.g. dp/B0BXYZ123 with an empty tag=).
+    text = _normalize_amazon_links(text)
 
     # Drop an in-body LLM FAQ block — the template owns the branded FAQ section.
     text = _LLM_FAQ_SECTION_RE.sub("", text)

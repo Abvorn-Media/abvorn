@@ -36,7 +36,7 @@ from src.content_generation import generate_outline, write_draft
 from src.deployment import build_homepage, rewrite_affiliate_urls, build_category_dropdown, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, build_reviews_hub_page, build_categories_hub_page, scan_published_reviews, _overlay_review, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS, review_card, CATEGORY_TAGLINES, DESIGN_SYSTEM_CSS, FONT_LINK
 from src.click_tracker import register_articles_batch
 from src.article_design import (PROD_SHOT_CSS, upgrade_product_image, sanitize_article_html, inject_product_photos,
-                                build_faq, render_article_body, price_floor_for)
+                                build_faq, render_article_body, price_floor_for, enforce_amazon_tag)
 from src.warm_editorial import (WARM_EDITORIAL_CSS, WARM_TOKEN_SHIM_CSS, WARM_PRODUCT_GRID_CSS,
                                 WARM_SHARE_HTML_T, warm_hero_pick_html, warm_product_card_html,
                                 warm_shop_cta_banner, warm_heading_ids, build_review_rail,
@@ -1992,6 +1992,10 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     # embedded document wrappers, mojibake, and duplicated Introduction headings.
     intro = sanitize_article_html(intro)
     article_html = sanitize_article_html(article_html)
+    # Enforce the affiliate tag on every in-body Amazon link so an LLM-written
+    # purchase CTA can never ship untagged (empty tag= clauses are stripped by
+    # the sanitizer above; this pass appends the real tag in their place).
+    article_html = enforce_amazon_tag(article_html, t)
     # Guarantee per-product photography even when the AI writer omits images.
     article_html = inject_product_photos(article_html, products or [])
     # Assign stable h2 ids and build the rail TOC from the article headings.

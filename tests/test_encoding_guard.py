@@ -107,3 +107,42 @@ def test_verify_page_passes_when_clean():
         "which mouse should I buy? \u201d</p>"
     )
     assert verify_page(html) is True
+
+
+def test_sanitizer_purges_placeholder_asin():
+    from src.article_design import sanitize_article_html
+    html = (
+        '<p>The <a href="https://www.amazon.com/dp/B0BXYZ123" '
+        'rel="nofollow sponsored">LG G3 OLED</a> features:</p>'
+    )
+    clean = sanitize_article_html(html)
+    assert "amazon.com/dp" not in clean
+    assert "LG G3 OLED" in clean
+
+
+def test_sanitizer_keeps_real_asin():
+    from src.article_design import sanitize_article_html
+    html = '<p><a href="https://www.amazon.com/dp/B0H69PVMKC" rel="sponsored">JBL</a></p>'
+    assert sanitize_article_html(html) == html
+
+
+def test_sanitizer_strips_empty_tag_clause():
+    from src.article_design import sanitize_article_html
+    html = '<a href="https://www.amazon.com/s?k=wireless+headphones&amp;tag=">Shop</a>'
+    clean = sanitize_article_html(html)
+    assert "/s?k=wireless+headphones&amp;tag=" not in clean
+    assert "/s?k=wireless+headphones\"" in clean
+
+
+def test_enforce_amazon_tag_blankets_in_body_ctas():
+    from src.article_design import enforce_amazon_tag
+    html = '<a class="btn" href="https://www.amazon.com/s?k=wireless+headphones">Shop all</a>'
+    tagged = enforce_amazon_tag(html, "viraltestco-20")
+    assert "tag=viraltestco-20" in tagged
+    assert "&amp;tag=viraltestco-20" in tagged
+
+
+def test_enforce_amazon_tag_leaves_already_tagged():
+    from src.article_design import enforce_amazon_tag
+    html = '<a href="https://www.amazon.com/dp/B0H69PVMKC?tag=x">ok</a>'
+    assert enforce_amazon_tag(html, "viraltestco-20") == html
