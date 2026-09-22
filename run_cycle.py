@@ -3100,6 +3100,12 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
             date_str = datetime.now().strftime("%Y-%m-%d")
             suffix = "" if i == 0 else f"-{i}"
             fname = f"{_title_slug(a['post_title'])}-{date_str}{suffix}.html"
+            # Only advertise a PDF that will actually be written. The daemon's
+            # deploy_content never renders PDFs, so its pages carry no button;
+            # the local regen path writes the .pdf beside the page, but the
+            # render can fail (WeasyPrint missing on-box). Emitting the button
+            # unconditionally shipped dead "Download PDF" links pointing at
+            # files that never made it into the published tree.
             pdf_url = f"{_SITE_URL}/reviews/{slug}/{fname[:-5]}.pdf"
             # Persist the article's real publish date across cycles. A dated file
             # already on disk (or a prior index.html) is the stable anchor for
@@ -3124,18 +3130,29 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
                     _publish_anchor = None
             _published_date = _publish_anchor or date_str
             _updated_date = date_str
-            article_html = build_article_page(slug, niche_name, a["post_title"], a["article_html"],
-                                              a["intro"], a["product_name"], a["meta_description"],
-                                              all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
-                                              related_niches=related, article_id=f"{slug}-{i}", pdf_url=pdf_url,
-                                              published_date=_published_date, updated_date=_updated_date)
-            _wc(post_dir / fname, article_html, f"article {slug}/{fname}")
-            print(f"  Written: docs/reviews/{slug}/{fname} (article)")
-            pdf_bytes = build_review_page_pdf(article_html, title=a["post_title"], niche_name=niche_name, base=_SITE_URL)
+            # Render the PDF first (it only needs the article body). Emit the
+            # on-page "Download PDF" button only when a real PDF exists, so a
+            # failed WeasyPrint render never ships a button pointing at a file
+            # that is not in the published tree.
+            base_html = build_article_page(slug, niche_name, a["post_title"], a["article_html"],
+                                           a["intro"], a["product_name"], a["meta_description"],
+                                           all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
+                                           related_niches=related, article_id=f"{slug}-{i}", pdf_url="",
+                                           published_date=_published_date, updated_date=_updated_date)
+            pdf_bytes = build_review_page_pdf(base_html, title=a["post_title"], niche_name=niche_name, base=_SITE_URL)
+            pdf_name = None
             if pdf_bytes:
                 pdf_name = f"{fname[:-5]}.pdf"
                 (post_dir / pdf_name).write_bytes(pdf_bytes)
                 print(f"  Written: docs/reviews/{slug}/{pdf_name} (pdf)")
+            article_html = build_article_page(slug, niche_name, a["post_title"], a["article_html"],
+                                              a["intro"], a["product_name"], a["meta_description"],
+                                              all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
+                                              related_niches=related, article_id=f"{slug}-{i}",
+                                              pdf_url=f"{_SITE_URL}/reviews/{slug}/{pdf_name}" if pdf_name else "",
+                                              published_date=_published_date, updated_date=_updated_date)
+            _wc(post_dir / fname, article_html, f"article {slug}/{fname}")
+            print(f"  Written: docs/reviews/{slug}/{fname} (article)")
             if i == len(post_list) - 1:
                 _wc(post_dir / "index.html", article_html, f"article index {slug}")
                 print(f"  Written: docs/reviews/{slug}/index.html (latest)")
