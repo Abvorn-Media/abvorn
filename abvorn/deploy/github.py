@@ -50,6 +50,9 @@ class GitHubDeployer:
         self.repo = repo
         self.branch = branch
         self.site_dir = Path(site_dir) if site_dir else Path("docs")
+        self._tree_paths = None
+        self._tree_fetched = 0.0
+        self._tree_ttl = 30.0
 
     def prepare_files(self, content: dict, output_dir: Path, brand=None, state=None) -> list[str]:
         """Generate HTML files for a content item."""
@@ -117,6 +120,48 @@ class GitHubDeployer:
         index_file.write_text(full_html, encoding="utf-8")
         logger.info(f"Prepared: {index_file}")
         return [str(index_file)]
+
+    def _remote_paths(self) -> set:
+        """All file paths under site_dir on the current branch, fetched once as a
+        recursive git tree and cached briefly so a deploy batch does not burn one
+        API call per file. Real API errors raise (so callers can fail open);
+        404s on the branch are treated as a miss."""
+        import time
+        from github import Github
+        now = time.monotonic()
+        if self._tree_paths is not None and (now - self._tree_fetched) < self._tree_ttl:
+            return self._tree_paths
+        g = Github(self.token)
+        repo = g.get_repo(self.repo)
+        for branch in (self.branch, "main"):
+            try:
+                ref = repo.get_git_ref(f"heads/{branch}")
+                break
+            except Exception:
+                continue
+        else:
+            raise RuntimeError("branch not found: " + self.branch)
+        tree = repo.get_git_tree(ref.object.sha, recursive=True)
+        prefix = (str(self.site_dir) + "/").replace("\\", "/")
+        self._tree_paths = {
+            el.path[len(prefix):]
+            for el in tree.tree
+            if el.type == "blob" and el.path.startswith(prefix)
+        }
+        self._tree_fetched = now
+        return self._tree_paths
+
+    def file_exists(self, repo_relative_path: str) -> bool:
+        """True if a file exists on the remote branch — the source of truth for
+        the ready-to-deploy tree. Local clones drift because the daemon pushes
+        via the GitHub API and never updates docs/ locally, so cards must be
+        gated on the remote tree, not the local checkout.
+
+        Returns only True (definite hit) or False (definite miss). Any API/
+        transport error raises so callers can fail open and keep the card
+        rather than dropping real pages during a GitHub outage."""
+        rel = repo_relative_path.replace("\\", "/")
+        return rel.lstrip("/") in self._remote_paths()
 
     def deploy_html(self, html_content: str, output_path: str) -> dict:
         """Push a raw HTML string to a specific path in the repo."""

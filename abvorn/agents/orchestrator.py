@@ -130,6 +130,13 @@ class SiteDeployer:
         carry through), overlays the article deployed earlier this cycle, then
         appends any state-recorded posts that are not yet on disk (the daemon
         pushes straight to GitHub without updating docs/ locally).
+
+        State posts are only appended when their article page genuinely exists
+        in the remote published tree (deploy_root_index passes deployer), so a
+        post row whose page was never actually pushed (e.g. a stale/scanned
+        "coffee-grinder" entry that 404s on the live site) cannot fabricate a
+        dead card. API/transport errors fail open: real pages are kept rather
+        than dropping every card during a GitHub outage.
         """
         from src.deployment import scan_published_reviews, _overlay_review
         today = datetime.now().strftime("%Y-%m-%d")
@@ -149,6 +156,18 @@ class SiteDeployer:
             if not slug or not title or (slug, title) in seen:
                 continue
             filename = p.get("filename", "")
+            if filename and self.deployer is not None:
+                rel = f"reviews/{slug}/{filename}"
+                try:
+                    if not self.deployer.file_exists(rel):
+                        logger.warning(
+                            f"[SiteDeployer] Skipping card {title!r}: page {rel} "
+                            "does not exist in the published tree"
+                        )
+                        seen[(slug, title)] = len(reviews)
+                        continue
+                except Exception as e:
+                    logger.warning(f"[SiteDeployer] Could not verify {rel} (fail-open): {e}")
             quality = p.get("quality_score")
             reviews.append({
                 "slug": slug,

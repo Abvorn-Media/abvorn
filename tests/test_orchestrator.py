@@ -19,6 +19,35 @@ def test_deploy_root_index_skips_when_empty_state():
     deployer.deploy_html.assert_not_called()
 
 
+def test_reviews_gates_phantom_post_cards():
+    """A state post whose article page does not exist in the published remote
+    tree (e.g. a stale 'coffee-grinder' row that 404s live) must not fabricate
+    a homepage card. Real pages that exist must still be emitted."""
+    class ExistenceDeployer:
+        def __init__(self):
+            self.existing = {
+                "reviews/tv/index.html",
+                "reviews/laptops/kindle-scribe.html",
+            }
+        def file_exists(self, rel):
+            return rel.lstrip("/") in self.existing
+
+    sd = SiteDeployer(ExistenceDeployer(), None)
+    posts = [
+        {"niche_slug": "tv", "title": "Budget 55-inch TV Guide",
+         "filename": "index.html", "quality_score": 8.5},
+        {"niche_slug": "laptops", "title": "Coffee Grinder Buying Guide",
+         "filename": "coffee-grinder.html", "quality_score": 10.0},
+        {"niche_slug": "laptops", "title": "Kindle Scribe Review",
+         "filename": "kindle-scribe.html", "quality_score": 9.0},
+    ]
+    reviews = sd._reviews(["tv", "laptops"], posts)
+    titles = [r["title"] for r in reviews]
+    assert "Coffee Grinder Buying Guide" not in titles, "phantom post card must be dropped"
+    assert "Kindle Scribe Review" in titles, "real review card must be kept"
+    assert "Budget 55-inch TV Guide" in titles, "existing index card must be kept"
+
+
 def test_deploy_root_index_skips_when_no_posts():
     deployer = _deployer()
     sd = SiteDeployer(deployer, None)
