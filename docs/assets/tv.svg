@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#faf6f1;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#e8dfd6;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="accentBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a7c3e8;stop-opacity:0.12"/>
+      <stop offset="100%" style="stop-color:#a7c3e8;stop-opacity:0.03"/>
+    </linearGradient>
+    <linearGradient id="productGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a7c3e8;stop-opacity:0.18"/>
+      <stop offset="100%" style="stop-color:#a7c3e8;stop-opacity:0.05"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5b7fb0;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#2f4a6e;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="12" flood-color="#a7c3e8" flood-opacity="0.25"/>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="30" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#accentBg)"/>
+
+  <!-- Accent circles -->
+  <circle cx="950" cy="100" r="350" fill="#a7c3e8" opacity="0.06"/>
+  <circle cx="250" cy="500" r="250" fill="#a7c3e8" opacity="0.05"/>
+  <circle cx="600" cy="315" r="180" fill="#a7c3e8" opacity="0.03"/>
+
+  <!-- TV silhouette area -->
+  <g filter="url(#shadow)">
+    <rect x="360" y="185" width="480" height="300" rx="18" fill="url(#screen)" stroke="#a7c3e8" stroke-width="3" opacity="0.95"/>
+    <rect x="372" y="197" width="456" height="276" rx="12" fill="#eaf2fb" opacity="0.95"/>
+    <circle cx="600" cy="335" r="52" fill="#a7c3e8" opacity="0.55"/>
+    <polyline points="565,305 635,345 600,365 600,365" fill="none" stroke="#2f4a6e" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="420" y="505" width="360" height="14" rx="7" fill="#a7c3e8" opacity="0.8"/>
+    <rect x="565" y="519" width="70" height="12" rx="6" fill="#8fa8c6"/>
+  </g>
+
+  <!-- Rating badge -->
+  <g transform="translate(60, 60)">
+    <rect width="100" height="32" rx="16" fill="#faf6f1" stroke="#e3dbd4" stroke-width="1" opacity="0.9"/>
+    <text x="50" y="21" font-family="'Trebuchet MS',Arial,sans-serif" font-size="13" font-weight="700" fill="#4a6a94" text-anchor="middle">★ 4.8 / 5.0</text>
+  </g>
+
+  <!-- Category badge -->
+  <g transform="translate(60, 100)">
+    <rect width="105" height="28" rx="14" fill="#4a6a94"/>
+    <text x="52.5" y="19" font-family="'Trebuchet MS',Arial,sans-serif" font-size="11" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing="1">4K + SMART</text>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="520" font-family="Georgia,'Times New Roman',serif" font-size="52" font-weight="700" fill="#2a2724" text-anchor="middle" letter-spacing="-1">Best TVs</text>
+
+  <!-- Divider -->
+  <rect x="560" y="540" width="80" height="3" rx="2" fill="#4a6a94"/>
+
+  <!-- Subtitle -->
+  <text x="600" y="575" font-family="'Trebuchet MS',Arial,sans-serif" font-size="18" fill="#6b6560" text-anchor="middle" letter-spacing="1">EXPERT TESTED · HONEST REVIEWS</text>
+</svg>
