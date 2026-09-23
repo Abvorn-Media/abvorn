@@ -176,7 +176,7 @@ class SiteDeployer:
                 "updated": (p.get("created_at") or "")[:10] or today,
                 "rel": f"/reviews/{slug}/{filename}" if filename else f"/reviews/{slug}/",
                 "snippet": "",
-                "image": "",
+                "image": p.get("image") or "",
                 "score": quality if quality else None,
                 "breakdown": {},
                 "label": "",
@@ -251,9 +251,13 @@ class SiteDeployer:
                                            all_categories=all_categories)
             posts = posts or []
             if not posts:
-                logger.warning(f"[SiteDeployer] Skipping new category hub for {niche}: no posts available")
+                logger.warning(f"[SiteDeployer] Skipping new category hub for {niche}: no posts available (would deploy placeholder)")
                 return False
-            html = self._category_html(niche, posts, all_categories)
+            rich = [r for r in self._reviews([niche], posts, niche)
+                    if r.get("slug") == niche]
+            if not rich:
+                rich = posts
+            html = self._category_html(niche, rich, all_categories)
             self.deployer.deploy_html(html, f"reviews/{niche}/index.html")
             logger.info(f"[SiteDeployer] Deployed premium category hub for {niche}")
             return True

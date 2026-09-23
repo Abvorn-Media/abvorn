@@ -13,6 +13,7 @@ CANARY_FILENAME = "docs/reviews/tv/index.html"
 
 REGEX_DP = re.compile(r"/dp/")
 REGEX_MOJI = re.compile(r"â€|Ã©|Ã¢|Ãƒ|Ã\. ")
+REGEX_IMG = re.compile(r"<img[^>]+src=[\"'](?:https?:)?//[^\"']+media-amazon\.com")
 
 
 def live_blob() -> str:
@@ -29,6 +30,7 @@ def live_blob() -> str:
 def count(haystack: str) -> dict[str, int]:
     return {
         "asins": len(REGEX_DP.findall(haystack)),
+        "imgs": len(REGEX_IMG.findall(haystack)),
         "mojibake": len(REGEX_MOJI.findall(haystack)),
         "len": len(haystack),
     }
@@ -37,11 +39,16 @@ def count(haystack: str) -> dict[str, int]:
 def main() -> int:
     p = argparse.ArgumentParser(description="Commit-watch canary for the tv review hub")
     p.add_argument("--min-asins", type=int, default=1)
+    p.add_argument("--min-imgs", type=int, default=1)
     args = p.parse_args()
 
     blob = live_blob()
     c = count(blob)
-    healthy = c["asins"] >= args.min_asins and c["mojibake"] == 0
+    healthy = (
+        c["asins"] >= args.min_asins
+        and c["imgs"] >= args.min_imgs
+        and c["mojibake"] == 0
+    )
     print(json.dumps({"health": "HEALTHY" if healthy else "REGRESSED", **c}, indent=2))
     return 0 if healthy else 1
 
