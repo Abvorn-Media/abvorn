@@ -358,11 +358,15 @@ class DeployAgent(AgentBase):
                 for s in all_slugs:
                     all_posts.extend(self.state.get_posts_for_niche(s))
                 if content_payload:
+                    _payload_products = content_payload.get("products") or []
                     deploy_content = {
                         "post_title": content_payload.get("post_title", ""),
+                        "intro": content_payload.get("intro", ""),
                         "article_html": content_payload.get("article_html", ""),
                         "meta_description": content_payload.get("meta_description", ""),
-                        "product_name": content_payload.get("product_name", ""),
+                        "product_name": (content_payload.get("product_name")
+                                        or (_payload_products[0].get("name", "") if _payload_products else "")),
+                        "products": _payload_products,
                     }
                     self.site_deployer.deploy_content(niche, deploy_content, all_categories=all_slugs)
                 else:
