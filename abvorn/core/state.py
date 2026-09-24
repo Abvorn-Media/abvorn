@@ -52,7 +52,8 @@ class AbvornState:
                     quality_score REAL,
                     persona_id TEXT,
                     deployment_status TEXT DEFAULT 'pending',
-                    created_at TEXT NOT NULL
+                    created_at TEXT NOT NULL,
+                    image TEXT DEFAULT ''
                 );
                 CREATE TABLE IF NOT EXISTS queue (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -221,20 +222,20 @@ class AbvornState:
 
     def add_post(self, niche_slug: str, title: str, filename: str,
                  product_name: str = "", angle: str = "", quality_score: float = 0.0,
-                 persona_id: str = ""):
+                 persona_id: str = "", image: str = ""):
         with self._cursor() as c:
             c.execute("""
                 INSERT INTO posts (niche_slug, title, filename, product_name, angle,
-                                    quality_score, persona_id, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                    quality_score, persona_id, image, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (niche_slug, title, filename, product_name, angle,
-                  quality_score, persona_id, datetime.now().isoformat()))
+                  quality_score, persona_id, image or "", datetime.now().isoformat()))
 
     def get_posts_for_niche(self, niche_slug: str) -> list:
         with self._cursor() as c:
             c.execute("SELECT * FROM posts WHERE niche_slug=? ORDER BY created_at DESC", (niche_slug,))
             keys = ["id","niche_slug","title","filename","product_name","angle",
-                    "quality_score","persona_id","deployment_status","created_at"]
+                    "quality_score","persona_id","deployment_status","image","created_at"]
             return [dict(zip(keys, row)) for row in c.fetchall()]
 
     def enqueue(self, niche_slug: str, stage: str, priority: int = 10, payload: dict = None):

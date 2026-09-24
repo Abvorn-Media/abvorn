@@ -322,7 +322,8 @@ class AbvornDaemon:
             self.state.add_post(site_cat, content.get("post_title", niche),
                                 f"{article_slug}.html",
                                 product_name=content.get("product_name", ""),
-                                angle="buying guide", quality_score=quality_from_opportunity(opp))
+                                angle="buying guide", quality_score=quality_from_opportunity(opp),
+                                image=content.get("image") or "")
             all_posts = []
             for s in all_slugs:
                 all_posts.extend(self.state.get_posts_for_niche(s))
