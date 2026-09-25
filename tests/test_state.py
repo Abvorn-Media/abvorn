@@ -56,3 +56,37 @@ def test_opportunities_migration_adds_category_column():
         assert opp["niche"] == "old-niche"
         assert opp["category"] == ""
         state.close()
+
+
+def test_posts_migration_adds_image_column():
+    with tempfile.TemporaryDirectory() as tmp:
+        db = Path(tmp) / "old.db"
+        conn = sqlite3.connect(str(db))
+        conn.execute("""
+            CREATE TABLE posts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                niche_slug TEXT NOT NULL,
+                title TEXT NOT NULL,
+                filename TEXT,
+                product_name TEXT,
+                angle TEXT,
+                quality_score REAL,
+                persona_id TEXT,
+                deployment_status TEXT DEFAULT 'pending',
+                created_at TEXT NOT NULL
+            )
+        """)
+        conn.commit()
+        conn.close()
+
+        state = AbvornState(db)
+        columns_conn = sqlite3.connect(str(db))
+        columns = {
+            row[1]
+            for row in columns_conn.execute(
+                "PRAGMA table_info(posts)"
+            ).fetchall()
+        }
+        columns_conn.close()
+        assert "image" in columns
+        state.close()

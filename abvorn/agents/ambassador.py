@@ -5,7 +5,7 @@ Monitors the schedule, writes platform-native posts with personality,
 posts via Composio, and keeps the Telegram channel warm and human.
 Built with safety nets — one failure never blocks the rest."""
 
-import logging
+import asyncio, logging
 from datetime import datetime
 from .base import AgentBase
 from ..deploy.social import SocialDeployer
@@ -70,7 +70,9 @@ class SocialAmbassador(AgentBase):
                and not s.get("posted", False)]
         if not mentions:
             try:
-                watcher_mentions = self.mention_watcher.poll()
+                watcher_mentions = await asyncio.to_thread(
+                    self.mention_watcher.poll
+                )
                 if watcher_mentions:
                     mentions = watcher_mentions
             except Exception:
@@ -147,8 +149,16 @@ class SocialAmbassador(AgentBase):
             results = []
             for m in mentions[:5]:
                 try:
-                    reply = self.reply_generator.craft(m, {})
-                    result = self.reply_poster.post(m, reply)
+                    reply = await asyncio.to_thread(
+                        self.reply_generator.craft,
+                        m,
+                        {},
+                    )
+                    result = await asyncio.to_thread(
+                        self.reply_poster.post,
+                        m,
+                        reply,
+                    )
                     results.append(result)
                 except Exception as e:
                     logger.warning(f"[Ambassador] Reply failed: {e}")
@@ -163,7 +173,8 @@ class SocialAmbassador(AgentBase):
                 if r.get("status") == "posted" and self.notifier:
                     platform = r.get("platform", "social")
                     try:
-                        self.notifier.send(
+                        await asyncio.to_thread(
+                            self.notifier.send,
                             f"✨ Just shared {r.get('title', 'something')} on {platform} — "
                             f"check it out and join the conversation!"
                         )
@@ -190,7 +201,10 @@ class SocialAmbassador(AgentBase):
             product = item.get("product", "")
 
             tone = PLATFORM_TONE.get(platform, "Be genuine and helpful with emojis.")
-            wisdom = self._get_platform_wisdom(platform)
+            wisdom = await asyncio.to_thread(
+                self._get_platform_wisdom,
+                platform,
+            )
             prompt = (
                 f"Write a social media post for {platform} about {product or niche}. "
                 f"Headline idea: {headline}. {tone} "
@@ -200,7 +214,12 @@ class SocialAmbassador(AgentBase):
                 prompt += f"\n\nBrain insight: {wisdom}"
 
             try:
-                post_text = self.router.ask(prompt, task="social", system=PERSONA)
+                post_text = await asyncio.to_thread(
+                    self.router.ask,
+                    prompt,
+                    task="social",
+                    system=PERSONA,
+                )
             except Exception:
                 post_text = f"Just published our latest guide on {niche}! Have you tried it yet? 🚀"
 
@@ -217,7 +236,11 @@ class SocialAmbassador(AgentBase):
             }
 
             try:
-                result = self.social.post(content, platform)
+                result = await asyncio.to_thread(
+                    self.social.post,
+                    content,
+                    platform,
+                )
             except Exception as e:
                 logger.warning(f"[Ambassador] Social post failed: {e}")
                 return {"status": "failed", "platform": platform, "error": str(e)[:100]}

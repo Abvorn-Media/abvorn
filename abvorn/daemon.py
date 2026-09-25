@@ -105,6 +105,9 @@ class AbvornDaemon:
         self.router.probe()
         self.agents = []
         self._tasks = []
+        self._last_bus_event_id = 0
+        self._domination_cycle_running = False
+        self._full_cycle_signal_running = False
         self._phase3_inited = False
         self.min_opportunity_score = float(
             os.environ.get("ABVORN_MIN_OPPORTUNITY_SCORE", "0.5")
@@ -353,6 +356,9 @@ class AbvornDaemon:
         self._ensure_phase3()
         if self.is_paused():
             return {"status": "paused"}
+        if self._domination_cycle_running:
+            return {"status": "already_running"}
+        self._domination_cycle_running = True
         try:
             result = await asyncio.to_thread(self.domination.run_cycle)
             if result.get("status") == "complete":
@@ -367,6 +373,8 @@ class AbvornDaemon:
             logger.error(f"Domination cycle failed: {e}")
             self.notifier.report_error("domination", str(e))
             return {"status": "failed", "error": str(e)}
+        finally:
+            self._domination_cycle_running = False
 
     async def start(self):
         """Start all agents and the brain."""
@@ -451,7 +459,10 @@ class AbvornDaemon:
         for agent in self.agents:
             task = asyncio.create_task(agent.run_forever())
             self._tasks.append(task)
+            self.supervisor.track_agent_task(agent.name, task)
 
+        latest_events = self.bus.get_recent_events(limit=1)
+        self._last_bus_event_id = latest_events[0]["id"] if latest_events else 0
         bus_task = asyncio.create_task(self._bus_loop())
         self._tasks.append(bus_task)
 
@@ -477,16 +488,28 @@ class AbvornDaemon:
 
     async def _bus_loop(self):
         while self.running:
-            events = self.bus.get_recent_events()
-            for evt in events:
-                topic = evt.get("topic", "")
-                _payload = evt.get("payload", {})
+            events = self.bus.get_recent_events(limit=100)
+            events = sorted(
+                (event for event in events if event["id"] > self._last_bus_event_id),
+                key=lambda event: event["id"],
+            )
+            for event in events:
+                self._last_bus_event_id = event["id"]
+                topic = event.get("topic", "")
                 if topic == "domination.signal" and not self.is_paused():
-                    self._ensure_phase3()
                     asyncio.create_task(self.run_domination_cycle())
                 elif topic == "cycle.signal" and not self.is_paused():
-                    asyncio.create_task(self.run_full_cycle())
+                    asyncio.create_task(self._run_full_cycle_signal())
             await asyncio.sleep(10)
+
+    async def _run_full_cycle_signal(self):
+        if self._full_cycle_signal_running:
+            return {"status": "already_running"}
+        self._full_cycle_signal_running = True
+        try:
+            return await self.run_full_cycle()
+        finally:
+            self._full_cycle_signal_running = False
 
     async def _telegram_poll_loop(self):
         while self.running:

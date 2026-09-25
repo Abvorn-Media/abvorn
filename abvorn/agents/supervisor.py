@@ -48,6 +48,9 @@ class SupervisorAgent(AgentBase):
             logger.error(f"[Supervisor] Failed to spawn '{name}': {e}")
             return False
 
+    def track_agent_task(self, name: str, task: asyncio.Task):
+        self._spawned_tasks[name] = task
+
     def kill_agent(self, name: str):
         if name not in self.registry:
             logger.warning(f"[Supervisor] Agent '{name}' not found — cannot kill")
@@ -113,6 +116,9 @@ class SupervisorAgent(AgentBase):
             if name == self.name:
                 continue
             inst = info.get("instance")
+            task = self._spawned_tasks.get(name)
+            if task is not None and not task.done():
+                continue
             if inst and hasattr(inst, "_last_heartbeat") and inst._last_heartbeat:
                 age = now - inst._last_heartbeat
                 if age > HEARTBEAT_TIMEOUT:

@@ -155,6 +155,10 @@ class AbvornState:
                     c.execute("ALTER TABLE opportunities ADD COLUMN category TEXT DEFAULT ''")
             except sqlite3.OperationalError:
                 pass  # column already exists
+            c.execute("PRAGMA table_info(posts)")
+            post_cols = {row[1] for row in c.fetchall()}
+            if "image" not in post_cols:
+                c.execute("ALTER TABLE posts ADD COLUMN image TEXT DEFAULT ''")
 
     def close(self):
         if hasattr(self._local, 'conn') and self._local.conn:

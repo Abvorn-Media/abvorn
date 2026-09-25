@@ -1,4 +1,4 @@
-import pytest, asyncio
+import pytest, asyncio, threading
 from unittest.mock import MagicMock, patch
 from abvorn.daemon import AbvornDaemon
 from abvorn.core.bus import AgentBus
@@ -71,4 +71,65 @@ def test_optimization_loop_invokes_optimizer_cycle():
             except asyncio.CancelledError:
                 pass
         fake.run_cycle.assert_called_once()
+    asyncio.run(test())
+
+
+def test_bus_loop_processes_signal_once():
+    async def test():
+        daemon = _hermetic_daemon()
+        daemon.running = True
+        calls = 0
+
+        async def run_cycle():
+            nonlocal calls
+            calls += 1
+            await asyncio.sleep(0.01)
+
+        daemon.run_domination_cycle = run_cycle
+        task = asyncio.create_task(daemon._bus_loop())
+        daemon.bus.publish("domination.signal", {"source": "test"})
+        await asyncio.sleep(0.05)
+        daemon.running = False
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+        assert calls == 1
+
+    asyncio.run(test())
+
+
+def test_domination_cycle_rejects_overlapping_run():
+    async def test():
+        daemon = _hermetic_daemon()
+        daemon._phase3_inited = True
+        daemon.domination = MagicMock()
+        started = threading.Event()
+        release = threading.Event()
+
+        def run_cycle():
+            started.set()
+            release.wait(1)
+            return {
+                "status": "complete",
+                "niche": "mechanical-keyboards",
+                "title": "Keyboard guide",
+            }
+
+        daemon.domination.run_cycle = MagicMock(side_effect=run_cycle)
+        daemon.health = MagicMock()
+        daemon.notifier = MagicMock()
+
+        first = asyncio.create_task(daemon.run_domination_cycle())
+        while not started.is_set():
+            await asyncio.sleep(0)
+        second = await daemon.run_domination_cycle()
+        release.set()
+        first_result = await first
+
+        assert first_result["status"] == "complete"
+        assert second == {"status": "already_running"}
+        assert daemon.domination.run_cycle.call_count == 1
+
     asyncio.run(test())

@@ -1,4 +1,4 @@
-import logging, os
+import asyncio, logging, os
 from datetime import datetime
 from .base import AgentBase
 from ..agents.researcher import research_niche
@@ -35,7 +35,7 @@ class ResearchAgent(AgentBase):
         if decision.startswith("research:"):
             niche = decision.split(":", 1)[1]
             logger.info(f"[ResearchAgent] Researching niche: {niche}")
-            products = research_niche(niche, self.router)
+            products = await asyncio.to_thread(research_niche, niche, self.router)
             if products:
                 self.bus.publish("content.researched", {"niche": niche, "products": products, "count": len(products)})
                 return {"niche": niche, "products_count": len(products)}
@@ -81,7 +81,12 @@ class ContentAgent(AgentBase):
         if decision.startswith("generate:"):
             niche = decision.split(":", 1)[1]
             logger.info(f"[ContentAgent] Generating content for: {niche}")
-            result = self.pipeline.run(niche, self.router, persona={})
+            result = await asyncio.to_thread(
+                self.pipeline.run,
+                niche,
+                self.router,
+                persona={},
+            )
             if result:
                 self.bus.publish("content.drafted", {"niche": niche, "result": result})
                 if self.state:
@@ -342,6 +347,59 @@ class DeployAgent(AgentBase):
             return f"deploy:{niche}"
         return "wait"
 
+    def _deploy_site(self, niche, content_payload):
+        all_niches_data = self.state.get_all_niches()
+        all_slugs = [n["slug"] for n in all_niches_data]
+        all_posts = []
+        for slug in all_slugs:
+            all_posts.extend(self.state.get_posts_for_niche(slug))
+        if content_payload:
+            payload_products = content_payload.get("products") or []
+            deploy_content = {
+                "post_title": content_payload.get("post_title", ""),
+                "intro": content_payload.get("intro", ""),
+                "article_html": content_payload.get("article_html", ""),
+                "meta_description": content_payload.get("meta_description", ""),
+                "product_name": (
+                    content_payload.get("product_name")
+                    or (payload_products[0].get("name", "") if payload_products else "")
+                ),
+                "products": payload_products,
+            }
+            self.site_deployer.deploy_content(
+                niche,
+                deploy_content,
+                all_categories=all_slugs,
+            )
+        else:
+            posts = self.state.get_posts_for_niche(niche)
+            if posts:
+                latest = posts[0]
+                content = {
+                    "post_title": latest.get("title", ""),
+                    "content": latest.get("filename", ""),
+                    "product_name": latest.get("product_name", ""),
+                }
+                self.site_deployer.deploy_content(
+                    niche,
+                    content,
+                    all_categories=all_slugs,
+                )
+        self.site_deployer.deploy_root_index(
+            niches=all_niches_data,
+            posts=all_posts,
+        )
+        for slug in all_slugs:
+            niche_posts = [
+                post for post in all_posts
+                if post.get("niche_slug") == slug
+            ]
+            self.site_deployer.deploy_category_page(
+                slug,
+                posts=niche_posts,
+                all_categories=all_slugs,
+            )
+
     async def act(self, decision):
         if decision.startswith("deploy:"):
             niche = decision.split(":", 1)[1]
@@ -349,44 +407,18 @@ class DeployAgent(AgentBase):
             events = self.bus.get_recent_events("content.drafted")
             content_payload = None
             handled_id = None
-            for e in events:
-                if e['message'].get('niche') == niche:
+            for event in events:
+                if event['message'].get('niche') == niche:
                     if handled_id is None:
-                        handled_id = e["id"]
-                    if content_payload is None and 'result' in e['message']:
-                        content_payload = e['message']['result']
+                        handled_id = event["id"]
+                    if content_payload is None and 'result' in event['message']:
+                        content_payload = event['message']['result']
             if self.site_deployer and self.state:
-                all_niches_data = self.state.get_all_niches()
-                all_slugs = [n["slug"] for n in all_niches_data]
-                all_posts = []
-                for s in all_slugs:
-                    all_posts.extend(self.state.get_posts_for_niche(s))
-                if content_payload:
-                    _payload_products = content_payload.get("products") or []
-                    deploy_content = {
-                        "post_title": content_payload.get("post_title", ""),
-                        "intro": content_payload.get("intro", ""),
-                        "article_html": content_payload.get("article_html", ""),
-                        "meta_description": content_payload.get("meta_description", ""),
-                        "product_name": (content_payload.get("product_name")
-                                        or (_payload_products[0].get("name", "") if _payload_products else "")),
-                        "products": _payload_products,
-                    }
-                    self.site_deployer.deploy_content(niche, deploy_content, all_categories=all_slugs)
-                else:
-                    posts = self.state.get_posts_for_niche(niche)
-                    if posts:
-                        latest = posts[0]
-                        content = {
-                            "post_title": latest.get("title", ""),
-                            "content": latest.get("filename", ""),
-                            "product_name": latest.get("product_name", ""),
-                        }
-                        self.site_deployer.deploy_content(niche, content, all_categories=all_slugs)
-                self.site_deployer.deploy_root_index(niches=all_niches_data, posts=all_posts)
-                for slug in all_slugs:
-                    niche_posts = [p for p in all_posts if p.get("niche_slug") == slug]
-                    self.site_deployer.deploy_category_page(slug, posts=niche_posts, all_categories=all_slugs)
+                await asyncio.to_thread(
+                    self._deploy_site,
+                    niche,
+                    content_payload,
+                )
             self.bus.publish("content.published", {"niche": niche, "status": "deployed"})
             if handled_id is not None:
                 self._mark_drafted_handled([handled_id])

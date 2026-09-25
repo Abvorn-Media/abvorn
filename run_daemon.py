@@ -11,16 +11,44 @@ import asyncio
 import contextlib
 import logging
 import signal
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+
+_LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s %(name)s %(levelname)s %(message)s",
+    format=_LOG_FORMAT,
 )
 logger = logging.getLogger("abvorn.entrypoint")
 
 
+def _enable_file_logging() -> Path | None:
+    """Mirror the root logger to a rotating file.
+
+    Scheduled-task and systemd launches capture no stdout, so without this the
+    daemon's log is unreachable and failures are silent.
+    """
+    try:
+        path = Path.home() / ".abvorn" / "daemon.log"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        handler = RotatingFileHandler(
+            path, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8",
+        )
+        handler.setFormatter(logging.Formatter(_LOG_FORMAT))
+        logging.getLogger().addHandler(handler)
+        return path
+    except Exception as e:
+        logging.getLogger(__name__).warning(
+            "file logging unavailable, stdout only: %s", e)
+        return None
+
+
 async def _main() -> None:
     from abvorn.daemon import AbvornDaemon
+
+    log_path = _enable_file_logging()
+    logger.info("Daemon log file: %s", log_path or "unavailable (stdout only)")
 
     loop = asyncio.get_running_loop()
     stop = asyncio.Event()

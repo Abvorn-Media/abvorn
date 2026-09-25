@@ -1,4 +1,4 @@
-import pytest, asyncio
+import pytest, asyncio, time
 from abvorn.agents.base import AgentBase
 from abvorn.core.bus import AgentBus
 
@@ -149,3 +149,98 @@ def test_content_agent_decide_waits_when_niche_missing():
         return await agent.decide(perception)
 
     assert asyncio.run(run()) == "wait"
+
+
+def test_research_agent_offloads_blocking_research(monkeypatch):
+    from abvorn.agents.orchestrator import ResearchAgent
+
+    order = []
+
+    def blocking_research(niche, router):
+        order.append("research-start")
+        time.sleep(0.05)
+        order.append("research-end")
+        return [{"title": "Keyboard"}]
+
+    async def ticker():
+        await asyncio.sleep(0.01)
+        order.append("tick")
+
+    async def run():
+        bus = AgentBus(":memory:")
+        agent = ResearchAgent(bus, state=None, router=object())
+        await asyncio.gather(
+            agent.act("research:mechanical-keyboards"),
+            ticker(),
+        )
+
+    monkeypatch.setattr(
+        "abvorn.agents.orchestrator.research_niche",
+        blocking_research,
+    )
+    asyncio.run(run())
+    assert order == ["research-start", "tick", "research-end"]
+
+
+def test_content_agent_offloads_blocking_pipeline():
+    from abvorn.agents.orchestrator import ContentAgent
+
+    order = []
+
+    class Pipeline:
+        def run(self, niche, router, persona):
+            order.append("pipeline-start")
+            time.sleep(0.05)
+            order.append("pipeline-end")
+            return {"post_title": "Guide"}
+
+    async def ticker():
+        await asyncio.sleep(0.01)
+        order.append("tick")
+
+    async def run():
+        bus = AgentBus(":memory:")
+        agent = ContentAgent(bus, state=None, router=object(), pipeline=Pipeline())
+        await asyncio.gather(
+            agent.act("generate:mechanical-keyboards"),
+            ticker(),
+        )
+
+    asyncio.run(run())
+    assert order == ["pipeline-start", "tick", "pipeline-end"]
+
+
+def test_supervisor_tracks_running_task_over_stale_heartbeat():
+    from abvorn.agents.supervisor import HEARTBEAT_TIMEOUT, SupervisorAgent
+
+    async def run():
+        supervisor = SupervisorAgent(AgentBus(":memory:"))
+
+        class LongAgent(AgentBase):
+            async def perceive(self):
+                return {}
+
+            async def decide(self, perception):
+                return "wait"
+
+            async def act(self, decision):
+                pass
+
+            async def reflect(self, outcome):
+                pass
+
+        agent = LongAgent("long", AgentBus(":memory:"))
+        agent._last_heartbeat = time.time() - HEARTBEAT_TIMEOUT - 5
+        supervisor.registry["long"] = {
+            "class": "LongAgent",
+            "status": "running",
+            "instance": agent,
+            "spawned_at": "x",
+        }
+        task = asyncio.create_task(asyncio.sleep(0.01))
+        supervisor.track_agent_task("long", task)
+        assert supervisor.detect_dead_agents() == []
+        await task
+        assert supervisor.detect_dead_agents() == ["long"]
+
+    asyncio.run(run())
