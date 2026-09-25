@@ -73,11 +73,16 @@ class _NoopLearner:
     def posted_urls(self):
         return self._sle.posted_urls()
 
+    def niche_post_times(self):
+        return self._sle.niche_post_times()
+
     def record_hook_test(self, *a, **k):
         return 1
 
-    def record_post_performance(self, url, niche, platform, **k):
-        self._sle.record_post_performance(url=url, niche=niche, platform=platform)
+    def record_post_performance(self, url, niche, platform, source_url="", **k):
+        self._sle.record_post_performance(
+            url=url, niche=niche, platform=platform, source_url=source_url
+        )
 
     def record_posting_time(self, *a, **k):
         pass
@@ -177,7 +182,8 @@ def test_cycle_all_posted_falls_back_to_first_entry(learn_db):
     orch.run_cycle()
     orch.run_cycle()
     orch.run_cycle()
-    # all three posted -> next run falls back to entries[0]
+    # all three posted -> next run rotates to the least-recently-posted niche,
+    # which is the first one posted (laptops), not blindly entries[0] forever.
     fourth = orch.run_cycle()
     assert fourth["title"] == "Top Laptops"
 
@@ -210,8 +216,11 @@ def test_cycle_shares_canonical_niche_url_not_stale_dated_article(learn_db, monk
 
     thread = captured["x"]
     assert thread[-1] == "Full breakdown: https://abvorn.com/reviews/gaming-mice/"
-    # recorded for dedupe as the canonical hub, not the dated flat file
-    assert orch.learner.posted_urls() == {"https://abvorn.com/reviews/gaming-mice/"}
+    # shared link is the canonical hub; the dedupe key is the source article,
+    # date-normalized so a reprint of the same article cannot re-post
+    assert orch.learner.posted_urls() == {
+        "https://abvorn.com/reviews/gaming-mice/best-gaming-mice-2026-logitech-vs-razer-compared.html"
+    }
 
 
 def test_cycle_deduplicates_by_canonical_hub_across_cycle_runs(learn_db, monkeypatch):
@@ -229,3 +238,207 @@ def test_cycle_deduplicates_by_canonical_hub_across_cycle_runs(learn_db, monkeyp
     urls = orch.learner.posted_urls()
     assert "https://abvorn.com/reviews/laptops/" in urls
     assert "https://abvorn.com/reviews/mice/" in urls
+
+
+def test_cycle_deduplicates_by_article_not_niche_hub(learn_db, monkeypatch):
+    """Two articles in the SAME niche are two distinct posts.
+
+    Dedupe used to key on the shared niche hub, so a niche with many reviews
+    collapsed to a single post and the cycle then re-posted the top-scoring
+    niche forever. Dedupe must key on each article's own URL.
+    """
+    from abvorn.domination import product_assets as pa
+    monkeypatch.setattr(pa, "load_products_for_niche", lambda slug: [])
+
+    entries = [
+        {
+            "title": "Best Laptops A",
+            "niche": "laptops",
+            "url": "https://abvorn.com/reviews/laptops/best-laptops-a.html",
+            "virality_score": 90,
+            "sentiment": "positive",
+        },
+        {
+            "title": "Best Laptops B",
+            "niche": "laptops",
+            "url": "https://abvorn.com/reviews/laptops/best-laptops-b.html",
+            "virality_score": 80,
+            "sentiment": "positive",
+        },
+    ]
+    orch = _make_orchestrator(entries, learn_db)
+
+    first = orch.run_cycle()
+    second = orch.run_cycle()
+
+    # same niche, different article — not a repeat
+    assert first["title"] == "Best Laptops A"
+    assert second["title"] == "Best Laptops B"
+    assert second["niche"] == "laptops"
+    assert orch.learner.posted_urls() == {
+        "https://abvorn.com/reviews/laptops/best-laptops-a.html",
+        "https://abvorn.com/reviews/laptops/best-laptops-b.html",
+    }
+
+
+def test_cycle_skips_dated_republication_of_posted_article(learn_db, monkeypatch):
+    """The live feed republishes one article under a new dated filename.
+
+    ...-compared-2026-08-24.html and ...-compared-2026-08-31.html are the same
+    content, so posting both would put the same article up twice in a row.
+    """
+    from abvorn.domination import product_assets as pa
+    monkeypatch.setattr(pa, "load_products_for_niche", lambda slug: [])
+
+    base = "https://abvorn.com/reviews/4k-monitors/best-4k-monitors-compared"
+    entries = [
+        {
+            "title": "Best 4k-Monitors Compared (Aug 24)",
+            "niche": "4k-monitors",
+            "url": f"{base}-2026-08-24.html",
+            "virality_score": 90,
+            "sentiment": "positive",
+        },
+        {
+            "title": "Best 4k-Monitors Compared (Aug 31 reprint)",
+            "niche": "4k-monitors",
+            "url": f"{base}-2026-08-31.html",
+            "virality_score": 85,
+            "sentiment": "positive",
+        },
+        {
+            "title": "Top Mice",
+            "niche": "mice",
+            "url": "https://abvorn.com/reviews/mice/",
+            "virality_score": 80,
+            "sentiment": "positive",
+        },
+    ]
+    orch = _make_orchestrator(entries, learn_db)
+
+    first = orch.run_cycle()
+    second = orch.run_cycle()
+
+    assert first["title"] == "Best 4k-Monitors Compared (Aug 24)"
+    # the dated reprint is suppressed; the next post is different content
+    assert second["title"] == "Top Mice"
+    assert orch.learner.posted_urls() == {
+        f"{base}.html",
+        "https://abvorn.com/reviews/mice/",
+    }
+
+
+def test_cycle_prefers_different_niche_over_feed_order(learn_db, monkeypatch):
+    """Feed order must not make the engine post one niche twice in a row.
+
+    With two unposted laptops articles and one unposted mice article, walking
+    the feed in order would post laptops, laptops, mice. Diversity is a
+    preference, not a constraint: the second laptops article is still used once
+    mice is spent.
+    """
+    from abvorn.domination import product_assets as pa
+    monkeypatch.setattr(pa, "load_products_for_niche", lambda slug: [])
+
+    entries = [
+        {
+            "title": "Laptops A",
+            "niche": "laptops",
+            "url": "https://abvorn.com/reviews/laptops/a.html",
+            "virality_score": 90,
+            "sentiment": "positive",
+        },
+        {
+            "title": "Laptops B",
+            "niche": "laptops",
+            "url": "https://abvorn.com/reviews/laptops/b.html",
+            "virality_score": 85,
+            "sentiment": "positive",
+        },
+        {
+            "title": "Mice",
+            "niche": "mice",
+            "url": "https://abvorn.com/reviews/mice/m.html",
+            "virality_score": 80,
+            "sentiment": "positive",
+        },
+    ]
+    orch = _make_orchestrator(entries, learn_db)
+
+    titles = [orch.run_cycle()["title"] for _ in range(3)]
+    assert titles == ["Laptops A", "Mice", "Laptops B"]
+    # every article still used exactly once
+    assert len(orch.learner.posted_urls()) == 3
+
+
+def test_cycle_rotates_to_least_recently_posted_niche(learn_db, monkeypatch):
+    """Once every article is spent, rotate to the least-recently-posted niche.
+
+    The old fallback returned entries[0] unconditionally, so the top-scoring
+    niche (laptops) was re-posted on every single cycle.
+    """
+    from abvorn.domination import product_assets as pa
+    monkeypatch.setattr(pa, "load_products_for_niche", lambda slug: [])
+
+    entries = [
+        {
+            "title": "Top Keyboards",
+            "niche": "keyboards",
+            "url": "https://abvorn.com/reviews/keyboards/",
+            "virality_score": 70,
+            "sentiment": "positive",
+        },
+        {
+            "title": "Top Mice",
+            "niche": "mice",
+            "url": "https://abvorn.com/reviews/mice/",
+            "virality_score": 80,
+            "sentiment": "positive",
+        },
+        {
+            "title": "Top Laptops",
+            "niche": "laptops",
+            "url": "https://abvorn.com/reviews/laptops/",
+            "virality_score": 90,
+            "sentiment": "positive",
+        },
+    ]
+    orch = _make_orchestrator(entries, learn_db)
+
+    # Post keyboards FIRST so it is the least recently posted, then drain the rest.
+    orch.run_cycle(niche="keyboards")
+    orch.run_cycle()  # laptops (highest virality, unposted)
+    orch.run_cycle()  # mice
+
+    # Everything is posted. Rotation must go back to keyboards, NOT laptops.
+    rotated = orch.run_cycle()
+    assert rotated["title"] == "Top Keyboards"
+
+
+def test_cycle_never_posts_same_article_twice_in_a_row(learn_db, monkeypatch):
+    """The reported symptom: the same niche posted over and over."""
+    from abvorn.domination import product_assets as pa
+    monkeypatch.setattr(pa, "load_products_for_niche", lambda slug: [])
+
+    entries = [
+        {
+            "title": "Top Laptops",
+            "niche": "laptops",
+            "url": "https://abvorn.com/reviews/laptops/",
+            "virality_score": 90,
+            "sentiment": "positive",
+        },
+        {
+            "title": "Top Mice",
+            "niche": "mice",
+            "url": "https://abvorn.com/reviews/mice/",
+            "virality_score": 80,
+            "sentiment": "positive",
+        },
+    ]
+    orch = _make_orchestrator(entries, learn_db)
+
+    titles = [orch.run_cycle()["title"] for _ in range(6)]
+    # both niches get a turn, then rotation alternates between them even though
+    # re-posting inserts no new dedupe row
+    assert titles[:2] == ["Top Laptops", "Top Mice"]
+    assert titles[2:] == ["Top Laptops", "Top Mice", "Top Laptops", "Top Mice"]

@@ -21,7 +21,7 @@ from .viral_script_generator import ViralScriptGenerator
 from .pexels_asset_fetcher import PexelsAssetFetcher
 from .cinematic_filter import CinematicFilter
 from .audio_system import AudioSystem
-from .self_learning_engine import SelfLearningEngine
+from .self_learning_engine import SelfLearningEngine, normalize_source_url
 from .social_publisher import SocialPublisher
 from .budget import APIBudget
 
@@ -73,6 +73,81 @@ class DominationOrchestrator:
         site = os.environ.get("SITE_URL", "https://abvorn.com").rstrip("/")
         return f"{site}/reviews/{slug}/"
 
+    def _source_url(self, target: dict) -> str:
+        """Dedupe key for a feed entry: its own article URL.
+
+        Distinct from _share_url, which points social at the canonical niche
+        hub. Dedupe must key on the article so a niche with many reviews yields
+        many distinct posts rather than collapsing into one. The URL is
+        date-normalized because the feed republishes the same article under a
+        new dated filename, and those copies must count as one post.
+        """
+        return normalize_source_url(str(target.get("url") or "").strip())
+
+    def _prefer_new_niche(self, candidates: list[dict]) -> dict:
+        """Prefer a candidate whose niche differs from the one posted last.
+
+        Purely a variety preference: if every remaining candidate belongs to the
+        niche just posted, it returns that anyway. Without it the engine walks the
+        feed in order and posts a niche twice in a row while a dozen other
+        unposted niches are available.
+        """
+        if len(candidates) < 2:
+            return candidates[0]
+        last_niche = None
+        try:
+            times = self.learner.niche_post_times()
+            if times:
+                last_niche = max(times, key=lambda n: times[n])
+        except Exception as e:
+            logger.warning(f"last posted niche lookup failed (non-fatal): {e}")
+        if last_niche is None:
+            return candidates[0]
+        fresh = [e for e in candidates if e.get("niche") != last_niche]
+        return fresh[0] if fresh else candidates[0]
+
+    def _rotate_target(self, entries: list[dict]) -> dict:
+        """Pick the least-recently-posted niche once every article is spent.
+
+        Without this the cycle fell back to entries[0] and re-posted the same
+        top-scoring niche forever. Ties fall to the higher virality score.
+        """
+        times: dict[str, int] = {}
+        try:
+            times = self.learner.niche_post_times()
+        except Exception as e:
+            logger.warning(f"niche_post_times lookup failed (non-fatal): {e}")
+        if not times:
+            return entries[0]
+        never_posted = [e for e in entries if e.get("niche") not in times]
+        if never_posted:
+            return never_posted[0]
+        return min(
+            entries,
+            key=lambda e: (times.get(e.get("niche"), 0), -float(e.get("virality_score") or 0)),
+        )
+
+    def _select_target(self, entries: list[dict], posted: set[str],
+                       niche: str | None = None) -> dict:
+        """Choose this cycle's feed entry.
+
+        Order: an explicit niche, else the first unposted article (preferring a
+        niche other than the one posted last), else rotation across all entries
+        when the feed is spent.
+        """
+        if niche:
+            target = next(
+                (e for e in entries if e["niche"] == niche and self._source_url(e) not in posted),
+                None,
+            )
+            if target is None:
+                target = next((e for e in entries if e["niche"] == niche), entries[0])
+            return target
+        unposted = [e for e in entries if self._source_url(e) not in posted]
+        if unposted:
+            return self._prefer_new_niche(unposted)
+        return self._rotate_target(entries)
+
     def run_cycle(self, niche: str | None = None,
                   platforms: list[str] | None = None) -> dict:
         """Run one domination cycle: parse → generate → fetch → filter → publish.
@@ -103,22 +178,12 @@ class DominationOrchestrator:
             except Exception as e:
                 logger.warning(f"[{cycle_id}] posted_urls lookup failed (non-fatal): {e}")
 
-            if niche:
-                target = next(
-                    (e for e in entries if e["niche"] == niche and self._share_url(e) not in posted),
-                    None,
-                )
-                if target is None:
-                    target = next(
-                        (e for e in entries if e["niche"] == niche), entries[0]
-                    )
-            else:
-                target = next(
-                    (e for e in entries if self._share_url(e) not in posted), None
-                )
-                if target is None:
-                    target = entries[0]
+            target = self._select_target(entries, posted, niche)
 
+            # Work on a copy: step 2 rewrites target["url"] to the shared hub, and
+            # mutating the caller's entry would destroy the article URL that dedupe
+            # keys on, collapsing every later cycle back to the hub.
+            target = dict(target)
             steps["intel"] = {
                 "status": "ok",
                 "title": target["title"],
@@ -126,6 +191,9 @@ class DominationOrchestrator:
                 "virality_score": target["virality_score"],
                 "sentiment": target["sentiment"],
             }
+            # Capture the article URL before step 2 overwrites target["url"] with
+            # the shared hub, otherwise the dedupe key collapses back to the hub.
+            source_url = self._source_url(target)
             logger.info(f"[{cycle_id}] Intel: {target['title'][:60]}... ({target['virality_score']})")
         except Exception as e:
             logger.error(f"[{cycle_id}] Content intel failed: {e}")
@@ -280,6 +348,7 @@ class DominationOrchestrator:
                     hook=hook,
                     sentiment=target.get("sentiment", "neutral"),
                     virality_score=target.get("virality_score", 0),
+                    source_url=source_url,
                 )
                 self.learner.record_posting_time(
                     target["niche"], platform_key, target.get("virality_score", 0)

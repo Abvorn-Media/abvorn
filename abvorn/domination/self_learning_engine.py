@@ -1,11 +1,27 @@
 """Self-Learning Engine — tracks hook performance, A/B test results,
 and engagement metrics per platform to optimize future content."""
 
-import logging, sqlite3
+import logging, re, sqlite3
 from pathlib import Path
 from datetime import datetime
 
 logger = logging.getLogger("abvorn.domination.self_learning")
+
+# Article URLs carry the date of regeneration: ...-compared-2026-08-24.html and
+# ...-compared-2026-08-31.html are the same content published twice.
+_DATED_SUFFIX_RE = re.compile(r"[-_]\d{4}[-_]\d{2}[-_]\d{2}(?=\.html?$)", re.IGNORECASE)
+
+
+def normalize_source_url(url: str) -> str:
+    """Strip a trailing regeneration date so dated re-publications dedupe together.
+
+    Exact-URL dedupe treats two dated copies of one article as distinct, which
+    posts the same content back-to-back. Only a date immediately before the
+    extension is removed, so no other part of the slug is touched.
+    """
+    if not url:
+        return ""
+    return _DATED_SUFFIX_RE.sub("", url)
 
 
 class SelfLearningEngine:
@@ -57,7 +73,8 @@ class SelfLearningEngine:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS content_performance (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    post_url TEXT NOT NULL UNIQUE,
+                    post_url TEXT NOT NULL,
+                    source_url TEXT NOT NULL DEFAULT '',
                     niche TEXT NOT NULL,
                     platform TEXT NOT NULL,
                     hook_used TEXT,
@@ -68,6 +85,15 @@ class SelfLearningEngine:
                     updated_at TEXT DEFAULT (datetime('now'))
                 )
             """)
+            self._migrate_content_performance(conn)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS niche_post_order (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    niche TEXT NOT NULL,
+                    platform TEXT NOT NULL,
+                    posted_at TEXT DEFAULT (datetime('now'))
+                )
+            """)
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_hook_niche
                 ON hook_tests(niche, platform)
@@ -76,7 +102,53 @@ class SelfLearningEngine:
                 CREATE INDEX IF NOT EXISTS idx_perf_niche
                 ON content_performance(niche, platform)
             """)
+            conn.execute("""
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_perf_source
+                ON content_performance(source_url, platform)
+            """)
             conn.commit()
+
+    @staticmethod
+    def _migrate_content_performance(conn):
+        """Rebuild a pre-source_url content_performance table.
+
+        The old schema made post_url UNIQUE, which collapsed every article in a
+        niche onto one row and forced the cycle to re-post a single top-scoring
+        entry once the niche hubs ran out. Dedupe now keys on the source article
+        URL per platform, so post_url keeps no uniqueness constraint.
+        """
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(content_performance)")}
+        if "source_url" in cols:
+            return
+        conn.execute("""
+            CREATE TABLE content_performance__migrated (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                post_url TEXT NOT NULL,
+                source_url TEXT NOT NULL DEFAULT '',
+                niche TEXT NOT NULL,
+                platform TEXT NOT NULL,
+                hook_used TEXT,
+                sentiment TEXT,
+                virality_score REAL DEFAULT 0.0,
+                total_engagement INTEGER DEFAULT 0,
+                posted_at TEXT,
+                updated_at TEXT DEFAULT (datetime('now'))
+            )
+        """)
+        conn.execute("""
+            INSERT INTO content_performance__migrated
+                (id, post_url, source_url, niche, platform, hook_used,
+                 sentiment, virality_score, total_engagement, posted_at, updated_at)
+            SELECT id, post_url, post_url, niche, platform, hook_used,
+                   sentiment, virality_score, total_engagement, posted_at, updated_at
+            FROM content_performance
+        """)
+        conn.execute("DROP TABLE content_performance")
+        conn.execute("ALTER TABLE content_performance__migrated RENAME TO content_performance")
+        conn.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_perf_source
+            ON content_performance(source_url, platform)
+        """)
 
     def record_hook_test(self, hook: str, niche: str, platform: str,
                          variant: str = "A") -> int:
@@ -111,25 +183,62 @@ class SelfLearningEngine:
             conn.commit()
 
     def posted_urls(self) -> set[str]:
-        """URLs already recorded as posted (used to avoid re-posting repeats)."""
+        """Normalized source article URLs already recorded as posted (dedupe key).
+
+        This is the per-article RSS link, not the shared niche hub, so a niche
+        with many articles contributes many distinct posts instead of one. Values
+        are normalized on read too, so rows written before date normalization
+        still suppress their dated re-publications.
+        """
         with sqlite3.connect(str(self.db_path)) as conn:
             rows = conn.execute(
-                "SELECT DISTINCT post_url FROM content_performance"
+                "SELECT DISTINCT source_url FROM content_performance"
             ).fetchall()
-            return {r[0] for r in rows if r[0]}
+        return {normalize_source_url(r[0]) for r in rows if r[0]}
+
+    def niche_post_times(self) -> dict[str, int]:
+        """Niche slug -> highest row id, i.e. how recently it was posted.
+
+        Read from niche_post_order rather than content_performance: dedupe makes
+        content_performance one row per article, so re-posting a niche inserts
+        nothing and its recency would never advance, pinning rotation to a single
+        niche. niche_post_order appends on every post, so "least recently posted"
+        is always exact. Row ids are used rather than posted_at because cycles
+        can run inside the same second and timestamps would tie.
+        """
+        with sqlite3.connect(str(self.db_path)) as conn:
+            rows = conn.execute(
+                "SELECT niche, MAX(id) FROM niche_post_order GROUP BY niche"
+            ).fetchall()
+        return {r[0]: r[1] for r in rows if r[0]}
 
     def record_post_performance(self, url: str, niche: str, platform: str,
                                 hook: str = "", sentiment: str = "neutral",
                                 virality_score: float = 0.0,
-                                total_engagement: int = 0):
+                                total_engagement: int = 0,
+                                source_url: str = ""):
+        """Record a post. ``url`` is the shared hub, ``source_url`` the article.
+
+        The unique key is (source_url, platform): the same article may be shared
+        to several platforms, and it must never be recorded twice on one. The
+        source URL is stored date-normalized, so a dated re-publication collides
+        with its original instead of creating a near-identical second post.
+        INSERT OR IGNORE keeps the original row rather than replacing it. Rotation
+        recency is tracked separately in niche_post_order, which appends on every
+        post including a repeat.
+        """
         with sqlite3.connect(str(self.db_path)) as conn:
             conn.execute("""
-                INSERT OR REPLACE INTO content_performance
-                    (post_url, niche, platform, hook_used, sentiment,
+                INSERT OR IGNORE INTO content_performance
+                    (post_url, source_url, niche, platform, hook_used, sentiment,
                      virality_score, total_engagement, posted_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
-            """, (url, niche, platform, hook, sentiment,
-                  virality_score, total_engagement))
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+            """, (url, normalize_source_url(source_url or url), niche, platform,
+                  hook, sentiment, virality_score, total_engagement))
+            conn.execute("""
+                INSERT INTO niche_post_order (niche, platform)
+                VALUES (?, ?)
+            """, (niche, platform))
             conn.commit()
 
     def record_posting_time(self, niche: str, platform: str,

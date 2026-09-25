@@ -1,10 +1,14 @@
 import shutil
+import sqlite3
 import tempfile
 from pathlib import Path
 
 import pytest
 
-from abvorn.domination.self_learning_engine import SelfLearningEngine
+from abvorn.domination.self_learning_engine import (
+    SelfLearningEngine,
+    normalize_source_url,
+)
 
 
 @pytest.fixture
@@ -37,6 +41,124 @@ def test_post_urls_roundtrip_via_record(learn_db):
         platform="x",
     )
     assert sle.posted_urls() == {"https://abvorn.com/reviews/laptops/"}
+
+
+def test_same_niche_distinct_articles_are_distinct_posts(learn_db):
+    """Two articles sharing one niche hub must record as two posts."""
+    sle = SelfLearningEngine(db_path=learn_db)
+    sle.record_post_performance(
+        url="https://abvorn.com/reviews/laptops/",
+        niche="laptops",
+        platform="x",
+        source_url="https://abvorn.com/reviews/laptops/best-a.html",
+    )
+    sle.record_post_performance(
+        url="https://abvorn.com/reviews/laptops/",
+        niche="laptops",
+        platform="x",
+        source_url="https://abvorn.com/reviews/laptops/best-b.html",
+    )
+    assert sle.posted_urls() == {
+        "https://abvorn.com/reviews/laptops/best-a.html",
+        "https://abvorn.com/reviews/laptops/best-b.html",
+    }
+
+
+def test_same_article_across_platforms_records_once_per_platform(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    for platform in ("x", "telegram", "linkedin"):
+        sle.record_post_performance(
+            url="https://abvorn.com/reviews/laptops/",
+            niche="laptops",
+            platform=platform,
+            source_url="https://abvorn.com/reviews/laptops/best-a.html",
+        )
+    import sqlite3
+    with sqlite3.connect(learn_db) as conn:
+        rows = conn.execute(
+            "SELECT platform FROM content_performance ORDER BY platform"
+        ).fetchall()
+    assert [r[0] for r in rows] == ["linkedin", "telegram", "x"]
+
+
+def test_niche_post_times_reports_recency_order(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    assert sle.niche_post_times() == {}
+    sle.record_post_performance(
+        url="https://abvorn.com/reviews/laptops/",
+        niche="laptops",
+        platform="x",
+        source_url="https://abvorn.com/reviews/laptops/best-a.html",
+    )
+    sle.record_post_performance(
+        url="https://abvorn.com/reviews/mice/",
+        niche="mice",
+        platform="x",
+        source_url="https://abvorn.com/reviews/mice/best-a.html",
+    )
+    recency = sle.niche_post_times()
+    assert set(recency) == {"laptops", "mice"}
+    # mice was recorded last, so it is the more recent niche
+    assert recency["mice"] > recency["laptops"]
+
+
+def test_legacy_post_url_unique_schema_migrates(learn_db):
+    """A pre-source_url DB must migrate in place, keeping its rows.
+
+    The old schema had post_url UNIQUE, which is what collapsed a niche's
+    articles into one row. Migration must preserve history and drop that
+    constraint so a niche can hold many articles.
+    """
+    import sqlite3
+    with sqlite3.connect(learn_db) as conn:
+        conn.execute("""
+            CREATE TABLE content_performance (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                post_url TEXT NOT NULL UNIQUE,
+                niche TEXT NOT NULL,
+                platform TEXT NOT NULL,
+                hook_used TEXT,
+                sentiment TEXT,
+                virality_score REAL DEFAULT 0.0,
+                total_engagement INTEGER DEFAULT 0,
+                posted_at TEXT,
+                updated_at TEXT DEFAULT (datetime('now'))
+            )
+        """)
+        conn.execute(
+            "INSERT INTO content_performance (post_url, niche, platform, posted_at) "
+            "VALUES ('https://abvorn.com/reviews/laptops/', 'laptops', 'x', '2026-09-01 00:00:00')"
+        )
+        conn.commit()
+
+    sle = SelfLearningEngine(db_path=learn_db)
+
+    # legacy row survives, backfilled with its own post_url as source_url
+    assert sle.posted_urls() == {"https://abvorn.com/reviews/laptops/"}
+    with sqlite3.connect(learn_db) as c:
+        assert c.execute("SELECT count(*) FROM content_performance").fetchone()[0] == 1
+        assert c.execute("SELECT post_url FROM content_performance").fetchone()[0] == (
+            "https://abvorn.com/reviews/laptops/"
+        )
+    # no rotation history exists for pre-migration rows, so the niche counts as
+    # never-posted and rotation would give it priority. That is safe: its articles
+    # are still deduped, so it cannot re-post one.
+    assert sle.niche_post_times() == {}
+
+    # the same hub can now hold a second article
+    sle.record_post_performance(
+        url="https://abvorn.com/reviews/laptops/",
+        niche="laptops",
+        platform="x",
+        source_url="https://abvorn.com/reviews/laptops/best-b.html",
+    )
+    assert len(sle.posted_urls()) == 2
+
+    # migration is idempotent
+    SelfLearningEngine(db_path=learn_db)
+    assert len(SelfLearningEngine(db_path=learn_db).posted_urls()) == 2
+
+
 def test_best_hooks_empty_before_ga4_feedback(learn_db):
     sle = SelfLearningEngine(db_path=learn_db)
     sle.record_hook_test("Buy now", "laptops", "x")
@@ -73,6 +195,77 @@ def test_feed_ga4_engagement_updates_hook_and_posting(learn_db):
     assert row is not None
     assert row[0] == 1
     assert row[1] == 120 + 30 * 2 + 4 * 10  # views + 2*users + 10*clicks
+
+
+def test_dated_republication_dedupes_to_one_post(learn_db):
+    """The feed republishes one article under new dated filenames.
+
+    Exact-URL dedupe would treat ...-2026-08-24.html and ...-2026-08-31.html as
+    two articles and post the same content back-to-back.
+    """
+    sle = SelfLearningEngine(db_path=learn_db)
+    base = "https://abvorn.com/reviews/4k-monitors/best-4k-monitors-compared"
+    sle.record_post_performance(
+        url="https://abvorn.com/reviews/4k-monitors/",
+        niche="4k-monitors",
+        platform="x",
+        source_url=f"{base}-2026-08-24.html",
+    )
+    posted = sle.posted_urls()
+    assert posted == {f"{base}.html"}
+
+    # the later dated copy of the same content is already considered posted
+    sle.record_post_performance(
+        url="https://abvorn.com/reviews/4k-monitors/",
+        niche="4k-monitors",
+        platform="x",
+        source_url=f"{base}-2026-08-31.html",
+    )
+    with sqlite3.connect(learn_db) as c:
+        assert c.execute("SELECT count(*) FROM content_performance").fetchone()[0] == 1
+    assert sle.posted_urls() == {f"{base}.html"}
+
+
+def test_repeat_record_keeps_one_dedupe_row_but_advances_rotation(learn_db):
+    """Dedupe and rotation recency are separate ledgers.
+
+    content_performance must keep exactly one row per (article, platform) so a
+    repeat cannot re-post. niche_post_order must still append, otherwise rotation
+    reads the same recency forever and pins itself to one niche.
+    """
+    sle = SelfLearningEngine(db_path=learn_db)
+    for _ in range(3):
+        sle.record_post_performance(
+            url="https://abvorn.com/reviews/laptops/",
+            niche="laptops",
+            platform="x",
+            source_url="https://abvorn.com/reviews/laptops/best.html",
+        )
+    with sqlite3.connect(learn_db) as c:
+        assert c.execute("SELECT count(*) FROM content_performance").fetchone()[0] == 1
+        assert c.execute("SELECT id FROM content_performance").fetchone()[0] == 1
+        assert c.execute("SELECT count(*) FROM niche_post_order").fetchone()[0] == 3
+    # recency advanced to the third post
+    assert sle.niche_post_times() == {"laptops": 3}
+
+
+def test_normalize_source_url_only_strips_trailing_date():
+    assert normalize_source_url(
+        "https://abvorn.com/reviews/x/best-2026-guide-2026-08-24.html"
+    ) == "https://abvorn.com/reviews/x/best-2026-guide.html"
+    # a year inside the slug is not a date suffix
+    assert normalize_source_url(
+        "https://abvorn.com/reviews/x/2026-roundup.html"
+    ) == "https://abvorn.com/reviews/x/2026-roundup.html"
+    # date mid-slug is untouched
+    assert normalize_source_url(
+        "https://abvorn.com/reviews/x/2026-08-24-roundup-final.html"
+    ) == "https://abvorn.com/reviews/x/2026-08-24-roundup-final.html"
+    assert normalize_source_url("") == ""
+    # hub URLs have no date and pass through unchanged
+    assert normalize_source_url(
+        "https://abvorn.com/reviews/laptops/"
+    ) == "https://abvorn.com/reviews/laptops/"
 
 
 def test_feed_ga4_skips_unknown_slug(learn_db):
