@@ -177,6 +177,26 @@ def test_pinterest_export_when_client_fails(publisher, monkeypatch, tmp_path):
 # ----------------------------------------------------------------------------
 
 
+def test_composio_constructor_uses_finite_timeout(monkeypatch):
+    from abvorn.deploy import composio_client as cc
+
+    captured = {}
+
+    class FakeComposio:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    monkeypatch.setattr(cc, "HAS_COMPOSIO", True)
+    monkeypatch.setattr(cc, "Composio", FakeComposio)
+
+    client = cc.ComposioClient(api_key="k")
+
+    assert client.available
+    assert captured["api_key"] == "k"
+    assert captured["timeout"] == cc.COMPOSIO_TIMEOUT_SECONDS
+    assert captured["max_retries"] == cc.COMPOSIO_MAX_RETRIES
+
+
 def _fake_client(monkeypatch, execute_result=None, board_id="555"):
     from abvorn.deploy import composio_client as cc
     c = cc.ComposioClient(api_key="k")

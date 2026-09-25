@@ -442,3 +442,22 @@ def test_cycle_never_posts_same_article_twice_in_a_row(learn_db, monkeypatch):
     # re-posting inserts no new dedupe row
     assert titles[:2] == ["Top Laptops", "Top Mice"]
     assert titles[2:] == ["Top Laptops", "Top Mice", "Top Laptops", "Top Mice"]
+
+
+def test_cycle_does_not_record_export_as_posted(learn_db):
+    class ExportPublisher:
+        def publish_all(self, publish_targets, niche, media_paths=None, media_by_platform=None):
+            return [
+                {"status": "exported", "platform": platform}
+                for platform in publish_targets
+            ]
+
+    orch = _make_orchestrator(_entries(), learn_db)
+    orch.publisher = ExportPublisher()
+
+    result = orch.run_cycle(platforms=["x"])
+
+    assert result["steps"]["publish"]["exported"] == 1
+    assert result["steps"]["learning"]["status"] == "skipped"
+    assert orch.learner.posted_urls() == set()
+    assert orch.learner.niche_post_times() == {}

@@ -15,6 +15,9 @@ from pathlib import Path
 
 logger = logging.getLogger("abvorn.deploy.composio_client")
 
+COMPOSIO_TIMEOUT_SECONDS = 30
+COMPOSIO_MAX_RETRIES = 1
+
 try:
     from composio import Composio
     HAS_COMPOSIO = True
@@ -53,7 +56,11 @@ class ComposioClient:
         if api_key and HAS_COMPOSIO:
             try:
                 os.environ["COMPOSIO_API_KEY"] = api_key
-                self.client = Composio()
+                self.client = Composio(
+                    api_key=api_key,
+                    timeout=COMPOSIO_TIMEOUT_SECONDS,
+                    max_retries=COMPOSIO_MAX_RETRIES,
+                )
                 logger.info("Composio v3 client initialized")
             except Exception as e:
                 logger.warning(f"Composio init failed: {e}")

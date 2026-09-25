@@ -6,8 +6,8 @@ Orchestrates the full pipeline:
 3. Pexels Asset Fetcher → images/videos for each post
 4. Cinematic Filter → brand overlays on images
 5. Audio System → voiceover scripts
-6. Self-Learning Engine → record + optimize
-7. Social Publisher → Composio publish or export
+6. Social Publisher → Composio publish or export
+7. Self-Learning Engine → record + optimize
 
 Designed to run as a scheduled task within the Abvorn daemon.
 """
@@ -333,12 +333,40 @@ class DominationOrchestrator:
             logger.warning(f"[{cycle_id}] Audio gen failed (non-fatal): {e}")
             steps["audio"] = {"status": "failed", "error": str(e)}
 
-        # 6. Self-Learning (record hooks for future optimization)
+        publish_results = []
+        posted = []
         try:
-            for platform_key, script_data in scripts.items():
+            publish_targets = {}
+            for platform_key in scripts:
+                script_obj = scripts[platform_key]["script"]
+                publish_targets[platform_key] = script_obj
+
+            publish_results = self.publisher.publish_all(
+                publish_targets, target["niche"], media_by_platform=media_by_platform
+            )
+            posted = [r for r in publish_results if r.get("status") == "posted"]
+            exported = [r for r in publish_results if r.get("status") == "exported"]
+            steps["publish"] = {
+                "status": "ok",
+                "posted": len(posted),
+                "exported": len(exported),
+                "results": publish_results,
+            }
+            logger.info(f"[{cycle_id}] Published: {len(posted)} posted, {len(exported)} exported")
+        except Exception as e:
+            logger.error(f"[{cycle_id}] Publish failed: {e}")
+            steps["publish"] = {"status": "failed", "error": str(e)}
+
+        try:
+            recorded = []
+            for result in posted:
+                platform_key = str(result.get("platform") or "")
+                script_data = scripts.get(platform_key)
+                if not script_data:
+                    continue
                 hook = script_data.get("hook", "")
                 if hook:
-                    _hook_id = self.learner.record_hook_test(
+                    self.learner.record_hook_test(
                         hook, target["niche"], platform_key
                     )
                 self.learner.record_post_performance(
@@ -353,34 +381,16 @@ class DominationOrchestrator:
                 self.learner.record_posting_time(
                     target["niche"], platform_key, target.get("virality_score", 0)
                 )
-            steps["learning"] = {"status": "ok"}
-            logger.info(f"[{cycle_id}] Learning data recorded")
+                recorded.append(platform_key)
+            steps["learning"] = {
+                "status": "ok" if recorded else "skipped",
+                "recorded": len(recorded),
+            }
+            if recorded:
+                logger.info(f"[{cycle_id}] Learning data recorded for {len(recorded)} posts")
         except Exception as e:
             logger.warning(f"[{cycle_id}] Learning record failed (non-fatal): {e}")
             steps["learning"] = {"status": "failed", "error": str(e)}
-
-        # 7. Publish
-        try:
-            publish_targets = {}
-            for platform_key in scripts:
-                script_obj = scripts[platform_key]["script"]
-                publish_targets[platform_key] = script_obj
-
-            publish_results = self.publisher.publish_all(
-                publish_targets, target["niche"], media_by_platform=media_by_platform
-            )
-            posted = [r for r in publish_results if r["status"] == "posted"]
-            exported = [r for r in publish_results if r["status"] == "exported"]
-            steps["publish"] = {
-                "status": "ok",
-                "posted": len(posted),
-                "exported": len(exported),
-                "results": publish_results,
-            }
-            logger.info(f"[{cycle_id}] Published: {len(posted)} posted, {len(exported)} exported")
-        except Exception as e:
-            logger.error(f"[{cycle_id}] Publish failed: {e}")
-            steps["publish"] = {"status": "failed", "error": str(e)}
 
         result = {
             "cycle_id": cycle_id,
