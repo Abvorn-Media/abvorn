@@ -5,6 +5,20 @@ from contextlib import contextmanager
 
 logger = logging.getLogger("abvorn.state")
 
+def _rows(cursor) -> list:
+    """Build dicts keyed by the query's own column names.
+
+    Never hand-maintain a key list alongside ``SELECT *``: the two can drift
+    apart silently and every value lands under the wrong name. That already
+    happened once -- posts.image is declared after created_at, but
+    get_posts_for_niche() listed image first, so ``image`` returned a
+    created_at timestamp and the site rendered timestamps as <img src>.
+    Deriving the names from cursor.description makes that class of bug
+    impossible.
+    """
+    cols = [d[0] for d in cursor.description]
+    return [dict(zip(cols, row)) for row in cursor.fetchall()]
+
 class AbvornState:
     """Thread-safe SQLite-backed state. WAL mode for concurrent access."""
 
@@ -191,19 +205,13 @@ class AbvornState:
     def get_niche(self, slug: str) -> dict:
         with self._cursor() as c:
             c.execute("SELECT * FROM niches WHERE slug=?", (slug,))
-            row = c.fetchone()
-            if not row:
-                return None
-            keys = ["slug","name","category","maturity","total_posts","avg_quality",
-                    "ga4_views","ga4_users","ga4_score","created_at","last_post_at"]
-            return dict(zip(keys, row))
+            rows = _rows(c)
+            return rows[0] if rows else None
 
     def get_all_niches(self) -> list:
         with self._cursor() as c:
             c.execute("SELECT * FROM niches ORDER BY ga4_score DESC")
-            keys = ["slug","name","category","maturity","total_posts","avg_quality",
-                    "ga4_views","ga4_users","ga4_score","created_at","last_post_at"]
-            return [dict(zip(keys, row)) for row in c.fetchall()]
+            return _rows(c)
 
     def update_niche_analytics(self, slug: str, views: int, users: int, score: float):
         with self._cursor() as c:
@@ -238,9 +246,7 @@ class AbvornState:
     def get_posts_for_niche(self, niche_slug: str) -> list:
         with self._cursor() as c:
             c.execute("SELECT * FROM posts WHERE niche_slug=? ORDER BY created_at DESC", (niche_slug,))
-            keys = ["id","niche_slug","title","filename","product_name","angle",
-                    "quality_score","persona_id","deployment_status","image","created_at"]
-            return [dict(zip(keys, row)) for row in c.fetchall()]
+            return _rows(c)
 
     def enqueue(self, niche_slug: str, stage: str, priority: int = 10, payload: dict = None):
         with self._cursor() as c:
@@ -305,9 +311,7 @@ class AbvornState:
     def get_personas_for_niche(self, niche: str) -> list:
         with self._cursor() as c:
             c.execute("SELECT * FROM persona_registry WHERE niche=?", (niche,))
-            keys = ["persona_id","niche","persona_json","created_at","last_used",
-                    "post_count","avg_quality","impressions","clicks","conversions"]
-            return [dict(zip(keys, row)) for row in c.fetchall()]
+            return _rows(c)
 
     def log_model_metric(self, provider: str, time_ms: float, tokens: int):
         with self._cursor() as c:
@@ -317,24 +321,20 @@ class AbvornState:
     def get_model_stats(self) -> list:
         with self._cursor() as c:
             c.execute("""
-                SELECT provider, COUNT(*) as calls, AVG(time_ms) as avg_time,
+                SELECT provider, COUNT(*) as calls, AVG(time_ms) as avg_time_ms,
                        SUM(tokens) as total_tokens
                 FROM model_metrics
                 WHERE created_at > datetime('now', '-7 days')
                 GROUP BY provider
             """)
-            keys = ["provider", "calls", "avg_time_ms", "total_tokens"]
-            return [dict(zip(keys, row)) for row in c.fetchall()]
+            return _rows(c)
 
     def get_opportunities(self, status: str = "pending", limit: int = 20) -> list:
         with self._cursor() as c:
             c.execute("""
                 SELECT * FROM opportunities WHERE status=? ORDER BY score DESC LIMIT ?
             """, (status, limit))
-            keys = ["id", "niche", "score", "search_volume", "buying_intent",
-                    "competition", "commission", "status", "created_at", "last_post_at",
-                    "category"]
-            return [dict(zip(keys, row)) for row in c.fetchall()]
+            return _rows(c)
 
     def add_opportunity(self, niche: str, score: float, search_volume: int = 0,
                         buying_intent: float = 0.0, competition: float = 0.0,
@@ -363,10 +363,7 @@ class AbvornState:
     def get_subscribers_for_niche(self, niche: str) -> list:
         with self._cursor() as c:
             c.execute("SELECT * FROM subscribers WHERE niche=? AND status='active'", (niche,))
-            keys = ["email", "persona_id", "niche", "subscribed_at", "last_open_at",
-                    "last_click_at", "sequence_step", "total_conversions",
-                    "total_revenue", "status", "tracking_consent"]
-            return [dict(zip(keys, row)) for row in c.fetchall()]
+            return _rows(c)
 
     def delete_subscriber(self, email: str) -> bool:
         with self._cursor() as c:
@@ -391,9 +388,7 @@ class AbvornState:
                 """, (niche, persona_id))
             else:
                 c.execute("SELECT * FROM email_sequences WHERE niche=? ORDER BY day", (niche,))
-            keys = ["id", "niche", "persona_id", "day", "subject", "body",
-                    "lead_magnet", "sent_count", "open_count", "click_count", "created_at"]
-            return [dict(zip(keys, row)) for row in c.fetchall()]
+            return _rows(c)
 
     def add_like(self, post_id: int, visitor_hash: str, reaction: str = "like"):
         """Record a reaction; one reaction per visitor per post (re-act replaces)."""
@@ -450,8 +445,7 @@ class AbvornState:
                 """, (post_id, status))
             else:
                 c.execute("SELECT * FROM engagement_comments WHERE post_id=? ORDER BY created_at", (post_id,))
-            keys = ["id", "post_id", "author", "body", "status", "created_at"]
-            return [dict(zip(keys, row)) for row in c.fetchall()]
+            return _rows(c)
 
     def moderate_comment(self, comment_id: int, status: str):
         with self._cursor() as c:

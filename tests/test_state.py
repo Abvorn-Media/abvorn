@@ -90,3 +90,68 @@ def test_posts_migration_adds_image_column():
         columns_conn.close()
         assert "image" in columns
         state.close()
+
+
+def test_posts_image_and_created_at_are_not_swapped(tmp_path):
+    """image must never receive the created_at timestamp.
+
+    posts.image is appended by a migration, so it lands *after* created_at in
+    the real column order. A hand-maintained key list that put image first
+    swapped the two and every consumer rendered a bare timestamp as an <img
+    src>. Keys are now derived from the query, so the order cannot drift.
+    """
+    db = tmp_path / "fresh.db"
+    state = AbvornState(db)
+    state.upsert_niche("tv", "TV", "Electronics")
+    state.add_post("tv", "A Review", "a.html", image="https://m.media-amazon.com/i/1.jpg")
+    post = state.get_posts_for_niche("tv")[0]
+    assert post["image"] == "https://m.media-amazon.com/i/1.jpg"
+    assert post["created_at"][:4] == "2026"
+    state.close()
+
+
+def test_posts_image_empty_on_migrated_db(tmp_path):
+    """The migrated column order must not leak created_at into image."""
+    db = tmp_path / "old.db"
+    conn = sqlite3.connect(str(db))
+    conn.execute("""
+        CREATE TABLE niches (
+            slug TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            category TEXT DEFAULT 'Other',
+            maturity TEXT DEFAULT 'seed',
+            total_posts INT DEFAULT 0,
+            avg_quality REAL DEFAULT 0.0,
+            ga4_views INT DEFAULT 0,
+            ga4_users INT DEFAULT 0,
+            ga4_score REAL DEFAULT 0.0,
+            created_at TEXT NOT NULL,
+            last_post_at TEXT
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE posts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            niche_slug TEXT NOT NULL,
+            title TEXT NOT NULL,
+            filename TEXT,
+            product_name TEXT,
+            angle TEXT,
+            quality_score REAL,
+            persona_id TEXT,
+            deployment_status TEXT DEFAULT 'pending',
+            created_at TEXT NOT NULL
+        )
+    """)
+    conn.execute(
+        "INSERT INTO posts (niche_slug, title, created_at) VALUES (?,?,?)",
+        ("tv", "Legacy Review", "2026-02-03T04:05:06"),
+    )
+    conn.commit()
+    conn.close()
+
+    state = AbvornState(db)
+    post = state.get_posts_for_niche("tv")[0]
+    assert post["image"] == ""
+    assert post["created_at"] == "2026-02-03T04:05:06"
+    state.close()

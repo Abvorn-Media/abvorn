@@ -1030,11 +1030,19 @@ MEGA_MENU_CSS = """
 
 
 def carousel_img(niche_slug, b):
-    """Pick real hero JPG if uploaded, else fall back to generated SVG."""
+    """Pick real hero JPG if uploaded, else fall back to generated SVG.
+
+    The SVG branch is existence-checked: a niche can exist in state without
+    ever getting art generated, and an unchecked `{slug}.svg` 404s on the
+    live site (robot-vacuums shipped that way). Fall back to the generic
+    hero, which is always present.
+    """
     hero_path = f"docs/assets/hero/{niche_slug}.jpg"
     if os.path.exists(hero_path):
         return f"{b}/assets/hero/{niche_slug}.jpg"
-    return f"{b}/assets/{niche_slug}.svg"
+    if os.path.exists(f"docs/assets/{niche_slug}.svg"):
+        return f"{b}/assets/{niche_slug}.svg"
+    return f"{b}/assets/hero-home.svg"
 
 
 def HEAD_HTML(title, description):
