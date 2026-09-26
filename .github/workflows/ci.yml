@@ -3,11 +3,21 @@ name: CI
 on:
   push:
     branches: [main]
+    # The daemon publishes content by pushing docs/ straight to main, several
+    # commits per minute during a deploy burst. Those commits carry no code, so
+    # don't spend a CI run on them: they would each cancel or queue the run that
+    # actually verifies the code. Every deploy commit in the last 120 touches
+    # docs/ and nothing else.
+    paths-ignore:
+      - 'docs/**'
   pull_request:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # false, like every other workflow in this repo. With true, each daemon push
+  # cancelled the run in flight, so the pytest job (which needs a dependency
+  # install plus the full suite) never got far enough to report on main.
+  cancel-in-progress: false
 
 jobs:
   lint:
