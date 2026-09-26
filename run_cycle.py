@@ -3109,8 +3109,8 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
             # the local regen path writes the .pdf beside the page, but the
             # render can fail (WeasyPrint missing on-box). Emitting the button
             # unconditionally shipped dead "Download PDF" links pointing at
-            # files that never made it into the published tree.
-            pdf_url = f"{_SITE_URL}/reviews/{slug}/{fname[:-5]}.pdf"
+            # files that never made it into the published tree. The real URL is
+            # computed below, once pdf_name is known.
             # Persist the article's real publish date across cycles. A dated file
             # already on disk (or a prior index.html) is the stable anchor for
             # "Published" + "Prices checked as of", so a re-run does not slide
