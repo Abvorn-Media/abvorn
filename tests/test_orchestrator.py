@@ -158,6 +158,64 @@ def test_deploy_content_defaults_to_index():
     assert path == "reviews/laptops/index.html"
 
 
+def test_product_placeholder_detection():
+    """A product with no ASIN is not buyable; 'Top <niche> Pick' is the stub
+    shape research_niche used to fabricate when every lookup failed."""
+    from abvorn.agents.orchestrator import _product_is_placeholder, _products_are_placeholder
+    stub = {"name": "Top tv Pick", "price": "Check Price",
+            "url": "?tag=viraltestco-20"}
+    real = {"name": "Roku 40-inch Select Series",
+            "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}
+    assert _product_is_placeholder(stub) is True
+    assert _product_is_placeholder(real) is False
+    assert _product_is_placeholder({"name": "", "url": ""}) is True
+    # ASIN in the name is enough even when the link form differs.
+    assert _product_is_placeholder(
+        {"name": "Roku 40 B0F1GF1KFC", "url": "https://www.amazon.com/s?k=roku"}
+    ) is False
+    assert _products_are_placeholder([stub]) is True
+    assert _products_are_placeholder([stub, real]) is False
+    # No products at all is not a placeholder payload: those are category pages
+    # and they have always been deployable.
+    assert _products_are_placeholder([]) is False
+
+
+def test_deploy_content_refuses_placeholder_products():
+    """The tv hub shipped one invented product and zero ASINs because a failed
+    research run was published anyway. A product set with no ASIN anywhere must
+    be refused at the deploy boundary, keeping the live page untouched."""
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    ok = sd.deploy_content(
+        "tv",
+        {"post_title": "2026 TV Buying Guide",
+         "article_html": "<p>guide</p>",
+         "products": [{"name": "Top tv Pick", "price": "Check Price",
+                       "url": "?tag=viraltestco-20", "category": "best_overall"}]},
+        all_categories=["tv"],
+    )
+    assert ok is False
+    deployer.deploy_html.assert_not_called()
+
+
+def test_deploy_content_allows_real_products():
+    """The same page with a real, ASIN-backed product set still deploys."""
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    ok = sd.deploy_content(
+        "tv",
+        {"post_title": "2026 TV Buying Guide",
+         "article_html": "<p>guide</p>",
+         "products": [{"name": "Roku 40-inch Select Series",
+                       "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}]},
+        all_categories=["tv"],
+    )
+    assert ok is True
+    html, path = deployer.deploy_html.call_args[0]
+    assert path == "reviews/tv/index.html"
+    assert "B0F1GF1KFC" in html
+
+
 def test_scheduler_queue():
     """Should return the highest-priority item from queue."""
     with tempfile.TemporaryDirectory() as tmp:

@@ -1,4 +1,4 @@
-import asyncio, logging, os
+import asyncio, logging, os, re
 from datetime import datetime
 from .base import AgentBase
 from ..agents.researcher import research_niche
@@ -9,6 +9,30 @@ logger = logging.getLogger("abvorn.orchestrator")
 # Centralized affiliate tag: AMAZON_TAG secret, falling back to the real tag.
 def _amazon_tag() -> str:
     return os.environ.get("AMAZON_TAG") or "viraltestco-20"
+
+# Publish-boundary guard for fabricated products. research_niche no longer
+# injects a "Top <niche> Pick" stub, but a stub can still arrive from an older
+# state row, a cached content dict, or a hand-edited payload. A product with no
+# ASIN anywhere in its name/url is not buyable, so a page built only from such
+# products is the product-less-hub regression (the tv hub shipped 1 fake
+# product, 0 ASINs, and a ?tag=... search link) and must not be published.
+_ASIN_RE = re.compile(r"B0[A-Z0-9]{8}")
+_PLACEHOLDER_NAME_RE = re.compile(r"^top\b.*\bpick$", re.I)
+
+
+def _product_is_placeholder(product: dict) -> bool:
+    """True when a product carries no ASIN and reads like a generated stub."""
+    if not isinstance(product, dict):
+        return True
+    blob = f"{product.get('name', '')} {product.get('url', '')} {product.get('asin', '')}"
+    if _ASIN_RE.search(blob or ""):
+        return False
+    name = str(product.get("name") or "").strip()
+    return bool(_PLACEHOLDER_NAME_RE.match(name)) or not name
+
+
+def _products_are_placeholder(products: list) -> bool:
+    return bool(products) and all(_product_is_placeholder(p) for p in products)
 
 class ResearchAgent(AgentBase):
     """Performs product research when content is needed for a niche."""
@@ -277,6 +301,15 @@ class SiteDeployer:
             from run_cycle import build_article_page
             today = datetime.now().strftime("%Y-%m-%d")
             products = content.get("products") or []
+            if _products_are_placeholder(products):
+                logger.warning(
+                    "[SiteDeployer] Refusing to publish %s: %d product(s) and "
+                    "none carry an ASIN (placeholder payload) — keeping the "
+                    "currently published page instead of shipping a "
+                    "product-less hub",
+                    niche, len(products),
+                )
+                return False
             product_name = (content.get("product_name")
                             or (products[0].get("name", "") if products else ""))
             related = [{"slug": c, "name": self._niche_name(c)}

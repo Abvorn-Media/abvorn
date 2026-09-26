@@ -73,19 +73,35 @@ Return a JSON array. Each product must have:
 - features: array of 3-4 key features
 - category: "best_overall", "best_value", or "premium_pick"
 - affiliate_query: search query for this product (e.g. "Sony+WH-1000XM5")"""
-        result = router.ask(prompt, json_mode=True)
+        # A provider outage must fail closed, not propagate: this call used to
+        # raise straight out of research_niche, turning a transient 401/429 into
+        # a crashed cycle instead of a skipped page.
+        try:
+            result = router.ask(prompt, json_mode=True)
+        except Exception as e:
+            logger.warning(f"AI knowledge research failed for '{niche}': {e}")
+            result = None
         if result:
             parsed = _parse_json(result)
             if isinstance(parsed, list):
                 products = parsed
 
-    # 3. Ultimate fallback
+    # 3. Nothing found. Return empty instead of fabricating a placeholder.
+    # A "Top <niche> Pick" stub used to be injected here and then published as
+    # if it were a real product: the hub rendered it with invented 7.0 scores
+    # and a tag-only Amazon search URL (?tag=...), so failed research shipped a
+    # product-less page (the tv hub carried 1 fake product and 0 ASINs, and the
+    # stub leaked into every listing card that referenced it). Both callers
+    # already treat an empty list as "do not publish" (ContentPipeline.run
+    # returns None; ResearchAgent.act publishes no content.researched event),
+    # so returning [] makes the existing guards do their job.
     if not products:
-        products = [{"name": f"Top {niche} Pick", "price": "Check Price",
-                     "description": f"Best {niche} on the market",
-                     "features": ["Quality", "Value", "Reliability"],
-                     "category": "best_overall",
-                     "affiliate_query": niche.replace(" ", "+")}]
+        logger.warning(
+            "research_niche('%s'): no real products found; returning empty so "
+            "the page is skipped instead of shipping a placeholder product",
+            niche,
+        )
+        return []
 
     for p in products:
         p.setdefault("affiliate_query", p.get("name", niche).replace(" ", "+"))
