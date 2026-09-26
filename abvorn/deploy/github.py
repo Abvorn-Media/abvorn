@@ -1,4 +1,4 @@
-import json, logging, re, html
+import json, logging, re, html, time
 from pathlib import Path
 
 logger = logging.getLogger("abvorn.deploy")
@@ -41,6 +41,16 @@ DNA_CSS = {
         "--heading-weight: 400;\n"
     ),
 }
+
+def _is_non_fast_forward(exc: Exception) -> bool:
+    """True for GitHub's 'Update is not a fast forward' rejection of a ref edit.
+
+    That is a lost race against another writer, not a bad request, and it is
+    worth retrying. 422 also covers genuine validation failures, so match the
+    message rather than the status alone.
+    """
+    return getattr(exc, "status", None) == 422 and "fast forward" in str(exc)
+
 
 class GitHubDeployer:
     """Deploys content to GitHub Pages via the GitHub API."""
@@ -163,6 +173,52 @@ class GitHubDeployer:
         rel = repo_relative_path.replace("\\", "/")
         return rel.lstrip("/") in self._remote_paths()
 
+    def _branch_ref_name(self, repo) -> str:
+        """The ref to deploy onto, falling back to main if the configured
+        branch does not exist."""
+        try:
+            repo.get_git_ref(f"heads/{self.branch}")
+            return self.branch
+        except Exception:
+            if self.branch == "main":
+                raise
+            return "main"
+
+    def _commit_file(self, repo, repo_path: str, content: str, message: str, attempts: int = 3) -> str:
+        """Commit one blob onto the branch head and advance the ref.
+
+        This is a read-modify-write against a branch that other writers move:
+        a local `git push`, or the other deploy path. Anything landing between
+        reading the head and editing the ref makes the edit a non-fast-forward
+        and the deploy is lost outright. Re-read the head and rebuild the commit
+        on top of it instead. The blob is content addressed, so a retry only
+        redoes the tree and the commit.
+        """
+        from github import InputGitTreeElement
+
+        ref_name = self._branch_ref_name(repo)
+        for attempt in range(1, attempts + 1):
+            # Re-fetch every attempt: after a rejected edit the cached ref still
+            # holds the stale sha, so reusing it would just fail the same way.
+            ref = repo.get_git_ref(f"heads/{ref_name}")
+            base_sha = ref.object.sha
+            base_tree = repo.get_git_tree(base_sha)
+            blob = repo.create_git_blob(content, "utf-8")
+            element = InputGitTreeElement(repo_path, "100644", "blob", sha=blob.sha)
+            new_tree = repo.create_git_tree([element], base_tree)
+            commit = repo.create_git_commit(message, new_tree, [repo.get_git_commit(base_sha)])
+            try:
+                ref.edit(commit.sha)
+                return commit.sha
+            except Exception as exc:
+                if not _is_non_fast_forward(exc) or attempt == attempts:
+                    raise
+                logger.warning(
+                    f"branch moved while committing {repo_path}; rebuilding on the new head "
+                    f"(attempt {attempt}/{attempts})"
+                )
+                time.sleep(1.5 * attempt)
+
     def deploy_html(self, html_content: str, output_path: str) -> dict:
         """Push a raw HTML string to a specific path in the repo."""
         for marker in PLACEHOLDER_MARKERS:
@@ -172,27 +228,14 @@ class GitHubDeployer:
                     "(refusing to overwrite real page with placeholder)"
                 )
                 return {"status": "error", "message": "placeholder content blocked", "path": output_path}
-        from github import Github, InputGitTreeElement
+        from github import Github
         try:
             g = Github(self.token)
             repo = g.get_repo(self.repo)
-            try:
-                ref = repo.get_git_ref(f"heads/{self.branch}")
-                base_sha = ref.object.sha
-                base_tree = repo.get_git_tree(base_sha)
-            except Exception:
-                ref = repo.get_git_ref("heads/main")
-                base_sha = ref.object.sha
-                base_tree = repo.get_git_tree(base_sha)
-            blob = repo.create_git_blob(html_content, "utf-8")
             repo_path = (str(self.site_dir) + "/" + output_path).replace("\\", "/")
-            element = InputGitTreeElement(repo_path, "100644", "blob", sha=blob.sha)
-            new_tree = repo.create_git_tree([element], base_tree)
-            parent = repo.get_git_commit(base_sha)
-            commit = repo.create_git_commit(f"deploy: {output_path}", new_tree, [parent])
-            ref.edit(commit.sha)
+            commit_sha = self._commit_file(repo, repo_path, html_content, f"deploy: {output_path}")
             logger.info(f"Deployed: {output_path}")
-            return {"status": "success", "commit": commit.sha}
+            return {"status": "success", "commit": commit_sha}
         except Exception as e:
             logger.error(f"deploy_html failed for {output_path}: {e}")
             return {"status": "error", "message": str(e)}
@@ -200,7 +243,6 @@ class GitHubDeployer:
     def deploy(self, niche_slug: str) -> dict:
         """Push generated files to GitHub using PyGithub."""
         from github import Github
-        from github import InputGitTreeElement
 
         try:
             g = Github(self.token)
@@ -213,27 +255,12 @@ class GitHubDeployer:
             with open(site_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
-            try:
-                ref = repo.get_git_ref(f"heads/{self.branch}")
-                base_sha = ref.object.sha
-                base_tree = repo.get_git_tree(base_sha)
-            except Exception:
-                ref = repo.get_git_ref("heads/main")
-                base_sha = ref.object.sha
-                base_tree = repo.get_git_tree(base_sha)
-
-            blob = repo.create_git_blob(content, "utf-8")
             relative_path = (str(self.site_dir) + "/" + niche_slug + "/index.html").replace("\\", "/")
-            element = InputGitTreeElement(relative_path, "100644", "blob", sha=blob.sha)
-            new_tree = repo.create_git_tree([element], base_tree)
-
-            parent = repo.get_git_commit(base_sha)
-            commit = repo.create_git_commit(f"feat: deploy {niche_slug}", new_tree, [parent])
-            ref.edit(commit.sha)
+            commit_sha = self._commit_file(repo, relative_path, content, f"feat: deploy {niche_slug}")
 
             deploy_url = f"https://{self.repo.split('/')[0]}.github.io/{self.repo.split('/')[1]}/{niche_slug}/"
             logger.info(f"Deployed: {deploy_url}")
-            return {"status": "success", "url": deploy_url, "commit": commit.sha}
+            return {"status": "success", "url": deploy_url, "commit": commit_sha}
 
         except Exception as e:
             logger.error(f"Deploy failed for {niche_slug}: {e}")

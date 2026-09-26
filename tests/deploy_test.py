@@ -1,4 +1,5 @@
 """Tests for brand-aware deployment."""
+import pytest
 from abvorn.sites.model import BrandConfig, DNAProfile
 from abvorn.deploy.github import GitHubDeployer
 
@@ -140,4 +141,122 @@ def test_deploy_html_allows_real_content():
     # Without a real token the GitHub call fails, but it must NOT be blocked as a placeholder.
     assert result["status"] != "placeholder blocked"
     assert result.get("message") != "placeholder content blocked"
+
+
+# --- ref-edit race ---------------------------------------------------------
+# A deploy reads the branch head, builds a commit on it, then edits the ref.
+# Anything that pushes in between (a local `git push`, or the other deploy
+# path) makes that edit a non-fast-forward and the deploy is lost. The daemon
+# hit exactly this: "deploy_html failed for tv/index.html: Update is not a fast
+# forward: 422".
+
+
+class _FakeGithubError(Exception):
+    def __init__(self, status, message):
+        self.status = status
+        super().__init__(f"{message}: {status} " + '{"status": "%d"}' % status)
+
+
+class _FakeRef:
+    def __init__(self, repo):
+        self._repo = repo
+        self.object = type("Obj", (), {})()
+        self.object.sha = repo.head
+
+    def edit(self, sha):
+        self._repo.edit_attempts.append(self.object.sha)
+        if self._repo.fail_edits >= len(self._repo.edit_attempts):
+            if self._repo.advance_on_failure:
+                self._repo.head = f"head{len(self._repo.edit_attempts)}"
+            raise _FakeGithubError(self._repo.fail_status, self._repo.fail_message)
+        self.object.sha = sha
+
+
+class _FakeRepo:
+    def __init__(self, fail_edits=1, fail_status=422,
+                 fail_message="Update is not a fast forward", advance_on_failure=True):
+        self.head = "base0"
+        self.fail_edits = fail_edits
+        self.fail_status = fail_status
+        self.fail_message = fail_message
+        self.advance_on_failure = advance_on_failure
+        self.edit_attempts = []
+        self.parents = []
+
+    def get_git_ref(self, name):
+        assert name == "heads/main", name
+        return _FakeRef(self)
+
+    def get_git_tree(self, sha):
+        return f"tree-of-{sha}"
+
+    def create_git_blob(self, content, encoding):
+        return type("Blob", (), {"sha": "blob1"})()
+
+    def create_git_tree(self, elements, base_tree):
+        return f"newtree-from-{base_tree}"
+
+    def get_git_commit(self, sha):
+        return f"commit-{sha}"
+
+    def create_git_commit(self, message, tree, parents):
+        self.parents.append((message, tuple(parents)))
+        return type("Commit", (), {"sha": f"newcommit{len(self.parents)}"})()
+
+
+@pytest.fixture(autouse=True)
+def _no_backoff_sleep(monkeypatch):
+    """The retry backoff is wall-clock; keep the tests instant."""
+    monkeypatch.setattr("abvorn.deploy.github.time.sleep", lambda *_: None)
+
+
+def test_is_non_fast_forward_matches_only_the_ref_race():
+    from abvorn.deploy.github import _is_non_fast_forward
+    assert _is_non_fast_forward(_FakeGithubError(422, "Update is not a fast forward"))
+    # 422 is also used for real validation errors, which must not be retried.
+    assert not _is_non_fast_forward(_FakeGithubError(422, "Invalid request"))
+    assert not _is_non_fast_forward(_FakeGithubError(500, "Update is not a fast forward"))
+    assert not _is_non_fast_forward(RuntimeError("boom"))
+
+
+def test_commit_file_retries_when_the_branch_moves(monkeypatch):
+    """The exact daemon failure: a competing writer lands between the head
+    read and the ref edit, and the deploy still lands."""
+    deployer = GitHubDeployer(token="fake", repo="user/repo")
+    repo = _FakeRepo(fail_edits=1)
+
+    sha = deployer._commit_file(repo, "docs/x/index.html", "<html>hi</html>", "deploy: x/index.html")
+
+    assert len(repo.edit_attempts) == 2, "should have retried exactly once"
+    assert sha == "newcommit2"
+    # The retry must parent on the *new* head, not replay the stale base.
+    assert repo.parents[0][1] == ("commit-base0",)
+    assert repo.parents[1][1] == ("commit-head1",), "retry did not rebuild on the fresh head"
+
+
+def test_commit_file_succeeds_first_try_without_a_race():
+    deployer = GitHubDeployer(token="fake", repo="user/repo")
+    repo = _FakeRepo(fail_edits=0)
+    sha = deployer._commit_file(repo, "docs/x/index.html", "<html>hi</html>", "deploy: x/index.html")
+    assert sha == "newcommit1"
+    assert repo.edit_attempts == ["base0"]
+
+
+def test_commit_file_gives_up_after_bounded_retries():
+    """A branch that keeps moving must not spin forever."""
+    deployer = GitHubDeployer(token="fake", repo="user/repo")
+    repo = _FakeRepo(fail_edits=99)
+
+    with pytest.raises(_FakeGithubError):
+        deployer._commit_file(repo, "docs/x/index.html", "<html>hi</html>", "deploy: x/index.html", attempts=3)
+    assert len(repo.edit_attempts) == 3
+
+
+def test_commit_file_does_not_retry_other_errors():
+    deployer = GitHubDeployer(token="fake", repo="user/repo")
+    repo = _FakeRepo(fail_edits=99, fail_status=500, fail_message="Server Error")
+
+    with pytest.raises(_FakeGithubError):
+        deployer._commit_file(repo, "docs/x/index.html", "<html>hi</html>", "deploy: x/index.html")
+    assert len(repo.edit_attempts) == 1, "a 500 is not a lost race, retrying just wastes the quota"
 
