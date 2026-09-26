@@ -100,6 +100,16 @@ def test_live_merged_map_covers_state_db():
         pytest.skip("no state.db on this machine")
     conn = sqlite3.connect(str(db))
     try:
+        # A file existing is not the same as live niches being present: a
+        # sibling test in this session can leave an empty state.db behind, and
+        # an older schema has no niches table at all. Either way there is no
+        # live taxonomy to check against, so skip. With the table present the
+        # assertion below still guards the invariant.
+        has_niches = conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='niches'"
+        ).fetchone()
+        if not has_niches:
+            pytest.skip("state.db has no niches table (empty or pre-niches schema)")
         slugs = {r[0] for r in conn.execute("SELECT slug FROM niches").fetchall()}
     finally:
         conn.close()
