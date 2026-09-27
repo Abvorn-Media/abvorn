@@ -155,3 +155,93 @@ def test_posts_image_empty_on_migrated_db(tmp_path):
     assert post["image"] == ""
     assert post["created_at"] == "2026-02-03T04:05:06"
     state.close()
+
+
+def test_product_card_image_reads_products_not_top_level(tmp_path):
+    """The card photo lives on products[i]["image"]; there is no top-level key.
+
+    A content payload as produced by abvorn/content/pipeline.py::run has no
+    "image" key, so callers using content.get("image") persisted an empty
+    posts.image and every such card fell back to the generic niche artwork
+    instead of the product photo.
+    """
+    from src.deployment import product_card_image
+
+    content = {
+        "post_title": "2026 Ultimate TV Buying Guide",
+        "products": [
+            {"name": "Sony Bravia 9", "image": "https://m.media-amazon.com/images/I/61abc._AC_SL500_.jpg"},
+            {"name": "LG C4", "image": "https://m.media-amazon.com/images/I/61def._AC_SL500_.jpg"},
+        ],
+    }
+    # The trap this guards: the naive read yields nothing.
+    assert content.get("image") is None
+
+    image = product_card_image(content)
+    assert image.startswith("https://m.media-amazon.com/images/I/61abc")
+    assert "_AC_SL500_" not in image  # upgraded to a larger rendition
+
+    # A payload with no product photo must stay empty rather than invent one.
+    assert product_card_image({"post_title": "No products"}) == ""
+    assert product_card_image({"products": [{"name": "x"}]}) == ""
+
+
+def test_add_post_persists_product_card_image(tmp_path):
+    """End-to-end: the resolved product photo must survive into posts.image."""
+    from src.deployment import product_card_image
+
+    db = tmp_path / "card.db"
+    state = AbvornState(db)
+    state.upsert_niche("tv", "TV", "Electronics")
+    content = {
+        "post_title": "2026 Ultimate TV Buying Guide",
+        "products": [{"name": "Sony Bravia 9",
+                      "image": "https://m.media-amazon.com/images/I/61abc._AC_SL500_.jpg"}],
+    }
+    state.add_post("tv", content["post_title"], "tv-guide.html",
+                   image=product_card_image(content))
+    post = state.get_posts_for_niche("tv")[0]
+    assert post["image"].startswith("https://m.media-amazon.com/images/I/61abc")
+    state.close()
+
+
+def test_no_production_add_post_reads_top_level_image():
+    """Every production add_post() must resolve its image via product_card_image.
+
+    A content payload has no top-level "image" key, so a call site reading
+    content.get("image") silently persists an empty posts.image and the card
+    falls back to generic niche artwork. This walks the real call sites so the
+    bug cannot come back at a new or edited call site.
+    """
+    import ast
+    from pathlib import Path
+
+    pkg = Path(__file__).resolve().parent.parent / "abvorn"
+    offenders = []
+    checked = 0
+    for path in sorted(pkg.rglob("*.py")):
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            fn = node.func
+            if not (isinstance(fn, ast.Attribute) and fn.attr == "add_post"):
+                continue
+            img_kw = next((k.value for k in node.keywords if k.arg == "image"), None)
+            if img_kw is None:
+                offenders.append("%s:%d add_post without image=" % (path.name, node.lineno))
+                continue
+            checked += 1
+            resolves = (
+                isinstance(img_kw, ast.Call)
+                and isinstance(img_kw.func, ast.Name)
+                and img_kw.func.id == "product_card_image"
+            )
+            if not resolves:
+                offenders.append("%s:%d image= is not product_card_image(...)"
+                                 % (path.name, node.lineno))
+    assert checked, "expected to find production add_post call sites"
+    assert not offenders, "add_post image regression:\n" + "\n".join(offenders)

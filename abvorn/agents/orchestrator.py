@@ -114,8 +114,10 @@ class ContentAgent(AgentBase):
             if result:
                 self.bus.publish("content.drafted", {"niche": niche, "result": result})
                 if self.state:
+                    from src.deployment import product_card_image
                     self.state.add_post(niche, result.get("post_title", ""), "",
-                                        quality_score=result.get("quality_score", 0))
+                                        quality_score=result.get("quality_score", 0),
+                                        image=product_card_image(result))
                 return {"niche": niche, "title": result.get("post_title", "")}
             return {"niche": niche, "error": "pipeline returned None"}
 

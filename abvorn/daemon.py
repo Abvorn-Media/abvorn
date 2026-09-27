@@ -314,6 +314,7 @@ class AbvornDaemon:
         # Deploy content to site under its category, then rebuild nav + hubs
         try:
             from .agents.orchestrator import SiteDeployer
+            from src.deployment import product_card_image
             site_dep = SiteDeployer(GitHubDeployer(
                 token=self.secrets.get("GITHUB_TOKEN", ""),
                 repo=self.secrets.get("GITHUB_REPO", ""),
@@ -326,7 +327,7 @@ class AbvornDaemon:
                                 f"{article_slug}.html",
                                 product_name=content.get("product_name", ""),
                                 angle="buying guide", quality_score=quality_from_opportunity(opp),
-                                image=content.get("image") or "")
+                                image=product_card_image(content))
             all_posts = []
             for s in all_slugs:
                 all_posts.extend(self.state.get_posts_for_niche(s))

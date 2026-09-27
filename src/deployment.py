@@ -2880,6 +2880,24 @@ def build_methodology_page(all_slugs, form_url=""):
     return _canonical(all_slugs, form_url)
 
 
+def product_card_image(a) -> str:
+    """The real product photo for a content dict, or "" when it has none.
+
+    Content payloads carry the photo on ``products[i]["image"]`` — there is no
+    top-level "image" key (see abvorn/content/pipeline.py::run). Callers that
+    read ``content.get("image")`` silently persist an empty string, which makes
+    every state-posted review card fall back to the generic niche artwork
+    instead of the product photo. This is the single place that resolves it.
+    """
+    for prod in (a.get("products") or []):
+        if not isinstance(prod, dict):
+            continue
+        image = prod.get("image") or ""
+        if image:
+            return upgrade_product_image(image)
+    return ""
+
+
 def _overlay_review(a, slug, niche_name, today):
     """Build a full review entry for a freshly-written article so its card shows
     the real product photo and verdict instead of the blank generated fallback.
@@ -2897,9 +2915,7 @@ def _overlay_review(a, slug, niche_name, today):
     products = a.get("products") or []
     if products:
         p0 = products[0]
-        image = p0.get("image", "")
-        if image:
-            image = upgrade_product_image(image)
+        image = product_card_image(a)
         product_name = p0.get("name", product_name)
         try:
             from abvorn.core.verdict import AbvornVerdictEngine
