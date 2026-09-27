@@ -55,6 +55,27 @@ notify() {
   cp -f "$REPO/run_cycle.py" /opt/abvorn-core/run_cycle.py
   rsync -a --delete --exclude __pycache__ "$REPO/src/" /opt/abvorn-core/src/ 2>&1
 
+  # Mirror docs/ too. SiteDeployer._reviews() calls scan_published_reviews("docs"),
+  # a RELATIVE path, and the daemon runs with cwd /opt/abvorn-core -- so the scan
+  # read /opt/abvorn-core/docs, which nothing ever updated: the daemon publishes
+  # through the GitHub API and never writes local pages, and the other mirror
+  # above only covered abvorn/ and src/. The result was a permanently frozen scan
+  # tree, so any article published after VPS setup could never be picked up as a
+  # card and could only surface as a state row with an empty posts.image -- which
+  # renders the generic /assets/<niche>.svg instead of the real product photo.
+  # repo-src is reset to origin/main above and run_cycle.sh commits docs/ to git,
+  # so repo-src/docs is the authoritative published tree. --delete keeps the scan
+  # tree exactly equal to it, so a page deleted upstream cannot linger here and
+  # fabricate a card for a URL that 404s.
+  if [ -d "$REPO/docs/" ]; then
+    rsync -a --delete --exclude __pycache__ "$REPO/docs/" /opt/abvorn-core/docs/ 2>&1
+  else
+    # Never let a missing docs/ abort the whole sync under `set -e`: leaving the
+    # previous tree in place is the old (degraded) behaviour, which is strictly
+    # better than refusing to deploy any runtime code at all.
+    echo "WARNING: $REPO/docs missing, leaving /opt/abvorn-core/docs untouched"
+  fi
+
   echo "reinstalling deps"
   "$VENV/bin/pip" install -q -r "$REPO/requirements.txt" 2>&1 || { echo "pip failed"; notify "pip install failed"; exit 1; }
 
