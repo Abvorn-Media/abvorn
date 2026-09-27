@@ -70,18 +70,28 @@ def _fetch(url: str, timeout: int = 45) -> str:
             .read().decode("utf-8", "replace"))
 
 
-def candidate_relpaths(slug: str, filename: str) -> list:
-    """Published paths for a post, most specific first."""
+def candidate_relpaths(slug: str, filename: str, allow_hub: bool = True) -> list:
+    """Published paths for a post, most specific first.
+
+    ``allow_hub`` gates the category-hub fallback used for rows that carry no
+    article filename. It is off by default: a hub exposes ONE best-pick product
+    photo, so every empty-filename row in a niche inherits that same image. On
+    this repo's state.db that collapsed 78 rows onto a single webcam photo, so
+    the fallback is opt-in rather than silently wrong.
+    """
     slug = (slug or "").strip("/")
     name = (filename or "").strip().lstrip("/")
     if name and name != "index.html":
         return ["reviews/%s/%s" % (slug, name)]
-    return ["reviews/%s/index.html" % slug]
+    if allow_hub:
+        return ["reviews/%s/index.html" % slug]
+    return []
 
 
-def resolve_image(slug: str, filename: str, docs_dir: Path, offline: bool = False) -> tuple:
+def resolve_image(slug: str, filename: str, docs_dir: Path, offline: bool = False,
+                  allow_hub: bool = True) -> tuple:
     """Find the product photo for a post. Returns (image, source)."""
-    for rel in candidate_relpaths(slug, filename):
+    for rel in candidate_relpaths(slug, filename, allow_hub=allow_hub):
         local = docs_dir / rel
         if local.is_file():
             try:
@@ -106,7 +116,8 @@ def resolve_image(slug: str, filename: str, docs_dir: Path, offline: bool = Fals
 
 
 def backfill(db_path: Path, docs_dir: Path, dry_run: bool = False,
-             limit: int = 0, offline: bool = False, delay: float = 0.4) -> dict:
+             limit: int = 0, offline: bool = False, delay: float = 0.4,
+             allow_hub: bool = False) -> dict:
     stats = {"rows": 0, "filled": 0, "already": 0, "unresolved": 0, "skipped": 0}
     con = sqlite3.connect(str(db_path), timeout=30)
     try:
@@ -129,7 +140,8 @@ def backfill(db_path: Path, docs_dir: Path, dry_run: bool = False,
                 continue
             if limit and stats["filled"] + stats["unresolved"] >= limit:
                 break
-            img, source = resolve_image(slug, filename or "", docs_dir, offline=offline)
+            img, source = resolve_image(slug, filename or "", docs_dir, offline=offline,
+                                        allow_hub=allow_hub)
             if not img:
                 stats["unresolved"] += 1
                 print("  UNRESOLVED %-14s %-52s" % (slug[:14], (title or "")[:52]))
@@ -150,6 +162,11 @@ def backfill(db_path: Path, docs_dir: Path, dry_run: bool = False,
 
 
 def main(argv=None) -> int:
+    # Post titles contain non-ASCII (en/em dashes, U+2011 non-breaking hyphens).
+    # On Windows a cp1252 stdout raises UnicodeEncodeError on the first one and
+    # kills the run part-way through the report, so force UTF-8 before printing.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--state-db", type=Path,
@@ -160,6 +177,10 @@ def main(argv=None) -> int:
     ap.add_argument("--offline", action="store_true", help="use docs/ only, no live fetches")
     ap.add_argument("--limit", type=int, default=0, help="stop after N attempted rows")
     ap.add_argument("--delay", type=float, default=0.4, help="seconds between live fetches")
+    ap.add_argument("--allow-hub-fallback", action="store_true",
+                    help="also fill rows that have no article filename, using the "
+                         "category hub. A hub exposes one best-pick photo, so this "
+                         "stamps the same image on every such row in a niche")
     args = ap.parse_args(argv)
 
     if not args.state_db.is_file():
@@ -168,11 +189,13 @@ def main(argv=None) -> int:
 
     print("state db : %s" % args.state_db)
     print("docs dir : %s" % args.docs_dir)
-    print("mode     : %s%s" % ("DRY RUN" if args.dry_run else "WRITE",
-                                ", offline" if args.offline else ""))
+    print("mode     : %s%s%s" % ("DRY RUN" if args.dry_run else "WRITE",
+                                 ", offline" if args.offline else "",
+                                 ", hub-fallback" if args.allow_hub_fallback else ""))
     print("-" * 78)
     stats = backfill(args.state_db, args.docs_dir, dry_run=args.dry_run,
-                     limit=args.limit, offline=args.offline, delay=args.delay)
+                     limit=args.limit, offline=args.offline, delay=args.delay,
+                     allow_hub=args.allow_hub_fallback)
     print("-" * 78)
     print("rows=%(rows)d filled=%(filled)d already_set=%(already)d "
           "unresolved=%(unresolved)d skipped=%(skipped)d" % stats)

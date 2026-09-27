@@ -6,8 +6,10 @@ timestamp, or nothing) with another wrong value (generic niche artwork) and
 the bug would look "fixed" while cards still showed no product photo.
 """
 import importlib.util
+import os
 import pathlib
 import sqlite3
+import subprocess
 import sys
 
 _SCRIPT = (pathlib.Path(__file__).resolve().parent.parent
@@ -63,6 +65,70 @@ def test_candidate_relpaths_prefers_specific_page():
     assert bf.candidate_relpaths("tv", "a-guide.html") == ["reviews/tv/a-guide.html"]
     assert bf.candidate_relpaths("tv", "index.html") == ["reviews/tv/index.html"]
     assert bf.candidate_relpaths("tv", "") == ["reviews/tv/index.html"]
+
+
+def test_candidate_relpaths_hub_fallback_is_opt_in():
+    """A hub exposes ONE best-pick photo, so it must not be the default source."""
+    assert bf.candidate_relpaths("tv", "", allow_hub=False) == []
+    assert bf.candidate_relpaths("tv", "index.html", allow_hub=False) == []
+    # A real article filename still resolves with the hub fallback disabled.
+    assert bf.candidate_relpaths("tv", "guide.html", allow_hub=False) == [
+        "reviews/tv/guide.html"]
+    # Still available when explicitly requested.
+    assert bf.candidate_relpaths("tv", "", allow_hub=True) == ["reviews/tv/index.html"]
+
+
+def test_backfill_leaves_hub_only_rows_empty_by_default(tmp_path):
+    """Regression: the hub fallback stamped one photo onto 78 rows at once.
+
+    Every empty-filename row in a niche resolved to the same hub best-pick
+    image, so 85 planned fills collapsed to 5 distinct photos. Rows with no
+    article page of their own must stay empty unless the caller opts in.
+    """
+    docs = tmp_path / "docs"
+    (docs / "reviews" / "tv").mkdir(parents=True)
+    # A hub that DOES carry a real product photo: the hazard case, which the
+    # "refuses fallback artwork" test above cannot catch on its own.
+    (docs / "reviews" / "tv" / "index.html").write_text(REVIEW_PAGE, encoding="utf-8")
+
+    db = _db(tmp_path, [
+        ("tv", "Hub row one", "", "", "2026-02-03T04:05:06"),
+        ("tv", "Hub row two", "", "", "2026-02-03T04:05:06"),
+    ])
+
+    stats = bf.backfill(db, docs, dry_run=False, offline=True)
+    assert stats["filled"] == 0
+    con = sqlite3.connect(str(db))
+    assert con.execute("SELECT count(*) FROM posts WHERE image<>''").fetchone()[0] == 0
+    con.close()
+
+    # Opting in still fills them, so the flag is a gate and not a removal.
+    opted = bf.backfill(db, docs, dry_run=False, offline=True, allow_hub=True)
+    assert opted["filled"] == 2
+
+
+def test_main_survives_non_ascii_titles_on_a_cp1252_stdout(tmp_path):
+    """A U+2011 in a post title used to abort the whole run on Windows.
+
+    Windows consoles default to cp1252, and printing a non-ASCII title raised
+    UnicodeEncodeError part-way through the report -- the same ANSI-codepage
+    class of failure that shipped mojibake to the live site once.
+    """
+    docs = tmp_path / "docs"
+    (docs / "reviews" / "tv").mkdir(parents=True)
+    (docs / "reviews" / "tv" / "guide.html").write_text(REVIEW_PAGE, encoding="utf-8")
+    db = _db(tmp_path, [
+        ("tv", "First‑Time Buyer’s Guide to the Roku 55‑Inch Select Series",
+         "guide.html", "", "2026-01-01T00:00:00"),
+    ])
+
+    env = dict(os.environ, PYTHONIOENCODING="cp1252")
+    proc = subprocess.run(
+        [sys.executable, str(_SCRIPT), "--state-db", str(db),
+         "--docs-dir", str(docs), "--offline"],
+        capture_output=True, env=env)
+    assert proc.returncode == 0, proc.stderr.decode("utf-8", "replace")
+    assert b"filled=1" in proc.stdout
 
 
 def test_backfill_fills_empty_rows_only_and_is_idempotent(tmp_path):
