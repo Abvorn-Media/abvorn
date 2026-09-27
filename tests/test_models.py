@@ -139,8 +139,13 @@ def test_mark_error_ban_durations():
 
     p = AIProvider("test6", "sk-test-key", model="gpt-4o")
     p.mark_error(RuntimeError("Error code: 429 - Rate limit reached for model `openai/gpt-oss-120b` on tokens per day (TPD): Limit 200000, Used 199645"))
-    # TPD exhaustion should ban until next UTC midnight (~hours), not 60s
-    assert p._banned_until - time.time() > 6 * 3600
+    # TPD exhaustion bans until the next UTC midnight (+60s), not a flat 60s.
+    # Assert that value directly instead of "> 6 * 3600": the midnight-based
+    # duration is only over 6h before 18:00 UTC, so the old floor failed for the
+    # last six hours of every day even though models.py was correct.
+    to_midnight = 86400 - (time.time() % 86400)
+    remaining = p._banned_until - time.time()
+    assert to_midnight - 5 <= remaining <= to_midnight + 65
 
     p = AIProvider("test4", "sk-test-key", model="gpt-4o")
     p.mark_error(RuntimeError("Error code: 500 - server"))
