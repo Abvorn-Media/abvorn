@@ -4,7 +4,12 @@
 # to GitHub (which redeploys the live site). Notifies Telegram on failure.
 set -euo pipefail
 
-cd /opt/abvorn/abvorn
+# The live install is /opt/abvorn-core; the old /opt/abvorn/abvorn path no longer
+# exists on the host, so a hardcoded cd here aborted the cycle on the first line.
+ABVORN_ROOT="${ABVORN_ROOT:-/opt/abvorn-core}"
+ABVORN_PYTHON="${ABVORN_PYTHON:-${ABVORN_ROOT}/venv/bin/python}"
+
+cd "$ABVORN_ROOT"
 
 set -a
 if [ -f .env ]; then
@@ -15,16 +20,17 @@ set +a
 
 git pull --rebase --autostash >/dev/null 2>&1 || true
 
-python() { /opt/abvorn/venv/bin/python "$@"; }
+python() { "$ABVORN_PYTHON" "$@"; }
 
 python scripts/check_publish_content.py --fix >/dev/null 2>&1 || true
 
-if ! python run_cycle.py --batch > data/cycle-run.log 2>&1; then
-  CODE=$?
+CODE=0
+python run_cycle.py --batch > data/cycle-run.log 2>&1 || CODE=$?
+if [ "$CODE" -ne 0 ]; then
   if [ -n "${TELEGRAM_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
     curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
       -d "chat_id=${TELEGRAM_CHAT_ID}" \
-      --data-urlencode "text=🚨 Abvorn VPS content cycle failed (exit ${CODE}). Log: /opt/abvorn/abvorn/data/cycle-run.log" \
+      --data-urlencode "text=🚨 Abvorn VPS content cycle failed (exit ${CODE}). Log: ${ABVORN_ROOT}/data/cycle-run.log" \
       -d "parse_mode=HTML" >/dev/null 2>&1 || true
   fi
   exit "$CODE"
