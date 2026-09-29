@@ -10,6 +10,22 @@ logger = logging.getLogger("abvorn.brain")
 
 BRAIN_DB_PATH = Path.home() / ".abvorn" / "brain_index.db"
 
+_INDEX = None
+
+
+def _get_index() -> KnowledgeIndex:
+    """Return the process-wide index singleton.
+
+    Constructing one per call opened a new SQLite connection every time, so a
+    long-lived server leaked a connection per invocation on top of the
+    per-thread leak. One index means one connection for the whole process.
+    """
+    global _INDEX
+    if _INDEX is None:
+        _INDEX = KnowledgeIndex(str(BRAIN_DB_PATH))
+    return _INDEX
+
+
 def refresh_brain() -> dict:
     """Full brain refresh: scan → extract → index → return summary.
 
@@ -20,7 +36,7 @@ def refresh_brain() -> dict:
     if not categories:
         return {"status": "no_brain", "documents": 0}
 
-    index = KnowledgeIndex(str(BRAIN_DB_PATH))
+    index = _get_index()
     indexed = 0
     skipped = 0
 
@@ -57,5 +73,4 @@ def get_brain_retriever() -> KnowledgeRetriever:
     """Get or create a retriever for the current brain index."""
     if not BRAIN_DB_PATH.exists():
         refresh_brain()
-    index = KnowledgeIndex(str(BRAIN_DB_PATH))
-    return KnowledgeRetriever(index)
+    return KnowledgeRetriever(_get_index())

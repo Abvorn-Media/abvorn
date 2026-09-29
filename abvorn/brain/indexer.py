@@ -20,16 +20,37 @@ class KnowledgeIndex:
 
     def __init__(self, db_path):
         self._db_path = db_path
-        self._local = threading.local()
+        self._conn = None
+        self._lock = threading.RLock()
         self._init_db()
+
+    def _connect(self):
+        if self._conn is None:
+            self._conn = sqlite3.connect(str(self._db_path), check_same_thread=False)
+            self._conn.execute("PRAGMA journal_mode=WAL")
+        return self._conn
 
     @contextmanager
     def _cursor(self):
-        if not hasattr(self._local, 'conn') or self._local.conn is None:
-            self._local.conn = sqlite3.connect(str(self._db_path))
-            self._local.conn.execute("PRAGMA journal_mode=WAL")
-        yield self._local.conn.cursor()
-        self._local.conn.commit()
+        # One connection for the whole index, guarded by a lock. A per-thread
+        # connection leaked one per thread: brain_server runs a
+        # ThreadingHTTPServer, so every request opened a fresh WAL connection
+        # that was never closed. That accumulated to 10.4GB of page cache and
+        # OOM-killed the 24GB host (journald, snapd and sshd died with it).
+        with self._lock:
+            conn = self._connect()
+            cursor = conn.cursor()
+            try:
+                yield cursor
+                conn.commit()
+            finally:
+                cursor.close()
+
+    def close(self):
+        with self._lock:
+            if self._conn is not None:
+                self._conn.close()
+                self._conn = None
 
     def _init_db(self):
         with self._cursor() as c:
