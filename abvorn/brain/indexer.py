@@ -101,11 +101,26 @@ class KnowledgeIndex:
         return chunks if chunks else [text[:max_chars]]
 
     def ingest_text(self, domain: str, title: str, text: str, path: str = "", file_hash: str = "") -> int:
-        chunks = self._chunk_text(text)
         # Store the scan-time file hash when available so incremental refresh can
         # dedupe by path+hash; fall back to a content hash for text-only ingests.
         stored_hash = file_hash or hashlib.md5(text[:8192].encode()).hexdigest()
         with self._cursor() as c:
+            if path:
+                # Idempotent ingest. Concurrent refresh_brain() calls used to both
+                # see "not indexed" and both INSERT, so every refresh appended
+                # another copy of every PDF: the index reached 87,151 documents
+                # and 10.4GB. The lookup and the insert now share one lock
+                # acquisition, so the check-then-write is atomic. An unchanged
+                # file is a no-op; a changed one replaces its old rows.
+                for doc_id, prev_hash in c.execute(
+                    "SELECT id, hash FROM documents WHERE path=?", (path,)
+                ).fetchall():
+                    if prev_hash == stored_hash:
+                        return doc_id
+                    c.execute("DELETE FROM chunks WHERE doc_id=?", (doc_id,))
+                    c.execute("DELETE FROM documents WHERE id=?", (doc_id,))
+
+            chunks = self._chunk_text(text)
             c.execute("INSERT INTO documents (domain, title, path, hash, indexed_at) VALUES (?, ?, ?, ?, ?)",
                       (domain, title, path, stored_hash, datetime.now().isoformat()))
             doc_id = c.lastrowid
