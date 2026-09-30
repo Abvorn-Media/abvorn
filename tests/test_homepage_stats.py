@@ -56,8 +56,11 @@ def test_stats_count_published_reviews_not_state_posts():
     assert stats["guides"] == 7
     # Products est = guides * 3.
     assert stats["products"] == 21
-    # Categories = number of niches (3), stable either way.
-    assert stats["categories"] == 3
+    # Categories = categories that actually have a published review. All 7
+    # reviews here are 'laptops', which lives in exactly one CATEGORY_MAP
+    # category ("Computing & Monitors"), so the stat must be 1 -- not the
+    # 3 niches in state.
+    assert stats["categories"] == 1
 
 
 def test_stats_do_not_show_zero_when_state_reports_zero():
@@ -66,3 +69,53 @@ def test_stats_do_not_show_zero_when_state_reports_zero():
     stats = _stats(html)
     assert stats["guides"] == 5
     assert stats["guides"] != 0
+
+
+def test_categories_stat_ignores_niches_with_no_published_review():
+    """The 'Categories covered' stat must count the CATEGORY_MAP categories
+    that actually have a published review.
+
+    Bug: the stat used len(niches) from state, so a daemon whose state only
+    listed 3 niches (laptops, robot-vacuums, tv) reported "3 Categories
+    covered" while the page covers 6 categories. A niche with no published
+    review covers nothing and must not be counted.
+    """
+    # 3 niches in state, but only 2 of them have any published review.
+    state = {
+        "niches": [
+            {"name": "Laptops", "slug": "laptops", "posts": 9},
+            {"name": "Tv", "slug": "tv", "posts": 5},
+            {"name": "Webcams", "slug": "webcams", "posts": 4},
+        ]
+    }
+    reviews = _reviews(3, slug="laptops") + _reviews(2, slug="tv")
+
+    html = build_homepage(state, reviews=reviews)
+    stats = _stats(html)
+
+    # laptops + tv both live in "Computing & Monitors" -> exactly 1 covered.
+    assert stats["categories"] == 1
+    # Not the raw niche count.
+    assert stats["categories"] != len(state["niches"])
+
+
+def test_categories_stat_counts_covered_categories_across_niches():
+    """Reviews spread over three different CATEGORY_MAP categories must report
+    3, even though state lists only 2 niches."""
+    state = {
+        "niches": [
+            {"name": "Laptops", "slug": "laptops", "posts": 9},
+            {"name": "Tv", "slug": "tv", "posts": 5},
+        ]
+    }
+    reviews = (
+        _reviews(1, slug="laptops")           # Computing & Monitors
+        + _reviews(1, slug="wireless-earbuds")  # Audio
+        + _reviews(1, slug="webcams")          # Webcams & Accessories
+    )
+
+    html = build_homepage(state, reviews=reviews)
+    stats = _stats(html)
+
+    assert stats["categories"] == 3
+    assert stats["categories"] != len(state["niches"])

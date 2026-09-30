@@ -1294,6 +1294,17 @@ def build_homepage(state, form_url="", reviews=None, base=None):
     footer_cats = build_footer_categories(b)
     footer_social = render_footer_social()
 
+    # "Categories covered" must count the CATEGORY_MAP categories the site
+    # actually publishes in, not the raw niche count from state. A daemon's
+    # state can list only a few niches (it grows as it discovers them) while
+    # the homepage still renders a section per CATEGORY_MAP category -- the
+    # stat then read "3 Categories covered" above 6 real sections. Count the
+    # categories that have at least one published review instead.
+    covered_categories = sum(
+        1 for _slugs in CATEGORY_MAP.values()
+        if any(_s in published_slugs for _s in _slugs)
+    )
+
     html = HOMEPAGE_TEMPLATE
     html = html.replace("__SITE_BASE__", b)
     html = html.replace("__SITE_URL__", _SITE_URL)
@@ -1301,7 +1312,7 @@ def build_homepage(state, form_url="", reviews=None, base=None):
     html = html.replace("HERO_SLIDES_PLACEHOLDER", hero_slides)
     html = html.replace("HERO_DOTS_PLACEHOLDER", hero_dots)
     html = html.replace("STAT_GUIDES_COUNT", str(total_posts))
-    html = html.replace("STAT_CATEGORIES_COUNT", str(len(niches)))
+    html = html.replace("STAT_CATEGORIES_COUNT", str(covered_categories))
     html = html.replace("STAT_PRODUCTS_COUNT", str(total_products))
     html = html.replace("LATEST_UPDATES_PLACEHOLDER", ticker_items if ticker_items else "No reviews yet")
     html = html.replace("LATEST_REVIEWS_PLACEHOLDER", latest_cards if latest_cards else '<p style="grid-column:1/-1;text-align:center;color:#888;padding:40px 0">More guides on the way.</p>')
