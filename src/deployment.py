@@ -1208,7 +1208,21 @@ def build_homepage(state, form_url="", reviews=None, base=None):
         hero_candidates.append((img, n["name"], n["slug"]))
     if not hero_candidates:
         hero_candidates.append((f"{b}/assets/hero-home.svg", "Reviews", "coming-soon"))
-    review_by_slug = {r["slug"]: r for r in review_list}
+    # Pick one review per niche for the slide verdict, but never let a
+    # product-less article take the slot. The fresh cycle article is appended
+    # last and its _overlay_review() entry has image=="" when it shipped with no
+    # products; a plain last-wins dict would let it displace a real product
+    # photo and drop the whole slide back to the generic category asset (e.g.
+    # assets/hero/laptops.jpg, a keyboard shot). Prefer entries that carry an
+    # image; fall back to any entry so a niche with no product photo still
+    # renders via the static asset at backdrop time.
+    review_by_slug = {}
+    for _r in review_list:
+        if _r.get("image"):
+            review_by_slug[_r["slug"]] = _r
+    for _r in review_list:
+        if _r["slug"] not in review_by_slug:
+            review_by_slug[_r["slug"]] = _r
     for i, (img, name, slug) in enumerate(hero_candidates):
         active = " active" if i == 0 else ""
         review = review_by_slug.get(slug, {})
