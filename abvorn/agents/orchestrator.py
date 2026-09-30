@@ -21,14 +21,26 @@ _PLACEHOLDER_NAME_RE = re.compile(r"^top\b.*\bpick$", re.I)
 
 
 def _product_is_placeholder(product: dict) -> bool:
-    """True when a product carries no ASIN and reads like a generated stub."""
+    """True when a product cannot be linked or pictured (a generated stub).
+
+    A real scrape (run_cycle.research_products) always yields an ASIN *and* a
+    photo. The pure-LLM fallback in research_niche yields neither, so the card
+    renders a "Product" text tile and the CTA degrades to a ?tag= search link.
+    The name alone cannot be trusted: that fallback happily invents real-sounding
+    models ("Sony Bravia XR90A9 65\" OLED TV"), which is how the tv hub shipped
+    three unpictured, unbuyable products. Missing a photo is the reliable tell.
+    """
     if not isinstance(product, dict):
         return True
-    blob = f"{product.get('name', '')} {product.get('url', '')} {product.get('asin', '')}"
+    name = str(product.get("name") or "").strip()
+    if not name:
+        return True
+    blob = f"{name} {product.get('url', '')} {product.get('asin', '')}"
     if _ASIN_RE.search(blob or ""):
         return False
-    name = str(product.get("name") or "").strip()
-    return bool(_PLACEHOLDER_NAME_RE.match(name)) or not name
+    if not str(product.get("image") or "").strip():
+        return True
+    return bool(_PLACEHOLDER_NAME_RE.match(name))
 
 
 def _products_are_placeholder(products: list) -> bool:
@@ -297,12 +309,21 @@ class SiteDeployer:
             return False
 
     def deploy_content(self, niche: str, content: dict, all_categories: list = None,
-                       article_filename: str = None) -> bool:
+                       article_filename: str = None,
+                       require_products: bool = False) -> bool:
         try:
             all_categories = all_categories or []
             from run_cycle import build_article_page, _SITE_URL
             today = datetime.now().strftime("%Y-%m-%d")
             products = content.get("products") or []
+            if require_products and not products:
+                logger.warning(
+                    "[SiteDeployer] Refusing to publish %s: a fresh article "
+                    "payload carried no products at all, which renders a "
+                    "product-less hub — keeping the currently published page",
+                    niche,
+                )
+                return False
             if _products_are_placeholder(products):
                 logger.warning(
                     "[SiteDeployer] Refusing to publish %s: %d product(s) and "
@@ -409,6 +430,7 @@ class DeployAgent(AgentBase):
                 niche,
                 deploy_content,
                 all_categories=all_slugs,
+                require_products=True,
             )
         else:
             posts = self.state.get_posts_for_niche(niche)

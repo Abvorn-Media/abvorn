@@ -303,3 +303,80 @@ def test_mark_complete():
         sched.mark_complete(opp["id"])
         assert sched.get_next_opportunity() is None
         sched.state.close()
+
+
+# ── unpictured-product regression (tv + robot-vacuums, 2026-09-30) ─────────
+# The live tv hub shipped three product cards whose media was a <span>Product</span>
+# text tile, not a photo, and the robot-vacuums hub shipped no product grid at
+# all. Both niches were absent from the OpenWebNinja cache, so research_niche
+# fell through to its pure-LLM branch, which emits no image and no ASIN. The old
+# detector only flagged names matching "Top ... Pick", so real-sounding invented
+# models sailed through.
+
+def test_product_without_asin_and_image_is_placeholder():
+    """No ASIN *and* no photo is the pure-LLM shape, whatever the name says."""
+    from abvorn.agents.orchestrator import _product_is_placeholder
+
+    # Verbatim from the live tv hub -- reads real, is unbuyable and unpictured.
+    assert _product_is_placeholder({
+        "name": 'Sony Bravia XR90A9 65" OLED TV',
+        "price": "Check Price",
+        "url": "https://www.amazon.com/s?k=tv&tag=viraltestco-20",
+        "image": "",
+        "description": "Ultra-high-definition 4K OLED with quantum HDR 400.",
+    }) is True
+    # A scraped product is fine with either signal present.
+    assert _product_is_placeholder({
+        "name": "Sony Bravia XR90A9 65\" OLED TV",
+        "image": "https://m.media-amazon.com/images/I/71abc._AC_SL1500_.jpg",
+    }) is False
+    assert _product_is_placeholder({
+        "name": "Sony Bravia XR90A9 65\" OLED TV",
+        "asin": "B0CX23V2ZK",
+        "image": "",
+    }) is False
+
+
+def test_deploy_content_refuses_unpictured_llm_products():
+    """The exact live tv payload must be refused at the deploy boundary."""
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    ok = sd.deploy_content(
+        "tv",
+        {"post_title": "2026 TV Buying Guide",
+         "article_html": "<p>guide</p>",
+         "products": [
+             {"name": 'Sony Bravia XR90A9 65" OLED TV', "price": "Check Price",
+              "url": "https://www.amazon.com/s?k=tv&tag=viraltestco-20", "image": ""},
+             {"name": 'Samsung QN90B 55" Neo-QLED TV', "price": "Check Price",
+              "url": "https://www.amazon.com/s?k=tv&tag=viraltestco-20", "image": ""},
+         ]},
+        all_categories=["tv"],
+    )
+    assert ok is False
+    deployer.deploy_html.assert_not_called()
+
+
+def test_deploy_content_require_products_blocks_productless_fresh_article():
+    """robot-vacuums shipped a hub with no product grid at all. The fresh-publish
+    path opts into require_products; the state-redeploy path must still work."""
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    ok = sd.deploy_content(
+        "robot-vacuums",
+        {"post_title": "2026 Robot Vacuum Buying Guide",
+         "article_html": "<p>guide</p>",
+         "products": []},
+        all_categories=["robot-vacuums"],
+        require_products=True,
+    )
+    assert ok is False
+    deployer.deploy_html.assert_not_called()
+
+    # Without the opt-in (state redeploy) the same payload is still deployable.
+    deployer2 = _deployer()
+    sd2 = SiteDeployer(deployer2, None)
+    assert sd2.deploy_content(
+        "laptops", {"post_title": "T", "article_html": "<p>x</p>"},
+        all_categories=["laptops"],
+    ) is True

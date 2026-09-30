@@ -317,8 +317,36 @@ def _extract_review_blocks(body):
     return products
 
 
+_BUYABLE_ASIN_RE = re.compile(r"B0[A-Z0-9]{8}")
+
+
+def _product_is_buyable(p):
+    """True when a product can actually be linked and pictured.
+
+    A scraped product always has an ASIN and a photo. The pure-LLM fallback in
+    research_niche has neither, so its card renders a "Product" text tile and its
+    CTA degrades to a ?tag= search link. Name wording is not a reliable signal
+    -- that fallback invents real-sounding models -- so require both.
+    """
+    if not isinstance(p, dict):
+        return False
+    if not str(p.get("image") or "").strip():
+        return False
+    blob = f"{p.get('name', '')} {p.get('url', '')} {p.get('asin', '')}"
+    return bool(_BUYABLE_ASIN_RE.search(blob or ""))
+
+
 def enrich_from_cache(products, cache_products):
-    """Merge richer fields (asin, features, original_price, rating) from the cache by URL."""
+    """Merge richer fields (asin, features, original_price, rating) from the cache by URL.
+
+    When a page carries no buyable product at all (an all-stub or empty list from
+    the LLM research fallback), the cached scrape wins outright: re-rendering the
+    stubs would ship "Product" text tiles and search links again. Pages that
+    already have a real product keep theirs and only gain the extra fields.
+    """
+    cache_real = [p for p in cache_products if _product_is_buyable(p)]
+    if cache_real and not any(_product_is_buyable(p) for p in products):
+        return [dict(p) for p in cache_real[:5]]
     by_url = {p.get("url", ""): p for p in cache_products if p.get("url")}
     enriched = []
     for p in products:
