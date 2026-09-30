@@ -310,12 +310,23 @@ def clean_product_name(name: str) -> str:
     Amazon titles sometimes contain HTML-encoded and doubled quote characters
     (e.g. `1.1&quot;&quot;`), which render as ugly `1.1""`. This normalises
     entities and collapses doubled quotes to a single inch-mark.
+
+    Scraper truncation also drops a trailing `)`, leaving names like
+    `LG 65-Inch OLED evo AI 4K C5 Series Smart TV (OLED65C5PUA` unbalanced.
+    That string is then repeated across the verdict card, FAQ, comparison
+    table, JSON-LD and affiliate links, so it is closed here once.
     """
     if not name:
         return name
     cleaned = _html.unescape(str(name))
     cleaned = cleaned.replace('""', '"')
     cleaned = re.sub(r'\s{2,}', ' ', cleaned).strip()
+    while cleaned.count("(") > cleaned.count(")") and "(" in cleaned:
+        # only pad when the open paren is not already trailing garbage
+        head, sep, tail = cleaned.rpartition("(")
+        if not sep or not tail.strip():
+            break
+        cleaned = cleaned + ")"
     return cleaned
 
 
