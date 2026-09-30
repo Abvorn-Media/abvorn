@@ -14,7 +14,7 @@ from src.ai_sql import QueryPlan
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.agent_reach_adapter import get_agent_reach_adapter
-from src.article_design import sanitize_article_html, upgrade_product_image
+from src.article_design import sanitize_article_html, upgrade_product_image, niche_display
 
 _cost_per_1k = {
     "openai": 0.002,
@@ -101,9 +101,13 @@ def generate_outline(niche, products, knowledge_core=None, workflow_engine=None,
         if parts:
             social_context = "\n\n💬 Real-Time Social Sentiment:\n" + "\n\n".join(parts)
 
-    prompt = f"""You are a content strategist planning a buying guide for '{niche}'.
+    niche_label = niche_display(niche)
+    prompt = f"""You are a content strategist planning a buying guide for '{niche_label}'.
 Products: {names}
-Current year: {datetime.now().year} — write the post_title with the current year (e.g. "Best {niche} {datetime.now().year}"), never a past year.{knowledge_context}{social_context}
+Category name to use in prose: {niche_label}
+Write the category name as words ("{niche_label}"), never as a URL slug
+(never a hyphenated slug). Capitalise it as a proper category name.
+Current year: {datetime.now().year} — write the post_title with the current year (e.g. "Best {niche_label} {datetime.now().year}"), never a past year.{knowledge_context}{social_context}
 
 Return a JSON object with:
 - outline: array of H2 section headings (e.g. ["Introduction", "What to Look For", "Product Reviews", "Buying Guide", "Conclusion"])

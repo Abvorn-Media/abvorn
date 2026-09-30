@@ -13,7 +13,8 @@ from typing import Dict, Any
 
 from src.article_design import (PROD_SHOT_CSS,
                                 upgrade_product_image,
-                                product_shot_html)
+                                product_shot_html,
+                                niche_display)
 
 logger = logging.getLogger(__name__)
 
@@ -326,7 +327,7 @@ def rewrite_affiliate_urls(html: str, article_id: str) -> str:
 
 def _slugify_title(s):
     """Convert a slug to a readable category name."""
-    return s.replace("-", " ").title()
+    return niche_display(s)
 
 
 # ── Category navigation (mega-menu + footer) ────────────────────────────
@@ -369,6 +370,10 @@ STATIC_CATEGORY_NAMES = {
     "webcams": "Webcams",
     "wireless-earbuds": "Wireless Earbuds",
     "wireless-headphones": "Wireless Headphones",
+    # Daemon-created niches. Registered so the display name is the proper
+    # casing rather than str.title()'s "Tv".
+    "tv": "TV",
+    "robot-vacuums": "Robot Vacuums",
 }
 
 # --- Category taxonomy: state.db owns which categories EXIST ----------------

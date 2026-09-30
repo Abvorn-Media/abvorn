@@ -194,6 +194,9 @@ def info_dot(text):
 
 
 # ── Price floor (per-niche) ─────────────────────────────────────────────
+# Fallback bands only. build_faq() derives the real floor from the scraped
+# catalogue, because a niche missing from this table used to advertise the
+# "$50" default — which told readers an OLED TV cost $50.
 PRICE_FLOORS = {
     "wireless-headphones": "50",
     "gaming-mice": "30",
@@ -210,6 +213,116 @@ PRICE_FLOORS = {
 
 def price_floor_for(niche_slug):
     return PRICE_FLOORS.get(niche_slug, "50")
+
+
+# ── Niche display names ────────────────────────────────────────────────
+# The slug is for URLs only. Anything user-facing (titles, FAQ prose) needs
+# the display form, or the page ships "Best robot-vacuums 2026" and
+# "What is the best tv?".
+NICHE_ACRONYMS = {
+    "tv", "oled", "qhd", "uhd", "hd", "lcd", "led", "usb", "usb-c", "hdmi",
+    "wi-fi", "ai", "pc", "dslr", "rgb", "usb3", "rtx", "ssd", "hdd", "nas",
+    "2k", "4k", "8k", "1440p", "4k3d",
+}
+
+_IRREGULAR_SINGULAR = {
+    "mice": "mouse", "people": "person", "geese": "goose", "teeth": "tooth",
+    "feet": "foot", "children": "child", "headphones": "headphone",
+}
+
+_UNCOUNTABLE = {"tv", "audio", "equipment", "furniture", "wearables", "apparel"}
+
+
+def niche_display(name_or_slug):
+    """'robot-vacuums' -> 'Robot Vacuums', 'tv' -> 'TV'. Prose-safe label."""
+    raw = (name_or_slug or "").strip()
+    if not raw:
+        return ""
+    if " " in raw or raw.isupper():
+        parts = [p for p in raw.split() if p]
+    else:
+        parts = raw.split("-")
+    out = []
+    for p in parts:
+        if p.lower() in NICHE_ACRONYMS:
+            out.append(p.upper())
+        else:
+            out.append(p[:1].upper() + p[1:] if p.islower() else p)
+    return " ".join(out)
+
+
+def niche_prose(name_or_slug):
+    """Display form for running prose: acronyms kept, other words lowercased.
+
+    niche_prose("tv") -> "TV", niche_prose("Robot Vacuums") -> "robot vacuums".
+    Needed because str.lower() on the display form produced "the best tv?".
+    """
+    label = niche_display(name_or_slug)
+    if not label:
+        return ""
+    return " ".join(
+        p.upper() if p.lower() in NICHE_ACRONYMS else p.lower()
+        for p in label.split()
+    )
+
+
+def singularize(name):
+    """Singular of a category label for count nouns.
+
+    'robot vacuums' -> 'robot vacuum', 'gaming mice' -> 'gaming mouse'.
+    Uncountable labels ('TV') are returned unchanged.
+    """
+    w = (name or "").strip()
+    if not w:
+        return w
+    parts = w.split()
+    last = parts[-1]
+    low = last.lower()
+    if low in _UNCOUNTABLE:
+        return w
+    if low in _IRREGULAR_SINGULAR:
+        parts[-1] = _IRREGULAR_SINGULAR[low]
+        return " ".join(parts)
+    if low.endswith("ies") and len(low) > 4:
+        parts[-1] = last[:-3] + "y"
+        return " ".join(parts)
+    if low.endswith(("sses", "shes", "ches", "xes", "zes")):
+        parts[-1] = last[:-2]
+        return " ".join(parts)
+    if low.endswith("s") and not low.endswith("ss"):
+        parts[-1] = last[:-1]
+        return " ".join(parts)
+    return w
+
+
+_PRICE_RE = re.compile(r"(\d[\d,]*(?:\.\d{1,2})?)")
+
+
+def _price_value(raw):
+    if raw is None:
+        return None
+    if isinstance(raw, (int, float)):
+        return float(raw)
+    m = _PRICE_RE.search(str(raw))
+    if not m:
+        return None
+    try:
+        return float(m.group(1).replace(",", ""))
+    except ValueError:
+        return None
+
+
+def catalog_price_floor(products, fallback="50"):
+    """Cheapest price actually present in the scraped catalogue.
+
+    Keeps the FAQ from quoting a price band nothing in the guide sells.
+    Falls back to the per-niche table when no product carries a price.
+    """
+    vals = [v for v in (_price_value(p.get("price")) for p in products or []) if v]
+    if not vals:
+        return fallback
+    floor = min(vals)
+    return str(int(floor)) if float(floor).is_integer() else f"{floor:.2f}"
 
 
 # ── Content sanitizer ───────────────────────────────────────────────────
@@ -516,12 +629,16 @@ def build_faq(niche_slug, niche_name, products, product_name, price_floor,
     best_name = clean_product_name(best.get("name", product_name))
     best_price = best.get("price", price_floor)
     score = top_score or best.get("verdict_score", "8+")
-    niche_lower = (niche_name or niche_slug).lower()
+    niche_label = niche_prose(niche_name or niche_slug) or (niche_name or niche_slug).lower()
+    # Count nouns need singular ("the best robot vacuum"), and the price band
+    # must come from this catalogue, not the "$50" default.
+    niche_single = singularize(niche_label)
+    price_floor = catalog_price_floor(products, price_floor)
 
     questions = [
         (
-            f"What is the best {niche_lower}?",
-            f"{best_name} is our current top pick for {niche_name or niche_lower}. "
+            f"What is the best {niche_single}?",
+            f"{best_name} is our current top pick for {niche_name or niche_label}. "
             f"It earned an Abvorn Verdict score of {score}/10 for {criteria.lower()}, "
             f"and at {best_price} it offers the strongest balance of "
             f"{criteria.lower()} for the money.",
@@ -534,14 +651,14 @@ def build_faq(niche_slug, niche_name, products, product_name, price_floor,
             f"{verdict_summary or 'It is the best-rounded option in this category today.'}",
         ),
         (
-            f"How much should I spend on {niche_lower}?",
-            f"You can get a genuinely good {niche_lower} for around "
+            f"How much should I spend on {niche_label}?",
+            f"You can get a genuinely good {niche_single} for around "
             f"${price_floor}. Spending more buys premium materials and extra "
             f"features, but our top pick delivers the best combination of "
             f"performance and value at its current price.",
         ),
         (
-            f"What should I look for when buying {niche_lower}?",
+            f"What should I look for when buying {niche_label}?",
             f"We score every product on {criteria.lower()}. Start by deciding "
             f"which of those matters most to you, then compare products on "
             f"that axis first — the Abvorn Verdict breakdown below each review "

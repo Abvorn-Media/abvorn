@@ -18,6 +18,10 @@ def _amazon_tag() -> str:
 # product, 0 ASINs, and a ?tag=... search link) and must not be published.
 _ASIN_RE = re.compile(r"B0[A-Z0-9]{8}")
 _PLACEHOLDER_NAME_RE = re.compile(r"^top\b.*\bpick$", re.I)
+# state.db deployment_status values that mean "this post is not a live review".
+# "pending" is deliberately absent: it is the status the daemon writes for
+# freshly generated articles that are already published.
+_UNPUBLISHED_STATUSES = frozenset({"unpublished", "deleted", "archived", "removed"})
 
 
 def _product_is_placeholder(product: dict) -> bool:
@@ -180,6 +184,13 @@ class SiteDeployer:
         "coffee-grinder" entry that 404s on the live site) cannot fabricate a
         dead card. API/transport errors fail open: real pages are kept rather
         than dropping every card during a GitHub outage.
+
+        A post with no article page (empty filename) or an explicitly
+        unpublished status is skipped outright. Rendering those produced a
+        card that pointed at the niche hub while keeping the post's stale
+        title, and the empty filename also bypassed the file_exists gate
+        above - which is how the robot-vacuum "hotel booking" rows stayed on
+        the live homepage after their pages were deleted.
         """
         from src.deployment import scan_published_reviews, _overlay_review
         today = datetime.now().strftime("%Y-%m-%d")
@@ -198,8 +209,22 @@ class SiteDeployer:
             title = p.get("title") or p.get("post_title") or ""
             if not slug or not title or (slug, title) in seen:
                 continue
-            filename = p.get("filename", "")
-            if filename and self.deployer is not None:
+            filename = (p.get("filename") or "").strip()
+            if not filename:
+                # No article page means this is not a published review. Emitting
+                # it would render a card that points at the niche hub while
+                # keeping the post's stale title - exactly what the
+                # robot-vacuum "hotel booking" rows did. It also silently
+                # bypassed the file_exists gate below, since that only ran when
+                # a filename was present.
+                logger.info("[SiteDeployer] Skipping card %r: no article page", title)
+                seen[(slug, title)] = len(reviews)
+                continue
+            if (p.get("deployment_status") or "").strip().lower() in _UNPUBLISHED_STATUSES:
+                logger.info("[SiteDeployer] Skipping card %r: unpublished", title)
+                seen[(slug, title)] = len(reviews)
+                continue
+            if self.deployer is not None:
                 rel = f"reviews/{slug}/{filename}"
                 try:
                     if not self.deployer.file_exists(rel):
@@ -217,7 +242,7 @@ class SiteDeployer:
                 "name": self._niche_name(slug),
                 "title": title,
                 "updated": (p.get("created_at") or "")[:10] or today,
-                "rel": f"/reviews/{slug}/{filename}" if filename else f"/reviews/{slug}/",
+                "rel": f"/reviews/{slug}/{filename}",
                 "snippet": "",
                 "image": p.get("image") or "",
                 "score": quality if quality else None,

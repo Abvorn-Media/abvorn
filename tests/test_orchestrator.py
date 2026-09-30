@@ -48,6 +48,52 @@ def test_reviews_gates_phantom_post_cards():
     assert "Budget 55-inch TV Guide" in titles, "existing index card must be kept"
 
 
+def test_reviews_skips_posts_with_no_article_page():
+    """A state post with an empty filename, or an explicitly unpublished
+    status, must not produce a card.
+
+    Regression: the robot-vacuum 'hotel booking' rows had their filename
+    cleared when their pages were deleted. The old code only ran the
+    file_exists gate `if filename and ...`, so an empty filename skipped the
+    gate entirely and still emitted a card - pointing at the niche hub while
+    keeping the stale 'First-Time Hotel Booking' title. That is what kept the
+    hotel cards on the live homepage and the niche landing page.
+    """
+    class EverythingExists:
+        def file_exists(self, rel):
+            return True
+
+    sd = SiteDeployer(EverythingExists(), None)
+    posts = [
+        # soft-unpublished: page deleted, filename cleared
+        {"niche_slug": "robot-vacuums",
+         "title": "First-Time Hotel Booking Guide",
+         "filename": "", "deployment_status": "unpublished",
+         "quality_score": 10.0},
+        # no filename at all, still "pending"
+        {"niche_slug": "robot-vacuums",
+         "title": "Another Draft Row", "filename": "",
+         "deployment_status": "pending", "quality_score": 9.0},
+        # explicitly removed
+        {"niche_slug": "robot-vacuums",
+         "title": "Deleted Robot Guide", "filename": "gone.html",
+         "deployment_status": "deleted", "quality_score": 9.0},
+        # the real guide: published, page exists -> must survive
+        {"niche_slug": "robot-vacuums",
+         "title": "Best Robot Vacuums 2026",
+         "filename": "best-robot-vacuums-2026.html",
+         "deployment_status": "deployed", "quality_score": 8.0},
+    ]
+    reviews = sd._reviews(["robot-vacuums"], posts)
+    titles = [r["title"] for r in reviews]
+    for dropped in ("First-Time Hotel Booking Guide", "Another Draft Row",
+                    "Deleted Robot Guide"):
+        assert dropped not in titles, f"{dropped!r} must not render a card"
+    assert "Best Robot Vacuums 2026" in titles, "the real published guide must render"
+    card = next(r for r in reviews if r["title"] == "Best Robot Vacuums 2026")
+    assert card["rel"] == "/reviews/robot-vacuums/best-robot-vacuums-2026.html"
+
+
 def test_deploy_root_index_skips_when_no_posts():
     deployer = _deployer()
     sd = SiteDeployer(deployer, None)
