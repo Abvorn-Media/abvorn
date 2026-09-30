@@ -315,6 +315,8 @@ class SiteDeployer:
         try:
             all_categories = list(all_categories or [niche])
             if self._last_content and self._last_niche == niche:
+                # _last_content is only ever assigned after the products checks
+                # in deploy_content() pass, so the mirror is product-backed.
                 return self.deploy_content(niche, self._last_content,
                                            all_categories=all_categories)
             posts = posts or []
@@ -336,6 +338,14 @@ class SiteDeployer:
     def deploy_content(self, niche: str, content: dict, all_categories: list = None,
                        article_filename: str = None,
                        require_products: bool = False) -> bool:
+        """Deploy one premium review page for a niche.
+
+        require_products stays opt-in because the state-redeploy path
+        (DeployAgent._deploy_site) rebuilds from state post metadata, which
+        carries no products key at all. The fresh-publish path opts in — a
+        payload with no products renders a product-less page whose cards all
+        fall back to the generic category graphic instead of a product photo.
+        """
         try:
             all_categories = all_categories or []
             from run_cycle import build_article_page, _SITE_URL
@@ -345,7 +355,9 @@ class SiteDeployer:
                 logger.warning(
                     "[SiteDeployer] Refusing to publish %s: a fresh article "
                     "payload carried no products at all, which renders a "
-                    "product-less hub — keeping the currently published page",
+                    "product-less hub — keeping the currently published page. "
+                    "Product-less pages ship no product photo, so every card "
+                    "falls back to the generic category graphic.",
                     niche,
                 )
                 return False

@@ -298,6 +298,43 @@ def test_deploy_content_refuses_placeholder_products():
     deployer.deploy_html.assert_not_called()
 
 
+def test_productless_payload_never_becomes_the_hub_mirror():
+    """A refused product-less publish must not leave a product-less mirror behind.
+
+    deploy_category_hub() installs reviews/<niche>/index.html from _last_content.
+    That assignment happens only after the products checks pass, so a refused
+    payload can never become the hub page. The three product-less tv pages that
+    shipped (zero ASINs, cards falling back to assets/tv.svg) predate the gate
+    in 79a52210; this locks the invariant that stops them recurring.
+    """
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    ok = sd.deploy_content(
+        "tv",
+        {"post_title": "2026 TV Buying Guide",
+         "article_html": "<p>guide</p>",
+         "products": []},
+        all_categories=["tv"],
+        require_products=True,
+    )
+    assert ok is False
+    assert sd._last_content is None, "a refused payload must not be cached for mirroring"
+    assert sd._last_niche is None
+    deployer.deploy_html.assert_not_called()
+
+    # With a real ASIN-backed product the mirror is installed as before.
+    ok = sd.deploy_content(
+        "tv",
+        {"post_title": "2026 TV Buying Guide",
+         "article_html": "<p>guide</p>",
+         "products": [{"name": "Roku 40-inch Select Series",
+                       "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}]},
+        all_categories=["tv"],
+    )
+    assert ok is True
+    assert sd._last_content is not None
+
+
 def test_deploy_content_allows_real_products():
     """The same page with a real, ASIN-backed product set still deploys."""
     deployer = _deployer()

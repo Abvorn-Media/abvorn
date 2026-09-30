@@ -906,6 +906,16 @@ def verify_page(html_content: str) -> bool:
     return True
 
 
+def _review_key(item):
+    """Stable identity for a single review card.
+
+    Several articles share one niche slug (every docs/reviews/tv/*.html is
+    slug "tv"), so the slug alone cannot tell two cards apart. The per-page
+    rel path can, and is what review_card() links to.
+    """
+    return item.get("rel") or item.get("slug") or ""
+
+
 def review_card(item, category, b, featured=False):
     """One review card with a category+niche banner, verdict score, snippet, and bottom-aligned CTA.
 
@@ -1224,6 +1234,11 @@ def build_homepage(state, form_url="", reviews=None, base=None):
     # the same Category · Niche banner as the category sections. The newest
     # review is promoted to a full-width featured spotlight card.
     latest_list = sorted(review_list, key=lambda x: x["updated"], reverse=True)[:3]
+    # The category sections below show the newest reviews per category, so the
+    # featured strip and its own category used to render the same cards twice
+    # (the tv/laptops trio appeared in both "Latest reviews" and
+    # "Computing & Monitors"). Category sections skip what is already featured.
+    featured_keys = {_review_key(r) for r in latest_list}
     latest_cards = ""
     for i, r in enumerate(latest_list):
         cat_name = next((c for c, slugs in CATEGORY_MAP.items() if r["slug"] in slugs), "")
@@ -1232,7 +1247,8 @@ def build_homepage(state, form_url="", reviews=None, base=None):
     # Build category sections — one per category, alphabetical, latest 3 reviews each.
     cat_sections = ""
     for cat_name, slugs in CATEGORY_MAP.items():
-        cat_items = [r for r in review_list if r["slug"] in slugs]
+        cat_items = [r for r in review_list
+                     if r["slug"] in slugs and _review_key(r) not in featured_keys]
         cat_items.sort(key=lambda r: r["updated"], reverse=True)
         top = cat_items[:3]
         if top:
@@ -2252,6 +2268,10 @@ def _hub_sections(reviews, b, accent, group_key, group_label, group_id):
         groups[k].sort(key=lambda r: r.get("updated", ""), reverse=True)
     order = sorted(groups, key=lambda k: group_label(k).lower())
     latest_items = sorted(reviews, key=lambda r: r.get("updated", ""), reverse=True)[:4]
+    # Same duplicate-card bug as build_homepage(): the featured strip and the
+    # per-group sections both rendered the newest reviews, so every card in
+    # "Latest reviews" reappeared in its own group section.
+    featured_keys = {_review_key(r) for r in latest_items}
     sections = []
     if reviews:
         latest_cards = "".join(
@@ -2266,9 +2286,14 @@ def _hub_sections(reviews, b, accent, group_key, group_label, group_id):
         )
         sections.append(_hub_subscribe_band(accent, "new guide"))
         for k in order:
-            n = len(groups[k])
+            group_items = [r for r in groups[k] if _review_key(r) not in featured_keys]
+            n = len(group_items)
+            if not n:
+                continue
+            group_items.sort(key=lambda r: r.get("updated", ""), reverse=True)
             cards = "".join(
-                review_card(r, _owner_category_for_niche(r.get("slug", "")), b) for r in groups[k]
+                review_card(r, _owner_category_for_niche(r.get("slug", "")), b)
+                for r in group_items
             )
             sections.append(
                 f'<section class="category-section container" id="{html_mod.escape(group_id(k))}" style="--cat:{accent}">'
