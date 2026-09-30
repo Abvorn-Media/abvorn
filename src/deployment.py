@@ -633,6 +633,38 @@ def review_snippet(html):
     return ""
 
 
+# A published page is only a product review if it actually carries a product.
+# `itemprop="mainEntity"` is deliberately NOT one of the signals: that is the
+# FAQPage schema's question list, and the productless pages shipped with it.
+_RPS_DATA_RE = re.compile(
+    r'<script id="abvorn-rps-data" type="application/json">(.*?)</script>', re.S
+)
+_AMAZON_DP_RE = re.compile(r"amazon\.com/dp/(B0[A-Z0-9]{8})")
+_COMPARE_ASIN_RE = re.compile(r"compare\.html\?asin=")
+_JSONLD_PRODUCT_RE = re.compile(r'"@type"\s*:\s*"Product"')
+
+
+def page_has_products(html: str) -> bool:
+    """True when `html` carries at least one product.
+
+    Used to keep productless pages out of the published-review set. A page
+    qualifies via a sponsored Amazon link, a compare link, a non-empty
+    `abvorn-rps-data` product set, or a JSON-LD Product block. Some legitimate
+    pages (reviews/wireless-earbuds/index.html) carry the product set only in
+    the RPS JSON, so the /dp/ check alone is not sufficient.
+    """
+    if _AMAZON_DP_RE.search(html) or _COMPARE_ASIN_RE.search(html):
+        return True
+    m = _RPS_DATA_RE.search(html)
+    if m:
+        try:
+            if json.loads(m.group(1)).get("products"):
+                return True
+        except (ValueError, TypeError, AttributeError):
+            pass
+    return bool(_JSONLD_PRODUCT_RE.search(html))
+
+
 def scan_published_reviews(docs_dir="docs"):
     """Enumerate every published review page under docs/reviews/*.
 
@@ -640,6 +672,14 @@ def scan_published_reviews(docs_dir="docs"):
     files) they are returned (and its index.html is skipped so the latest
     review is not double-counted); otherwise index.html is the single card.
     Returns a list of dicts: {slug, name, title, updated, rel, snippet}.
+
+    Pages with no product are skipped. This function is the single source of
+    truth for the homepage cards, the category listings, sitemap.xml, feed.xml,
+    llms.txt and llms-full.txt, so without the check a productless page the
+    content pipeline left behind (an off-topic article filed under a niche, or
+    a directory named after a product title) was indexed site-wide as a real
+    review. Those pages scored quality_score 10.0, so no other gate caught
+    them.
     """
     base = Path(docs_dir) / "reviews"
     reviews = []
@@ -653,6 +693,12 @@ def scan_published_reviews(docs_dir="docs"):
         if not pages:
             index = niche_dir / "index.html"
             pages = [index] if index.exists() else []
+        # Drop anything that carries no product -- see the docstring. Without
+        # this, productless pages reach the homepage cards, the category
+        # listings, the sitemap, the feed and the llms files.
+        pages = [p for p in pages if page_has_products(p.read_text(encoding="utf-8"))]
+        if not pages:
+            continue
         index_snippet = ""
         index_hero = ""
         # Canonical niche verdict lives in index.html; use it as the fallback
