@@ -839,24 +839,37 @@ def write_checked(path: Path, text: str, label: str, state=None) -> None:
     it before it goes live.
     """
     check_encoding(text, label=label)
+    pages_blocking = []
+    pages_issues = []
     try:
-        from abvorn.core.copyguard import check_text, enabled, html_to_text
+        from abvorn.core.copyguard import check_text, enabled, html_to_text, _PAGE_BLOCKING_RULES
         if enabled() and text and len(text) <= 500_000:
             plain = html_to_text(text)
             if plain:
-                # Pages are REPORT ONLY: long LLM-generated articles carry too
-                # many false positives to hard-block on, but flagged copy must
-                # surface in the build log so it can be reviewed before commit.
+                # Pages are REPORT ONLY for grammar: long LLM-generated
+                # articles carry too many false positives to hard-block on.
+                # Fabricated testing/sales claims are the exception — they are
+                # never ambiguous and carry compliance risk, so pages carrying
+                # one are BLOCKED before write.
                 issues = check_text(plain[:20_000])
-                if issues:
-                    rules = ", ".join(sorted({i["rule"] for i in issues[:8]}))
-                    logger.warning(
-                        "copyguard pages %s: %d issue(s) flagged (%s). "
-                        "Review before publishing.",
-                        label, len(issues), rules,
-                    )
+                pages_blocking = [i for i in issues if i["rule"] in _PAGE_BLOCKING_RULES]
+                pages_issues = issues
     except Exception:
         logger.exception("copyguard page check failed for %s", label)
+    if pages_blocking:
+        phrases = ", ".join('"%s"' % i.get("context", i["rule"])
+                            for i in pages_blocking[:5])
+        raise ValueError(
+            f"{label}: page contains fabricated test/sales claim(s): "
+            f"{phrases}. Reword or remove before publishing."
+        )
+    if pages_issues:
+        rules = ", ".join(sorted({i["rule"] for i in pages_issues[:8]}))
+        logger.warning(
+            "copyguard pages %s: %d issue(s) flagged (%s). "
+            "Review before publishing.",
+            label, len(pages_issues), rules,
+        )
     try:
         from abvorn.core.review_gate import write_gated
     except Exception:
@@ -2850,7 +2863,7 @@ renderRPS(regret,primaryProduct.name,rpsData.products);
 
 
 
-def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None, published_date=None, updated_date=None, article_id=None):
+def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None, published_date=None, updated_date=None, article_id=None, pdf_url="", canonical_url=""):
     """Warm-editorial article page.
 
     Single source of truth lives in run_cycle.build_article_page; this
@@ -2864,8 +2877,23 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
         amazon_tag=amazon_tag, form_url=form_url, hero_img=hero_img,
         google_client_id=google_client_id, related_niches=related_niches,
         published_date=published_date, updated_date=updated_date,
-        article_id=article_id,
+        article_id=article_id, pdf_url=pdf_url, canonical_url=canonical_url,
     )
+
+
+def _repoint_hub_canonical(html, niche_slug):
+    """Re-point a mirrored article's canonical + og:url at the category hub.
+
+    The /reviews/<slug>/index.html page mirrors the newest dated article, so
+    it inherits that article's self-canonical. The hub is the landing page for
+    the directory and must keep claiming the directory URL.
+
+    Takes a niche SLUG, not a URL, and delegates to run_cycle: that helper owns
+    the hub-URL shape. Rebuilding the URL here would be exactly how the two
+    copies drift apart.
+    """
+    from run_cycle import _repoint_hub_canonical as _impl
+    return _impl(html, niche_slug)
 
 
 def build_comparison_page(niche_slug, niche_name, post_title, products, all_slugs, amazon_tag=""):
@@ -3270,11 +3298,16 @@ footer a{{color:#aaa;text-decoration:none}}
                         _publish_anchor = datetime.strptime(_pm.group(1), "%b %d, %Y").strftime("%Y-%m-%d")
                 except Exception:
                     _publish_anchor = None
+            # A dated article must advertise its own URL. Without this it would
+            # inherit the /reviews/<slug>/ hub canonical from build_article_page
+            # and Google would consolidate every dated URL into the hub.
+            dated_canonical = f"{_SITE_URL}/reviews/{slug}/{fname}"
             article_html = build_article_page(slug, niche_name, a["post_title"], a["article_html"],
                                               a["intro"], a["product_name"], a["meta_description"],
                                               all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
                                               related_niches=related, article_id=f"{slug}-{i}",
-                                              published_date=_publish_anchor or date_str, updated_date=date_str)
+                                              published_date=_publish_anchor or date_str, updated_date=date_str,
+                                              canonical_url=dated_canonical)
             try:
                 verify_page(article_html)
             except ValueError as e:
@@ -3283,7 +3316,10 @@ footer a{{color:#aaa;text-decoration:none}}
             write_checked(post_dir / fname, article_html, f"article {slug}/{fname}")
             print(f"  Written: docs/reviews/{slug}/{fname} (article)")
             if i == len(post_list) - 1:
-                write_checked(post_dir / "index.html", article_html, f"article index {slug}")
+                # The hub index mirrors the newest article, so its canonical and
+                # og:url are re-pointed back at the /reviews/<slug>/ path.
+                index_html = _repoint_hub_canonical(article_html, slug)
+                write_checked(post_dir / "index.html", index_html, f"article index {slug}")
                 print(f"  Written: docs/reviews/{slug}/index.html (latest)")
             # Update the post slug in all_posts for root index links
             for p in all_posts:

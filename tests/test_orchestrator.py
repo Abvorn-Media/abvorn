@@ -130,7 +130,7 @@ def test_deploy_category_hub_mirrors_newest_article():
 
 
 def test_deploy_content_article_filename_write_path():
-    """Opportunity articles write inside the category, canonical stays the hub."""
+    """Opportunity articles write at their own dated URL and self-canonicalize."""
     deployer = _deployer()
     sd = SiteDeployer(deployer, None)
     ok = sd.deploy_content(
@@ -145,7 +145,7 @@ def test_deploy_content_article_filename_write_path():
     assert ok is True
     html, path = deployer.deploy_html.call_args[0]
     assert path == "reviews/tv/insignia-50-fire-tv.html"
-    assert 'href="https://abvorn.com/reviews/tv/"' in html  # canonical is the category hub
+    assert 'rel="canonical" href="https://abvorn.com/reviews/tv/insignia-50-fire-tv.html"' in html
     assert "4k-monitors" in html  # nav built from all_categories
 
 
@@ -156,6 +156,60 @@ def test_deploy_content_defaults_to_index():
     sd.deploy_content("laptops", {"post_title": "T", "article_html": "<p>x</p>"})
     html, path = deployer.deploy_html.call_args[0]
     assert path == "reviews/laptops/index.html"
+
+
+def test_repoint_hub_canonical_keeps_hub_url():
+    """The hub mirror must advertise /reviews/<slug>/, never the dated file."""
+    from run_cycle import _repoint_hub_canonical
+    html = ('<link rel="canonical" href="https://abvorn.com/reviews/tv/x-2026-09-29.html">'
+            '<meta property="og:url" content="https://abvorn.com/reviews/tv/x-2026-09-29.html">')
+    out = _repoint_hub_canonical(html, "tv")
+    assert '<link rel="canonical" href="https://abvorn.com/reviews/tv/">' in out
+    assert '<meta property="og:url" content="https://abvorn.com/reviews/tv/">' in out
+
+
+def test_build_article_page_self_canonical_for_dated_article():
+    """A dated article canonicalizes to its own file URL, not the hub."""
+    from run_cycle import build_article_page
+    html = build_article_page(
+        "tv", "TV", "Insignia 50 Review", "<p>x</p>", "", "Insignia 50",
+        "desc", ["tv"], amazon_tag="viraltestco-20",
+        canonical_url="https://abvorn.com/reviews/tv/insignia-50-2026-09-29.html",
+    )
+    assert ('<link rel="canonical" href='
+            '"https://abvorn.com/reviews/tv/insignia-50-2026-09-29.html">') in html
+    assert ('<meta property="og:url" content='
+            '"https://abvorn.com/reviews/tv/insignia-50-2026-09-29.html">') in html
+
+
+def test_build_article_page_defaults_to_hub_canonical():
+    """Without canonical_url the page keeps the /reviews/<slug>/ hub canonical."""
+    from run_cycle import build_article_page
+    html = build_article_page(
+        "tv", "TV", "Insignia 50 Review", "<p>x</p>", "", "Insignia 50",
+        "desc", ["tv"], amazon_tag="viraltestco-20",
+    )
+    assert '<link rel="canonical" href="https://abvorn.com/reviews/tv/">' in html
+
+
+def test_deployer_hub_canonical_delegate():
+    """The src.deployment re-point delegate must re-point both tags.
+
+    The deployer writes the newest dated article to both <file>.html and
+    index.html; only the hub copy may claim the directory URL.
+    """
+    from src.deployment import _repoint_hub_canonical as deploy_repoint
+    html = (
+        '<link rel="canonical" '
+        'href="https://abvorn.com/reviews/tv/insignia-50-2026-09-29.html">'
+        '<meta property="og:url" '
+        'content="https://abvorn.com/reviews/tv/insignia-50-2026-09-29.html">'
+    )
+    out = deploy_repoint(html, "tv")
+    assert '<link rel="canonical" href="https://abvorn.com/reviews/tv/">' in out
+    assert ('<meta property="og:url" content="https://abvorn.com/reviews/tv/">'
+            in out)
+    assert "insignia-50-2026-09-29.html" not in out
 
 
 def test_product_placeholder_detection():

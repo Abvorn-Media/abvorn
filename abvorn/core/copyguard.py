@@ -90,6 +90,30 @@ _PLURAL_NOUN_WITHOUT_S = {
     "data", "media", "criteria", "fish", "sheep", "deer", "series", "species",
 }
 
+# Fabricated first-hand testing or sales claims. Abvorn does not run lab tests
+# and has no internal sales data, so these phrases are always unverifiable —
+# unlike grammar issues they are never a false positive, and they carry real
+# legal/compliance risk (FTC endor-recording standards). Detected
+# deterministically here so they are caught even when the LanguageTool server
+# is down.
+_FABRICATED_CLAIM_RES = [
+    re.compile(r"\bbased on our testing\b", re.I),
+    re.compile(r"\bwe'?ve?\s+tested\b", re.I),
+    re.compile(r"\bwe\s+(?:have\s+|has\s+)?tested\b", re.I),
+    re.compile(r"\bhands?-on testing\b", re.I),
+    re.compile(r"\blab(?:oratory)? testing\b", re.I),
+    re.compile(r"\btest bench(?:es)?\b", re.I),
+    re.compile(
+        r"\b[0-9.,]+k?\s*\+?\s*(?:units?|bought)\s+"
+        r"(?:sold\s+in\s+(?:the\s+)?past\s+month"
+        r"|in\s+(?:the\s+)?past\s+month)\b", re.I),
+    re.compile(r"\b[0-9.,]+k?\s*\+?\s*units?/(?:month|mo)\b", re.I),
+    re.compile(r"\b[0-9.,]+k?\s*\+?\s*units?\s+sold\b", re.I),
+    re.compile(r"\bX\s*units?\s+sold\b", re.I),
+]
+
+_PAGE_BLOCKING_RULES = {"FABRICATED_TESTING_CLAIM"}
+
 
 def _number_agreement_issues(text: str) -> list[dict]:
     """Flag a count next to a singular noun ('We compared 4 Monitor').
@@ -128,6 +152,38 @@ def _number_agreement_issues(text: str) -> list[dict]:
             "replacement": "",
             "context": m.group(0),
         })
+    return issues
+
+
+def _fabricated_claim_issues(text: str) -> list[dict]:
+    """Flag unverifiable first-hand testing or sales claims.
+
+    Abvorn never conducts lab tests and holds no internal sales figures, so
+    these phrasings are fabricated by construction. They are flagged
+    deterministically (server-independent) because LanguageTool reliably passes
+    them as clean copy. Unlike grammar findings these are never ambiguous, so
+    callers may hard-block on them even where pages are otherwise report-only.
+    """
+    seen_contexts = set()
+    issues = []
+    for pat in _FABRICATED_CLAIM_RES:
+        for m in pat.finditer(text):
+            span = (m.start(), m.end())
+            if span in seen_contexts:
+                continue
+            seen_contexts.add(span)
+            issues.append({
+                "rule": "FABRICATED_TESTING_CLAIM",
+                "category": "CLAIMS",
+                "issue_type": "unverifiable",
+                "message": (
+                    "Claim of first-hand testing or internal sales data that "
+                    "Abvorn cannot substantiate. Reword to describe research, "
+                    "spec comparison, or owner feedback instead."
+                ),
+                "replacement": "",
+                "context": m.group(0),
+            })
     return issues
 
 
@@ -243,6 +299,7 @@ def check_text(text: str, *, ignore: set[str] | None = None) -> list[dict]:
     cleaned = _redact(text, ignore_entries)
     issues: list[dict] = []
     issues.extend(_number_agreement_issues(cleaned))
+    issues.extend(_fabricated_claim_issues(cleaned))
     if not _Availability.available():
         return issues
     for chunk in _chunks(cleaned):
@@ -280,6 +337,8 @@ def is_blocking(issue: dict, ignore_rules: set[str] | None = None) -> bool:
         ignore_rules = _env_ignore_rules()
     if issue["rule"] in ignore_rules:
         return False
+    if issue["rule"] == "FABRICATED_TESTING_CLAIM":
+        return True
     return (
         issue["issue_type"] in _BLOCKING_ISSUE_TYPES
         or issue["category"] in _BLOCKING_CATEGORIES

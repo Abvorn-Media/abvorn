@@ -300,7 +300,7 @@ class SiteDeployer:
                        article_filename: str = None) -> bool:
         try:
             all_categories = all_categories or []
-            from run_cycle import build_article_page
+            from run_cycle import build_article_page, _SITE_URL
             today = datetime.now().strftime("%Y-%m-%d")
             products = content.get("products") or []
             if _products_are_placeholder(products):
@@ -332,6 +332,10 @@ class SiteDeployer:
                 published_date=today,
                 updated_date=today,
                 article_id=f"{niche}-0",
+                canonical_url=(
+                    f"{_SITE_URL}/reviews/{niche}/{article_filename}"
+                    if article_filename else ""
+                ),
             )
             self._last_content = content
             self._last_niche = niche

@@ -166,6 +166,11 @@ WRITING RULES:
 - Include exactly 2-3 natural affiliate links within the body
 - Affiliate link format: <a href='https://www.amazon.com/s?k=PRODUCT&tag={amazon_tag}' rel='nofollow sponsored' target='_blank'>check price on Amazon</a>
 - End with a clear, low-risk call to action
+- NEVER claim first-hand or lab testing ("based on our testing", "we tested",
+  "hands-on testing", "our test bench") — Abvorn does not conduct lab tests.
+  Describe research, spec comparison, and owner feedback instead.
+- NEVER invent sales or popularity figures ("units sold in the past month",
+  "best-selling numbers"). Only report figures present in the PRODUCTS data.
 
 Return JSON:
 {{

@@ -379,8 +379,8 @@ def main():
 
     pages = sorted(p for p in (DOCS / "reviews").glob("*/*.html"))
     # Map each niche to its newest dated article stem (for index.html, whose
-    # Download button must point at the newest PDF even though the page itself
-    # is the byte-for-byte mirror of that article).
+    # Download button must point at the newest PDF even though the page mirrors
+    # that article apart from its canonical/og:url).
     newest_stem = {}
     for slug in by_slug:
         d = DOCS / "reviews" / slug
@@ -426,6 +426,10 @@ def main():
             updated_date=a.get("updated_date"),
             article_id=article_id,
             pdf_url=f"{run_cycle._SITE_URL}/reviews/{slug}/{pdf_stem}.pdf",
+            canonical_url=(
+                "" if page.name == "index.html"
+                else f"{run_cycle._SITE_URL}/reviews/{slug}/{page.name}"
+            ),
         )
         html_out = normalize_click_ids(html_out, article_id)
         page.write_text(html_out, encoding="utf-8")
@@ -437,8 +441,9 @@ def main():
                 page.with_suffix(".pdf").write_bytes(pdf_bytes)
                 print(f"  PDF:    {page.with_suffix('.pdf')}")
 
-    # index.html must mirror the newest dated article byte-for-byte (same
-    # article_id), matching the content cycle's write_files behavior.
+    # index.html must mirror the newest dated article (same article_id, same
+    # body), matching write_files behavior -- except the canonical + og:url,
+    # which stay on the /reviews/<slug>/ hub.
     mirrored = 0
     for slug in sorted(by_slug):
         niche_dir = DOCS / "reviews" / slug
@@ -447,8 +452,11 @@ def main():
             continue
         newest = max(dated, key=lambda p: extract_article(p)["published_date"] or "")
         idx = niche_dir / "index.html"
-        if idx.read_text(encoding="utf-8") != newest.read_text(encoding="utf-8"):
-            idx.write_text(newest.read_text(encoding="utf-8"), encoding="utf-8")
+        mirrored_html = run_cycle._repoint_hub_canonical(
+            newest.read_text(encoding="utf-8"), slug
+        )
+        if idx.read_text(encoding="utf-8") != mirrored_html:
+            idx.write_text(mirrored_html, encoding="utf-8")
             mirrored += 1
             print(f"  Mirror: {idx} -> {newest.name}")
 

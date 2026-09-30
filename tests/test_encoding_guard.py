@@ -146,3 +146,48 @@ def test_enforce_amazon_tag_leaves_already_tagged():
     from src.article_design import enforce_amazon_tag
     html = '<a href="https://www.amazon.com/dp/B0H69PVMKC?tag=x">ok</a>'
     assert enforce_amazon_tag(html, "viraltestco-20") == html
+
+
+def test_write_checked_blocks_fabricated_testing_claim(tmp_path, monkeypatch):
+    from src import deployment
+    from src.deployment import write_checked
+
+    monkeypatch.setattr(deployment, "logger", type(
+        "L", (), {"warning": staticmethod(lambda *a, **k: None),
+                  "info": staticmethod(lambda *a, **k: None),
+                  "exception": staticmethod(lambda *a, **k: None),
+                  "error": staticmethod(lambda *a, **k: None)}))
+    target = tmp_path / "claim.html"
+    html = (
+        "<html><body><h1>Best 4K monitors</h1>"
+        "<p>Based on our testing, the S2725QS wins.</p>"
+        "</body></html>"
+    )
+    with pytest.raises(ValueError, match="fabricated test/sales claim"):
+        write_checked(target, html, label="claim")
+    assert not target.exists()
+
+
+def test_write_checked_allows_clean_page(tmp_path, monkeypatch):
+    from src import deployment
+    from src.deployment import write_checked
+    import abvorn.core.review_gate as rg
+
+    monkeypatch.setattr(deployment, "logger", type(
+        "L", (), {"warning": staticmethod(lambda *a, **k: None),
+                  "info": staticmethod(lambda *a, **k: None),
+                  "exception": staticmethod(lambda *a, **k: None),
+                  "error": staticmethod(lambda *a, **k: None)}))
+    def _direct_write(path, text, state=None):
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    monkeypatch.setattr(rg, "write_gated", _direct_write)
+    target = tmp_path / "clean.html"
+    html = (
+        "<html><body><h1>Best 4K monitors</h1>"
+        "<p>We compared 8 monitors using spec sheets and owner reviews.</p>"
+        "</body></html>"
+    )
+    write_checked(target, html, label="clean")
+    assert target.exists()

@@ -220,6 +220,10 @@ Write the COMPLETE article body as HTML. Follow the outline sections as <h2> hea
 For each product, include: a brief intro, key features, pros/cons, and a bottom-line recommendation.
 Use <p> for paragraphs, <ul>/<li> for lists, <strong> for emphasis.
 Be honest, specific (use real prices/numbers), and scannable.
+NEVER claim first-hand or lab testing ("based on our testing", "we tested",
+"hands-on testing") — Abvorn does not conduct lab tests. Describe research,
+spec comparison, and owner feedback instead. NEVER invent sales or popularity
+figures ("units sold in the past month") unless present in the products data.
 Return ONLY the HTML."""
     t0 = time.time()
     article_result = ai_sql.query(QueryPlan(

@@ -169,6 +169,82 @@ def test_gate_copy_block_mode_fails_on_number_agreement(monkeypatch):
     assert "NUMBER_NOUN_AGREEMENT" in {i["rule"] for i in res.blocking}
 
 
+def test_fabricated_claim_flags_testing_based_on_our_testing():
+    issues = copyguard._fabricated_claim_issues(
+        "Based on our testing, the S2725QS is the best 4K monitor."
+    )
+    flagged = [i for i in issues if i["rule"] == "FABRICATED_TESTING_CLAIM"]
+    assert any("Based on our testing" in i["context"] for i in flagged)
+
+
+def test_fabricated_claim_flags_we_tested_variants():
+    for phrase in [
+        "We tested the webcams side by side.",
+        "We've tested and researched these devices.",
+        "We have tested 12 earbuds.",
+        "It passed our hands-on testing.",
+        "Lab testing confirmed the battery life.",
+    ]:
+        issues = copyguard._fabricated_claim_issues(phrase)
+        assert any(i["rule"] == "FABRICATED_TESTING_CLAIM" for i in issues), phrase
+
+
+def test_fabricated_claim_flags_sales_figures():
+    for phrase in [
+        "Sales: 4K+ units sold in the past month.",
+        "4,000+ bought in past month",
+        "2K+ bought in the past month",
+        "10K+ units/month",
+        "Sales: 10K+ bought in past month",
+    ]:
+        issues = copyguard._fabricated_claim_issues(phrase)
+        assert any(i["rule"] == "FABRICATED_TESTING_CLAIM" for i in issues), phrase
+
+
+def test_fabricated_claim_allows_clean_research_copy():
+    issues = copyguard._fabricated_claim_issues(
+        "We compared 8 monitors using spec sheets and owner feedback. "
+        "We've researched these earbuds for weeks."
+    )
+    assert [i for i in issues if i["rule"] == "FABRICATED_TESTING_CLAIM"] == []
+
+
+def test_fabricated_claim_is_page_blocking_rule():
+    assert "FABRICATED_TESTING_CLAIM" in copyguard._PAGE_BLOCKING_RULES
+
+
+def test_fabricated_claim_detected_server_independent(monkeypatch):
+    monkeypatch.setattr(copyguard, "_Availability", type("_Av", (), {
+        "available": staticmethod(lambda: False)}))
+    issues = check_text("Based on our hands-on testing, this is the best one.")
+    assert any(i["rule"] == "FABRICATED_TESTING_CLAIM" for i in issues)
+
+
+def test_gate_copy_block_mode_fails_on_fabricated_claim(monkeypatch):
+    monkeypatch.setattr(copyguard, "_Availability", type("_Av", (), {
+        "available": staticmethod(lambda: False)}))
+    res = gate_copy("Based on our lab testing, it wins.", "t", mode="block")
+    assert res.ok is False
+    assert "FABRICATED_TESTING_CLAIM" in {i["rule"] for i in res.blocking}
+
+
+def test_social_publisher_blocks_fabricated_claim(monkeypatch):
+    from abvorn.domination.social_publisher import SocialPublisher
+
+    monkeypatch.setenv("ABVORN_SOCIAL_PUBLISH", "1")
+    monkeypatch.setenv("ABVORN_SOCIAL_PLATFORMS", "x")
+    claim = {"rule": "FABRICATED_TESTING_CLAIM", "category": "CLAIMS",
+             "issue_type": "unverifiable", "message": "x", "replacement": "",
+             "context": "we tested"}
+    fake_result = GateResult(ok=False, blocking=[claim], issues=[claim])
+    monkeypatch.setattr(copyguard, "gate_copy", lambda t, label, mode="report": fake_result)
+
+    pub = SocialPublisher(composio_key="test_key")
+    monkeypatch.setattr(pub, "_will_post_live", lambda platform, mapping: True)
+    with pytest.raises(CopyGateError):
+        pub.publish({"text": "we tested the new laptops"}, "x", "laptops")
+
+
 def test_social_publisher_blocks_live_posts(monkeypatch):
     from abvorn.domination.social_publisher import SocialPublisher
 

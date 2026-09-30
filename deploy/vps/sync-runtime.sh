@@ -42,6 +42,17 @@ notify() {
   echo "runtime sync: $(git rev-parse --short "$OLD") -> $(git rev-parse --short "$NEW")"
   git reset --hard "$NEW"
 
+  # Only a runtime-code change needs a daemon restart. The daemon itself commits
+  # docs/ (index pages, card rewrites) through the GitHub API, so a docs-only
+  # commit would otherwise restart the daemon every cycle — 38 restarts/6h was
+  # observed. Compute whether the diff touches anything the running process
+  # actually loads; everything else is output, not input.
+  CODE_CHANGED=$(git diff --name-only "$OLD" "$NEW" \
+    | grep -E '^(abvorn/|src/|run_daemon.py|run_cycle.py|run_evolution.py|requirements.txt|deploy/vps/|scripts/)' || true)
+  if [ -z "$CODE_CHANGED" ]; then
+    echo "docs/output-only sync (no runtime code touched) - mirroring, not restarting"
+  fi
+
   echo "mirroring flat package"
   rsync -a --delete --exclude __pycache__ "$REPO/abvorn/" "$FLAT/" 2>&1
   cp -f "$REPO/run_daemon.py" /opt/abvorn-core/run_daemon.py
@@ -76,23 +87,27 @@ notify() {
     echo "WARNING: $REPO/docs missing, leaving /opt/abvorn-core/docs untouched"
   fi
 
-  echo "reinstalling deps"
-  "$VENV/bin/pip" install -q -r "$REPO/requirements.txt" 2>&1 || { echo "pip failed"; notify "pip install failed"; exit 1; }
+  if [ -n "$CODE_CHANGED" ]; then
+    echo "reinstalling deps"
+    "$VENV/bin/pip" install -q -r "$REPO/requirements.txt" 2>&1 || { echo "pip failed"; notify "pip install failed"; exit 1; }
 
-  echo "import validation (canary)"
-  cd /opt/abvorn-core
-  if ! "$VENV/bin/python" -c 'import src.deployment, run_cycle; print("import OK")' >/dev/null 2>&1; then
-    echo "IMPORT FAILED - keeping old daemon running"; notify "import validation FAILED - daemon not restarted"; exit 1
-  fi
+    echo "import validation (canary)"
+    cd /opt/abvorn-core
+    if ! "$VENV/bin/python" -c 'import src.deployment, run_cycle; print("import OK")' >/dev/null 2>&1; then
+      echo "IMPORT FAILED - keeping old daemon running"; notify "import validation FAILED - daemon not restarted"; exit 1
+    fi
 
-  echo "restarting abvorn-daemon"
-  if ! sudo -n systemctl restart abvorn-daemon; then
-    echo "daemon restart failed"; notify "daemon restart failed"; exit 1
+    echo "restarting abvorn-daemon"
+    if ! sudo -n systemctl restart abvorn-daemon; then
+      echo "daemon restart failed"; notify "daemon restart failed"; exit 1
+    fi
+    sleep 3
+    sudo -n systemctl is-active abvorn-daemon
+    notify "synced to $(git -C "$REPO" rev-parse --short HEAD)"
+  else
+    echo "runtime unchanged - daemon NOT restarted"
   fi
-  sleep 3
-  sudo -n systemctl is-active abvorn-daemon
 
   echo "$NEW" | sudo -n tee "$MARKER" >/dev/null
   echo "runtime synced to $(git -C "$REPO" rev-parse --short HEAD)"
-  notify "synced to $(git -C "$REPO" rev-parse --short HEAD)"
 } >> "$LOG" 2>&1

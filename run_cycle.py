@@ -1983,10 +1983,34 @@ def _product_aff_url(product, niche_slug, tag):
     return amazon_link(query, tag)
 
 
-def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None, published_date=None, updated_date=None, article_id=None, pdf_url=""):
+def _repoint_hub_canonical(html, niche_slug):
+    """Re-point a page's canonical + og:url to the category hub.
+
+    index.html mirrors the newest dated article -- same body, same article_id --
+    but its canonical + og:url are the only tags that differ, so it must keep
+    advertising the /reviews/<slug>/ hub URL and never the dated article's own
+    file. Used by write_files and the rebuild mirror step.
+    """
+    hub = f"{_SITE_URL}/reviews/{niche_slug}/"
+    html = re.sub(
+        r'<link rel="canonical" href="[^"]+">',
+        f'<link rel="canonical" href="{hub}">',
+        html,
+    )
+    html = re.sub(
+        r'<meta property="og:url" content="[^"]+">',
+        f'<meta property="og:url" content="{hub}">',
+        html,
+    )
+    return html
+
+
+def build_article_page(niche_slug, niche_name, post_title, article_html, intro, product_name, meta_desc, all_slugs, products=None, pexels_key="", amazon_tag="", form_url="", hero_img="", google_client_id="", related_niches=None, published_date=None, updated_date=None, article_id=None, pdf_url="", canonical_url=""):
     b = SITE_BASE
     t = amazon_tag or os.environ.get("AMAZON_TAG", "viraltestco-20")
-    article_url = f"{_SITE_URL}/reviews/{niche_slug}/"
+    # A dated article is its own canonical page; only the hub index keeps the
+    # /reviews/<slug>/ canonical (see write_files / rebuild_reviews mirror).
+    article_url = canonical_url or f"{_SITE_URL}/reviews/{niche_slug}/"
     share = WARM_SHARE_HTML_T.replace("TITLE_T", html_mod.escape(post_title)).replace("URL_T", article_url)
     # Sanitize AI-generated content up front: strip duplicated chart fragments,
     # embedded document wrappers, mojibake, and duplicated Introduction headings.
@@ -3104,6 +3128,9 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
             date_str = datetime.now().strftime("%Y-%m-%d")
             suffix = "" if i == 0 else f"-{i}"
             fname = f"{_title_slug(a['post_title'])}-{date_str}{suffix}.html"
+            # A dated article is its own canonical page; the hub index that
+            # mirrors the newest one is re-pointed to /reviews/<slug>/ below.
+            dated_canonical = f"{_SITE_URL}/reviews/{slug}/{fname}"
             # Only advertise a PDF that will actually be written. The daemon's
             # deploy_content never renders PDFs, so its pages carry no button;
             # the local regen path writes the .pdf beside the page, but the
@@ -3142,7 +3169,8 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
                                            a["intro"], a["product_name"], a["meta_description"],
                                            all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
                                            related_niches=related, article_id=f"{slug}-{i}", pdf_url="",
-                                           published_date=_published_date, updated_date=_updated_date)
+                                           published_date=_published_date, updated_date=_updated_date,
+                                           canonical_url=dated_canonical)
             pdf_bytes = build_review_page_pdf(base_html, title=a["post_title"], niche_name=niche_name, base=_SITE_URL)
             pdf_name = None
             if pdf_bytes:
@@ -3154,11 +3182,12 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
                                               all_slugs, a.get("products"), pexels_key, amazon_tag, form_url, hero_img_html, google_client_id,
                                               related_niches=related, article_id=f"{slug}-{i}",
                                               pdf_url=f"{_SITE_URL}/reviews/{slug}/{pdf_name}" if pdf_name else "",
-                                              published_date=_published_date, updated_date=_updated_date)
+                                              published_date=_published_date, updated_date=_updated_date,
+                                              canonical_url=dated_canonical)
             _wc(post_dir / fname, article_html, f"article {slug}/{fname}")
             print(f"  Written: docs/reviews/{slug}/{fname} (article)")
             if i == len(post_list) - 1:
-                _wc(post_dir / "index.html", article_html, f"article index {slug}")
+                _wc(post_dir / "index.html", _repoint_hub_canonical(article_html, slug), f"article index {slug}")
                 print(f"  Written: docs/reviews/{slug}/index.html (latest)")
             # Update the post slug in all_posts for root index links
             for p in all_posts:
