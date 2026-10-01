@@ -3,8 +3,13 @@ from datetime import datetime
 from .base import AgentBase
 from ..agents.researcher import research_niche
 from ..core.models import ModelRouter
+from ..core import bus_progress
 
 logger = logging.getLogger("abvorn.orchestrator")
+
+# Monotonic "highest content.drafted id already deployed" marker. See
+# abvorn/core/bus_progress.py for why this is a position and not a set.
+_DRAFTED_WATERMARK = "deployagent_drafted_watermark"
 
 # Centralized affiliate tag: AMAZON_TAG secret, falling back to the real tag.
 def _amazon_tag() -> str:
@@ -430,21 +435,14 @@ class DeployAgent(AgentBase):
         events = self.bus.get_recent_events("content.drafted")
         if not events:
             return {"events": []}
-        try:
-            stored = self.state.get_meta("handled_drafted_event_ids", []) if self.state else []
-            handled = set(stored)
-        except Exception:
-            handled = set()
-        fresh = [e for e in events if e["id"] not in handled]
+        # Watermark, not a truncated id set: a 200-entry window against a
+        # ~460-deep backlog made every evicted id look unhandled forever, so
+        # the same tv page was re-deployed and re-announced each cycle.
+        fresh = bus_progress.fresh_events(self.state, _DRAFTED_WATERMARK, events)
         return {"events": fresh}
 
     def _mark_drafted_handled(self, event_ids):
-        try:
-            stored = self.state.get_meta("handled_drafted_event_ids", []) if self.state else []
-            updated = sorted(set(stored) | set(event_ids))
-            self.state.set_meta("handled_drafted_event_ids", updated[-200:])
-        except Exception as e:
-            logger.error(f"[DeployAgent] failed to mark drafted events handled: {e}")
+        bus_progress.advance(self.state, _DRAFTED_WATERMARK, event_ids)
 
     async def decide(self, perception):
         if perception.get("events"):
@@ -529,7 +527,26 @@ class DeployAgent(AgentBase):
                     niche,
                     content_payload,
                 )
-            self.bus.publish("content.published", {"niche": niche, "status": "deployed"})
+            # Identity travels with the event. Without a title/slug the
+            # Ambassador could only build "Just published our {niche} guide!"
+            # from the niche, so every announcement of a given niche carried
+            # byte-identical text and the same product card.
+            published = {"niche": niche, "status": "deployed"}
+            if content_payload:
+                title = str(content_payload.get("post_title") or "").strip()
+                products = content_payload.get("products") or []
+                product_name = str(
+                    content_payload.get("product_name")
+                    or (products[0].get("name", "") if products else "")
+                ).strip()
+                if title:
+                    published["title"] = title
+                if product_name:
+                    published["product_name"] = product_name
+                slug = str(content_payload.get("slug") or "").strip()
+                if slug:
+                    published["slug"] = slug
+            self.bus.publish("content.published", published)
             if handled_id is not None:
                 self._mark_drafted_handled([handled_id])
             return {"niche": niche, "status": "deployed"}

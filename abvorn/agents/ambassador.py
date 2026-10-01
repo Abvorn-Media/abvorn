@@ -9,8 +9,12 @@ import asyncio, logging
 from datetime import datetime
 from .base import AgentBase
 from ..deploy.social import SocialDeployer
+from ..core import bus_progress
 
 logger = logging.getLogger("abvorn.agents.ambassador")
+
+# Monotonic "highest content.published id already promoted" marker.
+_PROMOTED_WATERMARK = "ambassador_promoted_watermark"
 
 PERSONA = (
     "You are Abvorn's social media ambassador — warm, knowledgeable, and genuinely helpful. "
@@ -86,22 +90,13 @@ class SocialAmbassador(AgentBase):
         return p
 
     def _filter_new(self, events: list) -> list:
-        if not events:
-            return []
-        try:
-            stored = self.state.get_meta("handled_promoted_event_ids", []) if self.state else []
-            handled = set(stored)
-        except Exception:
-            handled = set()
-        return [e for e in events if e["id"] not in handled]
+        # Watermark, not a truncated id set - see core/bus_progress.py. The old
+        # 200-entry window against a thousands-deep backlog meant the same
+        # published event was "fresh" again every cycle.
+        return bus_progress.fresh_events(self.state, _PROMOTED_WATERMARK, events)
 
     def _mark_handled(self, event_ids):
-        try:
-            stored = self.state.get_meta("handled_promoted_event_ids", []) if self.state else []
-            updated = sorted(set(stored) | set(event_ids))
-            self.state.set_meta("handled_promoted_event_ids", updated[-200:])
-        except Exception as e:
-            logger.warning(f"[Ambassador] failed to mark events handled: {e}")
+        bus_progress.advance(self.state, _PROMOTED_WATERMARK, event_ids)
 
     async def decide(self, perception: dict) -> str:
         if perception.get("schedule_due"):
@@ -139,11 +134,19 @@ class SocialAmbassador(AgentBase):
             if not events:
                 return {"action": "none"}
             ev = max(events, key=lambda e: e["created_at"])
-            niche = ev.get("message", {}).get("niche", ev.get("niche", "general"))
-            url = ev.get("message", {}).get("url", "") or ev.get("url", "")
+            msg = ev.get("message", {}) if isinstance(ev.get("message"), dict) else {}
+            niche = msg.get("niche", ev.get("niche", "general"))
+            url = msg.get("url", "") or ev.get("url", "")
+            # Identity from the publisher: a niche slug alone cannot tell two
+            # different reviews apart, so every tv post reused the same headline
+            # and the same product card.
+            title = msg.get("title", "") or ev.get("title", "")
+            slug = msg.get("slug", "") or ev.get("slug", "")
             if not self.soul_check("promote_new_content", {"niche": niche}):
                 return {"action": "soul_blocked", "decision": "promote_new_content"}
-            result = await self._promote_niche(niche, url=url)
+            result = await self._promote_niche(
+                niche, url=url, title=title, slug=slug
+            )
             self._mark_handled([ev["id"]])
             return result
 
@@ -305,7 +308,27 @@ class SocialAmbassador(AgentBase):
             logger.error(f"[Ambassador] _craft_and_post failed: {e}")
             return {"status": "failed", "error": str(e)[:100], "platform": item.get("platform", "unknown")}
 
-    async def _promote_niche(self, niche: str, url: str = "") -> dict:
+    def _headline(self, niche: str, title: str = "", slug: str = "") -> str:
+        """Announcement line for this specific article.
+
+        The old form interpolated only the niche, so every promotion of a given
+        niche rendered byte-identical text - "Just published our tv guide!" went
+        out over and over with the same product card. Prefer the real article
+        title from the publisher; fall back to the slug, humanised, so a niche
+        announcement still reads as English instead of exposing a 60-char slug.
+        """
+        clean = " ".join(str(title or "").split()).strip().strip("\"'")
+        if clean:
+            return f"Just published: {clean}"
+        raw = " ".join(str(slug or "").split()).strip()
+        if raw:
+            words = raw.replace("-", " ").replace("_", " ").strip()
+            if words:
+                return f"Just published our {words} guide!"
+        return f"Just published our {niche} guide!"
+
+    async def _promote_niche(self, niche: str, url: str = "",
+                             title: str = "", slug: str = "") -> dict:
         logger.info(f"[Ambassador] Promoting new content: {niche}")
         platforms = ["x", "linkedin"]
         try:
@@ -313,16 +336,18 @@ class SocialAmbassador(AgentBase):
                 platforms.append("facebook")
         except Exception:
             pass
-        headline = f"Just published our {niche} guide!"
+        headline = self._headline(niche, title, slug)
+        logger.info(f"[Ambassador] headline: {headline!r}")
         results = []
         for platform in platforms:
             try:
                 item = {"niche": niche, "platform": platform,
                         "headline": headline,
-                        "product": niche}
+                        "product": slug or niche}
                 # Same photo on every platform: one card, so the set reads as
                 # one campaign instead of three unrelated posts.
-                media = self._media_for(niche, platform, url, title=headline)
+                media = self._media_for(slug or niche, platform, url,
+                                        title=headline)
                 result = await self._craft_and_post(item, media_paths=media)
                 result["media_count"] = len(media or [])
                 results.append(result)
