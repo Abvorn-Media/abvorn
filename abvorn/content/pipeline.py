@@ -3,6 +3,7 @@ from datetime import datetime
 from abvorn.agents.researcher import research_niche
 from abvorn.agents.writer import generate_outline, write_draft
 from abvorn.agents.editor import fact_check, polish, build_schema
+from src.deployment import niche_relevance
 
 logger = logging.getLogger("abvorn.pipeline")
 
@@ -68,6 +69,20 @@ class ContentPipeline:
                             brain_context=brain_context)
         if not draft:
             logger.error(f"[PIPELINE] DRAFT failed for {niche}")
+            return None
+
+        # post_title is raw model output and it becomes the page's filename via
+        # _title_slug(), so an off-topic title used to ship as a real,
+        # self-canonical review inside the wrong niche. Check it here, right
+        # after the draft, so fact-check and polish don't spend calls on
+        # content we are going to throw away.
+        _rel = niche_relevance(niche, draft.get("post_title", "") or "", products)
+        if not _rel["relevant"]:
+            logger.error(
+                f"[PIPELINE] DRAFT off-topic for {niche}: {_rel['reason']} "
+                f"(title: {str(draft.get('post_title', ''))[:90]!r}) - aborting "
+                f"before publish rather than filing it under the wrong niche"
+            )
             return None
 
         # Stage 4: FACT-CHECK

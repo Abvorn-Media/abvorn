@@ -33,7 +33,7 @@ from src.social_permission import create_social_permission_framework
 from src.infrastructure import infra_reporter
 from src.energy_accounting import energy_accounting
 from src.content_generation import generate_outline, write_draft
-from src.deployment import build_homepage, rewrite_affiliate_urls, build_category_dropdown, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, build_reviews_hub_page, build_categories_hub_page, scan_published_reviews, _overlay_review, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS, review_card, CATEGORY_TAGLINES, DESIGN_SYSTEM_CSS, FONT_LINK
+from src.deployment import build_homepage, rewrite_affiliate_urls, build_category_dropdown, MEGA_MENU_CSS, CATEGORY_MAP, category_color, build_category_listing_page, build_reviews_hub_page, build_categories_hub_page, scan_published_reviews, niche_relevance, _overlay_review, _category_slug, _title_slug, build_site_header, build_site_footer, SITE_CHROME_CSS, REACTIONS_JS_BODY, ARTICLE_REACTIONS_JS, review_card, CATEGORY_TAGLINES, DESIGN_SYSTEM_CSS, FONT_LINK
 from src.click_tracker import register_articles_batch
 from src.article_design import (PROD_SHOT_CSS, upgrade_product_image, sanitize_article_html, inject_product_photos,
                                 build_faq, render_article_body, price_floor_for, enforce_amazon_tag)
@@ -3120,6 +3120,18 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     # latest so existing links (and category pages) keep working.
     for slug, post_list in articles.items():
         for i, a in enumerate(post_list):
+            # An off-topic post_title slugifies into a perfectly ordinary
+            # filename, so without this the article lands inside a real niche
+            # directory as a self-canonical page that has nothing to do with
+            # the niche ("Solar Panels Buying Guide" under reviews/laptops/).
+            # The niche slug plus this article's own product names are the
+            # whole vocabulary, so the check needs no maintained word list.
+            _rel = niche_relevance(slug, a.get("post_title", "") or "",
+                                    a.get("products") or [])
+            if not _rel["relevant"]:
+                print(f"  SKIPPED: docs/reviews/{slug}/ - {_rel['reason']} "
+                      f"(title: {str(a.get('post_title', ''))[:70]!r})")
+                continue
             post_dir = docs / "reviews" / slug
             post_dir.mkdir(parents=True, exist_ok=True)
             hero_img_html = hero_images.get(slug, "")

@@ -349,6 +349,7 @@ class SiteDeployer:
         try:
             all_categories = all_categories or []
             from run_cycle import build_article_page, _SITE_URL
+            from src.deployment import niche_relevance
             today = datetime.now().strftime("%Y-%m-%d")
             products = content.get("products") or []
             if require_products and not products:
@@ -368,6 +369,17 @@ class SiteDeployer:
                     "currently published page instead of shipping a "
                     "product-less hub",
                     niche, len(products),
+                )
+                return False
+            post_title = content.get("post_title", "") or ""
+            relevance = niche_relevance(niche, post_title, products)
+            if not relevance["relevant"]:
+                logger.warning(
+                    "[SiteDeployer] Refusing to publish %s: %s — title %r is "
+                    "about something else, so it would ship as a real, "
+                    "self-canonical review inside the wrong niche. Keeping "
+                    "the currently published page.",
+                    niche, relevance["reason"], post_title[:90],
                 )
                 return False
             product_name = (content.get("product_name")

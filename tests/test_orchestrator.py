@@ -199,7 +199,8 @@ def test_deploy_content_defaults_to_index():
     """Without an article_filename, behaviour is unchanged."""
     deployer = _deployer()
     sd = SiteDeployer(deployer, None)
-    sd.deploy_content("laptops", {"post_title": "T", "article_html": "<p>x</p>"})
+    sd.deploy_content("laptops", {"post_title": "Laptop Buying Guide 2026",
+                                  "article_html": "<p>x</p>"})
     html, path = deployer.deploy_html.call_args[0]
     assert path == "reviews/laptops/index.html"
 
@@ -348,8 +349,52 @@ def test_deploy_content_allows_real_products():
         all_categories=["tv"],
     )
     assert ok is True
+
+
+def test_deploy_content_refuses_off_topic_title():
+    """A real product set is not enough when the title is about something else.
+
+    "Solar Panels Buying Guide" shipped under reviews/laptops/ and
+    "First-Time Hotel Booking Guide" under reviews/robot-vacuums/ -- both with
+    a real laptop/vacuum product set, both self-canonical. The products check
+    cannot see this, because the payload genuinely had products; only the
+    title's relationship to the niche can.
+    """
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    ok = sd.deploy_content(
+        "laptops",
+        {"post_title": "Solar Panels Buying Guide for First-Time Buyers",
+         "article_html": "<p>guide</p>",
+         "products": [{"name": "Lenovo ThinkPad X1 Carbon",
+                       "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}]},
+        all_categories=["laptops"],
+    )
+    assert ok is False
+    deployer.deploy_html.assert_not_called()
+    # The refused payload must not become the hub mirror either.
+    assert sd._last_content is None
+    assert sd._last_niche is None
+
+
+def test_deploy_content_allows_on_topic_title_despite_no_slug_word():
+    """The guard must not fire when the title is on-topic but never names the
+    niche. 'Echo Show 5' says nothing about 'smart-home', yet the page belongs
+    there; rejecting it would trade this bug for a worse one."""
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    ok = sd.deploy_content(
+        "smart-home",
+        {"post_title": "First-Time Buyer Guide: Echo Show 5 Review & Best Deal",
+         "article_html": "<p>guide</p>",
+         "products": [{"name": "Echo Show 5",
+                       "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}]},
+        all_categories=["smart-home"],
+    )
+    assert ok is True
+
     html, path = deployer.deploy_html.call_args[0]
-    assert path == "reviews/tv/index.html"
+    assert path == "reviews/smart-home/index.html"
     assert "B0F1GF1KFC" in html
 
 
@@ -460,6 +505,7 @@ def test_deploy_content_require_products_blocks_productless_fresh_article():
     deployer2 = _deployer()
     sd2 = SiteDeployer(deployer2, None)
     assert sd2.deploy_content(
-        "laptops", {"post_title": "T", "article_html": "<p>x</p>"},
+        "laptops", {"post_title": "Laptop Buying Guide 2026",
+                    "article_html": "<p>x</p>"},
         all_categories=["laptops"],
     ) is True

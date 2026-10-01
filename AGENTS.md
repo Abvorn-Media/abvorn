@@ -110,7 +110,7 @@ fresh daemon on an old state.db would fabricate the dead card again.
   deps → import-canary → restarts `abvorn-daemon`. `run_cycle.sh` alone does
   NOT reload the running daemon.
 - **Recurrence guard**: this bug came back from the VPS daemon's own state.db
-  (`/opt/abvorn-core/.abvorn/state.db`), which is independent of the local
+  (`/home/ubuntu/.abvorn/state.db`), which is independent of the local
   one. The gate makes it moot: any daemon drops cards whose page is absent
   from the remote tree.
 - Tests: `tests/test_orchestrator.py::test_reviews_gates_phantom_post_cards`.

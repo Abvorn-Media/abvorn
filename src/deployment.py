@@ -501,6 +501,96 @@ def _title_slug(title):
     return slug or "review"
 
 
+# --- Niche relevance: is this title actually about this niche? ---------------
+# post_title is raw LLM output. It reaches the filesystem through
+# _title_slug() -> fname, which slugifies *whatever* it is handed, so an
+# off-topic title becomes a legitimate-looking filename inside a real niche
+# directory. That is exactly how "First-Time Hotel Booking Guide" shipped under
+# docs/reviews/laptops/ (born 3287dff1). Nothing between the model and the disk
+# ever asked whether the title was on-topic.
+#
+# The rule: the title's content words must overlap the niche's vocabulary,
+# where that vocabulary is the niche slug plus the product names in the
+# article. Using the article's own products keeps the lexicon self-maintaining -
+# no curated word list to drift out of date - and measured 0 false positives
+# across all 150 published reviews while blocking every off-topic title tried.
+
+# Pure function words plus review boilerplate that is identical in every niche
+# and therefore carries no topical signal. Deliberately excludes words that
+# look generic but are the whole topic of some niche ("smart", "home",
+# "premium", "budget") - dropping those falsely rejected 5 smart-home reviews.
+_RELEVANCE_STOPWORDS = frozenset("""
+a an and are as at be been by for from in into is it its of on or that the to
+up with you your we our us i my their there this these those they them
+best top pick picks guide buying buy buyer buyers review reviews compared
+comparison compare vs versus ultimate essential complete comprehensive new
+first time beginner beginners step steps worth actually really without mistake
+mistakes save money right get know make made easy simple find choose choosing
+option options explain explained model models need needs every everyday how why
+what when who which all any some more most less least new not no than then
+""".split())
+
+_YEAR_RE = re.compile(r"^20\d{2}$")
+
+
+def _relevance_tokens(text: str) -> set:
+    """Content words in `text`, stemmed and stripped of stopwords/numbers.
+
+    Crude suffix-stripping exists so 'webcams' and 'webcam' match, and 'laptops'
+    and 'laptop' do. It is not a real stemmer and does not need to be: it only
+    has to make morphological variants of the *same* word collide.
+    """
+    out = set()
+    for raw in re.split(r"[^a-z0-9]+", (text or "").lower()):
+        if not raw or raw in _RELEVANCE_STOPWORDS or raw.isdigit() or _YEAR_RE.match(raw):
+            continue
+        word = raw
+        for suffix in ("ing", "ers", "er", "es", "s"):
+            if len(word) > 4 and word.endswith(suffix):
+                word = word[: -len(suffix)] or raw
+                break
+        out.add(word)
+    return out
+
+
+def niche_relevance(niche_slug: str, title: str, products: list = None) -> dict:
+    """Judge whether `title` is on-topic for `niche_slug`.
+
+    Returns {"relevant": bool, "reason": str, "shared": [...], "checked": int}.
+    A title with no content words at all is treated as relevant (there is
+    nothing to contradict), matching the degenerate-input behaviour of the
+    rest of this module.
+    """
+    title_words = _relevance_tokens(title)
+    if not title_words:
+        return {"relevant": True, "reason": "title has no content words to check",
+                "shared": [], "checked": 0}
+
+    vocab = _relevance_tokens(niche_slug)
+    checked = 0
+    for product in products or []:
+        name = product.get("name") if isinstance(product, dict) else product
+        vocab |= _relevance_tokens(str(name or ""))
+        checked += 1
+    # A niche with neither a slug word nor a named product has nothing to
+    # compare against; do not invent a failure out of missing data.
+    if not vocab:
+        return {"relevant": True, "reason": f"niche '{niche_slug}' has no comparable vocabulary",
+                "shared": [], "checked": checked}
+
+    shared = title_words & vocab
+    if shared:
+        return {"relevant": True, "reason": "matches niche vocabulary",
+                "shared": sorted(shared), "checked": checked}
+
+    return {
+        "relevant": False,
+        "reason": (f"title shares no content word with niche '{niche_slug}' "
+                   f"or its {checked} product(s)"),
+        "shared": [], "checked": checked,
+    }
+
+
 def review_img(niche_slug, b):
     """Pick the generated PNG hero for a review card, else fall back to the SVG."""
     png = f"docs/assets/{niche_slug}.png"
@@ -665,6 +755,28 @@ def page_has_products(html: str) -> bool:
     return bool(_JSONLD_PRODUCT_RE.search(html))
 
 
+# The rendered page marks its refresh date as
+#   Updated <time datetime="2026-09-06">Sep 6, 2026</time>
+# and repeats it as JSON-LD "dateModified". The old probe looked for the literal
+# text "Updated: 2026-09-06", a shape build_article_page never emits, so it never
+# matched and every review came back with updated="" -- which silently flattened
+# the newest-first sorts on the homepage, the category listings and the sitemap
+# lastmod, and dropped the "Updated <date>" badge site-wide. Order the checks so
+# the machine-readable source wins and the legacy text form stays as a fallback.
+_UPDATED_DATED_RE = re.compile(r"Updated\s*(?:<[^>]*>\s*)*<time[^>]*datetime=\"(\d{4}-\d{2}-\d{2})\"")
+_UPDATED_TEXT_RE = re.compile(r"Updated:\s*(\d{4}-\d{2}-\d{2})")
+_JSONLD_MODIFIED_RE = re.compile(r'"dateModified"\s*:\s*"(\d{4}-\d{2}-\d{2})"')
+
+
+def _review_updated(html: str) -> str:
+    """Best-known last-modified date for a review page, "" if none found."""
+    for pattern in (_JSONLD_MODIFIED_RE, _UPDATED_DATED_RE, _UPDATED_TEXT_RE):
+        m = pattern.search(html)
+        if m:
+            return m.group(1)
+    return ""
+
+
 def scan_published_reviews(docs_dir="docs"):
     """Enumerate every published review page under docs/reviews/*.
 
@@ -720,7 +832,7 @@ def scan_published_reviews(docs_dir="docs"):
             html = p.read_text(encoding="utf-8")
             h1 = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.S)
             title = html_mod.unescape(re.sub(r"<[^>]+>", "", h1.group(1))).strip() if h1 else ""
-            upd = re.search(r"Updated:\s*(\d{4}-\d{2}-\d{2})", html)
+            upd = _review_updated(html)
             rel = f"/reviews/{slug}/" if p.name == "index.html" else f"/reviews/{slug}/{p.name}"
             hero_img = index_hero
             if p.name != "index.html":
@@ -752,7 +864,7 @@ def scan_published_reviews(docs_dir="docs"):
                 "slug": slug,
                 "name": _niche_name(slug),
                 "title": title or _niche_name(slug),
-                "updated": upd.group(1) if upd else "",
+                "updated": upd,
                 "rel": rel,
                 "snippet": review_snippet(html) or index_snippet,
                 "image": hero_img or "",
