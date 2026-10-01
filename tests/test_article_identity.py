@@ -22,7 +22,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from abvorn.agents.orchestrator import DeployAgent, SiteDeployer
+from abvorn.agents.orchestrator import (
+    DeployAgent,
+    SiteDeployer,
+    _article_filename,
+    _slugify_article_title,
+)
 from abvorn.core.state import AbvornState
 from abvorn.discovery.scanner import make_slug
 from abvorn.domination import product_assets as pa
@@ -42,7 +47,7 @@ def _state(tmp_path):
     return AbvornState(str(tmp_path / "state.db"))
 
 
-def _run_act(state, site_deployer, result, event_id=7):
+def _run_act(state, site_deployer, result, event_id=7, agent=None):
     """Drive DeployAgent.act and return the emitted content.published message."""
     bus = MagicMock()
     bus.get_recent_events.return_value = [
@@ -51,7 +56,8 @@ def _run_act(state, site_deployer, result, event_id=7):
     out = {}
     bus.publish.side_effect = lambda t, m: out.update({t: m})
 
-    agent = DeployAgent.__new__(DeployAgent)
+    if agent is None:
+        agent = DeployAgent.__new__(DeployAgent)
     agent.state = state
     agent.deployer = _deployer()
     agent.site_deployer = site_deployer
@@ -91,9 +97,11 @@ def test_published_event_carries_path_and_url(tmp_path):
     """The event must name the page that shipped, not just the niche.
 
     Without the path this payload has no slug/filename/url, so downstream media
-    selection falls back to the whole niche. ``url`` is set only for a real
-    article file - a niche index is not a review, and pretending otherwise is
-    what let a category page stand in for an article.
+selection falls back to the whole niche. ``url`` is set only for a real
+        article file - a niche index is not a review, and pretending otherwise is
+        what let a category page stand in for an article. The deploy agent now
+        derives that file from the title, so the path is a slug rather than
+        ``index.html``.
     """
     state = _state(tmp_path)
     sd = SiteDeployer(_deployer(), state)
@@ -104,9 +112,16 @@ def test_published_event_carries_path_and_url(tmp_path):
     })
 
     assert msg["niche"] == "tv"
-    assert msg["path"] == "reviews/tv/index.html"
+    # The article ships at its own slugified URL, never the niche index: an
+    # index.html write means each new post overwrote the previous one and no
+    # post row could ever carry a filename.
+    assert msg["path"] == "reviews/tv/best-tvs-of-2026-tcl-qm8l-vs-sony-bravia-9.html"
     assert msg["slug"] == "tv"
-    assert "url" not in msg, "a category index is not an article url"
+    assert msg["filename"] == "best-tvs-of-2026-tcl-qm8l-vs-sony-bravia-9.html"
+    assert msg["url"] == (
+        "https://abvorn.com/reviews/tv/"
+        "best-tvs-of-2026-tcl-qm8l-vs-sony-bravia-9.html"
+    )
 
 
 def test_published_event_uses_article_filename_when_written(tmp_path):
@@ -252,6 +267,120 @@ def test_make_slug_is_word_boundary_and_deterministic():
     assert not full.endswith("-")
     # The historical artifact was a 60-char cut mid-word ending in "...-for-a".
     assert not full.endswith("-for-a")
+
+
+# --- gap 3: the deploy agent derives a real filename -----------------------
+
+def test_slugify_article_title_is_ascii_and_word_bounded():
+    """Titles carry non-ASCII (non-breaking hyphens, smart quotes) that would
+    mojibake across the Windows ANSI codepage on a path, and a naive ``[:60]``
+    cut leaves a dangling hyphen."""
+    slug = _slugify_article_title(
+        '2026 TV Buying Guide: Insignia 50" & LG 55" Mini\u2011LED'
+    )
+    assert slug == "2026-tv-buying-guide-insignia-50-lg-55-miniled"
+    assert all(ord(c) < 128 for c in slug)
+
+    long = _slugify_article_title("word " * 60)
+    assert len(long) <= 60
+    assert not long.endswith("-")
+
+
+def test_article_filename_never_collides_with_a_live_article():
+    """A repeated title must not overwrite the earlier post's live page."""
+    taken = {"best-2026-tv-buying-guide.html"}
+    assert _article_filename("Best 2026 TV Buying Guide", set()) == (
+        "best-2026-tv-buying-guide.html"
+    )
+    assert _article_filename("Best 2026 TV Buying Guide", taken) == (
+        "best-2026-tv-buying-guide-2.html"
+    )
+    assert _article_filename("Best 2026 TV Buying Guide", taken | {
+        "best-2026-tv-buying-guide-2.html"}) == "best-2026-tv-buying-guide-3.html"
+
+
+def test_repeated_title_does_not_overwrite_the_live_article(tmp_path):
+    """The second tv post with an identical title must get its own page.
+
+    ``_article_filename`` is fed the filenames already recorded in the niche.
+    Removing that dedupe lets the second deploy overwrite the first post's live
+    page, which is the clobbering bug the uniqueness check exists to prevent.
+    """
+    state = _state(tmp_path)
+    state.add_post("tv", "Best 2026 TV Buying Guide", "")
+    sd = SiteDeployer(_deployer(), state)
+    agent = DeployAgent.__new__(DeployAgent)
+    first = _run_act(state, sd, {
+        "post_title": "Best 2026 TV Buying Guide",
+        "article_html": "<p>guide</p>",
+        "products": [REAL_PRODUCT],
+    }, agent=agent)
+    assert first["filename"] == "best-2026-tv-buying-guide.html"
+
+    state.add_post("tv", "Best 2026 TV Buying Guide", "")
+    second = _run_act(state, sd, {
+        "post_title": "Best 2026 TV Buying Guide",
+        "article_html": "<p>guide again</p>",
+        "products": [REAL_PRODUCT],
+    }, agent=agent)
+    assert second["filename"] == "best-2026-tv-buying-guide-2.html", (
+        "the second deploy clobbered the first article's live page"
+    )
+
+
+def test_index_html_is_never_reported_as_an_article(tmp_path):
+    """A niche index is not a review page, so it must not become a filename.
+
+    Stamping ``index.html`` onto a post would make ``_reviews()`` build a card
+    pointing at the category page while claiming an article identity, and the
+    post row would claim an article page that does not exist. The path is stubbed
+    to the category index so the guard itself is what is under test.
+    """
+    state = _state(tmp_path)
+    state.add_post("tv", "Insignia 50 Fire TV Review", "")
+
+    class _IndexOnlyDeployer(SiteDeployer):
+        def deploy_content(self, niche, content, all_categories=None,
+                           article_filename=None, require_products=False):
+            self.deployer.deploy_html("<html/>", f"reviews/{niche}/index.html")
+            return f"reviews/{niche}/index.html"
+
+    sd = _IndexOnlyDeployer(_deployer(), state)
+    msg = _run_act(state, sd, {
+        "post_title": "Insignia 50 Fire TV Review",
+        "article_html": "<p>guide</p>",
+        "products": [REAL_PRODUCT],
+    })
+
+    assert msg["path"] == "reviews/tv/index.html"
+    assert "filename" not in msg, "a category index must not be announced as an article"
+    assert "url" not in msg, "a category index is not an article url"
+    recorded = [p["filename"] for p in state.get_posts_for_niche("tv")]
+    assert "index.html" not in recorded
+    # The niche is still recoverable from the directory, so media selection is
+    # not left with nothing at all.
+    assert msg["slug"] == "tv"
+
+
+def test_recorded_filename_lands_on_the_post_row(tmp_path):
+    """The deployed slug must reach state, otherwise _reviews() still skips it."""
+    state = _state(tmp_path)
+    # Posts are created before the page exists, with an empty filename - that
+    # is the state the deploy step has to repair.
+    state.add_post("tv", "Insignia 50 Fire TV Review", "")
+    sd = SiteDeployer(_deployer(), state)
+    msg = _run_act(state, sd, {
+        "post_title": "Insignia 50 Fire TV Review",
+        "article_html": "<p>guide</p>",
+        "products": [REAL_PRODUCT],
+    })
+    expected = "insignia-50-fire-tv-review.html"
+    assert msg["filename"] == expected
+
+    recorded = [p["filename"] for p in state.get_posts_for_niche("tv")]
+    assert expected in recorded, (
+        "the slug never reached the post row, so _reviews() keeps skipping it"
+    )
 
 
 if __name__ == "__main__":

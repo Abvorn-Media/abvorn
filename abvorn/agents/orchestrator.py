@@ -11,6 +11,43 @@ logger = logging.getLogger("abvorn.orchestrator")
 # abvorn/core/bus_progress.py for why this is a position and not a set.
 _DRAFTED_WATERMARK = "deployagent_drafted_watermark"
 
+# Title -> article filename. ASCII-only by construction: titles arrive from the
+# LLM carrying non-ASCII characters (non-breaking hyphens, smart quotes, e.g.
+# "Mini\u2011LED"), which double-encode to mojibake when a path crosses the
+# Windows ANSI codepage - the exact failure the publish-content guard exists to
+# catch. Dropped rather than transliterated: an ugly path beats a broken one.
+_SLUG_STRIP_RE = re.compile(r"[^a-z0-9]+")
+
+
+def _slugify_article_title(title: str, max_len: int = 60) -> str:
+    """Filesystem-safe, ASCII-only slug from an article title."""
+    ascii_title = (title or "").encode("ascii", "ignore").decode("ascii").lower()
+    slug = _SLUG_STRIP_RE.sub("-", ascii_title).strip("-")
+    if len(slug) > max_len:
+        # Truncate on a word boundary, never mid-word.
+        slug = slug[:max_len].rsplit("-", 1)[0] or slug[:max_len]
+    return slug.strip("-")
+
+
+def _article_filename(post_title: str, taken: set) -> str:
+    """Pick the article's own filename inside ``reviews/<niche>/``.
+
+    Every article used to ship as ``index.html``: each new post overwrote the
+    previous one, nothing downstream could address a specific article, and the
+    post row could never carry a filename - ``_record_published_filename`` skips
+    index.html on purpose, because a category page is not a review. ``taken``
+    holds the filenames already recorded for this niche, so a repeated title
+    gets a numbered variant instead of silently clobbering a live page.
+    """
+    slug = _slugify_article_title(post_title) or "article"
+    if f"{slug}.html" not in taken:
+        return f"{slug}.html"
+    for n in range(2, 100):
+        candidate = f"{slug}-{n}.html"
+        if candidate not in taken:
+            return candidate
+    return f"{slug}-{datetime.now().strftime('%Y%m%d%H%M%S')}.html"
+
 # Centralized affiliate tag: AMAZON_TAG secret, falling back to the real tag.
 def _amazon_tag() -> str:
     return os.environ.get("AMAZON_TAG") or "viraltestco-20"
@@ -484,6 +521,16 @@ class DeployAgent(AgentBase):
         for slug in all_slugs:
             all_posts.extend(self.state.get_posts_for_niche(slug))
         deployed_path = ""
+        # Filenames already spoken for in this niche, so a repeated title cannot
+        # overwrite an earlier post's live page. Read this niche's posts directly
+        # rather than filtering all_posts: all_posts is assembled from the
+        # niches table, so a niche missing from it yields an empty set.
+        try:
+            niche_rows = self.state.get_posts_for_niche(niche) if self.state else []
+        except Exception as e:
+            logger.warning(f"[DeployAgent] could not read posts for {niche!r}: {e}")
+            niche_rows = []
+        taken = {(p.get("filename") or "").strip() for p in niche_rows} - {""}
         if content_payload:
             payload_products = content_payload.get("products") or []
             deploy_content = {
@@ -497,10 +544,17 @@ class DeployAgent(AgentBase):
                 ),
                 "products": payload_products,
             }
+            # Derive the article's own filename from its title. Without it the
+            # page ships as the category index and the post can never be
+            # addressed again.
+            post_title_payload = str(deploy_content.get("post_title") or "").strip()
+            if not post_title_payload and niche_rows:
+                post_title_payload = str(niche_rows[0].get("title") or "").strip()
             deployed_path = self.site_deployer.deploy_content(
                 niche,
                 deploy_content,
                 all_categories=all_slugs,
+                article_filename=_article_filename(post_title_payload, taken),
                 require_products=True,
             ) or ""
         else:
@@ -512,10 +566,12 @@ class DeployAgent(AgentBase):
                     "content": latest.get("filename", ""),
                     "product_name": latest.get("product_name", ""),
                 }
+                post_title_state = str(latest.get("title") or "").strip()
                 deployed_path = self.site_deployer.deploy_content(
                     niche,
                     content,
                     all_categories=all_slugs,
+                    article_filename=_article_filename(post_title_state, taken),
                 ) or ""
         self.site_deployer.deploy_root_index(
             niches=all_niches_data,
