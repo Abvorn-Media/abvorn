@@ -72,12 +72,26 @@ def review_page_candidates(slug: str) -> list[Path]:
             p = root / sub / "index.html"
             if p not in seen:
                 seen.append(p)
-    # A bare dated filename (``best-...-2026-08-26.html``) may arrive from a
-    # URL like ``/reviews/<niche>/<dated>.html`` — hunt it across niche folders.
+# A bare dated filename (``best-...-2026-08-26.html``) may arrive from a
+    # URL like ``/reviews/<niche>/<dated>.html`` - hunt it across niche folders.
     if slug.endswith(".html"):
         for root in _review_roots():
             try:
                 for hit in root.glob(f"reviews/*/{slug}"):
+                    if hit not in seen:
+                        seen.append(hit)
+            except OSError:
+                continue
+    # A slugified article title (``best-tvs-of-2026-buying-guide``) is not a
+    # niche folder, so the loop above never matches it. DeployAgent publishes
+    # articles as ``reviews/<niche>/<title-slug>.html``, so the products for one
+    # specific article can only be found by hunting for that exact filename.
+    # Without this, product lookup silently fell back to the niche's
+    # ``index.html`` and every tv article rendered the same product card.
+    if not slug.endswith(".html") and "-" in slug:
+        for root in _review_roots():
+            try:
+                for hit in root.glob(f"reviews/*/{slug}.html"):
                     if hit not in seen:
                         seen.append(hit)
             except OSError:

@@ -248,6 +248,27 @@ class AbvornState:
             c.execute("SELECT * FROM posts WHERE niche_slug=? ORDER BY created_at DESC", (niche_slug,))
             return _rows(c)
 
+    def update_post_filename(self, post_id, filename: str) -> bool:
+        """Record the article page a post actually shipped as.
+
+        Posts are created before the page path exists (``add_post`` writes an
+        empty filename), and the deploy step used to discard the path it wrote.
+        Every row therefore kept ``filename=''``, which makes the post
+        invisible to ``SiteDeployer._reviews()`` - it skips posts with no
+        article page - and leaves nothing to address the page downstream.
+
+        Returns True when a row was updated.
+        """
+        filename = (filename or "").strip()
+        if not filename:
+            return False
+        with self._cursor() as c:
+            cur = c.execute(
+                "UPDATE posts SET filename=? WHERE id=? AND COALESCE(filename,'')=''",
+                (filename, post_id),
+            )
+            return bool(cur.rowcount)
+
     def enqueue(self, niche_slug: str, stage: str, priority: int = 10, payload: dict = None):
         with self._cursor() as c:
             c.execute("""

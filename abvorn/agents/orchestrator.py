@@ -308,7 +308,7 @@ class SiteDeployer:
             logger.error(f"[SiteDeployer] Category page failed: {e}")
             return False
 
-    def deploy_category_hub(self, niche: str, posts: list = None, all_categories: list = None) -> bool:
+    def deploy_category_hub(self, niche: str, posts: list = None, all_categories: list = None) -> str:
         """Deploy a brand-new category hub at its canonical /reviews/<niche>/ location.
 
         In the rich pipeline write_files makes reviews/<niche>/index.html mirror
@@ -316,6 +316,8 @@ class SiteDeployer:
         not a duplicate category listing with a cross-canonical to /<niche>/.
         When the article this cycle just deployed belongs to this niche, mirror
         it; otherwise fall back to a premium category listing.
+
+        Returns the path written (or "" on refusal), matching deploy_content.
         """
         try:
             all_categories = list(all_categories or [niche])
@@ -327,27 +329,41 @@ class SiteDeployer:
             posts = posts or []
             if not posts:
                 logger.warning(f"[SiteDeployer] Skipping new category hub for {niche}: no posts available (would deploy placeholder)")
-                return False
+                return ""
             rich = [r for r in self._reviews([niche], posts, niche)
                     if r.get("slug") == niche]
             if not rich:
                 rich = posts
             html = self._category_html(niche, rich, all_categories)
-            self.deployer.deploy_html(html, f"reviews/{niche}/index.html")
+            path = f"reviews/{niche}/index.html"
+            self.deployer.deploy_html(html, path)
             logger.info(f"[SiteDeployer] Deployed premium category hub for {niche}")
-            return True
+            return path
         except Exception as e:
             logger.error(f"[SiteDeployer] Category hub failed: {e}")
-            return False
+            return ""
 
     def deploy_content(self, niche: str, content: dict, all_categories: list = None,
                        article_filename: str = None,
-                       require_products: bool = False) -> bool:
+                       require_products: bool = False) -> str:
         """Deploy one premium review page for a niche.
+
+        Returns the repo-relative path that was written, or "" on refusal or
+        failure.
+
+        The return value is the whole point. The page path is derived from
+        post_title inside ``_title_slug()``, but callers passed no
+        ``article_filename`` and only ever saw a bool, so the identity of the
+        article that actually shipped was discarded at this boundary: the page
+        went out as ``reviews/<niche>/index.html`` and every post row kept an
+        empty ``filename``. That is why nothing downstream could address a
+        specific article - social media resolved products by niche, and
+        ``_reviews()`` could not verify a page existed for a post it had no
+        filename for.
 
         require_products stays opt-in because the state-redeploy path
         (DeployAgent._deploy_site) rebuilds from state post metadata, which
-        carries no products key at all. The fresh-publish path opts in — a
+        carries no products key at all. The fresh-publish path opts in - a
         payload with no products renders a product-less page whose cards all
         fall back to the generic category graphic instead of a product photo.
         """
@@ -366,7 +382,7 @@ class SiteDeployer:
                     "falls back to the generic category graphic.",
                     niche,
                 )
-                return False
+                return ""
             if _products_are_placeholder(products):
                 logger.warning(
                     "[SiteDeployer] Refusing to publish %s: %d product(s) and "
@@ -375,7 +391,7 @@ class SiteDeployer:
                     "product-less hub",
                     niche, len(products),
                 )
-                return False
+                return ""
             post_title = content.get("post_title", "") or ""
             relevance = niche_relevance(niche, post_title, products)
             if not relevance["relevant"]:
@@ -386,7 +402,7 @@ class SiteDeployer:
                     "the currently published page.",
                     niche, relevance["reason"], post_title[:90],
                 )
-                return False
+                return ""
             product_name = (content.get("product_name")
                             or (products[0].get("name", "") if products else ""))
             related = [{"slug": c, "name": self._niche_name(c)}
@@ -417,10 +433,10 @@ class SiteDeployer:
             path = f"reviews/{niche}/{'index.html' if not article_filename else article_filename}"
             self.deployer.deploy_html(html, path)
             logger.info(f"[SiteDeployer] Deployed premium article for {niche} as {path}")
-            return True
+            return path
         except Exception as e:
             logger.error(f"[SiteDeployer] Article deploy failed: {e}")
-            return False
+            return ""
 
 
 class DeployAgent(AgentBase):
@@ -455,11 +471,19 @@ class DeployAgent(AgentBase):
         return "wait"
 
     def _deploy_site(self, niche, content_payload):
+        """Deploy for a niche and return the page path that was written (or "").
+
+        The path is the article's identity. It used to be thrown away, so every
+        post row kept an empty ``filename`` and ``content.published`` carried no
+        slug or url - which left social media unable to address a specific
+        article and left ``_reviews()`` unable to verify a page existed.
+        """
         all_niches_data = self.state.get_all_niches()
         all_slugs = [n["slug"] for n in all_niches_data]
         all_posts = []
         for slug in all_slugs:
             all_posts.extend(self.state.get_posts_for_niche(slug))
+        deployed_path = ""
         if content_payload:
             payload_products = content_payload.get("products") or []
             deploy_content = {
@@ -473,12 +497,12 @@ class DeployAgent(AgentBase):
                 ),
                 "products": payload_products,
             }
-            self.site_deployer.deploy_content(
+            deployed_path = self.site_deployer.deploy_content(
                 niche,
                 deploy_content,
                 all_categories=all_slugs,
                 require_products=True,
-            )
+            ) or ""
         else:
             posts = self.state.get_posts_for_niche(niche)
             if posts:
@@ -488,11 +512,11 @@ class DeployAgent(AgentBase):
                     "content": latest.get("filename", ""),
                     "product_name": latest.get("product_name", ""),
                 }
-                self.site_deployer.deploy_content(
+                deployed_path = self.site_deployer.deploy_content(
                     niche,
                     content,
                     all_categories=all_slugs,
-                )
+                ) or ""
         self.site_deployer.deploy_root_index(
             niches=all_niches_data,
             posts=all_posts,
@@ -507,6 +531,7 @@ class DeployAgent(AgentBase):
                 posts=niche_posts,
                 all_categories=all_slugs,
             )
+        return deployed_path
 
     async def act(self, decision):
         if decision.startswith("deploy:"):
@@ -521,12 +546,14 @@ class DeployAgent(AgentBase):
                         handled_id = event["id"]
                     if content_payload is None and 'result' in event['message']:
                         content_payload = event['message']['result']
+            deployed_path = ""
             if self.site_deployer and self.state:
-                await asyncio.to_thread(
+                deployed_path = await asyncio.to_thread(
                     self._deploy_site,
                     niche,
                     content_payload,
-                )
+                ) or ""
+
             # Identity travels with the event. Without a title/slug the
             # Ambassador could only build "Just published our {niche} guide!"
             # from the niche, so every announcement of a given niche carried
@@ -546,10 +573,71 @@ class DeployAgent(AgentBase):
                 slug = str(content_payload.get("slug") or "").strip()
                 if slug:
                     published["slug"] = slug
+
+            # The path is the only authoritative link to the page that shipped.
+            # It carries the slug and the article filename, which is what lets
+            # media selection address this article instead of the whole niche,
+            # and what _reviews() needs to verify the page really exists.
+            page_path = str(deployed_path or "").strip()
+            if page_path:
+                published["path"] = page_path
+                filename = page_path.rsplit("/", 1)[-1]
+                if filename and filename != "index.html":
+                    published["filename"] = filename
+                    from run_cycle import _SITE_URL
+                    published["url"] = f"{_SITE_URL}/{page_path}"
+                # The second path segment is the niche *directory*. Only use it
+                # when nothing more specific arrived - overwriting a payload's
+                # article slug with the niche would re-break per-article
+                # targeting, which is the thing this whole path fixes.
+                if not published.get("slug"):
+                    path_parts = page_path.split("/")
+                    if len(path_parts) >= 2 and path_parts[1]:
+                        published["slug"] = path_parts[1]
+                self._record_published_filename(niche, filename)
+
+            if not page_path:
+                logger.warning(
+                    "[DeployAgent] Nothing was written for %s - publishing "
+                    "content.published without a path, so no article identity "
+                    "is available downstream.", niche,
+                )
+
             self.bus.publish("content.published", published)
             if handled_id is not None:
                 self._mark_drafted_handled([handled_id])
-            return {"niche": niche, "status": "deployed"}
+            return {"niche": niche, "status": "deployed", "path": page_path}
+
+    def _record_published_filename(self, niche: str, filename: str) -> None:
+        """Stamp the deployed filename onto the newest post row for the niche.
+
+        Posts were created with an empty ``filename``, and
+        ``SiteDeployer._reviews()`` skips any post without one because a post
+        with no article page is not a published review. Recording it here means
+        the next homepage build can see and verify the page.
+        """
+        if not self.state or not filename or filename == "index.html":
+            return
+        try:
+            posts = self.state.get_posts_for_niche(niche) or []
+        except Exception as e:
+            logger.warning(f"[DeployAgent] could not read posts for {niche!r}: {e}")
+            return
+        for post in posts:
+            if (post.get("filename") or "").strip() == filename:
+                return
+            title = str(post.get("title") or "").strip()
+            if not title:
+                continue
+            try:
+                self.state.update_post_filename(post.get("id"), filename)
+                logger.info(
+                    f"[DeployAgent] recorded filename {filename!r} for post "
+                    f"{post.get('id')} ({title[:60]!r})"
+                )
+            except Exception as e:
+                logger.warning(f"[DeployAgent] could not record filename: {e}")
+            return
 
     async def reflect(self, outcome):
         if self.drive:

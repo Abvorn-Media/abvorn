@@ -146,7 +146,7 @@ def test_deploy_category_hub_writes_canonical_reviews_path():
         "filename": "insignia-50-fire-tv.html",
         "product_name": "Insignia 50",
     }], all_categories=["tv", "smart-home"])
-    assert ok is True
+    assert ok == "reviews/tv/index.html"
     html, path = deployer.deploy_html.call_args[0]
     assert path == "reviews/tv/index.html"
     assert "smart-home" in html  # nav carries other categories
@@ -169,7 +169,7 @@ def test_deploy_category_hub_mirrors_newest_article():
     ok = sd.deploy_category_hub("tv", posts=[
         {"title": "Insignia 50 Fire TV Review", "filename": "insignia-50-fire-tv.html"}
     ], all_categories=["tv"])
-    assert ok is True
+    assert ok == "reviews/tv/index.html"
     html, path = deployer.deploy_html.call_args[0]
     assert path == "reviews/tv/index.html"
     assert 'rel="canonical" href="https://abvorn.com/reviews/tv/"' in html
@@ -188,7 +188,7 @@ def test_deploy_content_article_filename_write_path():
         all_categories=["tv", "4k-monitors"],
         article_filename="insignia-50-fire-tv.html",
     )
-    assert ok is True
+    assert ok == "reviews/tv/insignia-50-fire-tv.html"
     html, path = deployer.deploy_html.call_args[0]
     assert path == "reviews/tv/insignia-50-fire-tv.html"
     assert 'rel="canonical" href="https://abvorn.com/reviews/tv/insignia-50-fire-tv.html"' in html
@@ -295,7 +295,7 @@ def test_deploy_content_refuses_placeholder_products():
                        "url": "?tag=viraltestco-20", "category": "best_overall"}]},
         all_categories=["tv"],
     )
-    assert ok is False
+    assert ok == ""
     deployer.deploy_html.assert_not_called()
 
 
@@ -318,7 +318,7 @@ def test_productless_payload_never_becomes_the_hub_mirror():
         all_categories=["tv"],
         require_products=True,
     )
-    assert ok is False
+    assert ok == ""
     assert sd._last_content is None, "a refused payload must not be cached for mirroring"
     assert sd._last_niche is None
     deployer.deploy_html.assert_not_called()
@@ -332,7 +332,7 @@ def test_productless_payload_never_becomes_the_hub_mirror():
                        "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}]},
         all_categories=["tv"],
     )
-    assert ok is True
+    assert ok == "reviews/tv/index.html"
     assert sd._last_content is not None
 
 
@@ -348,7 +348,7 @@ def test_deploy_content_allows_real_products():
                        "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}]},
         all_categories=["tv"],
     )
-    assert ok is True
+    assert ok == "reviews/tv/index.html"
 
 
 def test_deploy_content_refuses_off_topic_title():
@@ -370,7 +370,7 @@ def test_deploy_content_refuses_off_topic_title():
                        "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}]},
         all_categories=["laptops"],
     )
-    assert ok is False
+    assert ok == ""
     deployer.deploy_html.assert_not_called()
     # The refused payload must not become the hub mirror either.
     assert sd._last_content is None
@@ -391,7 +391,7 @@ def test_deploy_content_allows_on_topic_title_despite_no_slug_word():
                        "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}]},
         all_categories=["smart-home"],
     )
-    assert ok is True
+    assert ok == "reviews/smart-home/index.html"
 
     html, path = deployer.deploy_html.call_args[0]
     assert path == "reviews/smart-home/index.html"
@@ -477,11 +477,11 @@ def test_deploy_content_refuses_unpictured_llm_products():
              {"name": 'Sony Bravia XR90A9 65" OLED TV', "price": "Check Price",
               "url": "https://www.amazon.com/s?k=tv&tag=viraltestco-20", "image": ""},
              {"name": 'Samsung QN90B 55" Neo-QLED TV', "price": "Check Price",
-              "url": "https://www.amazon.com/s?k=tv&tag=viraltestco-20", "image": ""},
-         ]},
-        all_categories=["tv"],
-    )
-    assert ok is False
+"url": "https://www.amazon.com/s?k=tv&tag=viraltestco-20", "image": ""},
+           ]},
+          all_categories=["tv"],
+      )
+    assert ok == ""
     deployer.deploy_html.assert_not_called()
 
 
@@ -498,14 +498,14 @@ def test_deploy_content_require_products_blocks_productless_fresh_article():
         all_categories=["robot-vacuums"],
         require_products=True,
     )
-    assert ok is False
+    assert ok == ""
     deployer.deploy_html.assert_not_called()
 
     # Without the opt-in (state redeploy) the same payload is still deployable.
     deployer2 = _deployer()
     sd2 = SiteDeployer(deployer2, None)
     assert sd2.deploy_content(
-        "laptops", {"post_title": "Laptop Buying Guide 2026",
-                    "article_html": "<p>x</p>"},
-        all_categories=["laptops"],
-    ) is True
+            "laptops", {"post_title": "Laptop Buying Guide 2026",
+                        "article_html": "<p>x</p>"},
+            all_categories=["laptops"],
+        ) == "reviews/laptops/index.html"

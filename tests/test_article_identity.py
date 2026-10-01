@@ -1,0 +1,258 @@
+"""Article identity must survive the deploy boundary.
+
+Two gaps are locked here:
+
+1. ``SiteDeployer.deploy_content`` used to return ``True``/``False`` and throw
+   away the page path it wrote. The path is derived from ``post_title`` inside
+   ``_title_slug()``, but callers passed no ``article_filename``, so every
+   article shipped as ``reviews/<niche>/index.html`` and ``content.published``
+   carried no slug, no filename and no url. With no identity, the Ambassador
+   could only announce "our <niche> guide" and resolve products by niche, so
+   two different articles in one niche produced the same post and the same
+   product card.
+
+2. ``review_page_candidates`` only matched niche folders and dated ``.html``
+   files. A slugified article title (``best-tvs-of-2026-buying-guide``) matched
+   nothing, so product lookup silently fell back to the niche ``index.html``
+   and the *current* product set was used for every historical article.
+"""
+
+import asyncio
+from unittest.mock import MagicMock
+
+import pytest
+
+from abvorn.agents.orchestrator import DeployAgent, SiteDeployer
+from abvorn.core.state import AbvornState
+from abvorn.discovery.scanner import make_slug
+from abvorn.domination import product_assets as pa
+
+
+REAL_PRODUCT = {
+    "name": 'Sony Bravia 9 II 65" OLED TV',
+    "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20",
+}
+
+
+def _deployer():
+    return MagicMock()
+
+
+def _state(tmp_path):
+    return AbvornState(str(tmp_path / "state.db"))
+
+
+def _run_act(state, site_deployer, result, event_id=7):
+    """Drive DeployAgent.act and return the emitted content.published message."""
+    bus = MagicMock()
+    bus.get_recent_events.return_value = [
+        {"id": event_id, "message": {"niche": "tv", "result": result}}
+    ]
+    out = {}
+    bus.publish.side_effect = lambda t, m: out.update({t: m})
+
+    agent = DeployAgent.__new__(DeployAgent)
+    agent.state = state
+    agent.deployer = _deployer()
+    agent.site_deployer = site_deployer
+    agent.bus = bus
+    asyncio.run(agent.act("deploy:tv"))
+    return out.get("content.published", {})
+
+
+# --- gap 1: deploy_content returns the path it wrote ----------------------
+
+def test_deploy_content_returns_written_path():
+    """A refused payload returns ""; a written one returns its repo path."""
+    sd = SiteDeployer(_deployer(), None)
+
+    refused = sd.deploy_content(
+        "tv",
+        {"post_title": "2026 TV Buying Guide", "article_html": "<p>g</p>",
+         "products": []},
+        all_categories=["tv"],
+        require_products=True,
+    )
+    assert refused == ""
+
+    written = sd.deploy_content(
+        "tv",
+        {"post_title": "2026 TV Buying Guide", "article_html": "<p>g</p>",
+         "products": [REAL_PRODUCT]},
+        all_categories=["tv"],
+    )
+    assert written == "reviews/tv/index.html"
+    assert sd.deployer.deploy_html.call_args[0][1] == written
+
+
+# --- gap 1: content.published carries identity -----------------------------
+
+def test_published_event_carries_path_and_url(tmp_path):
+    """The event must name the page that shipped, not just the niche.
+
+    Without the path this payload has no slug/filename/url, so downstream media
+    selection falls back to the whole niche. ``url`` is set only for a real
+    article file - a niche index is not a review, and pretending otherwise is
+    what let a category page stand in for an article.
+    """
+    state = _state(tmp_path)
+    sd = SiteDeployer(_deployer(), state)
+    msg = _run_act(state, sd, {
+        "post_title": "Best TVs of 2026: TCL QM8L vs Sony Bravia 9",
+        "article_html": "<p>guide</p>",
+        "products": [REAL_PRODUCT],
+    })
+
+    assert msg["niche"] == "tv"
+    assert msg["path"] == "reviews/tv/index.html"
+    assert msg["slug"] == "tv"
+    assert "url" not in msg, "a category index is not an article url"
+
+
+def test_published_event_uses_article_filename_when_written(tmp_path):
+    """When an article file is written, url/filename point at *it*.
+
+    This is the whole point of returning the path: the niche index is a
+    different page from the article, and only the article is a review.
+    """
+    state = _state(tmp_path)
+    article = "best-tvs-of-2026-tcl-qm8l-vs-sony-bravia-9.html"
+
+    class _SD(SiteDeployer):
+        def deploy_content(self, niche, content, all_categories=None,
+                           article_filename=None, require_products=False):
+            # Mirrors what the real path writes when an article file is used.
+            self.deployer.deploy_html("<html/>", f"reviews/{niche}/{article}")
+            self._last_content = content
+            self._last_niche = niche
+            return f"reviews/{niche}/{article}"
+
+    sd = _SD(_deployer(), state)
+    msg = _run_act(state, sd, {
+        "post_title": "Best TVs of 2026: TCL QM8L vs Sony Bravia 9",
+        "products": [REAL_PRODUCT],
+    })
+
+    assert msg["path"] == f"reviews/tv/{article}"
+    assert msg["filename"] == article
+    assert msg["slug"] == "tv"
+    assert msg["url"].endswith(article)
+
+
+def test_deploy_records_filename_on_post_row(tmp_path):
+    """A post whose article page shipped gets its filename recorded.
+
+    ``_reviews()`` skips posts with no filename (a post with no page is not a
+    published review), so the empty column meant deployed articles never
+    produced a verifiable card.
+    """
+    state = _state(tmp_path)
+    state.upsert_niche("tv", "Tv")
+    state.add_post("tv", "Best TVs of 2026: TCL QM8L", "")
+
+    agent = DeployAgent.__new__(DeployAgent)
+    agent.state = state
+    agent._record_published_filename("tv", "best-tvs-of-2026-tcl-qm8l.html")
+
+    assert state.get_posts_for_niche("tv")[0]["filename"] == \
+        "best-tvs-of-2026-tcl-qm8l.html"
+
+
+# --- gap 2: per-article product resolution -------------------------------
+
+def test_review_page_candidates_matches_slugified_article_title(tmp_path, monkeypatch):
+    """A slugified article title must resolve to its own page.
+
+    DeployAgent writes ``reviews/<niche>/<title-slug>.html``; only the niche
+    folder and dated ``.html`` names were being hunted, so this missed and
+    lookup silently degraded to the niche index.
+    """
+    monkeypatch.setattr(pa, "_review_roots", lambda: [tmp_path])
+    page = tmp_path / "reviews" / "tv" / "best-tvs-of-2026-tcl-qm8l.html"
+    page.parent.mkdir(parents=True)
+    page.write_text("<html></html>", encoding="utf-8")
+
+    assert page in pa.review_page_candidates("best-tvs-of-2026-tcl-qm8l")
+
+
+def test_published_slug_not_clobbered_by_niche_directory(tmp_path):
+    """A payload's article slug must survive the path fallback.
+
+    The second path segment is the niche *directory*. Writing it over a
+    payload's article slug would re-break the per-article targeting this change
+    exists to provide.
+    """
+    state = _state(tmp_path)
+    article = "best-tvs-of-2026-tcl-qm8l.html"
+
+    class _SD(SiteDeployer):
+        def deploy_content(self, niche, content, all_categories=None,
+                           article_filename=None, require_products=False):
+            self.deployer.deploy_html("<html/>", f"reviews/{niche}/{article}")
+            return f"reviews/{niche}/{article}"
+
+    sd = _SD(_deployer(), state)
+    msg = _run_act(state, sd, {
+        "post_title": "Best TVs of 2026: TCL QM8L",
+        "slug": "best-tvs-of-2026-tcl-qm8l",
+        "products": [REAL_PRODUCT],
+    })
+
+    assert msg["slug"] == "best-tvs-of-2026-tcl-qm8l", "niche dir clobbered the article slug"
+
+
+def test_ambassador_post_body_carries_article_link(tmp_path):
+    """The link must be in the post body.
+
+    LinkedIn's image-post action sends ``commentary`` only and drops the
+    ``url`` param, so an event that carries identity still produced a post
+    linking nowhere. A bare URL in commentary is linkified on every path.
+    """
+    import abvorn.agents.ambassador as amb
+
+    agent = amb.SocialAmbassador.__new__(amb.SocialAmbassador)
+    agent.state = None
+    agent.drive = None
+    agent.router = MagicMock()
+    agent.router.ask = lambda *a, **k: "New TCL QM8L review is live."
+    agent.brain = None
+    agent.social = MagicMock()
+
+    captured = {}
+
+    def _post(content, platform, media_paths=None):
+        captured.update(content)
+        captured["_media"] = media_paths
+        return {"status": "posted", "platform": platform}
+
+    agent.social.post.side_effect = _post
+
+    url = "https://abvorn.com/reviews/tv/best-tvs-of-2026-tcl-qm8l.html"
+    asyncio.run(agent._craft_and_post(
+        {"niche": "tv", "platform": "linkedin",
+         "headline": "Best TVs of 2026: TCL QM8L", "url": url},
+        media_paths=["card.png"],
+    ))
+
+    assert captured["url"] == url
+    assert url in captured["intro"], "post body must contain the article link"
+
+
+def test_make_slug_is_word_boundary_and_deterministic():
+    """The slugifier truncates on word boundaries, so a 60-char cut can never
+    leave a trailing hyphen or split one product into two niches."""
+    full = make_slug(
+        "Amazon Echo Show 5 (newest model) Smart Display - Designed for a smart home"
+    )
+    partial = make_slug(
+        "Amazon Echo Show 5 (newest model) Smart Display - Designed for"
+    )
+    assert full == partial, "old naive [:60] cut produced two slugs for one product"
+    assert len(full) <= 60
+    assert not full.endswith("-")
+    # The historical artifact was a 60-char cut mid-word ending in "...-for-a".
+    assert not full.endswith("-for-a")
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__, "-q"]))

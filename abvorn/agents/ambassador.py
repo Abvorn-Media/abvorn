@@ -274,6 +274,16 @@ class SocialAmbassador(AgentBase):
             if not post_text or len(post_text) < 10:
                 post_text = f"Just published our latest guide on {niche}! Have you tried it yet? 🚀"
 
+            # The article link has to be in the post body, not just in the
+            # event. LinkedIn's image-post action sends commentary only - it
+            # drops the `url` param entirely - so an identity-carrying event
+            # still produced a post linking nowhere. A bare URL in commentary is
+            # linkified by LinkedIn, so the article is reachable on every path.
+            url = str(item.get("url") or "").strip()
+            if url and url not in post_text:
+                post_text = f"{post_text.rstrip()}\n\n{url}"
+                logger.info(f"[Ambassador] appended article link {url!r}")
+
             content = {
                 "post_title": headline or f"Guide: {niche}",
                 "intro": post_text,
@@ -281,6 +291,8 @@ class SocialAmbassador(AgentBase):
                 "meta_description": post_text[:160],
                 "tags": [niche],
                 "niche": niche,
+                "url": url,
+                "title": headline or f"Guide: {niche}",
             }
 
             try:
@@ -368,6 +380,7 @@ class SocialAmbassador(AgentBase):
             try:
                 item = {"niche": niche, "platform": platform,
                         "headline": headline,
+                        "url": url,
                         "product": slug or niche}
                 # Same photo on every platform: one card, so the set reads as
                 # one campaign instead of three unrelated posts.
