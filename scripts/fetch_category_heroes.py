@@ -12,6 +12,11 @@ Usage:
   python scripts/fetch_category_heroes.py --refresh          # re-fetch everything
   python scripts/fetch_category_heroes.py --only laptops     # one niche
   python scripts/fetch_category_heroes.py --pick 2 --only laptops   # force 3rd result
+  python scripts/fetch_category_heroes.py --set scene --dry-run --top 6  # lifestyle set
+
+Two sets, two art directions:
+  --set stage  (default) docs/assets/hero/        object on a dark stage, category pages
+  --set scene                 docs/assets/hero-scene/ product in a real room, About page
 
 Needs a Pexels key: env PEXELS_KEY / PEXELS_API_KEY or --key.
 """
@@ -27,6 +32,7 @@ import requests
 
 PEXELS_BASE = "https://api.pexels.com/v1"
 DEFAULT_OUT = Path(__file__).resolve().parents[1] / "docs" / "assets" / "hero"
+SCENE_OUT = Path(__file__).resolve().parents[1] / "docs" / "assets" / "hero-scene"
 CREDITS_FILE = "credits.json"
 
 # slug -> (pexels query, aspect window, default rank pick). Runs from the repo
@@ -50,6 +56,40 @@ HEROES = {
 MIN_W = 1200
 MIN_H = 700
 DL_W = 1440
+
+# Lifestyle set for the About page hero. This is deliberately the OPPOSITE of
+# HEROES above: no dark stage, no specimen. The About hero has to sell "we
+# review what you actually live with", so each shot puts the product in a real
+# room with a person using it -- a TV in a living room, a laptop on a desk,
+# headphones on a head. Queries name the scene, not the product, because
+# Pexels' "headphones product black background" returns a flat lay.
+#
+# Written to docs/assets/hero-scene/ with its own credits.json so the reviewed
+# dark-stage category heroes keep their art direction untouched.
+#
+# Windows are centred on the About hero's 4:3 aspect-ratio box; object-fit:
+# cover trims the rest, so anything in 1.2-1.7 crops without a hard letterbox.
+SCENES = {
+    # Default picks were reviewed against the candidate lists on 2026-10-01 and
+    # the reasons recorded, because --pick is global and cannot express these
+    # per-slug choices:
+    #   webcams  -> rank 2, not 0. Rank 0/1 are generic "virtual meeting" shots
+    #               and rank 1 is credited to "LinkedIn Sales Navigator", a
+    #               spam-bait photographer name. Rank 2 is RDNE Stock and puts
+    #               the laptop on an actual wooden desk, which is the scene.
+    #   earbuds  -> rank 2, not 0/1. Rank 0 is a flat lay on a table, not a
+    #               product in use. Rank 1 washed out badly (mean luminance 190,
+    #               edge energy 3.3 -- effectively a bright white room). Rank 2
+    #               is a person with earbuds actually in her ears, correctly
+    #               exposed. Rank 3 has more surface detail but the alt says
+    #               "wireless headphones", i.e. the wrong product, and this
+    #               site's whole claim is that every pick is fact-checked.
+    "streaming-devices": ("modern living room television sofa", (1.2, 1.7), 0),
+    "wireless-headphones": ("woman wearing headphones listening music", (1.2, 1.7), 0),
+    "webcams": ("laptop video call home office desk", (1.2, 1.7), 2),
+    "wireless-earbuds": ("person using wireless earbuds smartphone", (1.2, 1.7), 2),
+    "smart-home": ("cozy living room interior lamp evening", (1.2, 1.7), 0),
+}
 
 
 def pick_photos(photos, window, pick=0):
@@ -77,7 +117,11 @@ def download_photo(url, dest, timeout=60):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--key", default=os.environ.get("PEXELS_KEY") or os.environ.get("PEXELS_API_KEY"))
-    ap.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    ap.add_argument("--set", dest="which_set", choices=("stage", "scene"), default="stage",
+                    help="stage = object on a dark stage (category pages); "
+                         "scene = product in a real room (About page)")
+    ap.add_argument("--out", type=Path, default=None,
+                    help="override the output dir (defaults per --set)")
     ap.add_argument("--only", nargs="*", help="niche slugs to process")
     ap.add_argument("--pick", type=int, default=0, help="force the Nth ranked candidate (0=best)")
     ap.add_argument("--refresh", action="store_true", help="re-fetch even if the JPG exists")
@@ -89,6 +133,11 @@ def main():
         print("No Pexels key: pass --key or set PEXELS_KEY/PEXELS_API_KEY.", file=sys.stderr)
         return 1
 
+    sets = {"stage": HEROES, "scene": SCENES}
+    heroes = sets[args.which_set]
+    if args.out is None:
+        args.out = (SCENE_OUT if args.which_set == "scene" else DEFAULT_OUT)
+
     args.out.mkdir(parents=True, exist_ok=True)
     credits_path = args.out / CREDITS_FILE
     credits = {}
@@ -98,15 +147,15 @@ def main():
         except (json.JSONDecodeError, OSError):
             credits = {}
 
-    slugs = args.only or list(HEROES)
+    slugs = args.only or list(heroes)
     headers = {"Authorization": args.key}
     changed = []
 
     for slug in slugs:
-        if slug not in HEROES:
-            print(f"skip: {slug} (not in HEROES map)")
+        if slug not in heroes:
+            print(f"skip: {slug} (not in the '{args.which_set}' map)")
             continue
-        query, window, _default_pick = HEROES[slug]
+        query, window, _default_pick = heroes[slug]
         pick = args.pick if args.pick else _default_pick
         dest = args.out / f"{slug}.jpg"
         if dest.exists() and not args.refresh:
@@ -190,7 +239,7 @@ def main():
 
         credits[slug] = info
         size_kb = dest.stat().st_size // 1024
-        print(f"OK:   {slug:22s} {size_kb}KB <= docs/assets/hero/{slug}.jpg  ({alt[:60]})")
+        print(f"OK:   {slug:22s} {size_kb}KB <= {dest}  ({alt[:60]})")
         changed.append(slug)
 
     if changed and not args.dry_run:

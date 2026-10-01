@@ -1,0 +1,62 @@
+{
+  "streaming-devices": {
+    "query": "modern living room television sofa",
+    "alt": "Contemporary living room with a gray sectional sofa and a wall-mounted TV.",
+    "photo_id": 7587783,
+    "photographer": "Max Vakhtbovych",
+    "photographer_url": "https://www.pexels.com/@artbovich",
+    "pexels_url": "https://www.pexels.com/photo/gray-couch-on-gray-carpet-7587783/",
+    "width": 7360,
+    "height": 4912,
+    "source": "Pexels",
+    "fetched": "2026-10-01T02:03:38"
+  },
+  "wireless-headphones": {
+    "query": "woman wearing headphones listening music",
+    "alt": "A woman wearing white wireless headphones, smiling and enjoying music indoors.",
+    "photo_id": 3756917,
+    "photographer": "Sound On",
+    "photographer_url": "https://www.pexels.com/@sound-on",
+    "pexels_url": "https://www.pexels.com/photo/photo-of-woman-wearing-white-headphones-3756917/",
+    "width": 7360,
+    "height": 4912,
+    "source": "Pexels",
+    "fetched": "2026-10-01T02:03:39"
+  },
+  "webcams": {
+    "query": "laptop video call home office desk",
+    "alt": "An elderly man video calling a woman using a laptop at a wooden desk.",
+    "photo_id": 6414515,
+    "photographer": "RDNE Stock project",
+    "photographer_url": "https://www.pexels.com/@rdne",
+    "pexels_url": "https://www.pexels.com/photo/a-person-in-a-video-call-6414515/",
+    "width": 6344,
+    "height": 4229,
+    "source": "Pexels",
+    "fetched": "2026-10-01T02:03:40"
+  },
+  "wireless-earbuds": {
+    "query": "person using wireless earbuds smartphone",
+    "alt": "Asian woman lying on yoga mat using smartphone with AirPods in ears",
+    "photo_id": 7350289,
+    "photographer": "cottonbro studio",
+    "photographer_url": "https://www.pexels.com/@cottonbro",
+    "pexels_url": "https://www.pexels.com/photo/a-woman-using-a-smartphone-while-lying-on-the-floor-7350289/",
+    "width": 6720,
+    "height": 4480,
+    "source": "Pexels",
+    "fetched": "2026-10-01T02:03:40"
+  },
+  "smart-home": {
+    "query": "cozy living room interior lamp evening",
+    "alt": "A warm and inviting living room featuring a soft couch and floor lamp casting shadows on the wall.",
+    "photo_id": 3987481,
+    "photographer": "Lucian Petrean",
+    "photographer_url": "https://www.pexels.com/@lucian-petrean-1716046",
+    "pexels_url": "https://www.pexels.com/photo/black-floor-lamp-beside-gray-couch-3987481/",
+    "width": 6720,
+    "height": 4480,
+    "source": "Pexels",
+    "fetched": "2026-10-01T02:03:41"
+  }
+}
