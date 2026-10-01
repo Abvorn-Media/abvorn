@@ -191,3 +191,29 @@ class TestAmbassadorHeadline:
 
     def test_niche_fallback_last(self):
         assert self._agent()._headline("tv") == "Just published our tv guide!"
+
+    def test_title_fallback_reads_a_real_article_from_state(self):
+        """Deploys with no pipeline payload still name a real article."""
+        agent = self._agent()
+
+        class State:
+            def get_posts_for_niche(self, niche):
+                return [{"title": "Roku 55 Inch Select Series Review", "niche": niche}]
+
+        agent.state = State()
+        assert agent._latest_title_for_niche("tv") == "Roku 55 Inch Select Series Review"
+
+    def test_title_fallback_survives_a_broken_state(self):
+        agent = self._agent()
+
+        class State:
+            def get_posts_for_niche(self, niche):
+                raise RuntimeError("db locked")
+
+        agent.state = State()
+        assert agent._latest_title_for_niche("tv") == ""
+
+    def test_title_fallback_with_no_state(self):
+        agent = self._agent()
+        agent.state = None
+        assert agent._latest_title_for_niche("tv") == ""

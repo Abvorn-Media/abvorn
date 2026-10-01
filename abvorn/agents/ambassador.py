@@ -144,6 +144,11 @@ class SocialAmbassador(AgentBase):
             slug = msg.get("slug", "") or ev.get("slug", "")
             if not self.soul_check("promote_new_content", {"niche": niche}):
                 return {"action": "soul_blocked", "decision": "promote_new_content"}
+            # Older events predate the identity fields; fall back to the newest
+            # recorded post for this niche so the headline is still about a real
+            # article instead of a bare slug.
+            if not title and not slug:
+                title = self._latest_title_for_niche(niche)
             result = await self._promote_niche(
                 niche, url=url, title=title, slug=slug
             )
@@ -307,6 +312,26 @@ class SocialAmbassador(AgentBase):
         except Exception as e:
             logger.error(f"[Ambassador] _craft_and_post failed: {e}")
             return {"status": "failed", "error": str(e)[:100], "platform": item.get("platform", "unknown")}
+
+    def _latest_title_for_niche(self, niche: str) -> str:
+        """Newest recorded article title for ``niche``, or "" if unknown.
+
+        Fallback for events published before content.published carried identity
+        fields, and for deploys with no pipeline payload. Reading it from state
+        rather than inventing text means the post still names a real article.
+        """
+        if not self.state or not niche:
+            return ""
+        try:
+            posts = self.state.get_posts_for_niche(niche) or []
+        except Exception as e:
+            logger.warning(f"[Ambassador] could not read posts for {niche!r}: {e}")
+            return ""
+        for post in posts:
+            title = str(post.get("title") or post.get("post_title") or "").strip()
+            if title:
+                return title
+        return ""
 
     def _headline(self, niche: str, title: str = "", slug: str = "") -> str:
         """Announcement line for this specific article.
