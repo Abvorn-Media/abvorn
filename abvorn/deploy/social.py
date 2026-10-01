@@ -348,6 +348,23 @@ class SocialDeployer:
             logger.warning(f"{platform}: params failed — {result['reason']}")
             return result
 
+        # Daily budget: last gate before anything leaves for Composio. Placed
+        # here so every earlier exit (gate off, not-allowed, export-only,
+        # telegram, no key, no connection, bad params) returns without spending
+        # a slot, and so no caller can route around it.
+        from ..core.social_budget import check_and_consume, refund
+
+        allowed, budget_reason = check_and_consume(platform)
+        if not allowed:
+            logger.info(f"{platform}: daily budget reached — not posting ({budget_reason})")
+            result = {
+                "status": "budget_exceeded",
+                "platform": platform,
+                "reason": budget_reason,
+            }
+            self._results.append(result)
+            return result
+
         # LinkedIn: attach composed product cards as real images (media
         # category IMAGE) before falling back to a URL-share/text post.
         if platform == "linkedin" and media_paths:
@@ -405,6 +422,9 @@ class SocialDeployer:
             }
         except Exception as e:
             result = {"status": "failed", "platform": platform, "error": str(e)[:200]}
+        # Nothing went out, so give the slot back: a Composio outage must not
+        # burn the day's only post.
+        refund(platform)
         self._results.append(result)
         logger.warning(f"{platform}: composio execution failed — {result.get('error')}")
         return result

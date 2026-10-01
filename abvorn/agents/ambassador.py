@@ -121,7 +121,13 @@ class SocialAmbassador(AgentBase):
                     results.append({"status": "soul_blocked", "platform": p.get("platform", "unknown")})
                     continue
                 try:
-                    result = await self._craft_and_post(p)
+                    media = self._media_for(
+                        p.get("niche", ""),
+                        p.get("platform", ""),
+                        p.get("url", ""),
+                        title=p.get("headline", ""),
+                    )
+                    result = await self._craft_and_post(p, media_paths=media)
                     results.append(result)
                 except Exception as e:
                     logger.warning(f"[Ambassador] post_scheduled item failed: {e}")
@@ -134,9 +140,10 @@ class SocialAmbassador(AgentBase):
                 return {"action": "none"}
             ev = max(events, key=lambda e: e["created_at"])
             niche = ev.get("message", {}).get("niche", ev.get("niche", "general"))
+            url = ev.get("message", {}).get("url", "") or ev.get("url", "")
             if not self.soul_check("promote_new_content", {"niche": niche}):
                 return {"action": "soul_blocked", "decision": "promote_new_content"}
-            result = await self._promote_niche(niche)
+            result = await self._promote_niche(niche, url=url)
             self._mark_handled([ev["id"]])
             return result
 
@@ -193,7 +200,40 @@ class SocialAmbassador(AgentBase):
         except Exception:
             return []
 
-    async def _craft_and_post(self, item: dict) -> dict:
+    def _media_for(self, niche: str, platform: str, url: str = "", title: str = "") -> list[str]:
+        """Build a real product card for the post about this niche.
+
+        Until now the promote path called social.post() with no media at all,
+        so LinkedIn always took the link-preview fallback and every post went
+        out imageless. This reuses the composer the domination path already uses,
+        which pulls the products straight off the published review page, so the
+        card shows the actual product being written about rather than generic
+        stock. Returns [] when the niche has no review page yet; the caller
+        logs that rather than shipping a silent imageless post.
+        """
+        try:
+            from ..domination.product_assets import load_products_for_niche, slug_from_url
+            from ..domination.instagram_cards import compose_platform_media
+
+            slug = slug_from_url(url) or niche
+            products = load_products_for_niche(slug)
+            if not products:
+                logger.warning(
+                    f"[Ambassador] no products resolved for {slug!r} — {platform} post will go out without a product image"
+                )
+                return []
+            return compose_platform_media(
+                products,
+                niche=slug,
+                title=title or f"{niche} guide",
+                url=url,
+                platform=platform,
+            )
+        except Exception as e:
+            logger.warning(f"[Ambassador] media composition failed for {platform}: {e}")
+            return []
+
+    async def _craft_and_post(self, item: dict, media_paths: list[str] | None = None) -> dict:
         try:
             niche = item.get("niche", "general")
             platform = item.get("platform", "x")
@@ -240,6 +280,7 @@ class SocialAmbassador(AgentBase):
                     self.social.post,
                     content,
                     platform,
+                    media_paths,
                 )
             except Exception as e:
                 logger.warning(f"[Ambassador] Social post failed: {e}")
@@ -264,7 +305,7 @@ class SocialAmbassador(AgentBase):
             logger.error(f"[Ambassador] _craft_and_post failed: {e}")
             return {"status": "failed", "error": str(e)[:100], "platform": item.get("platform", "unknown")}
 
-    async def _promote_niche(self, niche: str) -> dict:
+    async def _promote_niche(self, niche: str, url: str = "") -> dict:
         logger.info(f"[Ambassador] Promoting new content: {niche}")
         platforms = ["x", "linkedin"]
         try:
@@ -272,13 +313,18 @@ class SocialAmbassador(AgentBase):
                 platforms.append("facebook")
         except Exception:
             pass
+        headline = f"Just published our {niche} guide!"
         results = []
         for platform in platforms:
             try:
                 item = {"niche": niche, "platform": platform,
-                        "headline": f"Just published our {niche} guide!",
+                        "headline": headline,
                         "product": niche}
-                result = await self._craft_and_post(item)
+                # Same photo on every platform: one card, so the set reads as
+                # one campaign instead of three unrelated posts.
+                media = self._media_for(niche, platform, url, title=headline)
+                result = await self._craft_and_post(item, media_paths=media)
+                result["media_count"] = len(media or [])
                 results.append(result)
             except Exception as e:
                 logger.warning(f"[Ambassador] {platform} promotion failed: {e}")

@@ -187,6 +187,22 @@ class SocialPublisher:
         if mapping.get("flow") == "pin":
             return self._publish_pinterest_pin(script, platform, niche, media_paths)
 
+        # Daily budget: same gate as deploy/social.py so the 4h domination and
+        # 12h full-cycle loops cannot stack extra posts on top of whatever the
+        # Ambassador already spent today. Placed after every non-live exit.
+        from ..core.social_budget import check_and_consume, refund
+
+        budget_ok, budget_reason = check_and_consume(platform)
+        if not budget_ok:
+            logger.info(f"{platform}: daily budget reached — not posting ({budget_reason})")
+            result = {
+                "status": "budget_exceeded",
+                "platform": platform,
+                "reason": budget_reason,
+            }
+            self._results.append(result)
+            return result
+
         params = mapping["params_fn"](script)
         if platform == "linkedin":
             params["author"] = self._client.linkedin_author_urn()
@@ -234,6 +250,8 @@ class SocialPublisher:
             return result
         except Exception as e:
             logger.warning(f"{platform}: Composio failed — exporting instead: {e}")
+            # Nothing reached the platform, so hand the daily slot back.
+            refund(platform)
             return self._export(script, platform, niche, media_paths=media_paths)
 
     def publish_all(self, scripts: dict, niche: str = "",
