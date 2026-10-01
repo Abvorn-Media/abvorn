@@ -261,7 +261,7 @@ background:linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.80) 38%, rg
         <a href="/index.html" class="btn">Browse our guides</a>
     </div>
     <div class="hero-slider" id="hero-slider">
-        <div class="hero-slide active"><img src="/assets/hero-scene/wireless-headphones.jpg" alt="A woman wearing white wireless headphones, smiling while listening to music at home" width="1440" height="961" fetchpriority="high"><figcaption>Wireless Headphones reviews — expert tested<span class="hero-slide__credit">Photo: <a href="https://www.pexels.com/photo/photo-of-woman-wearing-white-headphones-3756917/" target="_blank" rel="noopener">Sound On</a> on Pexels</span></figcaption></div><div class="hero-slide"><img src="/assets/hero-scene/wireless-earbuds.jpg" alt="A woman lying on a yoga mat using her smartphone with wireless earbuds in her ears" width="1440" height="960" loading="lazy"><figcaption>Wireless Earbuds reviews — expert tested<span class="hero-slide__credit">Photo: <a href="https://www.pexels.com/photo/a-woman-using-a-smartphone-while-lying-on-the-floor-7350289/" target="_blank" rel="noopener">cottonbro studio</a> on Pexels</span></figcaption></div><div class="hero-slide"><img src="/assets/hero-scene/webcams.jpg" alt="A man video calling from a laptop on a wooden desk" width="1440" height="960" loading="lazy"><figcaption>Webcams reviews — expert tested<span class="hero-slide__credit">Photo: <a href="https://www.pexels.com/photo/a-person-in-a-video-call-6414515/" target="_blank" rel="noopener">RDNE Stock project</a> on Pexels</span></figcaption></div><div class="hero-slide"><img src="/assets/hero-scene/streaming-devices.jpg" alt="A contemporary living room with a gray sectional sofa and a wall-mounted TV" width="1440" height="961" loading="lazy"><figcaption>Streaming Devices reviews — expert tested<span class="hero-slide__credit">Photo: <a href="https://www.pexels.com/photo/gray-couch-on-gray-carpet-7587783/" target="_blank" rel="noopener">Max Vakhtbovych</a> on Pexels</span></figcaption></div><div class="hero-slide"><img src="/assets/hero-scene/smart-home.jpg" alt="A warm living room with a soft couch and a floor lamp casting shadows on the wall" width="1440" height="960" loading="lazy"><figcaption>Smart Home reviews — expert tested<span class="hero-slide__credit">Photo: <a href="https://www.pexels.com/photo/black-floor-lamp-beside-gray-couch-3987481/" target="_blank" rel="noopener">Lucian Petrean</a> on Pexels</span></figcaption></div>
+        <div class="hero-slide active"><img src="/assets/hero-scene/wireless-headphones.jpg" alt="A woman wearing white wireless headphones, smiling while listening to music at home" width="1440" height="961" fetchpriority="high"><figcaption>Wireless Headphones reviews<span class="hero-slide__credit">Photo: <a href="https://www.pexels.com/photo/photo-of-woman-wearing-white-headphones-3756917/" target="_blank" rel="noopener">Sound On</a> on Pexels</span></figcaption></div><div class="hero-slide"><img src="/assets/hero-scene/wireless-earbuds.jpg" alt="A woman lying on a yoga mat using her smartphone with wireless earbuds in her ears" width="1440" height="960" loading="lazy"><figcaption>Wireless Earbuds reviews<span class="hero-slide__credit">Photo: <a href="https://www.pexels.com/photo/a-woman-using-a-smartphone-while-lying-on-the-floor-7350289/" target="_blank" rel="noopener">cottonbro studio</a> on Pexels</span></figcaption></div><div class="hero-slide"><img src="/assets/hero-scene/webcams.jpg" alt="A man video calling from a laptop on a wooden desk" width="1440" height="960" loading="lazy"><figcaption>Webcams reviews<span class="hero-slide__credit">Photo: <a href="https://www.pexels.com/photo/a-person-in-a-video-call-6414515/" target="_blank" rel="noopener">RDNE Stock project</a> on Pexels</span></figcaption></div><div class="hero-slide"><img src="/assets/hero-scene/streaming-devices.jpg" alt="A contemporary living room with a gray sectional sofa and a wall-mounted TV" width="1440" height="961" loading="lazy"><figcaption>Streaming Devices reviews<span class="hero-slide__credit">Photo: <a href="https://www.pexels.com/photo/gray-couch-on-gray-carpet-7587783/" target="_blank" rel="noopener">Max Vakhtbovych</a> on Pexels</span></figcaption></div><div class="hero-slide"><img src="/assets/hero-scene/smart-home.jpg" alt="A warm living room with a soft couch and a floor lamp casting shadows on the wall" width="1440" height="960" loading="lazy"><figcaption>Smart Home reviews<span class="hero-slide__credit">Photo: <a href="https://www.pexels.com/photo/black-floor-lamp-beside-gray-couch-3987481/" target="_blank" rel="noopener">Lucian Petrean</a> on Pexels</span></figcaption></div>
         <div class="hero-slider__dots"><button class="hero-slider__dot active" aria-label="Show Wireless Headphones" aria-current="true"></button><button class="hero-slider__dot" aria-label="Show Wireless Earbuds" aria-current="false"></button><button class="hero-slider__dot" aria-label="Show Webcams" aria-current="false"></button><button class="hero-slider__dot" aria-label="Show Streaming Devices" aria-current="false"></button><button class="hero-slider__dot" aria-label="Show Smart Home" aria-current="false"></button></div>
     </div>
 </div></section>
@@ -385,6 +385,71 @@ background:linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.80) 38%, rg
         }, { threshold: 0.4 });
         nums.forEach(n => obs.observe(n));
     } else { nums.forEach(n => { n.textContent = n.dataset.target; }); }
+})();
+(function() {
+    const slider = document.getElementById('hero-slider');
+    if (!slider) return;
+    const slides = Array.from(slider.querySelectorAll('.hero-slide'));
+    const dots = Array.from(slider.querySelectorAll('.hero-slider__dot'));
+    if (slides.length < 2) return;
+
+    // The slider was static markup until now: five .hero-slide divs, only the
+    // first with .active, and no code anywhere that ever toggled the class.
+    // Five stacked SVGs read as one graphic so it went unnoticed; photographs
+    // made it obvious that only slide 1 was ever shown.
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const INTERVAL = 5200;
+    let index = 0;
+    let timer = null;
+    let paused = false;
+
+    function show(next) {
+        index = (next + slides.length) % slides.length;
+        slides.forEach((s, i) => s.classList.toggle('active', i === index));
+        dots.forEach((d, i) => {
+            d.classList.toggle('active', i === index);
+            d.setAttribute('aria-current', i === index ? 'true' : 'false');
+        });
+    }
+    function start() {
+        // autoplay is motion, so reduced-motion means no timer at all. The dots
+        // still work, so the content stays reachable.
+        if (reduceMotion || paused) return;
+        stop();
+        timer = window.setInterval(() => show(index + 1), INTERVAL);
+    }
+    function stop() { if (timer) { window.clearInterval(timer); timer = null; } }
+
+    dots.forEach((d, i) => {
+        d.addEventListener('click', () => { show(i); start(); });
+    });
+
+    // Pause while the reader is on the image, and while it has keyboard focus,
+    // so the carousel never yanks content out from under them.
+    slider.addEventListener('mouseenter', () => { paused = true; stop(); });
+    slider.addEventListener('mouseleave', () => { paused = false; start(); });
+    slider.addEventListener('focusin', () => { paused = true; stop(); });
+    slider.addEventListener('focusout', (e) => {
+        if (!slider.contains(e.relatedTarget)) { paused = false; start(); }
+    });
+
+    // Off-screen carousel should not keep burning cycles.
+    if ('IntersectionObserver' in window) {
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) { paused = false; start(); }
+                else { paused = true; stop(); }
+            });
+        }, { threshold: 0.25 });
+        obs.observe(slider);
+    } else {
+        start();
+    }
+
+    show(0);
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stop(); else start();
+    });
 })();
 (function() {
     const cards = document.querySelectorAll('.about-card');
