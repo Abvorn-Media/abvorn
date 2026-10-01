@@ -1,6 +1,8 @@
 import json, re, logging
 from ddgs import DDGS
 
+from abvorn.core.amazon_catalog import AmazonCatalogClient
+
 logger = logging.getLogger("abvorn.researcher")
 
 def _get_tavily():
@@ -14,14 +16,43 @@ def _get_tavily():
         return TavilyClient()
 
 
+def _get_amazon() -> AmazonCatalogClient:
+    """Lazy-init the Amazon catalog client from secrets/environ."""
+    try:
+        from abvorn.core.secrets import load_secrets
+        return AmazonCatalogClient(load_secrets().get("OPENWEB_NINJA_KEY", ""))
+    except Exception:
+        return AmazonCatalogClient()
+
+
 def research_niche(niche: str, router=None) -> list:
     """RESEARCH stage: search web for real products in this niche.
 
-    Uses Tavily first (better results for AI), falls back to DDGS.
-    
+    Amazon first, then Tavily, then DDGS, then LLM knowledge.
+
+    Order matters and it is not a quality preference. Tavily and the LLM
+    fallback both prompt for {name, price, description, features, category,
+    source_url} — none of them can emit an ASIN or a product photo, so every
+    product they produce is rejected downstream by
+    ``_products_are_placeholder()`` at the deploy boundary. Researching via
+    Tavily therefore could never unblock a page: the tv niche was refused with
+    "1 product(s) and none carry an ASIN" while Tavily was returning perfectly
+    plausible TVs. Amazon is the only source here that returns asin + image +
+    url, so it goes first and the LLM-shaped fallbacks stay as last resorts
+    for niches Amazon has nothing for.
+
     Returns list of dicts: [{name, price, rating, features, pros, cons, summary, source_url}]
     """
     products = []
+
+    # 0. Real Amazon catalog: the only source that yields buyable products.
+    try:
+        products = _get_amazon().search_products(niche)
+        if products:
+            return products
+    except Exception as e:
+        logger.warning(f"Amazon catalog research failed for '{niche}': {e}")
+
     # 1. Try Tavily (AI-native search, structured results)
     tavily = _get_tavily()
     if tavily.available:
