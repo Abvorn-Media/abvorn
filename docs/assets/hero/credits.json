@@ -87,7 +87,7 @@
     "query": "computer camera closeup",
     "alt": "A workspace featuring a laptop, tablet, camera, and lens, ideal for creative work and photography.",
     "photo_id": 15977088,
-    "photographer": "Kawê  Rodrigues",
+    "photographer": "Kaw\u00c3\u00aa  Rodrigues",
     "photographer_url": "https://www.pexels.com/@kawerodriguess",
     "pexels_url": "https://www.pexels.com/photo/camera-by-laptop-and-tablet-on-desk-15977088/",
     "width": 5558,
@@ -118,5 +118,77 @@
     "height": 4000,
     "source": "Pexels",
     "fetched": "2026-09-08T08:05:34"
+  },
+  "audio": {
+    "query": "headphones product black background",
+    "alt": "Minimalist black headphones on a dark textured background, ideal for audio and music design themes.",
+    "photo_id": 3721941,
+    "photographer": "Daniel Reche",
+    "photographer_url": "https://www.pexels.com/@daniel-reche-718241",
+    "pexels_url": "https://www.pexels.com/photo/black-and-silver-headphones-on-black-surface-3721941/",
+    "width": 6000,
+    "height": 4000,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:34"
+  },
+  "fitness-and-health": {
+    "query": "smart watch product black background",
+    "alt": "Detailed close-up of a stylish modern smartwatch with a black band, ideal for tech enthusiasts.",
+    "photo_id": 437038,
+    "photographer": "Torsten Dettlaff",
+    "photographer_url": "https://www.pexels.com/@tdcat",
+    "pexels_url": "https://www.pexels.com/photo/silver-aluminum-case-apple-watch-437038/",
+    "width": 5760,
+    "height": 3840,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:26"
+  },
+  "home-and-lifestyle": {
+    "query": "smart speaker product photography",
+    "alt": "Modern smart speaker device with illuminated ring, featured on a dark background.",
+    "photo_id": 14309805,
+    "photographer": "Jonathan Borba",
+    "photographer_url": "https://www.pexels.com/@jonathanborba",
+    "pexels_url": "https://www.pexels.com/photo/close-up-shot-of-an-alexa-echo-dot-14309805/",
+    "width": 5472,
+    "height": 3648,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:30"
+  },
+  "computing-and-monitors": {
+    "query": "computer monitor black background",
+    "alt": "A sleek computer setup with dual monitors, keyboard, and mouse in a dark room.",
+    "photo_id": 7172661,
+    "photographer": "Matheus Bertelli",
+    "photographer_url": "https://www.pexels.com/@bertellifotografia",
+    "pexels_url": "https://www.pexels.com/photo/black-flat-screen-computer-monitor-and-black-computer-keyboard-7172661/",
+    "width": 6170,
+    "height": 4113,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:25"
+  },
+  "gaming": {
+    "query": "gaming mouse dark",
+    "alt": "High-tech gaming mouse on a hexagonal-patterned surface with ambient lighting.",
+    "photo_id": 28779691,
+    "photographer": "Atahan Demir",
+    "photographer_url": "https://www.pexels.com/@atahandemir",
+    "pexels_url": "https://www.pexels.com/photo/futuristic-gaming-mouse-on-dark-hexagonal-surface-28779691/",
+    "width": 6240,
+    "height": 4160,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:27"
+  },
+  "webcams-and-accessories": {
+    "query": "computer camera closeup",
+    "alt": "A workspace featuring a laptop, tablet, camera, and lens, ideal for creative work and photography.",
+    "photo_id": 15977088,
+    "photographer": "Kaw\u00c3\u00aa  Rodrigues",
+    "photographer_url": "https://www.pexels.com/@kawerodriguess",
+    "pexels_url": "https://www.pexels.com/photo/camera-by-laptop-and-tablet-on-desk-15977088/",
+    "width": 5558,
+    "height": 3705,
+    "source": "Pexels",
+    "fetched": "2026-09-08T08:05:32"
   }
 }
