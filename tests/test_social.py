@@ -231,3 +231,95 @@ def test_gate_on_allowed_platform_proceeds_past_scoping(monkeypatch):
     # Passed the scoping gate; with no key it must be "skipped", not a live post.
     assert result["status"] == "skipped"
     assert result["reason"] == "no_composio_key"
+
+
+# ── Telegram media (regression: photos were composed, then dropped) ──
+
+class FakeTelegram:
+    """Records which Bot API call SocialDeployer chose."""
+
+    def __init__(self, media_status="posted"):
+        self.media_status = media_status
+        self.media_calls = []
+        self.text_calls = []
+
+    def post_media_group(self, media_paths, caption=""):
+        self.media_calls.append((list(media_paths), caption))
+        if self.media_status != "posted":
+            return {"status": self.media_status, "platform": "telegram",
+                    "error": "media group failed"}
+        return {"status": "posted", "platform": "telegram",
+                "chat_id": "@abvorn", "photos": len(media_paths)}
+
+    def post(self, adapted, enable_preview=False):
+        self.text_calls.append(adapted)
+        return {"status": "posted", "platform": "telegram", "chat_id": "@abvorn"}
+
+
+@pytest.fixture
+def telegram_live(monkeypatch):
+    """Gate ON with telegram allowed, and a recording TelegramDeployer."""
+    monkeypatch.setenv("ABVORN_SOCIAL_PUBLISH", "1")
+    monkeypatch.setenv("ABVORN_SOCIAL_PLATFORMS", "telegram")
+    fake = FakeTelegram()
+    monkeypatch.setattr("abvorn.deploy.social.TelegramDeployer", lambda *a, **k: fake)
+    return fake
+
+
+CONTENT = {"post_title": "TV guide", "intro": "<p>Great picks</p>",
+           "article_html": "<p>Body</p>", "tags": ["tv"]}
+
+
+def test_telegram_sends_media_group_when_photos_exist(telegram_live, tmp_path):
+    """Composed product cards must ride along as a real media group.
+
+    SocialDeployer.post() accepted media_paths and used them for LinkedIn but
+    dropped them here, so every Telegram post shipped as bare text.
+    """
+    photo = tmp_path / "tv-card.png"
+    photo.write_bytes(b"\x89PNG\r\n\x1a\n")
+
+    deployer = SocialDeployer()
+    result = deployer.post(CONTENT, "telegram", media_paths=[str(photo)])
+
+    assert result["status"] == "posted"
+    assert result.get("photos") == 1, "photo count must survive to the caller"
+    assert len(telegram_live.media_calls) == 1, "sendMediaGroup was never called"
+    assert telegram_live.media_calls[0][0] == [str(photo)]
+    assert telegram_live.text_calls == [], "must not double-post a text message"
+    assert "Great picks" in telegram_live.media_calls[0][1], "copy rides as caption"
+
+
+def test_telegram_falls_back_to_text_when_media_group_fails(telegram_live, tmp_path):
+    """A failed album must still deliver the post as text, not drop it."""
+    telegram_live.media_status = "failed"
+    photo = tmp_path / "tv-card.png"
+    photo.write_bytes(b"\x89PNG\r\n\x1a\n")
+
+    deployer = SocialDeployer()
+    result = deployer.post(CONTENT, "telegram", media_paths=[str(photo)])
+
+    assert result["status"] == "posted"
+    assert len(telegram_live.media_calls) == 1
+    assert len(telegram_live.text_calls) == 1, "album failure must fall back to text"
+
+
+def test_telegram_text_only_when_no_media(telegram_live):
+    """No photos means a plain message — no empty media group call."""
+    deployer = SocialDeployer()
+    result = deployer.post(CONTENT, "telegram", media_paths=[])
+
+    assert result["status"] == "posted"
+    assert telegram_live.media_calls == []
+    assert len(telegram_live.text_calls) == 1
+
+
+def test_telegram_skips_media_paths_that_do_not_exist(telegram_live, tmp_path):
+    """Stale media paths must not produce an empty sendMediaGroup."""
+    deployer = SocialDeployer()
+    result = deployer.post(CONTENT, "telegram",
+                           media_paths=[str(tmp_path / "gone.png")])
+
+    assert result["status"] == "posted"
+    assert telegram_live.media_calls == []
+    assert len(telegram_live.text_calls) == 1

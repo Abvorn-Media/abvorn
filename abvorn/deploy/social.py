@@ -314,6 +314,28 @@ class SocialDeployer:
             return {"status": "exported", "platform": platform, "data": adapted}
 
         if platform == "telegram":
+            # Send composed product photos as a real album (sendMediaGroup),
+            # not a bare sendMessage. The Ambassador composes cards and hands
+            # them in via media_paths, but this branch used to ignore them
+            # entirely, so every Telegram post shipped imageless even though the
+            # cards existed on disk. Album captions cap at 1024 chars, so the
+            # text is clipped to what Telegram will actually accept.
+            if media_paths:
+                existing = [p for p in media_paths if Path(p).is_file()]
+                if existing:
+                    caption = fit_text(adapted.get("text", ""), 1024)
+                    result = TelegramDeployer().post_media_group(existing, caption)
+                    if result.get("status") == "posted":
+                        self._posted.append(platform)
+                        self._results.append(result)
+                        logger.info(
+                            f"telegram: posted {len(existing)} photos via media group"
+                        )
+                        return result
+                    logger.warning(
+                        f"telegram: media group {result.get('status')} "
+                        f"({result.get('error')}) - falling back to text"
+                    )
             result = TelegramDeployer().post(adapted)
             self._posted.append(platform)
             self._results.append(result)

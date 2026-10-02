@@ -330,7 +330,11 @@ class SocialPublisher:
                 existing = [p for p in media_paths if Path(p).exists()]
                 if existing:
                     result = deployer.post_media_group(
-                        existing, fit_text(params.get("text", ""), 3800)
+                        # sendMediaGroup captions cap at 1024 chars (sendMessage
+                        # allows 4096). Clipping to the message limit made every
+                        # album fail with BAD_REQUEST and silently fall back to
+                        # imageless text.
+                        existing, fit_text(params.get("text", ""), 1024)
                     )
                     if result.get("status") == "posted":
                         logger.info(f"telegram: posted {len(existing)} photos via Bot API sendMediaGroup")
