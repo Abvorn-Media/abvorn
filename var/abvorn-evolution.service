@@ -1,10 +1,15 @@
 [Unit]
 Description=Trigger Abvorn Evolution Check n8n workflow
+# After= only orders process start; n8n is Type=simple, so systemd considers it
+# up the moment the process forks and this unit's curl can fire before :5678 is
+# bound. On boot that surfaced as curl exit 7 (connection refused) and the whole
+# weekly run was lost, with no retry. Curl now waits for the port itself.
 After=network.target n8n.service
+Wants=network.target
 
 [Service]
 Type=oneshot
 User=ubuntu
-ExecStart=/usr/bin/curl -s -X POST -H "Content-Type: application/json" -d '{}' http://127.0.0.1:5678/webhook/abvorn-evolution
+ExecStart=/usr/bin/curl -sSf --retry 12 --retry-delay 5 --retry-connrefused --retry-all-errors -X POST -H "Content-Type: application/json" -d '{}' http://127.0.0.1:5678/webhook/abvorn-evolution
 StandardOutput=journal
 StandardError=journal

@@ -1,10 +1,13 @@
 [Unit]
 Description=Trigger Abvorn GSC Analysis n8n workflow
+# Same readiness race as abvorn-evolution.service: After= orders process start,
+# not port readiness. Retry until n8n is actually accepting connections.
 After=network.target n8n.service
+Wants=network.target
 
 [Service]
 Type=oneshot
 User=ubuntu
-ExecStart=/usr/bin/curl -s -X POST -H "Content-Type: application/json" -d '{}' http://127.0.0.1:5678/webhook/abvorn-gsc-analysis
+ExecStart=/usr/bin/curl -sSf --retry 12 --retry-delay 5 --retry-connrefused --retry-all-errors -X POST -H "Content-Type: application/json" -d '{}' http://127.0.0.1:5678/webhook/abvorn-gsc-analysis
 StandardOutput=journal
 StandardError=journal
