@@ -308,7 +308,22 @@ class AbvornDaemon:
                 logger.info(f"{platform}: stub ready — waiting for API keys")
                 continue
             _adapted = registry.adapter(platform)(content)
-            self.social.post(content, platform)
+            # Compose a real product card per platform. Without this the post
+            # went out imageless: LinkedIn took the link-preview fallback and
+            # Telegram's sendMessage cannot carry a photo at all, even though
+            # the cards were sitting on disk ready to send.
+            try:
+                from .agents.ambassador import compose_media_for_post
+                media = compose_media_for_post(
+                    niche, platform,
+                    url=content.get("url", ""),
+                    title=content.get("title") or content.get("product_name") or "",
+                    tag="daemon",
+                )
+            except Exception as e:
+                logger.warning(f"media composition failed for {platform}: {e}")
+                media = []
+            self.social.post(content, platform, media)
             logger.info(f"Deployed to {platform}")
 
         # Deploy content to site under its category, then rebuild nav + hubs

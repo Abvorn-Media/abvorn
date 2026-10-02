@@ -336,3 +336,61 @@ def test_media_for_survives_a_missing_review_page(monkeypatch):
         "abvorn.domination.product_assets.load_products_for_niche", lambda slug: []
     )
     assert amb._media_for("tv", "linkedin", url="") == []
+
+
+# --- the daemon publish loop must hand media down too ---------------------
+
+
+def test_daemon_publish_loop_passes_media_to_social(monkeypatch):
+    """The daemon's own publish loop posted with no media at all.
+
+    This is the path that produced every live `telegram: posted` line: it calls
+    social.post(content, platform) with two arguments, so the Telegram branch
+    never sees a photo and LinkedIn silently takes the link-preview fallback.
+    The Ambassador path was fixed; this one was missed.
+    """
+    import ast
+    import inspect
+
+    from abvorn import daemon as daemon_mod
+
+    src = inspect.getsource(daemon_mod)
+    tree = ast.parse(src)
+
+    # Find the social.post(...) call inside the registry.list(category="social")
+    # loop and assert it forwards media.
+    calls = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "post"
+        and isinstance(node.func.value, ast.Attribute)
+        and node.func.value.attr == "social"
+    ]
+    assert calls, "daemon no longer calls self.social.post"
+
+    # Every one of them must forward a third argument (the media list).
+    for call in calls:
+        assert len(call.args) == 3, (
+            "daemon social.post must pass media_paths; a 2-arg call ships "
+            "every platform imageless"
+        )
+
+
+def test_compose_media_for_post_is_shared_by_both_callers():
+    """Both callers must go through one implementation so they cannot drift."""
+    import inspect
+
+    from abvorn.agents.ambassador import compose_media_for_post, SocialAmbassador
+
+    # Ambassador delegates to the shared helper rather than duplicating it.
+    src = inspect.getsource(SocialAmbassador._media_for)
+    assert "compose_media_for_post" in src
+
+    # Daemon imports the same helper.
+    from abvorn import daemon as daemon_mod
+    assert "compose_media_for_post" in inspect.getsource(daemon_mod)
+
+    # And it degrades to [] rather than raising when products are missing.
+    assert compose_media_for_post.__doc__

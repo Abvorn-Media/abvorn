@@ -16,6 +16,42 @@ logger = logging.getLogger("abvorn.agents.ambassador")
 # Monotonic "highest content.published id already promoted" marker.
 _PROMOTED_WATERMARK = "ambassador_promoted_watermark"
 
+
+def compose_media_for_post(niche: str, platform: str, url: str = "",
+                            title: str = "", tag: str = "Ambassador") -> list[str]:
+    """Build a real product card for a social post about this niche.
+
+    Reuses the composer the domination path already uses, which pulls the
+    products straight off the published review page, so the card shows the
+    actual product being written about rather than generic stock.
+
+    Returns [] when the niche has no review page yet. Callers log that rather
+    than shipping a silent imageless post. Lives at module scope because two
+    callers need it: the Ambassador's promote path and the daemon's publish
+    loop in daemon.py, which was posting to social with no media at all.
+    """
+    try:
+        from ..domination.product_assets import load_products_for_niche, slug_from_url
+        from ..domination.instagram_cards import compose_platform_media
+
+        slug = slug_from_url(url) or niche
+        products = load_products_for_niche(slug)
+        if not products:
+            logger.warning(
+                f"[{tag}] no products resolved for {slug!r} - {platform} post will go out without a product image"
+            )
+            return []
+        return compose_platform_media(
+            products,
+            niche=slug,
+            title=title or f"{niche} guide",
+            url=url,
+            platform=platform,
+        )
+    except Exception as e:
+        logger.warning(f"[{tag}] media composition failed for {platform}: {e}")
+        return []
+
 PERSONA = (
     "You are Abvorn's social media ambassador — warm, knowledgeable, and genuinely helpful. "
     "You write like a real person who loves helping people make smart buying decisions. "
@@ -211,35 +247,10 @@ class SocialAmbassador(AgentBase):
     def _media_for(self, niche: str, platform: str, url: str = "", title: str = "") -> list[str]:
         """Build a real product card for the post about this niche.
 
-        Until now the promote path called social.post() with no media at all,
-        so LinkedIn always took the link-preview fallback and every post went
-        out imageless. This reuses the composer the domination path already uses,
-        which pulls the products straight off the published review page, so the
-        card shows the actual product being written about rather than generic
-        stock. Returns [] when the niche has no review page yet; the caller
-        logs that rather than shipping a silent imageless post.
+        Thin wrapper over ``compose_media_for_post`` so the Ambassador and the
+        daemon's publish loop build cards the same way.
         """
-        try:
-            from ..domination.product_assets import load_products_for_niche, slug_from_url
-            from ..domination.instagram_cards import compose_platform_media
-
-            slug = slug_from_url(url) or niche
-            products = load_products_for_niche(slug)
-            if not products:
-                logger.warning(
-                    f"[Ambassador] no products resolved for {slug!r} — {platform} post will go out without a product image"
-                )
-                return []
-            return compose_platform_media(
-                products,
-                niche=slug,
-                title=title or f"{niche} guide",
-                url=url,
-                platform=platform,
-            )
-        except Exception as e:
-            logger.warning(f"[Ambassador] media composition failed for {platform}: {e}")
-            return []
+        return compose_media_for_post(niche, platform, url=url, title=title)
 
     async def _craft_and_post(self, item: dict, media_paths: list[str] | None = None) -> dict:
         try:
