@@ -48,6 +48,53 @@ def test_reviews_gates_phantom_post_cards():
     assert "Budget 55-inch TV Guide" in titles, "existing index card must be kept"
 
 
+def test_deploy_content_injects_ai_seo_dates_before_publish():
+    """The daemon published pages straight from build_article_page, skipping the
+    post-build AI-SEO injector that run_cycle.write_files() runs.
+
+    Consequence: no Article JSON-LD and no <time datetime> wrapper on the
+    visible dates. src.deployment._review_updated() could read nothing back, so
+    every daemon-published page reported updated == "" -- 94 tv pages at once,
+    all missing the same day. That field drives the homepage newest-first sort
+    and the sitemap <lastmod>, so the freshness signal was gone site-wide.
+
+    The injector is idempotent and pure (string in, string out), so it is safe
+    to run here on the single page the daemon is about to push.
+    """
+    import re as _re
+
+    class CapturingDeployer:
+        def __init__(self):
+            self.pages = {}
+        def deploy_html(self, html, path):
+            self.pages[path] = html
+        def file_exists(self, rel):
+            return True
+
+    dep = CapturingDeployer()
+    sd = SiteDeployer(dep, None)
+    content = {
+        "post_title": "2026 TV Buying Guide: Insignia vs LG",
+        "article_html": "<p>Body copy that is long enough to look like a real review.</p>",
+        "intro": "<p>Intro paragraph.</p>",
+        "meta_description": "A meta description that is definitely long enough for the cap.",
+        "products": [{"name": "Insignia 50 inch", "asin": "B0TESTASIN1",
+                      "price": "$299", "image": "https://example.com/a.jpg",
+                      "rating": 4.2, "blurb": "Cheap 4K."}],
+    }
+    sd.deploy_content("tv", content, all_categories=["tv", "laptops"],
+                      article_filename="2026-tv-guide.html", require_products=True)
+
+    html = dep.pages.get("reviews/tv/2026-tv-guide.html")
+    assert html, "the page was never deployed"
+    assert _re.search(r'"dateModified"\s*:\s*"\d{4}-\d{2}-\d{2}"', html), (
+        "no Article dateModified -- the AI-SEO injector was skipped"
+    )
+    # And the consumer can actually read a date back out of what ships.
+    from src.deployment import _review_updated
+    assert _review_updated(html), "updated date is unreadable from the published html"
+
+
 def test_reviews_skips_posts_with_no_article_page():
     """A state post with an empty filename, or an explicitly unpublished
     status, must not produce a card.

@@ -1490,15 +1490,28 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
     </div>
 </section>'''
 
-    index_nav = f'''<nav class="category-index" aria-label="In this niche" style="--cat:{accent}">
+    # Build category nav with per-niche anchors
+    category_niches = []
+    for cat_name, slugs in CATEGORY_MAP.items():
+        if niche_slug in slugs:
+            category_niches = slugs
+            break
+    nav_links = []
+    nav_links.append(f'<a class="category-index__link is-current" aria-current="true" href="#latest"><span class="category-index__tick" style="--cat:{accent}"></span>Latest reviews</a>')
+    # Add links for each niche in this category
+    for ns in category_niches:
+        ns_name = next((n["name"] for n in load_state()["niches"] if n["slug"] == ns), ns.replace("-", " ").title())
+        nav_links.append(f'<a class="category-index__link" href="#{ns}"><span class="category-index__tick" style="--cat:{accent}"></span>{html_mod.escape(ns_name)}</a>')
+    nav_links.append(f'<a class="category-index__link" href="#archive"><span class="category-index__tick" style="--cat:{accent}"></span>All {title_escaped} guides</a>')
+    index_nav = f"""<nav class="category-index" aria-label="In this niche" style="--cat:{accent}">
     <div class="container category-index__inner">
         <span class="category-index__label">In this niche</span>
         <div class="category-index__links">
-            <a class="category-index__link is-current" aria-current="true" href="#latest"><span class="category-index__tick" style="--cat:{accent}"></span>Latest reviews</a>
-            <a class="category-index__link" href="#archive"><span class="category-index__tick" style="--cat:{accent}"></span>All {title_escaped} guides</a>
+            """ + "".join(nav_links) + """
         </div>
     </div>
-</nav>'''
+</nav>"""
+
 
     subscribe_band = (
         '<section class="subscribe-band"><div class="container subscribe-inner">'
@@ -1531,6 +1544,34 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
             f'<div class="niche-grid">{latest_cards}</div></section>'
         )
         sections.append(subscribe_band)
+
+        # Build per-niche sections for all niches in this category
+        category_niches = []
+        for cat_name, slugs in CATEGORY_MAP.items():
+            if niche_slug in slugs:
+                category_niches = slugs
+                break
+        state_niches = load_state().get("niches", [])
+        niche_name_map = {n["slug"]: n["name"] for n in state_niches}
+        for ns in category_niches:
+            ns_reviews = [r for r in sorted_reviews if r.get("slug") == ns]
+            if not ns_reviews:
+                continue  # skip empty niche sections to match clean layout
+            ns_reviews_sorted = sorted(ns_reviews, key=lambda r: r.get("updated", ""), reverse=True)
+            ns_cards = "".join(
+                review_card(r, category, b, featured=False)
+                for i, r in enumerate(ns_reviews_sorted[:6])
+            )
+            ns_name = niche_name_map.get(ns, ns.replace("-", " ").title())
+            ns_title_esc = html_mod.escape(ns_name)
+            ns_count = len(ns_reviews_sorted)
+            sections.append(
+                f'<section class="category-section container" id="{ns}" style="--cat:{accent}">'
+                f'<span class="section-eyebrow">{ns_title_esc}</span>'
+                f'<div class="category-section__header"><h2>{ns_title_esc} reviews</h2>'
+                f'<span class="category-section__count">{ns_count} guide{"s" if ns_count != 1 else ""}</span></div>'
+                f'<div class="niche-grid">{ns_cards}</div></section>'
+            )
 
         # Full archive index — every published review, newest first.
         archive_rows = "".join(_archive_row(r, accent, b, niche_slug) for r in sorted_reviews)
@@ -2959,6 +3000,15 @@ def write_persona_content_plan(niche_name, matrix, docs_dir="docs/plans"):
 
 
 # ─── Document writer ────────────────────────────────────────────────────
+def _load_injector():
+    import importlib.util as _ilu
+    _seo_path = Path(__file__).resolve().parent / "scripts" / "inject_ai_seo.py"
+    _spec = _ilu.spec_from_file_location("inject_ai_seo", _seo_path)
+    _seo = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(_seo)
+    return _seo
+
+
 def apply_ai_seo(docs) -> int:
     """Run the post-build AI-SEO injector over *docs*; best-effort, never raises.
 
@@ -2967,16 +3017,32 @@ def apply_ai_seo(docs) -> int:
     writer bodies so both the content cycle and rebuild_reviews share it.
     """
     try:
-        import importlib.util as _ilu
-        _seo_path = Path(__file__).resolve().parent / "scripts" / "inject_ai_seo.py"
-        _spec = _ilu.spec_from_file_location("inject_ai_seo", _seo_path)
-        _seo = _ilu.module_from_spec(_spec)
-        _spec.loader.exec_module(_seo)
-        changed, _ = _seo.inject_tree(docs)
+        changed, _ = _load_injector().inject_tree(docs)
         return changed
     except Exception as e:  # noqa: BLE001 - post-build enhancement is best-effort
         logger.warning(f"AI-SEO inject skipped: {e}")
         return 0
+
+
+def apply_ai_seo_page(rel: str, html: str) -> str:
+    """Run the post-build AI-SEO injector over one page's HTML, in memory.
+
+    ``apply_ai_seo`` walks a local ``docs/`` tree, which the daemon cannot use:
+    it deploys through the GitHub API and never writes ``docs/`` locally. So
+    every daemon-published page shipped with no Article JSON-LD and no
+    ``<time datetime>`` around the visible dates, and ``_review_updated()``
+    read "" back off all of them -- 94 tv pages on 2026-10-02, all published the
+    same day. That field is what the homepage newest-first sort and the sitemap
+    ``<lastmod>`` read, so the freshness signal was gone site-wide.
+
+    The injector is pure (string in, string out) and idempotent, so running it
+    on the single page about to be pushed is safe. Best-effort, never raises.
+    """
+    try:
+        return _load_injector().process(rel, html)
+    except Exception as e:  # noqa: BLE001 - post-build enhancement is best-effort
+        logger.warning(f"AI-SEO inject skipped for {rel}: {e}")
+        return html
 
 
 def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_url="", hero_images=None, google_client_id=""):
@@ -3094,7 +3160,7 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
 
     # Write category pages (post slugs point to reviews/{slug} for article pages)
     for n in state["niches"]:
-        niche_reviews = [r for r in reviews if r["slug"] == n["slug"]]
+        niche_reviews = [r for r in reviews if (r.get("niche") or r.get("niche_slug")) == n["slug"]]
         cat_dir = docs / n["slug"]
         cat_dir.mkdir(exist_ok=True)
         _wc(cat_dir / "index.html", build_category_page(n["slug"], n["name"], niche_reviews, all_slugs, amazon_tag), f"niche page {n['slug']}")

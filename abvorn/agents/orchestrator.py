@@ -406,7 +406,7 @@ class SiteDeployer:
         """
         try:
             all_categories = all_categories or []
-            from run_cycle import build_article_page, _SITE_URL
+            from run_cycle import build_article_page, _SITE_URL, apply_ai_seo_page
             from src.deployment import niche_relevance
             today = datetime.now().strftime("%Y-%m-%d")
             products = content.get("products") or []
@@ -468,6 +468,11 @@ class SiteDeployer:
             self._last_content = content
             self._last_niche = niche
             path = f"reviews/{niche}/{'index.html' if not article_filename else article_filename}"
+            # run_cycle.write_files() injects AI-SEO after building, but this
+            # path pushes straight to GitHub and never touches a local docs/
+            # tree, so the page went out with no Article JSON-LD and no
+            # <time datetime> on its dates. Inject in memory before shipping.
+            html = apply_ai_seo_page(path, html)
             self.deployer.deploy_html(html, path)
             logger.info(f"[SiteDeployer] Deployed premium article for {niche} as {path}")
             return path

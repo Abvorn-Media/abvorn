@@ -51,6 +51,12 @@ HEROES = {
     "webcams": ("computer camera closeup", (1.0, 1.9), 5),
     "wireless-earbuds": ("earbuds dark", (1.0, 1.8), 2),
     "wireless-headphones": ("headphones product black background", (1.1, 2.0), 4),
+    "audio": ("wireless headphones product black background", (1.1, 2.0), 1),
+    "fitness-and-health": ("smartwatch fitness black background", (1.0, 1.7), 0),
+    "home-and-lifestyle": ("smart speaker home dark", (1.1, 1.9), 0),
+    "computing-and-monitors": ("ultrawide monitor black background", (1.15, 1.9), 0),
+    "gaming": ("gaming rgb keyboard mouse dark", (1.1, 2.0), 0),
+    "webcams-and-accessories": ("webcam product black background", (1.0, 1.9), 0),
 }
 
 MIN_W = 1200

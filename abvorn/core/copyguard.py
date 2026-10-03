@@ -109,6 +109,12 @@ _FABRICATED_CLAIM_RES = [
         r"|in\s+(?:the\s+)?past\s+month)\b", re.I),
     re.compile(r"\b[0-9.,]+k?\s*\+?\s*units?/(?:month|mo)\b", re.I),
     re.compile(r"\b[0-9.,]+k?\s*\+?\s*units?\s+sold\b", re.I),
+    re.compile(r"\b[0-9.,]+k?\s*\+?\s*(?:units?|bought)\s+"
+        r"(?:sold\s+in\s+(?:the\s+)?past\s+month"
+        r"|in\s+(?:the\s+)?past\s+month)\b", re.I),
+    re.compile(r"\b(?:monthly|weekly)\s+sales:\s*[0-9.,]+\s*k?\+?\b", re.I),
+    re.compile(r"\b[0-9.,]+\s*k?\+\s*(?:units?|sold)\s*(?:per|a)\s+month\b", re.I),
+    re.compile(r"\bsales:\s*[0-9.,]+\s*k?\+\s*(?:units|bought)?\b", re.I),
     re.compile(r"\bX\s*units?\s+sold\b", re.I),
 ]
 
@@ -155,6 +161,42 @@ def _number_agreement_issues(text: str) -> list[dict]:
     return issues
 
 
+# Negation cues for _in_negated_clause. Split in two because the contraction
+# forms end in "n't" and so never have a word boundary before the "n".
+_NEGATION_WORD_RE = re.compile(
+    r"(?<![A-Za-z])(?:no|not|never|without|neither|nor|cannot|unable)"
+    r"(?![A-Za-z])",
+    re.I,
+)
+_NEGATION_CONTRACTION_RE = re.compile(r"n't(?![A-Za-z])", re.I)
+# Clause boundaries: a negation earlier in the document must not excuse a
+# claim stated later.
+_CLAUSE_BOUNDARY = (". ", "! ", "? ", "; ", ": ", ".<", "!</p", "?</p", "<p")
+_NEGATION_LOOKBACK = 140
+
+
+def _in_negated_clause(text: str, start: int) -> bool:
+    """True when the match beginning at *start* sits inside a negated clause.
+
+    Scoped to the enclosing clause so "We did not run lab testing. We tested
+    every panel." still flags the second sentence. The cue has to sit between
+    the clause boundary and the match, and no further back than
+    ``_NEGATION_LOOKBACK`` characters, so a negation in a neighbouring sentence
+    cannot suppress a real claim.
+    """
+    window = text[max(0, start - _NEGATION_LOOKBACK):start]
+    cut = 0
+    for boundary in _CLAUSE_BOUNDARY:
+        idx = window.rfind(boundary)
+        if idx != -1:
+            cut = max(cut, idx + len(boundary))
+    clause = window[cut:]
+    return bool(
+        _NEGATION_WORD_RE.search(clause)
+        or _NEGATION_CONTRACTION_RE.search(clause)
+    )
+
+
 def _fabricated_claim_issues(text: str) -> list[dict]:
     """Flag unverifiable first-hand testing or sales claims.
 
@@ -163,6 +205,12 @@ def _fabricated_claim_issues(text: str) -> list[dict]:
     deterministically (server-independent) because LanguageTool reliably passes
     them as clean copy. Unlike grammar findings these are never ambiguous, so
     callers may hard-block on them even where pages are otherwise report-only.
+
+    A *negated* mention is a disclaimer rather than a claim and is left alone.
+    FABRICATED_TESTING_CLAIM is a hard block on pages, so matching "lab
+    testing" inside "No hands-on lab testing was performed" made the honest
+    sentence unpublishable -- the incentive was to delete the disclosure, not
+    to keep it. One published page hit exactly that.
     """
     seen_contexts = set()
     issues = []
@@ -172,6 +220,8 @@ def _fabricated_claim_issues(text: str) -> list[dict]:
             if span in seen_contexts:
                 continue
             seen_contexts.add(span)
+            if _in_negated_clause(text, m.start()):
+                continue
             issues.append({
                 "rule": "FABRICATED_TESTING_CLAIM",
                 "category": "CLAIMS",

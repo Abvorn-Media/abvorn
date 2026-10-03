@@ -201,6 +201,56 @@ def test_fabricated_claim_flags_sales_figures():
         assert any(i["rule"] == "FABRICATED_TESTING_CLAIM" for i in issues), phrase
 
 
+# --- negation: a disclosure is not a claim ------------------------------
+
+
+def test_fabricated_claim_allows_negated_disclaimers():
+    """Saying you did NOT test something is the disclosure we want published.
+
+    FABRICATED_TESTING_CLAIM is a hard block on pages, so a detector that
+    matched "lab testing" inside "No hands-on lab testing was performed" made
+    the honest sentence unpublishable -- pushing authors to delete the
+    disclaimer rather than keep it. One published page hit exactly this.
+    """
+    for phrase in [
+        "No hands-on lab testing was performed.",
+        "We did not perform any lab testing for this guide.",
+        "We have not tested these panels in person.",
+        "Conclusions are drawn without hands-on testing.",
+        "Abvorn does not run laboratory testing on its picks.",
+        "This is not based on our testing.",
+    ]:
+        issues = copyguard._fabricated_claim_issues(phrase)
+        assert not any(
+            i["rule"] == "FABRICATED_TESTING_CLAIM" for i in issues
+        ), f"disclaimer wrongly flagged as a fabricated claim: {phrase!r}"
+
+
+def test_negation_guard_is_clause_scoped():
+    """A negation in a previous sentence must not excuse a claim in this one."""
+    issues = copyguard._fabricated_claim_issues(
+        "We did not run lab testing. We tested every panel side by side."
+    )
+    flagged = [i for i in issues if i["rule"] == "FABRICATED_TESTING_CLAIM"]
+    assert any("We tested" in i["context"] for i in flagged), (
+        "the negated first sentence leaked its exemption into the second"
+    )
+
+
+def test_negation_guard_keeps_real_claims_blocked():
+    """The guard must not weaken any claim that is actually asserted."""
+    for phrase in [
+        "Based on our testing, the S2725QS wins.",
+        "We tested the webcams side by side.",
+        "Lab testing confirmed the battery life.",
+        "Sales: 10K+ bought in past month",
+    ]:
+        issues = copyguard._fabricated_claim_issues(phrase)
+        assert any(
+            i["rule"] == "FABRICATED_TESTING_CLAIM" for i in issues
+        ), f"guard let a real claim through: {phrase!r}"
+
+
 def test_fabricated_claim_allows_clean_research_copy():
     issues = copyguard._fabricated_claim_issues(
         "We compared 8 monitors using spec sheets and owner feedback. "
