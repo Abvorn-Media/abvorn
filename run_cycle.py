@@ -1342,7 +1342,10 @@ def carousel_img(niche_slug, b):
     hero_path = f"docs/assets/hero/{niche_slug}.jpg"
     if os.path.exists(hero_path):
         return f"{b}/assets/hero/{niche_slug}.jpg"
-    return f"{b}/assets/{niche_slug}.svg"
+    svg_path = f"docs/assets/{niche_slug}.svg"
+    if os.path.exists(svg_path):
+        return f"{b}/assets/{niche_slug}.svg"
+    return f"{b}/assets/hero-home.svg"
 
 
 def hero_credit(niche_slug, b):

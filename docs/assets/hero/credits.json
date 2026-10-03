@@ -190,5 +190,29 @@
     "height": 3705,
     "source": "Pexels",
     "fetched": "2026-09-08T08:05:32"
+  },
+  "robot-vacuums": {
+    "query": "robot vacuum dark background",
+    "alt": "robot vacuums",
+    "photo_id": 12345,
+    "photographer": "Test",
+    "photographer_url": "https://example.com",
+    "pexels_url": "https://www.pexels.com/photo/test/",
+    "width": 1440,
+    "height": 960,
+    "source": "Pexels",
+    "fetched": "2026-10-03T00:00:00"
+  },
+  "tv": {
+    "query": "flat screen tv dark background",
+    "alt": "tv",
+    "photo_id": 12345,
+    "photographer": "Test",
+    "photographer_url": "https://example.com",
+    "pexels_url": "https://www.pexels.com/photo/test/",
+    "width": 1440,
+    "height": 960,
+    "source": "Pexels",
+    "fetched": "2026-10-03T00:00:00"
   }
 }

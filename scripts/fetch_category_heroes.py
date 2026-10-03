@@ -57,6 +57,8 @@ HEROES = {
     "computing-and-monitors": ("ultrawide monitor black background", (1.15, 1.9), 0),
     "gaming": ("gaming rgb keyboard mouse dark", (1.1, 2.0), 0),
     "webcams-and-accessories": ("webcam product black background", (1.0, 1.9), 0),
+    "robot-vacuums": ("robot vacuum product dark background", (1.15, 1.9), 0),
+    "tv": ("flat screen tv dark background", (1.15, 1.9), 0),
 }
 
 MIN_W = 1200

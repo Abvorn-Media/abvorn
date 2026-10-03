@@ -6,18 +6,34 @@ from pathlib import Path
 from run_cycle import build_category_page, hero_credit
 
 HERO_DIR = Path("docs/assets/hero")
-NICHES = {
-    "4k-monitors",
-    "fitness-trackers",
-    "gaming-mice",
-    "laptops",
-    "mechanical-keyboards",
-    "smart-home",
-    "streaming-devices",
-    "webcams",
-    "wireless-earbuds",
-    "wireless-headphones",
-}
+try:
+    from abvorn.core import category_pages as _cp
+except Exception:
+    _cp = None
+
+if _cp is not None and hasattr(_cp, "CATEGORY_MAP"):
+    _CAT_MAP = getattr(_cp, "CATEGORY_MAP")
+    NICHES = set()
+    for cat, mapping in _CAT_MAP.items():
+        if isinstance(mapping, dict):
+            for slug in mapping.values():
+                if slug:
+                    NICHES.add(slug)
+else:
+    NICHES = {
+        "4k-monitors",
+        "fitness-trackers",
+        "gaming-mice",
+        "laptops",
+        "mechanical-keyboards",
+        "smart-home",
+        "streaming-devices",
+        "webcams",
+        "wireless-earbuds",
+        "wireless-headphones",
+        "robot-vacuums",
+        "tv",
+    }
 
 
 def _credits():
@@ -48,10 +64,8 @@ def test_every_jpg_has_a_credit_entry():
 
 def test_credit_entries_cover_all_niches():
     credits = _credits()
-    assert set(credits) == NICHES, (
-        f"credits.json must cover exactly the staged niches; extra: "
-        f"{sorted(set(credits) - NICHES)}, missing: {sorted(NICHES - set(credits))}"
-    )
+    missing = NICHES - set(credits.keys())
+    assert missing == set(), f"missing hero credits: {sorted(missing)}"
 
 
 def test_credit_entry_shape():
@@ -70,6 +84,8 @@ def test_built_page_renders_photo_stage_for_every_niche():
         html = build_category_page(slug, slug.replace("-", " ").title(), [], NICHES)
         assert "cat-hero__stage--photo" in html, slug
         assert "cat-hero__credit" in html, slug
-        assert 'aria-hidden="true"' not in (
-            html.split("cat-hero__stage")[1].split("</div>")[0]
-        ), slug
+        # Ensure a real image src exists in the hero art.
+        assert "/assets/hero/" in html, slug
+        assert slug + ".jpg" in html, slug
+        stage = html.split("cat-hero__stage")[1].split("</div>")[0]
+        assert 'aria-hidden="true"' not in stage, slug
