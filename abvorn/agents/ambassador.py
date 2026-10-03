@@ -10,6 +10,7 @@ from datetime import datetime
 from .base import AgentBase
 from ..deploy.social import SocialDeployer
 from ..core import bus_progress
+from ..core.social_budget import can_attempt
 
 logger = logging.getLogger("abvorn.agents.ambassador")
 
@@ -388,6 +389,14 @@ class SocialAmbassador(AgentBase):
         logger.info(f"[Ambassador] headline: {headline!r}")
         results = []
         for platform in platforms:
+            # Cheap read-only gate before the expensive part. Outside a posting
+            # window, or once the day's allowance is gone, the publish path would
+            # reject the post anyway - so skip commentary generation and
+            # product-card composition entirely. On 2026-10-02 this path ran 166
+            # cycles and 165 were rejected after all that work had been done.
+            if not can_attempt(platform):
+                results.append({"status": "window_closed", "platform": platform})
+                continue
             try:
                 item = {"niche": niche, "platform": platform,
                         "headline": headline,
