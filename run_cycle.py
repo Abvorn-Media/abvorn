@@ -180,6 +180,7 @@ def get_secrets():
         "GOOGLE_CLIENT_ID": os.environ.get("GOOGLE_CLIENT_ID", ""),
         "OPENWEB_NINJA_KEY": os.environ.get("OPENWEB_NINJA_KEY", ""),
         "TAVILY_KEY": os.environ.get("TAVILY_KEY", ""),
+        "TAVILY_KEY_BACKUP": os.environ.get("TAVILY_KEY_BACKUP", ""),
         "CEREBRAS_KEY": os.environ.get("CEREBRAS_KEY", ""),
     }
     # Merge with local secrets.json (boardroom) to fill in missing keys

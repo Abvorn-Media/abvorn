@@ -48,6 +48,7 @@ def load_secrets() -> dict:
         "PEXELS_KEY": "PEXELS_KEY",
         "OPENWEB_NINJA_KEY": "OPENWEB_NINJA_KEY",
         "TAVILY_KEY": "TAVILY_KEY",
+        "TAVILY_KEY_BACKUP": "TAVILY_KEY_BACKUP",
         "CEREBRAS_KEY": "CEREBRAS_KEY",
         "NVIDIA_KEY": "NVIDIA_KEY",
     }

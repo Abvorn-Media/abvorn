@@ -12,19 +12,53 @@ TAVILY_API_URL = "https://api.tavily.com"
 
 
 class TavilyClient:
-    """Lightweight Tavily search client. No dependencies beyond requests."""
+    """Lightweight Tavily search client. No dependencies beyond requests.
 
-    def __init__(self, api_key: str = None):
-        self.api_key = api_key or os.environ.get("TAVILY_KEY", "")
+    Holds an ordered list of API keys: the primary first, then any backups
+    (constructor args, falling back to env TAVILY_KEY / TAVILY_KEY_BACKUP).
+    When a key is rejected for auth, quota or rate-limit reasons the client
+    rotates to the next key, so an exhausted primary never silently disables
+    search.
+    """
+
+    # HTTP codes that mean "this key is dead or exhausted - try the next key"
+    _ROTATE_CODES = {401, 403, 429, 432, 433}
+
+    def __init__(self, api_key: str = None, backup_key: str = None):
+        candidates = [
+            api_key if api_key is not None else os.environ.get("TAVILY_KEY", ""),
+            backup_key if backup_key is not None else os.environ.get("TAVILY_KEY_BACKUP", ""),
+        ]
+        self._keys = []
+        for key in candidates:
+            key = (key or "").strip()
+            if key and "YOUR_" not in key and key not in self._keys:
+                self._keys.append(key)
+        self._idx = 0
         self._last_call = 0.0
 
     @property
+    def api_key(self) -> str:
+        """The key currently in use (rotates to a backup after a rejection)."""
+        return self._keys[self._idx] if self._keys else ""
+
+    @property
     def available(self) -> bool:
-        return bool(self.api_key) and "YOUR_" not in self.api_key
+        return bool(self._keys)
+
+    def _ordered_keys(self) -> list:
+        """Current key first, then the remaining keys as fallbacks."""
+        return self._keys[self._idx:] + self._keys[:self._idx]
+
+    def _rate_limit(self) -> None:
+        """Tavily allows 1 request/second."""
+        now = time.time()
+        if now - self._last_call < 1.0:
+            time.sleep(1.0 - (now - self._last_call))
 
     def search(self, query: str, max_results: int = 5, search_depth: str = "basic",
                include_answer: bool = True, include_raw_content: bool = False) -> dict:
-        """Search the web via Tavily.
+        """Search the web via Tavily, rotating to backup keys on rejection.
 
         Args:
             query: Search query
@@ -41,37 +75,41 @@ class TavilyClient:
             logger.warning("Tavily: no API key configured")
             return {"answer": "", "results": [], "response_time": 0}
 
-        # Rate limit: 1 req/s
-        now = time.time()
-        if now - self._last_call < 1.0:
-            time.sleep(1.0 - (now - self._last_call))
-
         import requests as rq
-        try:
-            resp = rq.post(f"{TAVILY_API_URL}/search", json={
-                "api_key": self.api_key,
-                "query": query,
-                "search_depth": search_depth,
-                "include_answer": include_answer,
-                "include_raw_content": include_raw_content,
-                "max_results": max_results,
-            }, timeout=15)
+        for pos, key in enumerate(self._ordered_keys()):
+            self._rate_limit()
+            try:
+                resp = rq.post(f"{TAVILY_API_URL}/search", json={
+                    "api_key": key,
+                    "query": query,
+                    "search_depth": search_depth,
+                    "include_answer": include_answer,
+                    "include_raw_content": include_raw_content,
+                    "max_results": max_results,
+                }, timeout=15)
+            except Exception as e:
+                logger.warning(f"Tavily: request failed: {e}")
+                return {"answer": "", "results": [], "response_time": 0}
             self._last_call = time.time()
 
             if resp.status_code == 200:
+                self._idx = self._keys.index(key)
                 data = resp.json()
                 logger.info(f"Tavily: '{query[:40]}' → {len(data.get('results', []))} results in {data.get('response_time', 0)}s")
+                if pos > 0:
+                    logger.warning("Tavily: using backup key #%d", self._idx + 1)
                 return data
-            elif resp.status_code == 429:
-                logger.warning("Tavily: rate limited (429)")
-                return {"answer": "", "results": [], "response_time": 0}
-            else:
-                logger.warning(f"Tavily: HTTP {resp.status_code}: {resp.text[:200]}")
-                return {"answer": "", "results": [], "response_time": 0}
-
-        except Exception as e:
-            logger.warning(f"Tavily: request failed: {e}")
+            if resp.status_code in self._ROTATE_CODES:
+                logger.warning(
+                    "Tavily: key #%d rejected (HTTP %s); trying next key",
+                    self._keys.index(key) + 1, resp.status_code,
+                )
+                continue
+            logger.warning(f"Tavily: HTTP {resp.status_code}: {resp.text[:200]}")
             return {"answer": "", "results": [], "response_time": 0}
+
+        logger.warning("Tavily: all %d key(s) rejected", len(self._keys))
+        return {"answer": "", "results": [], "response_time": 0}
 
     def search_context(self, query: str, max_results: int = 5) -> str:
         """Search and return a formatted context string for LLM prompts."""

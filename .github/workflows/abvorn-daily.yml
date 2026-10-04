@@ -76,6 +76,7 @@ jobs:
           GA4_PROPERTY_ID:       ${{ secrets.GA4_PROPERTY_ID }}
           GA4_CREDENTIALS_JSON:  ${{ secrets.GA4_CREDENTIALS_JSON }}
           TAVILY_KEY:            ${{ secrets.TAVILY_KEY }}
+          TAVILY_KEY_BACKUP:     ${{ secrets.TAVILY_KEY_BACKUP }}
           CEREBRAS_KEY:          ${{ secrets.CEREBRAS_KEY }}
         run: python run_cycle.py
 

@@ -99,7 +99,7 @@ def search_tavily(query: str, max_results: int = 5) -> dict:
         logger.warning("TAVILY_KEY not configured; search skipped")
         return {"results": [], "answer": ""}
     try:
-        client = TavilyClient(key)
+        client = TavilyClient(key, secrets.get("TAVILY_KEY_BACKUP", ""))
         data = client.search(query, max_results=max_results, include_answer=True)
         return data
     except Exception as e:

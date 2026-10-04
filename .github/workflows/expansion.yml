@@ -78,6 +78,7 @@ jobs:
           APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
           OPENWEB_NINJA_KEY: ${{ secrets.OPENWEB_NINJA_KEY }}
           TAVILY_KEY: ${{ secrets.TAVILY_KEY }}
+          TAVILY_KEY_BACKUP: ${{ secrets.TAVILY_KEY_BACKUP }}
           CEREBRAS_KEY: ${{ secrets.CEREBRAS_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}

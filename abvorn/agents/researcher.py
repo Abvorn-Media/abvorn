@@ -11,7 +11,7 @@ def _get_tavily():
         from abvorn.core.secrets import load_secrets
         from abvorn.core.tavily import TavilyClient
         s = load_secrets()
-        return TavilyClient(s.get("TAVILY_KEY", ""))
+        return TavilyClient(s.get("TAVILY_KEY", ""), s.get("TAVILY_KEY_BACKUP", ""))
     except Exception:
         return TavilyClient()
 
