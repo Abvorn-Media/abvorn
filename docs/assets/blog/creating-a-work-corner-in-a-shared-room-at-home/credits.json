@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "file": "assets/blog/creating-a-work-corner-in-a-shared-room-at-home/hero.jpg",
+    "query": "sunlit bedroom corner with notebook and lamp",
+    "alt": "A cozy minimalist bedroom featuring neutral decor, large windows, and abundant natural light.",
+    "caption": "",
+    "photo_id": 7722151,
+    "photographer": "Max Vakhtbovych",
+    "photographer_url": "https://www.pexels.com/@artbovich",
+    "pexels_url": "https://www.pexels.com/photo/an-interior-of-a-bedroom-7722151/",
+    "width": 7342,
+    "height": 4900,
+    "source": "Pexels",
+    "fetched": "2026-10-04T09:57:20"
+  },
+  "01": {
+    "file": "assets/blog/creating-a-work-corner-in-a-shared-room-at-home/01.jpg",
+    "query": "small kitchen table with laptop and coffee mug morning light",
+    "alt": "Various mugs and bottles on a window sill, showcasing an everyday indoor scene.",
+    "caption": "Various mugs and bottles on a window sill, showcasing an everyday indoor scene.",
+    "photo_id": 26605943,
+    "photographer": "MaLui Yi",
+    "photographer_url": "https://www.pexels.com/@malui-yi-917936997",
+    "pexels_url": "https://www.pexels.com/photo/bottles-mugs-and-accessories-on-table-by-window-26605943/",
+    "width": 14016,
+    "height": 9344,
+    "source": "Pexels",
+    "fetched": "2026-10-04T09:57:22"
+  },
+  "02": {
+    "file": "assets/blog/creating-a-work-corner-in-a-shared-room-at-home/02.jpg",
+    "query": "shared flat desk beside a window at dusk",
+    "alt": "Bright home office setup featuring a computer on a desk by the window with green plants.",
+    "caption": "Bright home office setup featuring a computer on a desk by the window with green plants.",
+    "photo_id": 3042508,
+    "photographer": "Mstudio",
+    "photographer_url": "https://www.pexels.com/@mstudio-360817",
+    "pexels_url": "https://www.pexels.com/photo/computer-desktop-on-desk-3042508/",
+    "width": 12000,
+    "height": 8000,
+    "source": "Pexels",
+    "fetched": "2026-10-04T09:57:24"
+  }
+}

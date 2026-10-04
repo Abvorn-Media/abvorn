@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "file": "assets/blog/lighting-is-the-whole-mood-in-a-small-flat/hero.jpg",
+    "query": "warm table lamp glowing in small living room at dusk",
+    "alt": "Comfortable sofa and carpet opposite TV set hanging on wall with chairs at counter in kitchen",
+    "caption": "",
+    "photo_id": 7031722,
+    "photographer": "Max Vakhtbovych",
+    "photographer_url": "https://www.pexels.com/@artbovich",
+    "pexels_url": "https://www.pexels.com/photo/interior-of-modern-apartment-with-couch-and-counter-7031722/",
+    "width": 7342,
+    "height": 4900,
+    "source": "Pexels",
+    "fetched": "2026-10-04T10:20:06"
+  },
+  "01": {
+    "file": "assets/blog/lighting-is-the-whole-mood-in-a-small-flat/01.jpg",
+    "query": "corner floor lamp beside sofa in evening light",
+    "alt": "A warm and inviting living room featuring a soft couch and floor lamp casting shadows on the wall.",
+    "caption": "A warm and inviting living room featuring a soft couch and floor lamp casting shadows on the wall.",
+    "photo_id": 3987481,
+    "photographer": "Lucian Petrean",
+    "photographer_url": "https://www.pexels.com/@lucian-petrean-1716046",
+    "pexels_url": "https://www.pexels.com/photo/black-floor-lamp-beside-gray-couch-3987481/",
+    "width": 6720,
+    "height": 4480,
+    "source": "Pexels",
+    "fetched": "2026-10-04T10:20:08"
+  },
+  "02": {
+    "file": "assets/blog/lighting-is-the-whole-mood-in-a-small-flat/02.jpg",
+    "query": "cozy small apartment interior warm lighting night",
+    "alt": "Bed against shelves and cabinet under television reflecting brick wall with lamps in modern house with parquet",
+    "caption": "Bed against shelves and cabinet under television reflecting brick wall with lamps in modern house with parquet",
+    "photo_id": 7018244,
+    "photographer": "Max Vakhtbovych",
+    "photographer_url": "https://www.pexels.com/@artbovich",
+    "pexels_url": "https://www.pexels.com/photo/contemporary-bedroom-interior-with-furniture-and-tv-at-home-7018244/",
+    "width": 7360,
+    "height": 4912,
+    "source": "Pexels",
+    "fetched": "2026-10-04T10:20:11"
+  }
+}

@@ -1,0 +1,405 @@
+{
+  "creating-a-work-corner-in-a-shared-room-at-home": {
+    "slug": "creating-a-work-corner-in-a-shared-room-at-home",
+    "title": "Creating a Work Corner in a Shared Room at Home",
+    "dek": "Simple adjustments to light, sound, and layout turn any bedroom or kitchen table into a spot that signals work the moment you sit down",
+    "meta_description": "Learn how to shape a small bedroom, kitchen table or shared flat into a work corner that helps you focus, reduces distractions and leaves you with a clear head at day's end.",
+    "persona_id": "calm-desk",
+    "persona": "The Calm Desk",
+    "category": "focus",
+    "intro": "<p>You sit down, open your laptop, and within minutes a notification, a housemate's conversation, or the glare from a nearby window pulls your attention away.</p><p>The room was never meant for deep work, yet you need a place that tells your brain it's time to focus.</p>",
+    "sections": [
+      {
+        "heading": "Defining the Corner",
+        "html": "<p>Start by picking a spot that you can claim for work, even if it's only a fraction of a table or a shelf.</p><p>Mark it with a <strong>small object</strong>—a notebook, a lamp, or a plant—that you only use when you begin.</p>",
+        "note": "Even a small, consistent cue can train your mind to associate that spot with focus, no matter the room's original purpose."
+      },
+      {
+        "heading": "Controlling Sound",
+        "html": "<p>Noise you cannot control often breaks concentration before you even start.</p><p>Consider this:</p><p>After you have softened the room, notice how the remaining sounds become less jarring and more like a <strong>steady hum</strong>.</p>",
+        "note": "Soft background sound works best when it is steady and low, not when it tries to mask every single noise."
+      },
+      {
+        "heading": "Shaping Light",
+        "html": "<p>Light influences alertness more than you realise.</p><p>Place your work spot where daylight falls gently, or add a lamp with a <strong>warm tone</strong> that you turn on only for work.</p>",
+        "note": "Warm light in the evening can signal wind-down, while cooler tones in the morning support alertness."
+      },
+      {
+        "heading": "Choosing a Surface",
+        "html": "<p>A surface that is free of clutter sends a <strong>clear signal</strong> to your brain.</p><p>Before you begin, remove anything that is not needed for the task at hand.</p><ul><li>Keep only your laptop, a notebook, and a pen.</li><li>Return everything else to its usual place when you finish.</li></ul>",
+        "note": "A clear surface reduces decision fatigue because you spend less time looking for what you need."
+      },
+      {
+        "heading": "Organising Tools",
+        "html": "<p>Having the tools you need within reach reduces the urge to get up and search.</p><p>Store a charger, a pen, and a small notepad in a drawer or a box that stays at the <strong>corner</strong>.</p>",
+        "note": "Keeping essentials in a fixed spot means you start each session with the same setup, building a reliable routine."
+      },
+      {
+        "heading": "Closing the Day",
+        "html": "<p>When work ends, reset the space so it no longer feels like an office.</p><p>Put the notebook away, turn off the lamp, and take a moment to stretch before you leave the <strong>chair</strong>.</p>",
+        "note": "Resetting the corner creates a mental boundary that helps you shift from work mode to rest without carrying tension."
+      }
+    ],
+    "pull_quote": "A clear surface tells your mind that the task ahead is the only thing on the table.",
+    "faqs": [
+      {
+        "question": "What if I have to share the table with others during meals?",
+        "answer": "Agree on a signal, like placing a specific object, to show when the corner is in use. When the signal is removed, the space returns to shared use."
+      },
+      {
+        "question": "How do I stay focused when my housemates are talking nearby?",
+        "answer": "Use a steady, low sound such as soft instrumental music or a white-noise app to smooth sudden spikes in conversation. Combine this with a visual cue like a lamp that marks your work time."
+      }
+    ],
+    "tags": [
+      "workspace",
+      "focus",
+      "small rooms",
+      "home routine",
+      "mindful work"
+    ],
+    "image_queries": [
+      "sunlit bedroom corner with notebook and lamp",
+      "small kitchen table with laptop and coffee mug morning light",
+      "shared flat desk beside a window at dusk",
+      "quiet nook with a plant and a chair late afternoon",
+      "minimalist workspace with a notebook and a pen soft indoor light",
+      "evening scene of a desk lamp casting warm glow on papers"
+    ],
+    "cross_sell_niche": "wireless-headphones",
+    "cross_sell_name": "Wireless Headphones",
+    "cross_sell_blurb": "When choosing wireless headphones, look for a comfortable fit, steady battery life, and sound that lets you stay aware of your surroundings.",
+    "published": "2026-10-04",
+    "hero": {
+      "file": "assets/blog/creating-a-work-corner-in-a-shared-room-at-home/hero.jpg",
+      "query": "sunlit bedroom corner with notebook and lamp",
+      "alt": "A cozy minimalist bedroom featuring neutral decor, large windows, and abundant natural light.",
+      "caption": "",
+      "photo_id": 7722151,
+      "photographer": "Max Vakhtbovych",
+      "photographer_url": "https://www.pexels.com/@artbovich",
+      "pexels_url": "https://www.pexels.com/photo/an-interior-of-a-bedroom-7722151/",
+      "width": 7342,
+      "height": 4900,
+      "source": "Pexels",
+      "fetched": "2026-10-04T09:57:20"
+    },
+    "images": [
+      {
+        "file": "assets/blog/creating-a-work-corner-in-a-shared-room-at-home/01.jpg",
+        "query": "small kitchen table with laptop and coffee mug morning light",
+        "alt": "Various mugs and bottles on a window sill, showcasing an everyday indoor scene.",
+        "caption": "Various mugs and bottles on a window sill, showcasing an everyday indoor scene.",
+        "photo_id": 26605943,
+        "photographer": "MaLui Yi",
+        "photographer_url": "https://www.pexels.com/@malui-yi-917936997",
+        "pexels_url": "https://www.pexels.com/photo/bottles-mugs-and-accessories-on-table-by-window-26605943/",
+        "width": 14016,
+        "height": 9344,
+        "source": "Pexels",
+        "fetched": "2026-10-04T09:57:22"
+      },
+      {
+        "file": "assets/blog/creating-a-work-corner-in-a-shared-room-at-home/02.jpg",
+        "query": "shared flat desk beside a window at dusk",
+        "alt": "Bright home office setup featuring a computer on a desk by the window with green plants.",
+        "caption": "Bright home office setup featuring a computer on a desk by the window with green plants.",
+        "photo_id": 3042508,
+        "photographer": "Mstudio",
+        "photographer_url": "https://www.pexels.com/@mstudio-360817",
+        "pexels_url": "https://www.pexels.com/photo/computer-desktop-on-desk-3042508/",
+        "width": 12000,
+        "height": 8000,
+        "source": "Pexels",
+        "fetched": "2026-10-04T09:57:24"
+      }
+    ],
+    "products": [],
+    "cross_sell_product": {
+      "name": "Hybrid Active Noise Cancelling Bluetooth Headphones Wireless Headphones | Over Ear",
+      "price": "$29.99",
+      "original_price": "$259.99",
+      "rating": "4.8",
+      "ratings_count": 281,
+      "image": "https://m.media-amazon.com/images/I/61eQgGlycYL._AC_UY654_QL65_.jpg",
+      "url": "https://www.amazon.com/dp/B0H69PVMKC",
+      "asin": "B0H69PVMKC",
+      "description": "Hybrid Active Noise Cancelling Bluetooth Headphones Wireless Headphones | Over Ear, 120H Playtime, Hi-Res Audio, Deep Bass, Memory Foam Ear Cups for Home Office Travel Black",
+      "features": [],
+      "is_best_seller": false,
+      "is_amazon_choice": false,
+      "sales_volume": null
+    }
+  },
+  "design-a-three-day-city-break-that-feels-considerate-not-exhausted": {
+    "slug": "design-a-three-day-city-break-that-feels-considerate-not-exhausted",
+    "title": "Design A Three-Day City Break That Feels Considerate, Not Exhausted",
+    "dek": "A rhythm for short city breaks that values purpose over planning.",
+    "meta_description": "A step-by-step guide to a 3-day city escape that keeps you rested, not exhausted, and lets the place feel personal instead of a rushed itinerary.",
+    "persona_id": "weekend-escaper",
+    "persona": "The Weekend Escaper",
+    "category": "travel",
+    "intro": "<p>You check in, lose the first day to lost phones and wondering where the bus went, and end up more tired than excited. That frightful cycle starts with a plan that isn't built for the real world. Let's fix it.</p>",
+    "sections": [
+      {
+        "heading": "Anchor Your Days with a Single Landmark",
+        "html": "<p>If you start each day with the same point of interest—whether a museum, a towering statue or a campus—nothing else feels lost. It is the invisible tether that steadies the rhythm of your stay. <strong>Choose one spot per day that you will return to for a coffee break, a meal, or simply to look back on the day you're out of it.</strong> It tells you where you've been, without needing a whole itinerary on a phone. <strong>Set a timer to return to that anchor every evening and you'll find your energy defences more natural.</strong></p>",
+        "note": "An anchor gives you a compass, not just a point; think of it as the beat you follow each day."
+      },
+      {
+        "heading": "Pack with Purpose: Less is a Better Companion",
+        "html": "<p>Put only the essentials in that small duffel and seal the rest into the closet. <strong>Clothing in one easy-to-pack roll keeps you looking fresh and gives you more space for a spare pair of shoes.</strong> When you have less to weigh, you can swap outfits for windows, street art or an impromptu jazz performance at a sidewalk bar. <strong>You should leave the duplicate gadgets and chargers at home unless they are truly indispensable.</strong></p>",
+        "note": "Packing less lets you swap clothes for experiences, freeing time to chase spontaneous walks instead of laundry."
+      },
+      {
+        "heading": "Start Any City With a Winning Logistics Plan",
+        "html": "<p>Give yourself an hour \"arrival buffer\": from the moment you leave the office to when you pick up your luggage. A buffer for purpose is not time wasted; it is time saved by avoiding the chaos of the morning rush. <strong>Check that your transport passes through three key waypoints: the airport lobby, a major transit hub, and your accommodation.</strong> That's three things you can rely on without a PDF timetable. <strong>Once you leave your luggage behind, treat the city as a playground, not a maze.</strong></p>",
+        "note": "Smooth logistics mean you can focus on sights, not the clock; treat arrivals as part of the adventure."
+      },
+      {
+        "heading": "Make a City Ritual And Keep It Simple",
+        "html": "<p>Ritual is the anchor's partner. Pick one coffee shop, one marketplace, or one sunset spot and visit it each evening. <strong>It turns an unfamiliar space into a friendly room with a familiar light.</strong> The simple act of ordering the same coffee or asking a vendor for a tip becomes a local handshake that time can't fool. <strong>Add a soft, handwritten note in a notebook each day that smells of the city.</strong></p>",
+        "note": "Rituals become your city's secret language; a morning ritual anchors memory better than a guidebook."
+      },
+      {
+        "heading": "Capture the Story, Not the Spreadsheet",
+        "html": "<p>Throw out the Excel sheet and pick up a small notebook or a note app that feels more like a diary than a log. <strong>After seeing a monument or satirising a street sign, write a line or two in the margin.</strong> The jotting you do will become the hook when you tell the city to November in your living room. <strong>That's the way stories survive longer than itineraries.</strong></p>",
+        "note": "Capture the narrative, not the spreadsheet; a quick note beside a café photo says far more than a list."
+      },
+      {
+        "heading": "Return Rested: Wind-Down Before Work Mode",
+        "html": "<p>When you come home, take a full ten minutes to sit in the bed and let your body recalibrate. <strong>Read a page of a book, stretch, or simply stare at the ceiling for a minute.</strong> You've earned the pause. <strong>Do that before opening your laptop, or the trip will feel like it overlapped the old job, not finished by it.</strong></p>",
+        "note": "After you return, give your body a pause before dragging into work, or the trip tops itself."
+      }
+    ],
+    "pull_quote": "When you start each day with a single anchor, the city unfolds like a familiar walk, not a map you stare at.",
+    "faqs": [
+      {
+        "question": "How do I choose a good anchor?",
+        "answer": "Pick something you can appreciate from multiple angles—an art piece, a bridge, or a bustling square—so you can see it at sunrise and sunset."
+      },
+      {
+        "question": "Do I need a map for short trips?",
+        "answer": "Only if you want to navigate in order. Otherwise, let landmarks be your compass; they give you easy reference points that are far more reliable than a tailor-made route."
+      },
+      {
+        "question": "What if I forget my notebook?",
+        "answer": "Download a single-page version on your phone, so you can still jot a line. The memory will still be there."
+      }
+    ],
+    "tags": [
+      "citybreak",
+      "shorttrips",
+      "planning",
+      "budgettravel",
+      "shift"
+    ],
+    "image_queries": [
+      "city street at dawn with empty cafés",
+      "small travel bag on a suitcase rack at noon",
+      "hand holding a coffee cup with city skyline at twilight",
+      "handwritten note on a hotel reception desk at half-morning",
+      "spacious interior of a small art gallery at afternoon light",
+      "hand stroking a city sign at dusk"
+    ],
+    "cross_sell_niche": "wireless-earbuds",
+    "cross_sell_name": "Wireless Earbuds",
+    "cross_sell_blurb": "Look for comfort, battery life, and sound balance when choosing wireless earbuds so they suit both city walks and quiet evenings.",
+    "published": "2026-10-04",
+    "hero": {
+      "file": "assets/blog/design-a-three-day-city-break-that-feels-considerate-not-exhausted/hero.jpg",
+      "query": "city street at dawn with empty cafés",
+      "alt": "Warm evening ambiance at an outdoor café in a vintage city street.",
+      "caption": "",
+      "photo_id": 30481262,
+      "photographer": "Marcelo Mora",
+      "photographer_url": "https://www.pexels.com/@marcelo-mora-203572590",
+      "pexels_url": "https://www.pexels.com/photo/cozy-evening-outdoor-cafe-setting-with-lights-30481262/",
+      "width": 7021,
+      "height": 4680,
+      "source": "Pexels",
+      "fetched": "2026-10-04T10:02:08"
+    },
+    "images": [
+      {
+        "file": "assets/blog/design-a-three-day-city-break-that-feels-considerate-not-exhausted/01.jpg",
+        "query": "small travel bag on a suitcase rack at noon",
+        "alt": "A woman placing her bag in the overhead rack on a modern train.",
+        "caption": "A woman placing her bag in the overhead rack on a modern train.",
+        "photo_id": 18502399,
+        "photographer": "Connor Scott McManus",
+        "photographer_url": "https://www.pexels.com/@connorscottmcmanus",
+        "pexels_url": "https://www.pexels.com/photo/woman-putting-her-luggage-on-a-rack-in-a-modern-train-18502399/",
+        "width": 7728,
+        "height": 5152,
+        "source": "Pexels",
+        "fetched": "2026-10-04T10:02:11"
+      },
+      {
+        "file": "assets/blog/design-a-three-day-city-break-that-feels-considerate-not-exhausted/02.jpg",
+        "query": "hand holding a coffee cup with city skyline at twilight",
+        "alt": "Close-up of a hand holding a glass cup of coffee with a blurred outdoor background.",
+        "caption": "Close-up of a hand holding a glass cup of coffee with a blurred outdoor background.",
+        "photo_id": 9575580,
+        "photographer": "ธันยกร ไกรสร",
+        "photographer_url": "https://www.pexels.com/@tanyakorn",
+        "pexels_url": "https://www.pexels.com/photo/cup-of-coffee-on-the-palm-of-a-hand-9575580/",
+        "width": 6016,
+        "height": 4016,
+        "source": "Pexels",
+        "fetched": "2026-10-04T10:02:14"
+      }
+    ],
+    "products": [],
+    "cross_sell_product": {
+      "name": "Wireless Earbuds",
+      "price": null,
+      "original_price": null,
+      "rating": "4.9",
+      "ratings_count": 689,
+      "image": "https://m.media-amazon.com/images/I/61QGlXzWdKL._AC_UY654_QL65_.jpg",
+      "url": "https://www.amazon.com/dp/B0H73T3PD7",
+      "asin": "B0H73T3PD7",
+      "description": "Wireless Earbuds, Bluetooth 5.4 Ear Buds Bass Stereo, Headphones with Noise Cancelling Mic, LED Display in Ear Earphones Clear Calls, IP7 Waterproof Bluetooth Earbuds for Phone/Android/iPad, Black",
+      "features": [],
+      "is_best_seller": false,
+      "is_amazon_choice": false,
+      "sales_volume": null
+    }
+  },
+  "lighting-is-the-whole-mood-in-a-small-flat": {
+    "slug": "lighting-is-the-whole-mood-in-a-small-flat",
+    "title": "Lighting Is the Whole Mood in a Small Flat",
+    "dek": "Three cheap changes that make an evening feel intentional, not improvised.",
+    "meta_description": "A practical small-flat guide to lighting: layer three levels, pick warm bulbs, and dim on purpose so an evening feels designed.",
+    "persona_id": "small-space-host",
+    "persona": "The Small-Space Host",
+    "category": "home",
+    "intro": "<p>The guests arrive in twenty minutes and the room looks flat. The overhead light is on, the ceiling glares, and every surface reads the same. Nothing is wrong here, and nothing feels like anything.</p><p>Lighting does most of the work in a small room, and almost none of it is about buying more fixtures. It is about layering, warmth, and giving yourself a dimmer reason to turn the big light off.</p>",
+    "sections": [
+      {
+        "heading": "Turn the Ceiling Light Off First",
+        "html": "<p>If a room only has one light, that light is usually the ceiling, and the ceiling is the least flattering place to put it. It fires straight down, drops a hard shadow under every eye, and flattens the walls into a single colour.</p><p>Try an evening with the overhead light permanently off. You will not miss it as much as you expect, and the room will immediately feel larger because your eye stops reading the whole ceiling at once.</p>",
+        "note": "A quick test: stand in the doorway, switch off the big light, and see what the room keeps."
+      },
+      {
+        "heading": "Build Three Small Pools of Light",
+        "html": "<p>Good rooms are lit in layers: something low near the floor, something at table height, and something that grazes a wall. In a small flat you do not need three expensive lamps. You need three positions.</p><ul><li><strong>Low:</strong> a floor light in the corner your eye lands on when you walk in.</li><li><strong>Middle:</strong> a table lamp you can reach while sitting down.</li><li><strong>Wall:</strong> anything that sends light sideways across plaster instead of down onto the floor.</li></ul><p>Three small pools read as depth. One big pool reads as a waiting room.</p>",
+        "note": "The wall light is the cheapest upgrade most people never try - a shaded lamp pointed at plaster will do."
+      },
+      {
+        "heading": "Choose Warmth, Not Brightness",
+        "html": "<p>Bulb temperature changes a room more than wattage. A cool-white bulb makes even a warm sofa look clinical, while a warm bulb makes plain walls feel like evening.</p><p>If you are unsure, err warmer than feels sensible for a working light and keep the cooler bulbs for where you read or cook. Your guests will not name the difference, but they will feel it the second they walk in.</p>",
+        "note": "Warm does not mean orange. Sit under the bulb before you commit to a whole room of them."
+      },
+      {
+        "heading": "Give Yourself a Dimmer Reason",
+        "html": "<p>The single most useful habit in a small flat is an obvious, easy way to turn the light down as the evening goes on. That might be a dimmer, a smart bulb, or simply a lamp with a switch you can reach without standing up.</p><p>Fiddly switches kill the habit. If dimming takes two minutes and a phone, you will not do it, and you will be back under the ceiling light by dessert.</p>",
+        "note": "Reachability is the whole feature. A dimmer you have to get up for is a dimmer you never use."
+      },
+      {
+        "heading": "Let One Thing Stay Bright",
+        "html": "<p>Contrast is what makes a room feel considered. If everything is dim, the room goes sleepy rather than atmospheric. Keep one detail lit - a shelf, a plant, the edge of a picture - so the eye has somewhere to rest.</p><p>That single brighter point is also what photographs well when someone inevitably pulls out a phone.</p>",
+        "note": "One bright detail is the difference between moody and just dark."
+      },
+      {
+        "heading": "Make the Change Reversible",
+        "html": "<p>If you rent, treat every lighting change as temporary. Plug-in wall lights, adhesive clips, and floor lamps all leave without a trace, and they can move with you to the next place.</p><p>The goal is not a perfect room. It is a room you can reset in ten minutes when people are coming over.</p>",
+        "note": "Reversible choices survive a deposit, a landlord, and your own change of mind."
+      }
+    ],
+    "pull_quote": "Three small pools of light read as depth. One big pool reads as a waiting room.",
+    "faqs": [
+      {
+        "question": "What if my flat only has one ceiling light and no sockets free?",
+        "answer": "Start with one plug-in floor lamp in the corner you notice first. It will not fix the room, but it gives you a reason to leave the ceiling off, which is most of the change."
+      },
+      {
+        "question": "Do smart bulbs count as a cheap option?",
+        "answer": "One or two can be, especially if they let you dim a light from your seat. Treat them as an easy dimmer rather than a whole system, and keep the ones you rely on simple."
+      },
+      {
+        "question": "Warm bulbs feel too yellow in my room. What now?",
+        "answer": "Move a step cooler rather than straight back to daylight. A slightly neutral warm bulb often reads as pleasant where the warmest one reads as murky."
+      }
+    ],
+    "tags": [
+      "small spaces",
+      "lighting",
+      "home",
+      "hosting",
+      "renting"
+    ],
+    "image_queries": [
+      "warm table lamp glowing in small living room at dusk",
+      "corner floor lamp beside sofa in evening light",
+      "cozy small apartment interior warm lighting night",
+      "plant illuminated by a lamp on a shelf",
+      "dining table candles warm evening small room"
+    ],
+    "cross_sell_niche": "smart-home",
+    "cross_sell_name": "Smart Home",
+    "cross_sell_blurb": "If you want the dimming habit to stick, look for a simple smart bulb you can dim from your seat - not a whole system to learn.",
+    "published": "2026-10-04",
+    "hero": {
+      "file": "assets/blog/lighting-is-the-whole-mood-in-a-small-flat/hero.jpg",
+      "query": "warm table lamp glowing in small living room at dusk",
+      "alt": "Comfortable sofa and carpet opposite TV set hanging on wall with chairs at counter in kitchen",
+      "caption": "",
+      "photo_id": 7031722,
+      "photographer": "Max Vakhtbovych",
+      "photographer_url": "https://www.pexels.com/@artbovich",
+      "pexels_url": "https://www.pexels.com/photo/interior-of-modern-apartment-with-couch-and-counter-7031722/",
+      "width": 7342,
+      "height": 4900,
+      "source": "Pexels",
+      "fetched": "2026-10-04T10:20:06"
+    },
+    "images": [
+      {
+        "file": "assets/blog/lighting-is-the-whole-mood-in-a-small-flat/01.jpg",
+        "query": "corner floor lamp beside sofa in evening light",
+        "alt": "A warm and inviting living room featuring a soft couch and floor lamp casting shadows on the wall.",
+        "caption": "A warm and inviting living room featuring a soft couch and floor lamp casting shadows on the wall.",
+        "photo_id": 3987481,
+        "photographer": "Lucian Petrean",
+        "photographer_url": "https://www.pexels.com/@lucian-petrean-1716046",
+        "pexels_url": "https://www.pexels.com/photo/black-floor-lamp-beside-gray-couch-3987481/",
+        "width": 6720,
+        "height": 4480,
+        "source": "Pexels",
+        "fetched": "2026-10-04T10:20:08"
+      },
+      {
+        "file": "assets/blog/lighting-is-the-whole-mood-in-a-small-flat/02.jpg",
+        "query": "cozy small apartment interior warm lighting night",
+        "alt": "Bed against shelves and cabinet under television reflecting brick wall with lamps in modern house with parquet",
+        "caption": "Bed against shelves and cabinet under television reflecting brick wall with lamps in modern house with parquet",
+        "photo_id": 7018244,
+        "photographer": "Max Vakhtbovych",
+        "photographer_url": "https://www.pexels.com/@artbovich",
+        "pexels_url": "https://www.pexels.com/photo/contemporary-bedroom-interior-with-furniture-and-tv-at-home-7018244/",
+        "width": 7360,
+        "height": 4912,
+        "source": "Pexels",
+        "fetched": "2026-10-04T10:20:11"
+      }
+    ],
+    "products": [],
+    "cross_sell_product": {
+      "name": "Amazon Echo Show 15 (newest model)",
+      "price": "$299.99",
+      "original_price": null,
+      "rating": "4.4",
+      "ratings_count": 5961,
+      "image": "https://m.media-amazon.com/images/I/61xQl81iYQL._AC_UL960_QL65_.jpg",
+      "url": "https://www.amazon.com/dp/B0C5DPSW5Y",
+      "asin": "B0C5DPSW5Y",
+      "description": "Amazon Echo Show 15 (newest model), Full HD 15.6&quot; kitchen hub for home organization, with built-in Fire TV, Designed for Alexa+ Reducing CO2",
+      "features": [],
+      "is_best_seller": false,
+      "is_amazon_choice": false,
+      "sales_volume": "3K+ bought in past month"
+    }
+  }
+}

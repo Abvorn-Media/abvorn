@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "file": "assets/blog/design-a-three-day-city-break-that-feels-considerate-not-exhausted/hero.jpg",
+    "query": "city street at dawn with empty cafés",
+    "alt": "Warm evening ambiance at an outdoor café in a vintage city street.",
+    "caption": "",
+    "photo_id": 30481262,
+    "photographer": "Marcelo Mora",
+    "photographer_url": "https://www.pexels.com/@marcelo-mora-203572590",
+    "pexels_url": "https://www.pexels.com/photo/cozy-evening-outdoor-cafe-setting-with-lights-30481262/",
+    "width": 7021,
+    "height": 4680,
+    "source": "Pexels",
+    "fetched": "2026-10-04T10:02:08"
+  },
+  "01": {
+    "file": "assets/blog/design-a-three-day-city-break-that-feels-considerate-not-exhausted/01.jpg",
+    "query": "small travel bag on a suitcase rack at noon",
+    "alt": "A woman placing her bag in the overhead rack on a modern train.",
+    "caption": "A woman placing her bag in the overhead rack on a modern train.",
+    "photo_id": 18502399,
+    "photographer": "Connor Scott McManus",
+    "photographer_url": "https://www.pexels.com/@connorscottmcmanus",
+    "pexels_url": "https://www.pexels.com/photo/woman-putting-her-luggage-on-a-rack-in-a-modern-train-18502399/",
+    "width": 7728,
+    "height": 5152,
+    "source": "Pexels",
+    "fetched": "2026-10-04T10:02:11"
+  },
+  "02": {
+    "file": "assets/blog/design-a-three-day-city-break-that-feels-considerate-not-exhausted/02.jpg",
+    "query": "hand holding a coffee cup with city skyline at twilight",
+    "alt": "Close-up of a hand holding a glass cup of coffee with a blurred outdoor background.",
+    "caption": "Close-up of a hand holding a glass cup of coffee with a blurred outdoor background.",
+    "photo_id": 9575580,
+    "photographer": "ธันยกร ไกรสร",
+    "photographer_url": "https://www.pexels.com/@tanyakorn",
+    "pexels_url": "https://www.pexels.com/photo/cup-of-coffee-on-the-palm-of-a-hand-9575580/",
+    "width": 6016,
+    "height": 4016,
+    "source": "Pexels",
+    "fetched": "2026-10-04T10:02:14"
+  }
+}

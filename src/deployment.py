@@ -1703,6 +1703,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
     <nav class="nav-links" id="nav-links">
         <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
         <a href="{b}/">Home</a>
+        <a href="{b}/blog/">Blog</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/journal/">Journal</a>
     </nav>
@@ -2286,6 +2287,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
     <nav class="nav-links" id="nav-links">
         <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
         <a href="{b}/">Home</a>
+        <a href="{b}/blog/">Blog</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/journal/">Journal</a>
     </nav>
@@ -2671,6 +2673,7 @@ def _hub_page(b, meta_title, meta_desc, canonical_path, hero_html, index_nav, se
     <nav class="nav-links" id="nav-links">
         <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{build_category_dropdown(b)}</div></div>
         <a href="{b}/">Home</a>
+        <a href="{b}/blog/">Blog</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/journal/">Journal</a>
     </nav>
@@ -3657,6 +3660,7 @@ def build_site_header(b="", all_slugs=None):
     <nav class="nav-links" id="nav-links">
         {dropdown}
         <a href="{b}/">Home</a>
+        <a href="{b}/blog/">Blog</a>
         <a href="{b}/about.html">About</a>
         <a href="{b}/journal/">Journal</a>
     </nav>
