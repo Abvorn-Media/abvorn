@@ -31,7 +31,7 @@ def _state():
     }
 
 
-def _review(slug, image, name="Product", updated="2026-09-01"):
+def _review(slug, image, name="Product", updated="2026-09-01", breakdown=None):
     return {
         "slug": slug,
         "name": slug.title(),
@@ -41,10 +41,23 @@ def _review(slug, image, name="Product", updated="2026-09-01"):
         "snippet": "s",
         "image": image,
         "score": 8.4,
-        "breakdown": {},
+        "breakdown": {} if breakdown is None else breakdown,
         "label": "Excellent",
         "product_name": name,
     }
+
+
+def _breakdown():
+    return {"Picture quality": 8.0, "Sound": 6.0, "Smart platform": 7.0,
+            "Value": 7.5, "Design": 6.5}
+
+
+def _slides(html):
+    """Full hero slide markup per slide, split on the opening tag so nested
+    divs (scrim, verdict card) are not truncated."""
+    parts = re.split(r'(?=<div class="hero-slide(?:\s|"))', html)
+    return [p.split('<div class="hero-slider__dots"')[0] for p in parts
+            if p.startswith('<div class="hero-slide')]
 
 
 def _hero_slides(html):
@@ -103,3 +116,50 @@ def test_hero_slide_keeps_verdict_from_the_review_it_photographs():
     assert slide, "expected a hero slide"
     text = slide.group(0)
     assert "assets/hero/laptops.jpg" not in text
+
+
+def test_every_hero_slide_has_the_same_overlay_format():
+    """Regression: the TV slide rendered as a bare <img><figcaption> with no
+    scrim and no verdict card while its sibling slides showed a 5-criterion
+    scorecard. A missing breakdown silently changed a slide's structure, so
+    the carousel was visually inconsistent. Every slide must now ship the same
+    scrim + verdict card, scored or honestly unscored."""
+    reviews = [
+        _review("tv", "https://m.media-amazon.com/tv.jpg", "Sony TV",
+                breakdown=_breakdown()),
+        # No breakdown anywhere for laptops -> unscored card, same markup.
+        _review("laptops", "", "Best Laptops 2026"),
+    ]
+
+    html = build_homepage(_state(), "", reviews=reviews, base="")
+    slides = _slides(html)
+
+    assert len(slides) == 2
+    for slide in slides:
+        assert "hero-slide__scrim" in slide, slide[:200]
+        assert "hero-verdict" in slide, slide[:200]
+        assert "<figcaption>" not in slide, "bare caption fallback is back"
+    assert "hero-verdict--unscored" in html
+    # And the scored slide keeps its real bars.
+    assert "hero-verdict__bar" in html
+
+
+def test_unscored_overlay_does_not_displace_a_scored_review():
+    """_overlay_review() entries are appended last. When the verdict engine
+    failed it left breakdown={} while still carrying an image, so a plain
+    last-wins pick stripped a real published scorecard off the slide."""
+    reviews = [
+        _review("tv", "https://m.media-amazon.com/tv.jpg", "Sony TV",
+                breakdown=_breakdown()),
+        # Fresh cycle article, newer, has an image but no verdict data.
+        _review("tv", "https://m.media-amazon.com/tv-new.jpg", "Insignia 50",
+                updated="2026-09-30"),
+    ]
+
+    html = build_homepage(_state(), "", reviews=reviews, base="")
+
+    tv_slide = [s for s in _slides(html) if 'alt="Tv"' in s][0]
+    assert "https://m.media-amazon.com/tv.jpg" in tv_slide
+    assert "Sony TV" in tv_slide
+    assert "hero-verdict__bar" in tv_slide
+    assert "hero-verdict--unscored" not in tv_slide

@@ -1291,15 +1291,45 @@ def _truncate(text, n=40):
     return text[: n - 1].rstrip() + "…"
 
 
+def _hero_product_title(product, name):
+    """Resolve the product line shown on a hero verdict card.
+
+    Guards against placeholder product names ("Product", blank, generic)
+    leaking into the hero-verdict -- falls back to the niche name so no slide
+    shows a literal placeholder to readers.
+    """
+    _product = (product or "").strip()
+    if not _product or _product.lower() in (
+        "product", "n/a", "tbd", "coming soon", "placeholder",
+        (name or "").lower(),
+    ):
+        _product = name or _product
+    return _truncate(_product, 40)
+
+
 def _hero_slide_verdict(breakdown, overall, label, product, name):
     """Build the 5-criterion verdict scorecard inside a hero slide.
 
     The card is the site's proof of the "Scored on 5 criteria" claim: the
     real breakdown with the top criterion in amber and the weakest muted.
-    Returns "" when no breakdown data exists (caller falls back to a caption).
+
+    Always returns a card, even with no breakdown data, so every hero slide
+    ships the same markup. A review without a breakdown renders an honest
+    unscored card (no invented score) instead of degrading the slide into a
+    bare image with a caption.
     """
     if not breakdown:
-        return ""
+        title = _hero_product_title(product, name)
+        return f'''<div class="hero-verdict hero-verdict--unscored">
+        <div class="hero-verdict__head">
+            <div class="hero-verdict__title">
+                <span class="hero-verdict__eyebrow">{html_mod.escape(name)} · Abvorn Verdict</span>
+                <span class="hero-verdict__product">{html_mod.escape(title)}</span>
+            </div>
+            <div class="hero-verdict__overall"><span class="hero-verdict__num">&mdash;</span><span class="hero-verdict__label">Expert tested</span></div>
+        </div>
+        <div class="hero-verdict__bars"><div class="hero-verdict__pending">Scored on 5 criteria — full scorecard on the review</div></div>
+    </div>'''
     criteria = list(breakdown.items())[:5]
     srt = sorted(criteria, key=lambda kv: kv[1], reverse=True)
     top = srt[0][0]
@@ -1316,13 +1346,7 @@ def _hero_slide_verdict(breakdown, overall, label, product, name):
         )
     overall_html = f"{overall:.1f}<small>/10</small>" if overall else "—"
     label_html = f'<span class="hero-verdict__label">{html_mod.escape(label or "Scored")}</span>'
-    # Guard against placeholder product names ("Product", blank, generic) leaking
-    # into the hero-verdict — fall back to the niche name so no slide shows a
-    # literal placeholder to readers.
-    _product = (product or "").strip()
-    if not _product or _product.lower() in ("product", "n/a", "tbd", "coming soon", "placeholder", name.lower()):
-        _product = name or _product
-    title = _truncate(_product, 40)
+    title = _hero_product_title(product, name)
     return f'''<div class="hero-verdict">
         <div class="hero-verdict__head">
             <div class="hero-verdict__title">
@@ -1366,21 +1390,28 @@ def build_homepage(state, form_url="", reviews=None, base=None):
         hero_candidates.append((img, n["name"], n["slug"]))
     if not hero_candidates:
         hero_candidates.append((f"{b}/assets/hero-home.svg", "Reviews", "coming-soon"))
-    # Pick one review per niche for the slide verdict, but never let a
-    # product-less article take the slot. The fresh cycle article is appended
-    # last and its _overlay_review() entry has image=="" when it shipped with no
-    # products; a plain last-wins dict would let it displace a real product
-    # photo and drop the whole slide back to the generic category asset (e.g.
-    # assets/hero/laptops.jpg, a keyboard shot). Prefer entries that carry an
-    # image; fall back to any entry so a niche with no product photo still
-    # renders via the static asset at backdrop time.
+    # Pick one review per niche for the slide verdict, but never let a weak
+    # entry take the slot. The fresh cycle article is appended last by
+    # _overlay_review(), and that overlay has image=="" whenever the article
+    # shipped with no products (image is only filled inside ``if products:``);
+    # its breakdown is also {} whenever AbvornVerdictEngine raised, because
+    # _overlay_review() swallows that. A plain last-wins dict therefore let a
+    # product-less or unscored overlay displace a real product photo AND the
+    # real 5-criterion scorecard -- the TV slide degraded to a bare image with a
+    # caption while every published TV review carried valid verdict data.
+    #
+    # Preference order, each tier keeping last-wins so the newest good entry
+    # still leads: image + breakdown > image > anything (static asset fallback).
     review_by_slug = {}
+    for _tier in (
+        lambda r: bool(r.get("image")) and bool(r.get("breakdown")),
+        lambda r: bool(r.get("image")),
+    ):
+        for _r in review_list:
+            if _r["slug"] not in review_by_slug and _tier(_r):
+                review_by_slug[_r["slug"]] = _r
     for _r in review_list:
-        if _r.get("image"):
-            review_by_slug[_r["slug"]] = _r
-    for _r in review_list:
-        if _r["slug"] not in review_by_slug:
-            review_by_slug[_r["slug"]] = _r
+        review_by_slug.setdefault(_r["slug"], _r)
     for i, (img, name, slug) in enumerate(hero_candidates):
         active = " active" if i == 0 else ""
         review = review_by_slug.get(slug, {})
@@ -1394,11 +1425,10 @@ def build_homepage(state, form_url="", reviews=None, base=None):
             review.get("product_name"),
             name,
         )
-        caption = verdict or f"{name} reviews — expert tested"
-        if verdict:
-            overlay = f'<div class="hero-slide__scrim" aria-hidden="true"></div>{caption}'
-        else:
-            overlay = f"<figcaption>{caption}</figcaption>"
+        # Every slide gets the same structure: scrim + verdict card. The card
+        # renders unscored when the review has no breakdown, so a missing
+        # scorecard can never change a slide's format.
+        overlay = f'<div class="hero-slide__scrim" aria-hidden="true"></div>{verdict}'
         hero_slides += f'<div class="hero-slide{active}"><img src="{backdrop}" alt="{name}">{overlay}</div>'
         hero_dots += f'<button class="hero-slider__dot{active}" aria-label="Show {name}" aria-current="{"true" if i == 0 else "false"}"></button>'
 
@@ -3168,7 +3198,10 @@ def _overlay_review(a, slug, niche_name, today):
                 score = verdict.get("overall")
                 label = verdict.get("label", "")
                 breakdown = verdict.get("breakdown", {})
-        except Exception:
+        except Exception as exc:
+            # Logged, never silent: a swallowed failure here leaves breakdown={}
+            # and used to strip the hero slide's scorecard. See build_homepage().
+            print(f"  [warn] verdict overlay failed for {slug}: {exc}")
             score = None
     return {
         "slug": slug,
@@ -4304,6 +4337,9 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .hero-verdict__bar.is-weak .hero-verdict__bar-label { color:#6b6b68; }
         .hero-verdict__bar.is-weak .hero-verdict__bar-fill { background:#555; }
         .hero-verdict__bar-score { text-align:right; font-weight:700; font-variant-numeric: tabular-nums; color:#fff; font-family:var(--font-mono); font-size:0.68rem; }
+    .hero-verdict__pending { font-size:0.56rem; color:#c4c4bf; font-family:var(--font-mono); letter-spacing:0.02em; }
+    .hero-verdict--unscored .hero-verdict__num { color:#c4c4bf; }
+    .hero-verdict--unscored .hero-verdict__label { background:rgba(255,255,255,0.14); color:#fff; }
         .hero-slider__dots { position:absolute; top:14px; right:14px; display:flex; gap:2px; z-index:6; }
         .hero-slider__dot { width:44px; height:44px; border:none; background:transparent; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
         .hero-slider__dot::before { content:''; width:8px; height:8px; border-radius:2px; background:rgba(255,255,255,0.35); transition: background var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
