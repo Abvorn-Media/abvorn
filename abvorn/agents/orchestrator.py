@@ -238,6 +238,7 @@ class SiteDeployer:
         today = datetime.now().strftime("%Y-%m-%d")
         reviews = scan_published_reviews("docs")
         seen = {(r["slug"], r["title"]): i for i, r in enumerate(reviews)}
+        seen_by_rel = {(r.get("rel") or ""): i for i, r in enumerate(reviews)}
         if self._last_content and self._last_niche:
             entry = _overlay_review(self._last_content, self._last_niche,
                                     self._niche_name(self._last_niche), today)
@@ -274,10 +275,10 @@ class SiteDeployer:
                 logger.info("[SiteDeployer] Skipping card %r: unpublished", title)
                 seen[(slug, title)] = len(reviews)
                 continue
+            rel = f"/reviews/{slug}/{filename}"
             if self.deployer is not None:
-                rel = f"reviews/{slug}/{filename}"
                 try:
-                    if not self.deployer.file_exists(rel):
+                    if not self.deployer.file_exists(f"reviews/{slug}/{filename}"):
                         logger.warning(
                             f"[SiteDeployer] Skipping card {title!r}: page {rel} "
                             "does not exist in the published tree"
@@ -287,6 +288,23 @@ class SiteDeployer:
                 except Exception as e:
                     logger.warning(f"[SiteDeployer] Could not verify {rel} (fail-open): {e}")
             quality = p.get("quality_score")
+            # Match the scanned card by page path before appending. The state
+            # row's title often differs from the page's own <h1>, so the
+            # (slug, title) key missed and the row was appended as a second
+            # card for a page already in the list -- one copy of which has
+            # snippet="" and renders with no description at all. Enrich the
+            # scanned card instead; its copy is already correct.
+            scanned_i = seen_by_rel.get(rel)
+            if scanned_i is not None:
+                row = reviews[scanned_i]
+                if p.get("image") and not row.get("image"):
+                    row["image"] = p["image"]
+                if p.get("product_name") and not row.get("product_name"):
+                    row["product_name"] = p["product_name"]
+                if quality and not row.get("score"):
+                    row["score"] = quality
+                seen[(slug, title)] = scanned_i
+                continue
             reviews.append({
                 "slug": slug,
                 "name": self._niche_name(slug),

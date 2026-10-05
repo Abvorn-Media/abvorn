@@ -603,3 +603,50 @@ def test_overlay_never_blanks_out_a_published_snippet(monkeypatch, tmp_path):
     assert len(out) == 1
     assert out[0]["snippet"].strip(), "overlay blanked the published snippet"
     assert out[0]["snippet"] == scanned[0]["snippet"]
+
+
+def test_state_post_merges_into_scanned_card_instead_of_duplicating(monkeypatch):
+    """A state row must not become a second, copyless card for a page the
+    scanner already found.
+
+    State titles drift from the page's own <h1>, so the (slug, title) key missed
+    and the row was appended with snippet="". Because niche pages sort by date,
+    those duplicates landed at the top of the page: live /tv/ rendered 4 of 10
+    cards with no description while every one of those articles had good copy
+    in the scan.
+    """
+    import abvorn.agents.orchestrator as orch
+
+    scanned = [{
+        "slug": "tv",
+        "name": "Tv",
+        "title": "2026 TV Buying Guide: Insignia vs LG \u2013 Which Fits Your Room?",
+        "updated": "2026-10-05",
+        "rel": "/reviews/tv/insignia-vs-lg.html",
+        "snippet": "Choosing the right TV in 2026 hinges on screen size and budget.",
+        "image": "", "score": None, "breakdown": {}, "label": "",
+        "product_name": "",
+    }]
+    monkeypatch.setattr("src.deployment.scan_published_reviews",
+                        lambda *a, **k: scanned)
+
+    class Deployer:
+        def file_exists(self, rel):
+            return rel.lstrip("/") == "reviews/tv/insignia-vs-lg.html"
+
+    sd = SiteDeployer(Deployer(), None)
+    # Same page, different title string, plus the metadata only state has.
+    posts = [{"niche_slug": "tv",
+              "title": "2026 TV Buying Guide: Insignia vs LG - Which Fits Your Room",
+              "filename": "insignia-vs-lg.html",
+              "quality_score": 9.2,
+              "image": "https://example.com/p.jpg",
+              "product_name": "Insignia 50 inch",
+              "created_at": "2026-10-05T10:00:00"}]
+
+    out = sd._reviews(["tv"], posts)
+    assert len(out) == 1, "state row duplicated an already-scanned page"
+    assert out[0]["snippet"].strip(), "merged card lost its copy"
+    assert out[0]["score"] == 9.2
+    assert out[0]["image"] == "https://example.com/p.jpg"
+    assert out[0]["product_name"] == "Insignia 50 inch"
