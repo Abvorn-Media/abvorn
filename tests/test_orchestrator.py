@@ -556,3 +556,50 @@ def test_deploy_content_require_products_blocks_productless_fresh_article():
                         "article_html": "<p>x</p>"},
             all_categories=["laptops"],
         ) == "reviews/laptops/index.html"
+
+def test_overlay_never_blanks_out_a_published_snippet(monkeypatch, tmp_path):
+    """The newest article must not lose its description to the overlay.
+
+    A freshly generated article whose intro and meta description are both
+    unusable (here: an opening question, which the cleaner rejects) yields an
+    empty overlay snippet. The published page already had good copy, so the
+    overlay has to defer to it -- otherwise every cycle shipped the newest
+    review as a card with no snippet at all.
+    """
+    import abvorn.agents.orchestrator as orch
+
+    page = tmp_path / "reviews" / "tv" / "guide.html"
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        '<html><body><p>The LG C3 leads the category on panel brightness. '
+        'It wins on HDR tone mapping.</p></body></html>',
+        encoding="utf-8",
+    )
+    scanned = [{
+        "slug": "tv",
+        "title": "2026 TV Buying Guide",
+        "rel": "/reviews/tv/guide.html",
+        "snippet": "The LG C3 leads the category on panel brightness.",
+        "image": "", "score": 8.0, "label": "Great", "breakdown": {},
+        "product_name": "LG C3", "updated": "2026-10-01",
+    }]
+    monkeypatch.setattr(orch, "scan_published_reviews", lambda *a, **k: scanned,
+                        raising=False)
+    monkeypatch.setattr("src.deployment.scan_published_reviews",
+                        lambda *a, **k: scanned)
+
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    sd._last_content = {
+        "post_title": "2026 TV Buying Guide",
+        "intro": "<p>Looking for the best TV in 2026?</p>",
+        "meta_description": "",
+        "article_html": "<p>Looking for the best TV in 2026?</p>",
+        "products": [],
+    }
+    sd._last_niche = "tv"
+
+    out = sd._reviews(["tv"], [])
+    assert len(out) == 1
+    assert out[0]["snippet"].strip(), "overlay blanked the published snippet"
+    assert out[0]["snippet"] == scanned[0]["snippet"]

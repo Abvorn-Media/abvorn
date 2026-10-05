@@ -243,6 +243,14 @@ class SiteDeployer:
                                     self._niche_name(self._last_niche), today)
             key = (entry["slug"], entry["title"])
             if key in seen:
+                # Keep the published page's snippet when the overlay has none.
+                # A freshly generated article whose intro and meta description
+                # are both unusable (an opening question, say) produces an empty
+                # overlay snippet, and blindly replacing the scanned entry
+                # shipped the newest review as a card with no description at
+                # all -- even though the page on disk already had good copy.
+                if not (entry.get("snippet") or "").strip():
+                    entry["snippet"] = reviews[seen[key]].get("snippet") or ""
                 reviews[seen[key]] = entry
             else:
                 reviews.append(entry)
