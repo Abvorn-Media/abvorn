@@ -638,6 +638,118 @@ _BOILERPLATE_RE = re.compile(
     r"^(we'?ve done the research|scores out of 10|we tested the top products|we'?re reviewing the top products)",
     re.I,
 )
+# Newsletter / CTA copy that lives *inside* <article> on published review pages.
+# The paragraph fallback in review_snippet() scans the whole article element, and
+# the ".cta-banner" block ("New guides, top picks, and price drops ... straight
+# to your inbox. No spam, unsubscribe anytime.") sits inside it -- so 57 reviews
+# shipped that sentence as their card snippet. Nothing rejected its vocabulary.
+_NEWSLETTER_RE = re.compile(
+    r"straight to your|your inbox|no spam|unsubscribe|newsletter|subscri"
+    r"be|signed? up|sign[ -]?in|opt[ -]?in|every week|weekly|dispatch|"
+    r"get more reviews like this|price drops? for these products|"
+    r"send yourself the full guide|first[- ]time bookers",
+    re.I,
+)
+# Containers that are chrome rather than review copy. Removed before the
+# paragraph scan so their text can never be picked as a snippet.
+_CTA_BLOCK_RE = re.compile(
+    r"<(?:div|section|aside|form)\b[^>]*"
+    r'class="[^"]*\b(?:cta-banner|newsletter|subscribe|email-capture|'
+    r'email-signup|share|rail-card)\b[^"]*"[^>]*>'
+    r".*?</(?:div|section|aside|form)>",
+    re.S | re.I,
+)
+
+# Card snippets must read as a few *complete* sentences. The old cleaner cut at
+# a word boundary (rfind(" ", 0, 180)), which is not a sentence boundary: 506 of
+# 655 published reviews shipped a card that stopped mid-thought. Text is now
+# assembled from whole sentences, so the visible string always ends on one.
+_SNIPPET_MIN_CHARS = 40
+_SNIPPET_MAX_CHARS = 320
+_SNIPPET_MAX_SENTENCES = 4
+# How far into a block an em dash may sit and still count as a title
+# lead-in (Product name, dash, description) rather than an aside inside
+# the prose. A real lead-in lands well inside 120 characters, while the
+# asides that emptied cards sat at 260+: unbounded, _plain_copy amputated
+# a 317-character snippet down to its 50-character tail, which then
+# started lowercase and ended in an ellipsis, so _complete_sentences
+# discarded it and the card shipped with no copy at all.
+_TITLE_DASH_MAX_CHARS = 120
+# A 320px card at 0.9rem holds roughly 38 characters per line, so the card budget
+# is what its line-clamp can show without a visual mid-sentence cut. Measured on
+# all 655 published reviews, 280 characters yields two whole sentences on 74% of
+# cards (median two), against 10% at 160.
+_CARD_SNIPPET_CHARS = 280
+_FEATURED_SNIPPET_CHARS = 360
+# The featured card spans the full grid width, so it can carry a sentence or two
+# more than a 320px card.
+_FEATURED_SNIPPET_MAX_SENTENCES = 6
+# Split on a terminator only when what follows actually starts a sentence, so
+# "e.g. 4K" and "U.S. models" stay intact.
+_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])[\"')\u201d\u2019]?\s+(?=[\"'\u201c]?[A-Z0-9])")
+# Where a genuine sentence begins: a terminator, then a closing quote, then
+# a capitalized opener. Used to re-anchor a snippet whose leading fragment
+# was dropped, so truncation cannot silently restore the mid-thought open.
+_SENTENCE_START_RE = re.compile(r"(?<=[.!?])[\"')\u201d\u2019]\s+(?=[\"'\u201c]?[A-Z0-9])")
+
+
+def _strip_cta_blocks(html):
+    """Drop newsletter/share/CTA containers so their copy cannot be read as prose."""
+    out = html
+    for _ in range(6):
+        stripped = _CTA_BLOCK_RE.sub(" ", out)
+        if stripped == out:
+            break
+        out = stripped
+    return out
+
+
+def _complete_sentences(text, max_chars=_SNIPPET_MAX_CHARS, max_sentences=_SNIPPET_MAX_SENTENCES):
+    """Longest prefix of `text` built from whole sentences that fits the budget.
+
+    Never ends mid-sentence. When even the first sentence overruns the budget it
+    is cut at a word boundary and marked with an ellipsis, so the card says it
+    is truncated instead of pretending the sentence finished.
+    """
+    parts = [
+        p.strip()
+        for p in _SENTENCE_SPLIT_RE.split(text)
+        # U+2026 counts: it is this module's own truncation marker, so a
+        # sentence we already shortened is still a usable sentence. Without
+        # it such a fragment was dropped here and the card lost its copy.
+        if p and p.strip() and p.strip()[-1] in ".!?\u2026"
+    ]
+    # A card must not open mid-thought. Some published intros genuinely begin
+    # with a lowercase continuation of an earlier clause ("with brands like
+    # Lenovo, HP, and ... competing"), so skip those leading fragments instead
+    # of shipping a sentence that starts halfway through.
+    while parts and parts[0][:1].islower():
+        parts.pop(0)
+    if not parts:
+        # Every complete sentence here starts lowercase, so the text is a
+        # continuation of something earlier. Re-anchor on the first genuine
+        # sentence start: slicing `text` again would restore the mid-thought
+        # open this loop just removed.
+        m = _SENTENCE_START_RE.search(text)
+        if m:
+            text = text[m.start():]
+        if text[:1].islower():
+            return ""
+        cut = text.rfind(" ", 0, max_chars)
+        return (text[:cut].rstrip(" ,;:-\u2026") + "\u2026") if cut > 0 else ""
+    picked = []
+    for part in parts:
+        if len(picked) >= max_sentences:
+            break
+        candidate = " ".join(picked + [part])
+        if len(candidate) > max_chars:
+            if picked:
+                break
+            cut = candidate.rfind(" ", 0, max_chars)
+            out = candidate[:cut].rstrip(" ,;:-\u2026") + "\u2026"
+            return "" if out[:1].islower() else out
+        picked.append(part)
+    return " ".join(picked)
 
 
 def _parse_verdict_data(html):
@@ -666,8 +778,8 @@ def _parse_verdict_data(html):
         return {}, None, "", ""
 
 
-def _clean_snippet(raw):
-    """Unescape, flatten whitespace, reject boilerplate/too-short text."""
+def _plain_copy(raw):
+    """Markup-free, chrome-free copy from one block of a page ("" if unusable)."""
     text = html_mod.unescape(re.sub(r"<[^>]+>", "", raw))
     text = re.sub(r"\s+", " ", text).strip()
     # Excerpts sometimes lead with the long product name + em dash
@@ -676,51 +788,80 @@ def _clean_snippet(raw):
     # Some dated articles render the dash mojibake'd as "â€"" (UTF-8 bytes read
     # as latin-1), so match both.
     for dash in (" — ", " â€” ", " â€"" "):
-        if dash in text:
-            after = text.split(dash, 1)[1].strip()
+        idx = text.find(dash)
+        if idx != -1 and idx <= _TITLE_DASH_MAX_CHARS:
+            after = text[idx + len(dash):].strip()
             if len(after) >= 25:
                 text = after
             break
-    if len(text) < 40 or _BOILERPLATE_RE.search(text):
+    if len(text) < _SNIPPET_MIN_CHARS or _BOILERPLATE_RE.search(text):
+        return ""
+    if _NEWSLETTER_RE.search(text):
         return ""
     if _COOKIE_RE.search(text) or _UPDATED_RE.search(text) or _SHARE_RE.search(text) or _WIDGET_RE.search(text):
         return ""
-    if len(text) > 180:
-        cut = text.rfind(" ", 0, 180)
-        text = text[:cut].rstrip(" ,.;:") + "…"
     return text
 
 
-def review_snippet(html):
-    """First real paragraph of a review page, for card snippets ("" if none).
+def _split_sentences(text):
+    """Whole sentences in `text`, in order. A trailing unterminated fragment
+    is dropped so a snippet never ends mid-thought."""
+    parts = [p.strip() for p in _SENTENCE_SPLIT_RE.split(text) if p and p.strip()]
+    if parts and parts[-1][-1] not in ".!?":
+        parts = parts[:-1]
+    return parts
 
-    Tries, in order: the Introduction block, the article's excerpt line, then
-    the first substantial paragraph. Pages without an explicit Introduction
-    (e.g. wireless-headphones, 4k-monitors) still get a snippet this way.
 
-    Extraction is scoped to the <article> element when present and skips
-    boilerplate (cookie consent, navigation) so card snippets never show
-    chrome text instead of review copy.
+def _clean_snippet(raw, max_chars=_SNIPPET_MAX_CHARS, max_sentences=_SNIPPET_MAX_SENTENCES):
+    """Card-ready copy: no markup, no CTA chrome, and only complete sentences."""
+    text = _plain_copy(raw)
+    return _complete_sentences(text, max_chars, max_sentences) if text else ""
+
+
+def _snippet_sources(body):
+    """Prose blocks of a review page in priority order: Introduction, the
+    excerpt line, then every remaining paragraph."""
+    seen = set()
+    for pattern in (_INTRO_RE, _EXCERPT_RE):
+        m = pattern.search(body)
+        if m and m.group(1) not in seen:
+            seen.add(m.group(1))
+            yield m.group(1)
+    for m in _ANY_P_RE.finditer(body):
+        if m.group(1) not in seen:
+            seen.add(m.group(1))
+            yield m.group(1)
+
+
+def review_snippet(html, max_chars=_SNIPPET_MAX_CHARS, max_sentences=_SNIPPET_MAX_SENTENCES):
+    """A few complete sentences of real review copy, for card snippets.
+
+    Walks the page's prose in priority order (Introduction, excerpt line, then
+    body paragraphs) and keeps whole sentences until the budget is met, so a
+    lead paragraph that is one long sentence still yields a card with a few
+    sentences. Extraction is scoped to the <article> element when present, drops
+    the newsletter/share CTA containers that live inside it, and skips
+    boilerplate (cookie consent, navigation) so card snippets never show chrome
+    text instead of review copy.
     """
     body = html
     m = _ARTICLE_RE.search(html)
     if m:
         body = m.group(1)
-    m = _INTRO_RE.search(body)
-    if m:
-        text = _clean_snippet(m.group(1))
+    body = _strip_cta_blocks(body)
+
+    blocks = []
+    for raw in _snippet_sources(body):
+        text = _plain_copy(raw)
         if text:
-            return text
-    m = _EXCERPT_RE.search(body)
-    if m:
-        text = _clean_snippet(m.group(1))
-        if text:
-            return text
-    for m in _ANY_P_RE.finditer(body):
-        text = _clean_snippet(m.group(1))
-        if text:
-            return text
-    return ""
+            blocks.append(text)
+    # Assemble once, through the single sentence-aware cleaner. This used to
+    # be a second, hand-rolled accumulator: it joined sentences across
+    # paragraphs but never applied the leading-fragment skip or the
+    # truncation guard, so a page whose first prose block began mid-thought
+    # shipped a card opening on a lowercase word. One cleaner, one place
+    # where the whole-sentence and no-mid-thought rules can hold.
+    return _complete_sentences(" ".join(blocks), max_chars, max_sentences)
 
 
 # A published page is only a product review if it actually carries a product.
@@ -863,6 +1004,8 @@ def scan_published_reviews(docs_dir="docs"):
             reviews.append({
                 "slug": slug,
                 "name": _niche_name(slug),
+                "niche": slug,
+                "niche_slug": slug,
                 "title": title or _niche_name(slug),
                 "updated": upd,
                 "rel": rel,
@@ -1088,7 +1231,15 @@ def review_card(item, category, b, featured=False):
         _rel = f"/{_slug}/" if _slug.startswith("reviews/") else f"/reviews/{_slug}/"
     href = f'{b.rstrip("/")}{_rel if _rel.startswith("/") else "/" + _rel}'
     color = category_color(category)
-    snippet = item.get("snippet", "")
+    # Budget the visible copy to what the line-clamp can actually show and trim
+    # it on a sentence boundary, so a card never ends mid-sentence on screen.
+    raw_snippet = item.get("snippet", "")
+    budget = _FEATURED_SNIPPET_CHARS if featured else _CARD_SNIPPET_CHARS
+    cap = _FEATURED_SNIPPET_MAX_SENTENCES if featured else _SNIPPET_MAX_SENTENCES
+    # Clean here too, not just at the extractors: whatever a producer hands the
+    # card is markup until proven otherwise.
+    cleaned = _plain_copy(raw_snippet) if raw_snippet else ""
+    snippet = _complete_sentences(cleaned, budget, cap) if cleaned else ""
     snippet_html = (
         f'<p class="review-card__snippet">{html_mod.escape(snippet)}</p>' if snippet else ""
     )
@@ -1686,7 +1837,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .review-card__body h2 {{ font-size: var(--text-lg); margin:0 0 8px; line-height:1.25; }}
         .review-card__body h2 a {{ color:inherit; text-decoration:none; }}
         .review-card__body h2 a:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
-        .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
+        .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:7; -webkit-box-orient:vertical; overflow:hidden; }}
         .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top: var(--space-sm); }}
         .review-card__footer .read-link {{ font-weight:700; font-size:0.82rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); border-bottom-color: color-mix(in srgb, var(--cat, var(--clr-accent)) 55%, #1a1200); padding-bottom:1px; }}
         .review-card__footer .read-link:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
@@ -1704,7 +1855,7 @@ def build_category_page(niche_slug, niche_name, posts, all_slugs, affiliate_tag=
         .niche-card--featured .review-card__body {{ padding: var(--space-xl); }}
         .niche-card--featured h2 {{ font-size: var(--text-2xl); }}
         .niche-card--featured .review-card__score-num {{ font-size:1.5rem; }}
-        .niche-card--featured .review-card__snippet {{ -webkit-line-clamp:3; }}
+        .niche-card--featured .review-card__snippet {{ -webkit-line-clamp:8; }}
         @media (max-width: 760px) {{ .niche-card--featured {{ grid-template-columns: 1fr; }} .niche-card--featured .review-card__body {{ padding: var(--space-md); }} }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
@@ -2275,7 +2426,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         .review-card__body h2 {{ font-size: var(--text-lg); margin:0 0 8px; line-height:1.25; }}
         .review-card__body h2 a {{ color:inherit; text-decoration:none; }}
         .review-card__body h2 a:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
-        .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
+        .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:7; -webkit-box-orient:vertical; overflow:hidden; }}
         .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top: var(--space-sm); }}
         .review-card__footer .read-link {{ font-weight:700; font-size:0.82rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); border-bottom-color: color-mix(in srgb, var(--cat, var(--clr-accent)) 55%, #1a1200); padding-bottom:1px; }}
         .review-card__footer .read-link:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
@@ -2290,7 +2441,7 @@ def build_category_listing_page(category_name, category_slug, items, all_slugs, 
         .niche-card--featured .review-card__body {{ padding: var(--space-xl); }}
         .niche-card--featured h2 {{ font-size: var(--text-2xl); }}
         .niche-card--featured .review-card__score-num {{ font-size:1.5rem; }}
-        .niche-card--featured .review-card__snippet {{ -webkit-line-clamp:3; }}
+        .niche-card--featured .review-card__snippet {{ -webkit-line-clamp:8; }}
         @media (max-width: 760px) {{ .niche-card--featured {{ grid-template-columns: 1fr; }} .niche-card--featured .review-card__body {{ padding: var(--space-md); }} }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
@@ -2661,7 +2812,7 @@ def _hub_page(b, meta_title, meta_desc, canonical_path, hero_html, index_nav, se
         .review-card__body h2 {{ font-size: var(--text-lg); margin:0 0 8px; line-height:1.25; }}
         .review-card__body h2 a {{ color:inherit; text-decoration:none; }}
         .review-card__body h2 a:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
-        .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
+        .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:7; -webkit-box-orient:vertical; overflow:hidden; }}
         .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top: var(--space-sm); }}
         .review-card__footer .read-link {{ font-weight:700; font-size:0.82rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); border-bottom-color: color-mix(in srgb, var(--cat, var(--clr-accent)) 55%, #1a1200); padding-bottom:1px; }}
         .review-card__footer .read-link:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
@@ -2676,7 +2827,7 @@ def _hub_page(b, meta_title, meta_desc, canonical_path, hero_html, index_nav, se
         .niche-card--featured .review-card__body {{ padding: var(--space-xl); }}
         .niche-card--featured h2 {{ font-size: var(--text-2xl); }}
         .niche-card--featured .review-card__score-num {{ font-size:1.5rem; }}
-        .niche-card--featured .review-card__snippet {{ -webkit-line-clamp:3; }}
+        .niche-card--featured .review-card__snippet {{ -webkit-line-clamp:8; }}
         @media (max-width: 760px) {{ .niche-card--featured {{ grid-template-columns: 1fr; }} .niche-card--featured .review-card__body {{ padding: var(--space-md); }} }}
 
         .footer {{ background:#0a0a0a; color:#999; padding: var(--space-2xl) 0 var(--space-lg); }}
@@ -3203,13 +3354,22 @@ def _overlay_review(a, slug, niche_name, today):
             # and used to strip the hero slide's scorecard. See build_homepage().
             print(f"  [warn] verdict overlay failed for {slug}: {exc}")
             score = None
+    # Card copy for an article that is not on disk yet. `intro` arrives as
+    # article markup, so it goes through the same cleaner as a published page --
+    # the old raw [:160] slice shipped literal "<p>" tags into the card and
+    # stopped mid-sentence. Falls back to the meta description, then the body.
+    snippet = _clean_snippet(a.get("intro") or "")
+    if not snippet:
+        snippet = _clean_snippet(a.get("meta_description") or "")
+    if not snippet:
+        snippet = review_snippet(a.get("article_html") or "")
     return {
         "slug": slug,
         "name": niche_name,
         "title": a.get("post_title", ""),
         "updated": today,
         "rel": f"/reviews/{slug}/",
-        "snippet": (a.get("intro") or "")[:160],
+        "snippet": snippet,
         "image": image,
         "score": score,
         "breakdown": breakdown,
@@ -4407,7 +4567,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .review-card__body h2 { font-size: var(--text-lg); margin:0 0 8px; line-height:1.25; }
         .review-card__body h2 a { color:inherit; text-decoration:none; }
         .review-card__body h2 a:hover { color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }
-        .review-card__snippet { font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .review-card__snippet { font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:7; -webkit-box-orient:vertical; overflow:hidden; }
         .review-card__footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top: var(--space-sm); }
         .review-card__footer .read-link { font-weight:700; font-size:0.82rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); border-bottom-color: color-mix(in srgb, var(--cat, var(--clr-accent)) 55%, #1a1200); padding-bottom:1px; }
         .review-card__footer .read-link:hover { color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }
@@ -4422,7 +4582,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .niche-card--featured .review-card__body { padding: var(--space-xl); }
         .niche-card--featured h2 { font-size: var(--text-2xl); }
         .niche-card--featured .review-card__score-num { font-size:1.5rem; }
-        .niche-card--featured .review-card__snippet { -webkit-line-clamp:3; }
+        .niche-card--featured .review-card__snippet { -webkit-line-clamp:8; }
         @media (max-width: 760px) { .niche-card--featured { grid-template-columns: 1fr; } .niche-card--featured .review-card__body { padding: var(--space-md); } }
 
         .category-group { display: none; }
@@ -4456,6 +4616,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     <nav class="nav-links" id="nav-links">
         <div class="nav-item"><a href="#niches">Categories</a><div class="nav-dropdown nav-dropdown--mega">CATEGORY_DROPDOWN_PLACEHOLDER</div></div>
         <a href="__SITE_BASE__/">Home</a>
+        <a href="__SITE_BASE__/blog/">Blog</a>
         <a href="__SITE_BASE__/about.html">About</a>
         <a href="__SITE_BASE__/journal/">Journal</a>
     </nav>

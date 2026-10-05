@@ -1,4 +1,7 @@
 """Tests for the pre-publish mojibake guard."""
+import json
+from pathlib import Path
+
 import pytest
 
 from src.deployment import (
@@ -7,6 +10,37 @@ from src.deployment import (
     repair_mojibake,
     verify_page,
 )
+
+HERO_CREDITS = Path("docs/assets/hero/credits.json")
+
+
+def test_hero_credit_manifest_is_free_of_mojibake():
+    """The manifest is JSON, so a raw byte scan sees only clean ASCII when a
+    name is stored escaped ("Kaw\\u00c3\\u00aa") and the corruption only surfaces
+    after json.loads -- straight into the rendered "Photo: ... -- Pexels" credit.
+    That is how 'KawÃª  Rodrigues' reached docs/webcams/index.html."""
+    if not HERO_CREDITS.exists():
+        pytest.skip("hero credit manifest not present")
+    data = json.loads(HERO_CREDITS.read_text(encoding="utf-8"))
+    dirty = [
+        (slug, key, value)
+        for slug, info in data.items()
+        for key, value in info.items()
+        if isinstance(value, str) and find_mojibake(value)
+    ]
+    assert not dirty, dirty
+
+
+def test_hero_credit_manifest_has_no_double_spaces_in_names():
+    if not HERO_CREDITS.exists():
+        pytest.skip("hero credit manifest not present")
+    data = json.loads(HERO_CREDITS.read_text(encoding="utf-8"))
+    names = {
+        slug: info.get("photographer", "")
+        for slug, info in data.items()
+        if "  " in (info.get("photographer") or "")
+    }
+    assert not names, names
 
 
 def test_clean_utf8_passes():

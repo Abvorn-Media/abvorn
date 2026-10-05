@@ -1115,7 +1115,7 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
         .niche-card h2 { font-size:var(--text-lg); margin: var(--space-md) var(--space-md) 8px; }
         .niche-card h2 a { color:inherit; text-decoration:none; }
         .niche-card p { font-size:0.9rem; color:var(--clr-mid-gray); margin-bottom:var(--space-sm); line-height:1.5; }
-        .niche-card .review-card__snippet { font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .niche-card .review-card__snippet { font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin: 0 var(--space-md) var(--space-sm); display:-webkit-box; -webkit-line-clamp:7; -webkit-box-orient:vertical; overflow:hidden; }
         .niche-card .read-link { font-weight:700; font-size:0.85rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); padding-bottom:1px; margin: auto var(--space-md) var(--space-md); align-self:flex-end; }
         .niche-card .read-link:hover { color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }
         .review-card__banner { display:inline-block; margin: var(--space-md) var(--space-md) 0; padding:3px 10px; border-radius:4px; background: var(--clr-accent); color:#1a1200; font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
@@ -1157,9 +1157,10 @@ HOMEPAGE_TEMPLATE = '''<!DOCTYPE html>
     </button>
     <nav class="nav-links" id="nav-links">
         <div class="nav-item"><a href="#niches">Categories</a><div class="nav-dropdown">CATEGORY_DROPDOWN_PLACEHOLDER</div></div>
-        <a href="__SITE_BASE__/">Home</a>
-        <a href="__SITE_BASE__/about.html">About</a>
-        <a href="__SITE_BASE__/journal/">Journal</a>
+<a href="__SITE_BASE__/">Home</a>
+<a href="__SITE_BASE__/blog/">Blog</a>
+<a href="__SITE_BASE__/about.html">About</a>
+<a href="__SITE_BASE__/journal/">Journal</a>
     </nav>
 </div></header>
 <div class="trending-ticker"><div class="container"><div class="trending-ticker__track"><div class="trending-ticker__inner"><span class="trending-ticker__label">Latest updates:</span><span id="trending-items">LATEST_UPDATES_PLACEHOLDER</span></div><div class="trending-ticker__inner" aria-hidden="true"><span class="trending-ticker__label">Latest updates:</span><span>LATEST_UPDATES_PLACEHOLDER</span></div></div></div></div>
@@ -1721,7 +1722,7 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
         .review-card__body h2 {{ font-size: var(--text-lg); margin:0 0 8px; line-height:1.25; }}
         .review-card__body h2 a {{ color:inherit; text-decoration:none; }}
         .review-card__body h2 a:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
-        .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }}
+        .review-card__snippet {{ font-size:0.9rem; color:var(--clr-mid-gray); line-height:1.5; margin:0 0 var(--space-sm); display:-webkit-box; -webkit-line-clamp:7; -webkit-box-orient:vertical; overflow:hidden; }}
         .review-card__footer {{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top: var(--space-sm); }}
         .review-card__footer .read-link {{ font-weight:700; font-size:0.82rem; color:var(--clr-black); text-decoration:none; border-bottom:2px solid var(--cat, var(--clr-accent)); border-bottom-color: color-mix(in srgb, var(--cat, var(--clr-accent)) 55%, #1a1200); padding-bottom:1px; }}
         .review-card__footer .read-link:hover {{ color: var(--cat, var(--clr-accent-text)); color: color-mix(in srgb, var(--cat, var(--clr-accent-text)) 55%, #1a1200); }}
@@ -1736,7 +1737,7 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
         .niche-card--featured .review-card__body {{ padding: var(--space-xl); }}
         .niche-card--featured h2 {{ font-size: var(--text-2xl); }}
         .niche-card--featured .review-card__score-num {{ font-size:1.5rem; }}
-        .niche-card--featured .review-card__snippet {{ -webkit-line-clamp:3; }}
+        .niche-card--featured .review-card__snippet {{ -webkit-line-clamp:8; }}
         @media (max-width: 760px) {{ .niche-card--featured {{ grid-template-columns: 1fr; }} .niche-card--featured .review-card__body {{ padding: var(--space-md); }} }}
 
         .archive-list {{ display:flex; flex-direction:column; border-top:1px solid var(--clr-light-gray); }}
@@ -1774,9 +1775,10 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
     </button>
     <nav class="nav-links" id="nav-links">
         <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
-        <a href="{b}/">Home</a>
-        <a href="{b}/about.html">About</a>
-        <a href="{b}/journal/">Journal</a>
+<a href="{b}/">Home</a>
+<a href="{b}/blog/">Blog</a>
+<a href="{b}/about.html">About</a>
+<a href="{b}/journal/">Journal</a>
     </nav>
 </div></header>
 
@@ -2432,9 +2434,10 @@ def build_article_page(niche_slug, niche_name, post_title, article_html, intro, 
     </button>
     <nav class="nav-links" id="nav-links">
         <div class="nav-item"><a href="#">Categories</a><div class="nav-dropdown nav-dropdown--mega">{nav_dd}</div></div>
-        <a href="{b}/">Home</a>
-        <a href="{b}/about.html">About</a>
-        <a href="{b}/journal/">Journal</a>
+<a href="{b}/">Home</a>
+<a href="{b}/blog/">Blog</a>
+<a href="{b}/about.html">About</a>
+<a href="{b}/journal/">Journal</a>
     </nav>
 </div></header>
 
