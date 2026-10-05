@@ -93,3 +93,40 @@ def test_hub_sections_have_no_duplicate_review_cards():
     assert hrefs, "expected the hub to render review cards"
     dupes = {h: c for h, c in Counter(hrefs).items() if c > 1}
     assert not dupes, f"hub rendered the same review twice: {dupes}"
+
+
+def test_category_page_never_renders_the_same_review_twice():
+    """The 'Latest' spotlight and the per-niche grid drew from the same
+    newest-first list, so the top guides rendered twice: /tv/ shipped 10 cards
+    for 6 distinct reviews."""
+    import re as _re
+    from collections import Counter
+
+    from run_cycle import build_category_page
+
+    def mk(n):
+        return {
+            "slug": "tv", "name": "Tv",
+            "title": f"2026 TV Buying Guide {n}",
+            "updated": f"2026-10-{n:02d}",
+            "rel": f"/reviews/tv/guide-{n}.html",
+            "snippet": f"Guide number {n} explains the trade-offs in plain words.",
+            "image": "", "score": 8.0, "breakdown": {}, "label": "Great",
+            "product_name": "Insignia 50 inch",
+        }
+
+    reviews = [mk(i) for i in range(1, 9)]
+    html = build_category_page("tv", "Tv", reviews, ["tv"], "")
+
+    blocks = _re.findall(
+        r'class="niche-card review-card[^"]*"(.*?)(?=class="niche-card review-card|</section>|</main>)',
+        html, _re.S,
+    )
+    hrefs = []
+    for b in blocks:
+        m = _re.search(r'href="[^"]*/reviews/tv/([^"/]+\.html)"', b)
+        if m:
+            hrefs.append(m.group(1))
+    assert hrefs, "no cards rendered"
+    dupes = {k: v for k, v in Counter(hrefs).items() if v > 1}
+    assert not dupes, f"duplicate cards on the page: {dupes}"

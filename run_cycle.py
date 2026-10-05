@@ -1537,10 +1537,16 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
     sections = []
     if sorted_reviews:
         # Latest reviews — newest promoted to a full-width featured card.
+        latest = sorted_reviews[:4]
         latest_cards = "".join(
             review_card(r, category, b, featured=(i == 0))
-            for i, r in enumerate(sorted_reviews[:4])
+            for i, r in enumerate(latest)
         )
+        # Remember what the spotlight already rendered. The per-niche sections
+        # below pull from the same newest-first list, so without this the top
+        # guides appeared twice on the page: /tv/ shipped 10 cards for 6
+        # reviews, each of the four newest rendered in both sections.
+        already_shown = {r.get("rel") for r in latest if r.get("rel")}
         sections.append(
             f'<section class="category-section container" id="latest" style="--cat:{accent}">'
             f'<span class="section-eyebrow">Fresh this week</span>'
@@ -1560,6 +1566,7 @@ def build_category_page(niche_slug, niche_name, reviews, all_slugs, affiliate_ta
         niche_name_map = {n["slug"]: n["name"] for n in state_niches}
         for ns in category_niches:
             ns_reviews = [r for r in sorted_reviews if r.get("slug") == ns]
+            ns_reviews = [r for r in ns_reviews if r.get("rel") not in already_shown]
             if not ns_reviews:
                 continue  # skip empty niche sections to match clean layout
             ns_reviews_sorted = sorted(ns_reviews, key=lambda r: r.get("updated", ""), reverse=True)
