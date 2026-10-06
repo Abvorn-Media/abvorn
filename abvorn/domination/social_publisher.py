@@ -3,7 +3,7 @@ or export-ready file generation when Composio is unavailable."""
 
 import logging, json, re
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger("abvorn.domination.social_publisher")
 
@@ -103,6 +103,27 @@ def _linkedin_url_share_args(params: dict) -> dict | None:
     }
 
 
+def _parse_ig_timestamp(ts: str) -> datetime | None:
+    """Instagram's media timestamp (``2026-09-26T11:52:01+0000``) as aware UTC.
+
+    ``fromisoformat`` handles the colon-less offset on 3.11+ only, so the
+    explicit strptime keeps this working on older interpreters too.
+    """
+    if not ts:
+        return None
+    parsed = None
+    try:
+        parsed = datetime.fromisoformat(ts)
+    except ValueError:
+        try:
+            parsed = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S%z")
+        except ValueError:
+            return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed.astimezone(timezone.utc)
+
+
 class SocialPublisher:
     """Publishes generated scripts to social platforms via Composio.
 
@@ -120,6 +141,40 @@ class SocialPublisher:
         self._client = ComposioClient(api_key=composio_key)
         if self._client.available:
             self.composio = self._client.client
+
+    def collect_instagram_insights(self, days: int = 30) -> list[dict]:
+        """Read-only sweep of recent media plus their lifetime metrics.
+
+        Returns ``[{"media_id", "when", "metrics"}, ...]`` for media posted
+        within ``days``; older media are skipped so the one-call-per-post
+        cost stays bounded as the account grows. Never raises and never
+        publishes — this is telemetry, and a Composio hiccup yields an empty
+        list rather than a failed learning cycle.
+        """
+        if not self._client.available:
+            return []
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        try:
+            media_list = self._client.instagram_media_list()
+        except Exception as e:
+            logger.warning(f"instagram media sweep failed: {e}")
+            return []
+        items = []
+        for media in media_list:
+            if not isinstance(media, dict):
+                continue
+            media_id = media.get("id")
+            if not media_id:
+                continue
+            when = _parse_ig_timestamp(str(media.get("timestamp") or ""))
+            if when is None or when < cutoff:
+                continue
+            items.append({
+                "media_id": str(media_id),
+                "when": when,
+                "metrics": self._client.instagram_post_insights(str(media_id)),
+            })
+        return items
 
     def _will_post_live(self, platform: str, mapping: dict) -> bool:
         """True when this call will actually post to a live platform rather

@@ -31,6 +31,17 @@ INSTAGRAM_TOOLKIT = "instagram"
 INSTAGRAM_GET_USER_INFO_TOOL = "INSTAGRAM_GET_USER_INFO"
 INSTAGRAM_CAROUSEL_CONTAINER_TOOL = "INSTAGRAM_CREATE_CAROUSEL_CONTAINER"
 INSTAGRAM_CREATE_POST_TOOL = "INSTAGRAM_CREATE_POST"
+INSTAGRAM_MEDIA_LIST_TOOL = "INSTAGRAM_GET_IG_USER_MEDIA"
+INSTAGRAM_POST_INSIGHTS_TOOL = "INSTAGRAM_GET_POST_INSIGHTS"
+
+# Lifetime media metrics Instagram answers for a Creator account. 'impressions'
+# is deliberately absent: it was retired in favour of 'views' and the API drops
+# it from the request rather than failing it.
+INSIGHT_METRICS = "reach,likes,comments,shares,saved"
+
+# Interaction metrics that count as engagement. Reach is deliberately excluded:
+# it measures distribution, not interaction, and would dominate the bucket.
+INSIGHT_ENGAGEMENT_KEYS = ("likes", "comments", "shares", "saved")
 
 PINTEREST_TOOLKIT = "pinterest"
 PINTEREST_CREATE_PIN_TOOL = "PINTEREST_CREATE_PIN"
@@ -41,6 +52,49 @@ PINTEREST_DEFAULT_BOARD = "Abvorn Finds"
 
 class ComposioConnectionError(RuntimeError):
     """Raised when a toolkit has no usable connected account / version."""
+
+
+def parse_insight_metrics(payload) -> dict:
+    """Flatten an Instagram insights payload into ``{metric: int}``.
+
+    The API answers in three shapes and none of them is the list itself:
+      - ``{"data": [ {...}, ... ]}`` (Composio's envelope),
+      - ``{"data": {"data": [ {...}, ... ]}}`` (envelope plus the Graph
+        API's own ``data`` key),
+      - ``{"message": ..., "status_code": 400}`` when an argument was
+        rejected — an error, which must not be mistaken for metrics.
+
+    Metrics Instagram has no data for are simply absent from the list, so a
+    missing key means "unknown" rather than measured-zero; callers that need a
+    number decide for themselves how to treat the unknown.
+    """
+    for _ in range(3):
+        if not isinstance(payload, dict):
+            break
+        if "data" not in payload:
+            return {}
+        payload = payload["data"]
+    if not isinstance(payload, list):
+        return {}
+    metrics: dict = {}
+    for item in payload:
+        if not isinstance(item, dict):
+            continue
+        name = item.get("name")
+        if not name:
+            continue
+        values = item.get("values") or []
+        if not values or not isinstance(values[0], dict):
+            continue
+        first = values[0]
+        raw = first.get("value")
+        if raw is None:
+            continue
+        try:
+            metrics[name] = int(raw)
+        except (TypeError, ValueError):
+            continue
+    return metrics
 
 
 class ComposioClient:
@@ -208,6 +262,49 @@ class ComposioClient:
             raise ComposioConnectionError(
                 f"instagram user id lookup failed: {e}"
             ) from e
+
+    def instagram_media_list(self, limit: int = 50) -> list[dict]:
+        """Recent media for the connected account, newest first.
+
+        Read-only. Returns ``[]`` on any failure so an insights sweep can
+        never take down the learning loop that calls it; callers get media
+        ids and timestamps, nothing else.
+        """
+        try:
+            data = self.execute(
+                INSTAGRAM_TOOLKIT,
+                INSTAGRAM_MEDIA_LIST_TOOL,
+                {"ig_user_id": self.instagram_user_id()},
+            )
+        except Exception as e:
+            logger.warning(f"instagram media list failed: {e}")
+            return []
+        items = data.get("data") if isinstance(data, dict) else data
+        if not isinstance(items, list):
+            return []
+        return [
+            m for m in items
+            if isinstance(m, dict) and m.get("id")
+        ][:limit]
+
+    def instagram_post_insights(self, media_id: str) -> dict:
+        """Lifetime metrics for one media, flattened to ``{metric: int}``.
+
+        Read-only. Returns ``{}`` on failure so a single unreachable post
+        skips itself instead of failing the sweep.
+        """
+        if not media_id:
+            return {}
+        try:
+            data = self.execute(
+                INSTAGRAM_TOOLKIT,
+                INSTAGRAM_POST_INSIGHTS_TOOL,
+                {"ig_post_id": str(media_id), "metric": INSIGHT_METRICS},
+            )
+        except Exception as e:
+            logger.warning(f"instagram insights for {media_id} failed: {e}")
+            return {}
+        return parse_insight_metrics(data)
 
     def instagram_publish_carousel(self, caption: str,
                                    image_paths: list[str]) -> dict:

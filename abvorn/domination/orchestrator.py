@@ -55,6 +55,17 @@ class DominationOrchestrator:
 
         self._cycle_count = 0
 
+    def learn_instagram_insights(self, days: int = 30) -> dict:
+        """Read Instagram Insights and fold measured engagement into learning.
+
+        Read-only against Instagram: it publishes nothing and mutates only the
+        local learning database. Safe to call on a timer — media already
+        recorded are skipped, and a Composio failure yields empty counts
+        instead of raising.
+        """
+        items = self.publisher.collect_instagram_insights(days=days)
+        return self.learner.ingest_instagram_insights(items)
+
     def _share_url(self, target: dict) -> str:
         """Canonical /reviews/<niche>/ URL for a target, falling back to its raw link.
 

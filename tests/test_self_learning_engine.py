@@ -367,3 +367,114 @@ def test_alignment_delay_this_weekday_only(learn_db):
         sle.record_posting_time_at("laptops", "x", 10.0, friday)
     thursday_now = datetime(2026, 9, 10, 10, 0)
     assert sle.next_alignment_delay(now=thursday_now, max_lookahead_hours=6) == 0
+
+
+def _ig_post(sle, niche="smart-home"):
+    """A content_performance instagram row published right now."""
+    sle.record_post_performance(
+        url="https://abvorn.com/reviews/smart-home/hub/",
+        niche=niche,
+        platform="instagram",
+        source_url="https://abvorn.com/reviews/smart-home/best-things.html",
+    )
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def test_ingest_records_measured_engagement(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    when = _ig_post(sle)
+    stats = sle.ingest_instagram_insights([{
+        "media_id": "111",
+        "when": when,
+        "metrics": {"reach": 40, "likes": 5, "comments": 1},
+    }])
+    assert stats["recorded"] == 1
+    with sqlite3.connect(learn_db) as conn:
+        rows = conn.execute(
+            "SELECT niche, platform, day_of_week, hour, avg_engagement, sample_size "
+            "FROM posting_insights").fetchall()
+    assert len(rows) == 1
+    assert rows[0][0] == "smart-home"
+    assert rows[0][1] == "instagram"
+    assert rows[0][2] == when.strftime("%A")
+    assert rows[0][3] == when.hour
+    assert rows[0][4] == 6.0
+    assert rows[0][5] == 1
+
+
+def test_ingest_skips_zero_engagement(learn_db):
+    """A measured zero must not move the bucket (see ingest docstring)."""
+    sle = SelfLearningEngine(db_path=learn_db)
+    when = _ig_post(sle)
+    stats = sle.ingest_instagram_insights([{
+        "media_id": "111",
+        "when": when,
+        "metrics": {"reach": 12, "likes": 0, "comments": 0, "shares": 0, "saved": 0},
+    }])
+    assert stats["no_signal"] == 1
+    assert stats["recorded"] == 0
+    with sqlite3.connect(learn_db) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM posting_insights").fetchone()[0] == 0
+        seen = conn.execute(
+            "SELECT recorded, reach FROM instagram_media_insights "
+            "WHERE media_id='111'").fetchone()
+    assert seen == (0, 12)
+
+
+def test_ingest_retries_zero_until_first_like(learn_db):
+    """Unrecorded zero media must be re-checked, so the first like counts."""
+    sle = SelfLearningEngine(db_path=learn_db)
+    when = _ig_post(sle)
+    first = {"media_id": "111", "when": when, "metrics": {"likes": 0}}
+    assert sle.ingest_instagram_insights([first])["no_signal"] == 1
+
+    second = {"media_id": "111", "when": when, "metrics": {"likes": 4}}
+    assert sle.ingest_instagram_insights([second])["recorded"] == 1
+
+    with sqlite3.connect(learn_db) as conn:
+        assert conn.execute("SELECT sample_size FROM posting_insights").fetchone()[0] == 1
+        assert conn.execute(
+            "SELECT recorded FROM instagram_media_insights "
+            "WHERE media_id='111'").fetchone()[0] == 1
+
+
+def test_ingest_never_double_counts(learn_db):
+    """Re-running a sweep must not inflate sample_size."""
+    sle = SelfLearningEngine(db_path=learn_db)
+    when = _ig_post(sle)
+    item = {"media_id": "111", "when": when, "metrics": {"likes": 4}}
+    assert sle.ingest_instagram_insights([item])["recorded"] == 1
+
+    again = sle.ingest_instagram_insights([item])
+    assert again["already"] == 1
+    assert again["recorded"] == 0
+    with sqlite3.connect(learn_db) as conn:
+        assert conn.execute("SELECT sample_size FROM posting_insights").fetchone()[0] == 1
+
+
+def test_ingest_unattributed_without_content_row(learn_db):
+    """No matching post means no niche: skip, never guess one."""
+    sle = SelfLearningEngine(db_path=learn_db)
+    from datetime import datetime, timezone
+    when = datetime.now(timezone.utc).replace(tzinfo=None)
+    stats = sle.ingest_instagram_insights([{
+        "media_id": "111", "when": when, "metrics": {"likes": 9},
+    }])
+    assert stats["unattributed"] == 1
+    assert stats["recorded"] == 0
+    with sqlite3.connect(learn_db) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM posting_insights").fetchone()[0] == 0
+        assert conn.execute(
+            "SELECT COUNT(*) FROM instagram_media_insights").fetchone()[0] == 0
+
+
+def test_ingest_rejects_post_outside_tolerance(learn_db):
+    sle = SelfLearningEngine(db_path=learn_db)
+    _ig_post(sle)
+    from datetime import datetime, timedelta, timezone
+    too_old = datetime.now(timezone.utc) - timedelta(hours=2)
+    stats = sle.ingest_instagram_insights([{
+        "media_id": "111", "when": too_old, "metrics": {"likes": 9},
+    }])
+    assert stats["unattributed"] == 1

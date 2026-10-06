@@ -3,7 +3,7 @@ and engagement metrics per platform to optimize future content."""
 
 import logging, re, sqlite3
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger("abvorn.domination.self_learning")
 
@@ -92,6 +92,17 @@ class SelfLearningEngine:
                     niche TEXT NOT NULL,
                     platform TEXT NOT NULL,
                     posted_at TEXT DEFAULT (datetime('now'))
+                )
+            """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS instagram_media_insights (
+                    media_id TEXT PRIMARY KEY,
+                    niche TEXT NOT NULL,
+                    posted_at TEXT,
+                    reach INTEGER DEFAULT 0,
+                    engagement INTEGER DEFAULT 0,
+                    recorded INTEGER DEFAULT 0,
+                    fetched_at TEXT DEFAULT (datetime('now'))
                 )
             """)
             conn.execute("""
@@ -354,6 +365,141 @@ class SelfLearningEngine:
                                           when, engagement)
                 consumed += 1
         return consumed
+
+    @staticmethod
+    def _as_utc_naive(value) -> datetime | None:
+        """A datetime as naive UTC — the shape sqlite's ``datetime('now')``
+        stores, so media timestamps and ``posted_at`` compare directly."""
+        if isinstance(value, datetime):
+            dt = value
+        elif isinstance(value, str) and value.strip():
+            try:
+                dt = datetime.fromisoformat(value.strip().replace(" ", "T"))
+            except ValueError:
+                return None
+        else:
+            return None
+        if dt.tzinfo is None:
+            return dt
+        return dt.astimezone(timezone.utc).replace(tzinfo=None)
+
+    @staticmethod
+    def _instagram_niche_at(conn, when: datetime, tolerance: int) -> str:
+        """Niche of the instagram content row published nearest ``when``.
+
+        Media carry no niche of their own; the orchestrator writes one row per
+        distinct article at publish time, so the closest row inside the
+        tolerance window is the post this media came from. Nothing inside the
+        window means the media belongs to no known post — return empty rather
+        than guess, because a wrong niche files the measurement under the
+        wrong hour bucket for good.
+        """
+        window_from = (when - timedelta(seconds=tolerance)).strftime(
+            "%Y-%m-%d %H:%M:%S")
+        window_to = (when + timedelta(seconds=tolerance)).strftime(
+            "%Y-%m-%d %H:%M:%S")
+        epoch = int((when - datetime(1970, 1, 1)).total_seconds())
+        row = conn.execute("""
+            SELECT niche FROM content_performance
+            WHERE platform = 'instagram'
+              AND posted_at >= ? AND posted_at <= ?
+            ORDER BY ABS(strftime('%s', posted_at) - ?) ASC
+            LIMIT 1
+        """, (window_from, window_to, epoch)).fetchone()
+        return row[0] if row else ""
+
+    def ingest_instagram_insights(self, items: list[dict],
+                                  match_tolerance_seconds: int = 300) -> dict:
+        """Fold measured Instagram engagement into ``posting_insights``.
+
+        Each item is ``{"media_id", "when", "metrics"}`` as built by
+        ``SocialPublisher.collect_instagram_insights``. Attribution runs
+        first: the media's publish moment is matched to the nearest
+        ``content_performance`` instagram row to recover its niche.
+
+        Media whose measured interaction is zero is stored but **not** fed to
+        ``posting_insights``. The existing instagram buckets are fed by GA4
+        page engagement, whose scale is orders of magnitude above a post's
+        likes, so a zero would drag an established average toward nothing —
+        and once every hour looked alike, ``next_alignment_delay`` would
+        choose a "best" hour out of a tie. Zero means nothing was observed,
+        so there is nothing to learn yet; the media stays unrecorded and is
+        re-checked on the next sweep, so the first real like still counts.
+
+        A media recorded once is never recorded again, so repeated sweeps
+        cannot inflate ``sample_size``.
+
+        Returns counts: ``recorded`` (fed to posting_insights), ``no_signal``,
+        ``unattributed``, ``already``, ``total``.
+        """
+        from ..deploy.composio_client import INSIGHT_ENGAGEMENT_KEYS
+
+        stats = {"recorded": 0, "no_signal": 0, "unattributed": 0,
+                 "already": 0, "total": len(items or [])}
+        if not items:
+            return stats
+
+        with sqlite3.connect(str(self.db_path)) as conn:
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                media_id = str(item.get("media_id") or "").strip()
+                if not media_id:
+                    stats["unattributed"] += 1
+                    continue
+
+                seen = conn.execute(
+                    "SELECT recorded FROM instagram_media_insights "
+                    "WHERE media_id = ?", (media_id,)
+                ).fetchone()
+                if seen and seen[0]:
+                    stats["already"] += 1
+                    continue
+
+                when = self._as_utc_naive(
+                    item.get("when") or item.get("timestamp"))
+                if when is None:
+                    stats["unattributed"] += 1
+                    continue
+
+                metrics = item.get("metrics") or {}
+                if not isinstance(metrics, dict):
+                    metrics = {}
+                engagement = 0
+                for key in INSIGHT_ENGAGEMENT_KEYS:
+                    try:
+                        engagement += int(metrics.get(key) or 0)
+                    except (TypeError, ValueError):
+                        continue
+                try:
+                    reach = int(metrics.get("reach") or 0)
+                except (TypeError, ValueError):
+                    reach = 0
+
+                niche = self._instagram_niche_at(
+                    conn, when, match_tolerance_seconds)
+                if not niche:
+                    stats["unattributed"] += 1
+                    continue
+
+                if engagement > 0:
+                    self._record_posting_time(conn, niche, "instagram",
+                                              when, float(engagement))
+                    recorded = 1
+                    stats["recorded"] += 1
+                else:
+                    recorded = 0
+                    stats["no_signal"] += 1
+
+                conn.execute("""
+                    INSERT OR REPLACE INTO instagram_media_insights
+                        (media_id, niche, posted_at, reach, engagement, recorded)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (media_id, niche,
+                      when.strftime("%Y-%m-%d %H:%M:%S"),
+                      reach, engagement, recorded))
+            conn.commit()
+        return stats
 
     def _latest_hook_id(self, conn, perf_row) -> int | None:
         """The most recent hook_tests row that matches a content_performance row."""

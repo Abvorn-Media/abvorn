@@ -729,6 +729,22 @@ class AbvornDaemon:
                 logger.info("Analytics feedback applied: %s", summary)
             except Exception as e:
                 logger.warning("Analytics feedback error (non-fatal): %s", e)
+
+            # Platform-native Instagram engagement, deliberately in its own
+            # try/except: a GA4 outage must not also cost us the reading that
+            # tells us which hours Instagram actually performs in.
+            try:
+                domination = getattr(self, "domination", None)
+                if domination is not None:
+                    stats = await asyncio.to_thread(
+                        domination.learn_instagram_insights
+                    )
+                    if stats.get("total"):
+                        logger.info("Instagram insights: %s", stats)
+            except Exception as e:
+                logger.warning(
+                    "Instagram insights feedback failed (non-fatal): %s", e)
+
             await asyncio.sleep(43200)
 
     async def _optimization_loop(self):

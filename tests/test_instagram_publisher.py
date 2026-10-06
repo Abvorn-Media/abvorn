@@ -1,6 +1,9 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
 from PIL import Image
-from abvorn.domination.social_publisher import SocialPublisher
+from abvorn.deploy.composio_client import parse_insight_metrics
+from abvorn.domination.social_publisher import SocialPublisher, _parse_ig_timestamp
 from abvorn.domination.cinematic_filter import CinematicFilter
 
 
@@ -93,3 +96,111 @@ def test_resize_instagram_never_returns_original_path(publisher, tmp_path):
     resized = publisher._resize_for_instagram([str(real)])
     assert resized
     assert all(str(p) != str(real) for p in resized)
+
+
+def test_parse_insight_metrics_unwraps_composio_envelope():
+    payload = {"data": [{"name": "likes", "values": [{"value": 3}]},
+                        {"name": "reach", "values": [{"value": 40}]}]}
+    assert parse_insight_metrics(payload) == {"likes": 3, "reach": 40}
+
+
+def test_parse_insight_metrics_unwraps_double_nesting():
+    """The Graph API wraps in data too, so the envelope nests twice."""
+    payload = {"data": {"data": [{"name": "shares", "values": [{"value": 2}]}]}}
+    assert parse_insight_metrics(payload) == {"shares": 2}
+
+
+def test_parse_insight_metrics_rejects_error_payload():
+    """A 400 must never be mistaken for a set of zero metrics."""
+    assert parse_insight_metrics(
+        {"message": "metric is required", "status_code": 400}) == {}
+    assert parse_insight_metrics(None) == {}
+    assert parse_insight_metrics([]) == {}
+    assert parse_insight_metrics({"data": {"message": "bad", "status_code": 400}}) == {}
+
+
+def test_parse_insight_metrics_omits_absent_metric():
+    """Instagram drops metrics it has no data for; absent stays absent."""
+    payload = {"data": [{"name": "likes", "values": [{"value": 0}]}]}
+    parsed = parse_insight_metrics(payload)
+    assert parsed == {"likes": 0}
+    assert "reach" not in parsed
+
+
+def test_parse_insight_metrics_ignores_malformed_values():
+    payload = {"data": [{"values": [{"value": 1}]},
+                        {"name": "likes", "values": []},
+                        {"name": "comments", "values": [{"value": "many"}]},
+                        {"name": "saved", "values": [{"value": None}]},
+                        {"name": "shares", "values": [{"value": 7}]}]}
+    assert parse_insight_metrics(payload) == {"shares": 7}
+
+
+def test_parse_ig_timestamp_handles_colonless_offset():
+    when = _parse_ig_timestamp("2026-09-26T11:52:01+0000")
+    assert when is not None
+    assert when.utcoffset() == timedelta(0)
+    assert (when.hour, when.minute, when.second) == (11, 52, 1)
+
+
+def test_parse_ig_timestamp_rejects_unknown_or_absent_zone():
+    assert _parse_ig_timestamp("") is None
+    assert _parse_ig_timestamp("not-a-date") is None
+    assert _parse_ig_timestamp("2026-09-26T11:52:01") is None
+
+
+class _StubInsightClient:
+    available = True
+
+    def __init__(self, media, insights=None):
+        self._media = media
+        self._insights = insights or {}
+
+    def instagram_media_list(self, limit=50):
+        return list(self._media)
+
+    def instagram_post_insights(self, media_id):
+        return self._insights.get(media_id, {})
+
+
+class _StubOfflineClient:
+    available = False
+
+    def instagram_media_list(self, limit=50):  # pragma: no cover - guard
+        raise AssertionError("media list must not be called when unavailable")
+
+
+def test_collect_insights_returns_recent_media_with_metrics(publisher, monkeypatch):
+    now = datetime.now(timezone.utc)
+    media = [
+        {"id": "fresh",
+         "timestamp": now.strftime("%Y-%m-%dT%H:%M:%S+0000")},
+        {"id": "stale",
+         "timestamp": (now - timedelta(days=90)).strftime("%Y-%m-%dT%H:%M:%S+0000")},
+        {"id": "broken", "timestamp": "not-a-date"},
+        {"timestamp": now.strftime("%Y-%m-%dT%H:%M:%S+0000")},
+    ]
+    monkeypatch.setattr(publisher, "_client",
+                        _StubInsightClient(media, {"fresh": {"likes": 2}}))
+
+    items = publisher.collect_instagram_insights(days=30)
+
+    assert [i["media_id"] for i in items] == ["fresh"]
+    assert items[0]["metrics"] == {"likes": 2}
+    assert isinstance(items[0]["when"], datetime)
+
+
+def test_collect_insights_is_empty_without_a_live_client(publisher, monkeypatch):
+    monkeypatch.setattr(publisher, "_client", _StubOfflineClient())
+    assert publisher.collect_instagram_insights() == []
+
+
+def test_collect_insights_never_raises(publisher, monkeypatch):
+    class _Boom:
+        available = True
+
+        def instagram_media_list(self, limit=50):
+            raise RuntimeError("composio down")
+
+    monkeypatch.setattr(publisher, "_client", _Boom())
+    assert publisher.collect_instagram_insights() == []
