@@ -181,15 +181,15 @@ class SocialPublisher:
         if mapping.get("export_only") or not self._client.available:
             return self._export(script, platform, niche, media_paths=media_paths)
 
-        if mapping.get("flow") == "carousel":
-            return self._publish_instagram_carousel(script, platform, niche, media_paths)
-
-        if mapping.get("flow") == "pin":
-            return self._publish_pinterest_pin(script, platform, niche, media_paths)
-
         # Daily budget: same gate as deploy/social.py so the 4h domination and
         # 12h full-cycle loops cannot stack extra posts on top of whatever the
         # Ambassador already spent today. Placed after every non-live exit.
+        #
+        # This gate must sit ABOVE the flow dispatch. The carousel/pin branches
+        # used to return first, so Instagram posted with no daily limit and no
+        # window enforcement at all — the whole social_budget schedule was dead
+        # code for that platform. Consuming here means a flow that later fails
+        # has a real slot to refund.
         from ..core.social_budget import check_and_consume, refund
 
         budget_ok, budget_reason = check_and_consume(platform)
@@ -202,6 +202,12 @@ class SocialPublisher:
             }
             self._results.append(result)
             return result
+
+        if mapping.get("flow") == "carousel":
+            return self._publish_instagram_carousel(script, platform, niche, media_paths)
+
+        if mapping.get("flow") == "pin":
+            return self._publish_pinterest_pin(script, platform, niche, media_paths)
 
         params = mapping["params_fn"](script)
         if platform == "linkedin":
@@ -257,11 +263,39 @@ class SocialPublisher:
     def publish_all(self, scripts: dict, niche: str = "",
                     media_paths: list[str] | None = None,
                     media_by_platform: dict | None = None) -> list[dict]:
+        """Publish every platform, isolating per-platform failures.
+
+        publish() raises on a blocked copy gate, and one blocked channel used to
+        unwind the entire cycle — on 2026-10-05 an Instagram grammar false
+        positive took LinkedIn and Telegram down with it, because the caller
+        wraps publish_all in a single try. Each platform now fails on its own row
+        so a bad caption on one network cannot silence the others.
+        """
+        from ..core.copyguard import CopyGateError
+
         results = []
         for platform, script in scripts.items():
             platform_media = (media_by_platform or {}).get(platform, media_paths)
-            r = self.publish(script, platform, niche, media_paths=platform_media)
-            results.append(r)
+            try:
+                results.append(
+                    self.publish(script, platform, niche, media_paths=platform_media)
+                )
+            except CopyGateError as e:
+                logger.warning(f"{platform}: {e}")
+                results.append({
+                    "status": "blocked",
+                    "platform": platform,
+                    "reason": "CopyGateError",
+                    "detail": str(e),
+                })
+            except Exception as e:
+                logger.warning(f"{platform} publish failed (isolated): {e}")
+                results.append({
+                    "status": "failed",
+                    "platform": platform,
+                    "reason": type(e).__name__,
+                    "detail": str(e),
+                })
         return results
 
     def _honest_instagram_caption(self, script: dict | list | str, niche: str) -> str:
@@ -366,6 +400,10 @@ class SocialPublisher:
         media_paths = media_paths or []
         existing = [p for p in media_paths if Path(p).is_file()]
         if not existing:
+            # Budget gate runs before this dispatch; a pin with no image can never
+            # go out, so hand the slot back rather than spending it on a draft.
+            from ..core.social_budget import refund as _refund
+            _refund(platform)
             return self._export(script, platform, niche, media_paths=media_paths)
 
         script_dict = script if isinstance(script, dict) else {}
@@ -391,7 +429,9 @@ class SocialPublisher:
                 alt_text=fit_text(alt_text, 500),
             )
         except Exception as e:
+            from ..core.social_budget import refund as _refund
             logger.warning(f"pinterest: Composio pin failed — exporting instead: {e}")
+            _refund(platform)
             return self._export(script, platform, niche, media_paths=media_paths)
 
         result = {
@@ -424,9 +464,25 @@ class SocialPublisher:
     def _publish_instagram_carousel(self, script: dict | list | str, platform: str,
                                     niche: str, media_paths: list[str] | None) -> dict:
         media_paths = media_paths or []
+        from ..core.social_budget import refund
+
         if len(media_paths) < 2:
-            logger.warning("instagram: carousel needs >=2 images — exporting instead")
-            return self._export(script, platform, niche, media_paths=media_paths)
+            # check_and_consume already spent the slot upstream, and a one-image
+            # carousel can never go out. Hand the window back instead of burning
+            # one of only three daily windows on an unpostable draft.
+            logger.error(
+                "instagram: carousel needs >=2 images, got %d - NOT posted, "
+                "daily slot refunded", len(media_paths),
+            )
+            refund(platform)
+            result = self._export(script, platform, niche, media_paths=media_paths)
+            result.update({
+                "fallback": True,
+                "posted": False,
+                "error": f"carousel needs >=2 images, got {len(media_paths)}",
+            })
+            self._results.append(result)
+            return result
 
         caption = self._honest_instagram_caption(script, niche)
         images = self._resize_for_instagram(media_paths)
@@ -442,8 +498,22 @@ class SocialPublisher:
             logger.info(f"instagram: carousel posted ({result_data})")
             return result
         except Exception as e:
-            logger.warning(f"instagram: Composio failed — exporting instead: {e}")
-            return self._export(script, platform, niche, media_paths=media_paths)
+            # Nothing reached Instagram. Refund the daily slot (the generic
+            # publish path already did; this path used to swallow the error and
+            # burn the window silently) and mark the export so an outage is not
+            # mistaken for a deliberate gate-off draft.
+            logger.error(
+                f"instagram: Composio failed - NOT posted, daily slot refunded: {e}"
+            )
+            refund(platform)
+            result = self._export(script, platform, niche, media_paths=media_paths)
+            result.update({
+                "fallback": True,
+                "posted": False,
+                "error": f"{type(e).__name__}: {e}",
+            })
+            self._results.append(result)
+            return result
 
     def _export(self, script: dict | list | str, platform: str,
                 niche: str, media_paths: list[str] | None = None) -> dict:

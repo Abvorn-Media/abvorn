@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
 from abvorn.domination.social_publisher import (
     _extract_text,
@@ -267,6 +268,174 @@ def test_publish_all_routes_per_platform_media(publisher, monkeypatch, tmp_path)
     tg_export = json.loads(Path(by_platform["telegram"]["export_path"]).read_text(encoding="utf-8"))
     assert tg_export["media_paths"] == [str(tg)]
     assert by_platform["instagram"]["export_path"] != by_platform["telegram"]["export_path"]
+
+
+def test_publish_all_isolates_a_blocked_platform(publisher, monkeypatch, tmp_path):
+    """One platform's copy failure must not silence the others.
+
+    On 2026-10-05 the copy gate blocked Instagram on
+    NUMBER_NOUN_AGREEMENT. publish() raises CopyGateError, publish_all had no
+    per-platform guard, so the exception unwound the whole cycle:
+
+        ERROR Publish failed: copy gate blocked instagram ('webcams', live=True)
+
+    LinkedIn and Telegram were collateral damage - they had clean copy and never
+    got the chance to post. A per-platform failure has to become one result row.
+    """
+    from abvorn.core.copyguard import CopyGateError
+
+    calls = []
+
+    def fake_publish(self, script, platform, niche="", media_paths=None):
+        calls.append(platform)
+        if platform == "instagram":
+            raise CopyGateError("copy gate blocked instagram")
+        return {"status": "posted", "platform": platform}
+
+    monkeypatch.setattr(SocialPublisher, "publish", fake_publish)
+    results = publisher.publish_all(
+        {"instagram": {"text": "x"}, "linkedin": {"text": "y"},
+         "telegram": {"text": "z"}},
+        "webcams",
+    )
+
+    assert calls == ["instagram", "linkedin", "telegram"]
+    by_platform = {r["platform"]: r for r in results}
+    assert by_platform["instagram"]["status"] == "blocked"
+    assert "CopyGateError" in by_platform["instagram"]["reason"]
+    assert by_platform["linkedin"]["status"] == "posted"
+    assert by_platform["telegram"]["status"] == "posted"
+
+
+def test_publish_all_reports_every_platform_even_when_all_fail(publisher, monkeypatch):
+    """A total failure still returns one row per platform, so the cycle can
+    record which channels were blocked instead of losing the whole step."""
+    def fake_publish(self, script, platform, niche="", media_paths=None):
+        raise RuntimeError("composio exploded")
+
+    monkeypatch.setattr(SocialPublisher, "publish", fake_publish)
+    results = publisher.publish_all({"instagram": {"text": "a"}, "x": {"text": "b"}}, "tv")
+    assert {r["platform"] for r in results} == {"instagram", "x"}
+    assert all(r["status"] == "failed" for r in results)
+
+
+def test_instagram_composio_failure_refunds_the_window(publisher, monkeypatch, tmp_path):
+    """A failed carousel must hand back the daily slot and say so.
+
+    ``publish`` now runs the budget gate before the carousel dispatch (it used
+    to sit after, so Instagram had no daily limit or window enforcement at all).
+    The slot is therefore spent when Composio throws, and the carousel path
+    refunds it — otherwise Instagram burns one of only three daily windows on a
+    post that never left, and the cycle reports it as an ordinary "exported"
+    draft indistinguishable from a deliberate gate-off export.
+    """
+    monkeypatch.setenv("ABVORN_SOCIAL_BUDGET_FILE", str(tmp_path / "budget.json"))
+    monkeypatch.setenv("ABVORN_SOCIAL_DAILY_LIMIT", "3")
+    monkeypatch.setenv("ABVORN_SOCIAL_WINDOWS", "instagram=UTC:0000-2359")
+    # The carousel path only runs once the master gate is on.
+    monkeypatch.setenv("ABVORN_SOCIAL_PUBLISH", "1")
+    monkeypatch.setattr(
+        "abvorn.deploy.social._allowed_platforms", lambda: None
+    )
+
+    def boom(*a, **kw):
+        raise RuntimeError("instagram composite api error")
+
+    monkeypatch.setattr(publisher._client, "instagram_publish_carousel", boom)
+
+    images = []
+    for i in range(2):
+        p = tmp_path / f"ig{i}.jpg"
+        Image.new("RGB", (1080, 1350), (i, i, i)).save(p)
+        images.append(str(p))
+
+    from abvorn.core import social_budget
+
+    result = publisher.publish({"text": "caption"}, "instagram", "webcams",
+                               media_paths=images)
+
+    assert result["status"] == "exported"
+    # Loud and distinguishable from a deliberate draft export.
+    assert result.get("fallback") is True
+    assert "instagram composite api error" in str(result.get("error", ""))
+    # The window is released, so the next cycle can still post today: the failed
+    # attempt consumed a slot and the carousel path refunded it, netting zero.
+    assert social_budget.open_windows("instagram") == ["UTC:0000-2359"]
+    assert social_budget.used_today("instagram") == 0
+
+
+def test_instagram_carousel_needs_two_images_and_refunds(
+    publisher, monkeypatch, tmp_path
+):
+    """One image cannot be a carousel. That is a hard publish failure, so the
+    budget gate's slot must be refunded rather than spent on an unpostable
+    draft."""
+    monkeypatch.setenv("ABVORN_SOCIAL_BUDGET_FILE", str(tmp_path / "budget.json"))
+    monkeypatch.setenv("ABVORN_SOCIAL_DAILY_LIMIT", "3")
+    monkeypatch.setenv("ABVORN_SOCIAL_WINDOWS", "instagram=UTC:0000-2359")
+    monkeypatch.setenv("ABVORN_SOCIAL_PUBLISH", "1")
+    monkeypatch.setattr(
+        "abvorn.deploy.social._allowed_platforms", lambda: None
+    )
+
+    one = tmp_path / "single.jpg"
+    Image.new("RGB", (1080, 1350), (7, 7, 7)).save(one)
+
+    from abvorn.core import social_budget
+
+    result = publisher.publish({"text": "caption"}, "instagram", "webcams",
+                               media_paths=[str(one)])
+
+    assert result["status"] == "exported"
+    assert result.get("fallback") is True
+    # Failed attempt refunded the gate's slot.
+    assert social_budget.open_windows("instagram") == ["UTC:0000-2359"]
+    assert social_budget.used_today("instagram") == 0
+
+
+def test_instagram_respects_the_daily_budget(publisher, monkeypatch, tmp_path):
+    """The carousel dispatch used to sit BEFORE ``check_and_consume``, so the
+    daily limit and the window schedule were dead code for Instagram: it could
+    post as many carousels as the loop produced. Once the limit is reached the
+    carousel must be refused, and the Composio client must not be called.
+    """
+    monkeypatch.setenv("ABVORN_SOCIAL_BUDGET_FILE", str(tmp_path / "budget.json"))
+    monkeypatch.setenv("ABVORN_SOCIAL_DAILY_LIMIT", "1")
+    monkeypatch.setenv("ABVORN_SOCIAL_WINDOWS", "instagram=UTC:0000-2359")
+    monkeypatch.setenv("ABVORN_SOCIAL_PUBLISH", "1")
+    monkeypatch.setattr(
+        "abvorn.deploy.social._allowed_platforms", lambda: None
+    )
+
+    calls = []
+
+    def fake_post(caption, images):
+        calls.append(images)
+        return {"id": "post_1"}
+
+    monkeypatch.setattr(
+        publisher._client, "instagram_publish_carousel", fake_post
+    )
+
+    images = []
+    for i in range(2):
+        p = tmp_path / f"ig{i}.jpg"
+        Image.new("RGB", (1080, 1350), (i, i, i)).save(p)
+        images.append(str(p))
+
+    from abvorn.core import social_budget
+
+    first = publisher.publish({"text": "caption"}, "instagram", "webcams",
+                              media_paths=images)
+    assert first["status"] == "posted"
+    assert len(calls) == 1
+    assert social_budget.used_today("instagram") == 1
+
+    second = publisher.publish({"text": "caption again"}, "instagram", "webcams",
+                               media_paths=images)
+    assert second["status"] == "budget_exceeded"
+# The gate stopped it before any API call.
+    assert len(calls) == 1
 
 
 @pytest.fixture

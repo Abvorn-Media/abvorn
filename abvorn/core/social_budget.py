@@ -54,6 +54,20 @@ LINKEDIN_PRESET_WINDOWS = (
     "linkedin=Europe/Paris:0830-1030|Europe/Paris:1700-1830|America/New_York:0900-1030"
 )
 
+# Same shape as the LinkedIn preset, shifted to Instagram's scroll-heavy day:
+# a US evening slot instead of the LinkedIn EU-evening one. This is an initial
+# hypothesis, not measured truth — nothing in the system reads Instagram
+# Insights yet, so there is no data to tune it against. Replace these hours with
+# measured per-hour engagement once `posting_insights` has Instagram rows.
+INSTAGRAM_PRESET_WINDOWS = (
+    "instagram=Europe/Paris:0830-1030|America/New_York:0900-1030"
+    "|America/New_York:1900-2130"
+)
+
+# Both presets in one value, so an operator can opt every channel in with a
+# single env var. Names absent from ABVORN_SOCIAL_WINDOWS stay unconstrained.
+SOCIAL_PRESET_WINDOWS = f"{LINKEDIN_PRESET_WINDOWS},{INSTAGRAM_PRESET_WINDOWS}"
+
 # One lock for the whole process. The check-then-consume in check_and_consume()
 # has to be atomic or two concurrent agent loops can both read the last slot and
 # both post it.
@@ -93,8 +107,16 @@ def daily_limit() -> int | None:
     return limit
 
 
-def _today() -> str:
-    return datetime.now(timezone.utc).date().isoformat()
+def _today(now: datetime | None = None) -> str:
+    """The budget day for *now*.
+
+    Takes the same injectable clock as ``check_and_consume_at``. Readers used to
+    call this with no argument while the writer stamped the date from the injected
+    clock, so a caller replaying another day wrote state that every reader then
+    treated as stale — the count read back as 0, refunds became no-ops, and
+    ``status()`` reported nothing.
+    """
+    return (now or datetime.now(timezone.utc)).astimezone(timezone.utc).date().isoformat()
 
 
 # ----------------------------------------------------------------------
@@ -327,7 +349,7 @@ def can_attempt(platform: str, now: datetime | None = None) -> bool:
     check and the eventual publish are not one atomic operation.
     """
     limit = daily_limit()
-    if limit is not None and used_today(platform) >= limit:
+    if limit is not None and used_today(platform, now=now) >= limit:
         return False
     return windows_open(platform, now=now)
 
@@ -361,10 +383,10 @@ def _save(data: dict) -> None:
         fh.write("\n")
 
 
-def used_today(platform: str) -> int:
+def used_today(platform: str, now: datetime | None = None) -> int:
     with _lock:
         data = _load()
-        if data.get("date") != _today():
+        if data.get("date") != _today(now):
             return 0
     try:
         return int(data.get("counts", {}).get(platform, 0))
@@ -475,7 +497,7 @@ def check_and_consume_at(platform: str,
         return True, f"{platform} {slot} today"
 
 
-def refund(platform: str) -> None:
+def refund(platform: str, now: datetime | None = None) -> None:
     """Give back a slot taken by check_and_consume when the post did not go out.
 
     Also releases the window the slot claimed. Without that, a Composio outage
@@ -484,7 +506,7 @@ def refund(platform: str) -> None:
     """
     with _lock:
         data = _load()
-        if data.get("date") != _today():
+        if data.get("date") != _today(now):
             return
         counts = data.get("counts", {})
         try:
@@ -504,12 +526,12 @@ def refund(platform: str) -> None:
             logger.warning(f"social budget: could not persist refund: {e}")
 
 
-def status() -> dict:
+def status(now: datetime | None = None) -> dict:
     """Today's usage, for logging and /status style reporting."""
     limit = daily_limit()
     with _lock:
         data = _load()
-    today = _today()
+    today = _today(now)
     fresh = data.get("date") == today
     if not fresh:
         return {"date": today, "limit": limit, "used": {}, "windows": {}}
@@ -520,9 +542,25 @@ def status() -> dict:
             used[platform] = int(count)
         except (TypeError, ValueError):
             continue
+    # Report every configured platform, not just the ones with a row, so an
+    # operator can see "instagram: 0" instead of an absent key that reads like
+    # the platform is not configured at all.
+    for platform in _configured_platforms():
+        used.setdefault(platform, 0)
     windows_used = {
         platform: sorted(_consumed_windows(data, platform))
         for platform in used
         if _consumed_windows(data, platform)
     }
     return {"date": today, "limit": limit, "used": used, "windows": windows_used}
+
+
+def _configured_platforms() -> list[str]:
+    """Platforms named in ``ABVORN_SOCIAL_WINDOWS``, in config order."""
+    raw = os.environ.get(_WINDOWS_ENV, "").strip()
+    names = []
+    for entry in raw.split(","):
+        name = entry.partition("=")[0].strip()
+        if name and name not in names:
+            names.append(name)
+    return names

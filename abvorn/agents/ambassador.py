@@ -5,8 +5,8 @@ Monitors the schedule, writes platform-native posts with personality,
 posts via Composio, and keeps the Telegram channel warm and human.
 Built with safety nets — one failure never blocks the rest."""
 
-import asyncio, logging
-from datetime import datetime
+import asyncio, logging, re
+from datetime import datetime, timedelta, timezone
 from .base import AgentBase
 from ..deploy.social import SocialDeployer
 from ..core import bus_progress
@@ -16,6 +16,128 @@ logger = logging.getLogger("abvorn.agents.ambassador")
 
 # Monotonic "highest content.published id already promoted" marker.
 _PROMOTED_WATERMARK = "ambassador_promoted_watermark"
+# A promotion is remembered for this long so the same article/product is not
+# re-announced on every cycle that re-surfaces the same content.
+_PROMOTION_COOLDOWN_HOURS = 12
+_PROMOTION_COOLDOWN_META_KEY = "ambassador_recent_promotions"
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _parse_ts(value) -> datetime | None:
+    """Parse a stored ISO timestamp into an aware UTC datetime, or None.
+
+    Stored timestamps may be naive (older records) or malformed; comparing a
+    naive value against an aware ``now`` raises TypeError. Normalise here.
+    """
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+def _product_key_from_products(products: list) -> str:
+    """Return a stable product identity key from a list of products.
+
+    Prefer ASIN (most specific), fall back to the first product's name/url.
+    Returns "" when nothing identifiable exists.
+    """
+    if not products:
+        return ""
+    for p in products:
+        asin = str((p or {}).get("asin", "") or "").strip().upper()
+        if asin and asin != "N/A":
+            return f"asin:{asin}"
+    p0 = products[0] or {}
+    name = str(p0.get("name", "") or "").strip().lower()
+    url = str(p0.get("url", "") or "").strip().lower()
+    key = re.sub(r"\s+", " ", name) if name else url
+    return f"prod:{key}" if key else ""
+
+
+def _promotion_key(url: str, slug: str, niche: str, products: list) -> str:
+    """Canonical identity for a promotion.
+
+    The article is what a reader actually sees, so an article URL/slug is the
+    primary key; the product set is only a fallback when no article identity is
+    available. Two promotions of the same article therefore collide even if the
+    product list underneath it rotates.
+    """
+    identity = str(url or "").strip() or str(slug or "").strip() or str(niche or "").strip()
+    if identity:
+        return "article:" + identity.lower().rstrip("/")
+    return _product_key_from_products(products)
+
+
+def _cooldown_active(state, key: str, hours: int | None = None) -> bool:
+    """True when ``key`` was promoted within the cooldown window."""
+    if not state or not key:
+        return False
+    hours = hours or _PROMOTION_COOLDOWN_HOURS
+    window = timedelta(hours=hours)
+    now = _utcnow()
+    try:
+        recent = state.get_meta(_PROMOTION_COOLDOWN_META_KEY, []) or []
+    except Exception:
+        return False
+    if not isinstance(recent, list):
+        return False
+
+    active = False
+    keep = []
+    for item in recent:
+        if not isinstance(item, dict):
+            continue
+        dt = _parse_ts(item.get("ts"))
+        if dt is None or now - dt > window:
+            continue  # expired or unparsable -> drop
+        keep.append(item)
+        if str(item.get("key", "")) == key:
+            active = True
+
+    if len(keep) != len(recent):
+        try:
+            state.set_meta(_PROMOTION_COOLDOWN_META_KEY, keep)
+        except Exception:
+            pass
+    return active
+
+
+def _record_promotion(state, key: str) -> None:
+    """Remember that ``key`` was just promoted, replacing any prior entry."""
+    if not state or not key:
+        return
+    window = timedelta(hours=_PROMOTION_COOLDOWN_HOURS)
+    now = _utcnow()
+    try:
+        recent = state.get_meta(_PROMOTION_COOLDOWN_META_KEY, []) or []
+    except Exception:
+        recent = []
+    if not isinstance(recent, list):
+        recent = []
+
+    keep = []
+    for item in recent:
+        if not isinstance(item, dict):
+            continue
+        dt = _parse_ts(item.get("ts"))
+        if dt is None or now - dt > window:
+            continue
+        if str(item.get("key", "")) == key:
+            continue  # replaced by the fresh timestamp below
+        keep.append(item)
+    keep.append({"key": key, "ts": now.isoformat()})
+    try:
+        state.set_meta(_PROMOTION_COOLDOWN_META_KEY, keep)
+    except Exception:
+        pass
 
 
 def compose_media_for_post(niche: str, platform: str, url: str = "",
@@ -377,7 +499,7 @@ class SocialAmbassador(AgentBase):
         return f"Just published our {niche} guide!"
 
     async def _promote_niche(self, niche: str, url: str = "",
-                             title: str = "", slug: str = "") -> dict:
+                              title: str = "", slug: str = "") -> dict:
         logger.info(f"[Ambassador] Promoting new content: {niche}")
         platforms = ["x", "linkedin"]
         try:
@@ -386,6 +508,29 @@ class SocialAmbassador(AgentBase):
         except Exception:
             pass
         headline = self._headline(niche, title, slug)
+
+        # Cooldown: do not re-announce the same article/product every cycle.
+        products = []
+        promo_key = ""
+        try:
+            from ..domination.product_assets import load_products_for_niche, slug_from_url
+            # Match the media path: media is composed from the URL's slug when
+            # available, so the cooldown must key off the same identity.
+            slug_for_media = slug_from_url(url) or slug or niche
+            products = load_products_for_niche(slug_for_media) or []
+            promo_key = _promotion_key(url, slug, niche, products)
+        except Exception as e:
+            logger.warning(f"[Ambassador] cooldown identity lookup failed: {e}")
+            promo_key = _promotion_key(url, slug, niche, [])
+
+        if promo_key and _cooldown_active(self.state, promo_key):
+            logger.info(
+                f"[Ambassador] skipping promotion: {promo_key!r} promoted within "
+                f"{_PROMOTION_COOLDOWN_HOURS}h"
+            )
+            return {"action": "promote_skipped", "niche": niche,
+                    "reason": "promotion_cooldown"}
+
         logger.info(f"[Ambassador] headline: {headline!r}")
         results = []
         for platform in platforms:
@@ -409,6 +554,10 @@ class SocialAmbassador(AgentBase):
                 result = await self._craft_and_post(item, media_paths=media)
                 result["media_count"] = len(media or [])
                 results.append(result)
+                # Only a genuinely posted promotion arms the cooldown; a failed
+                # or window-closed result must stay retryable.
+                if result.get("status") == "posted":
+                    _record_promotion(self.state, promo_key)
             except Exception as e:
                 logger.warning(f"[Ambassador] {platform} promotion failed: {e}")
                 results.append({"status": "failed", "platform": platform})

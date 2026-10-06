@@ -147,6 +147,52 @@ def test_number_agreement_singular_count_passes():
     assert copyguard._number_agreement_issues("We compared 1 Tv today.") == []
 
 
+def test_number_agreement_survives_curly_apostrophes():
+    """The Instagram outage of 2026-10-05.
+
+    Every hook template in viral_script_generator emits a typographic apostrophe
+    ("so you don't have to"), but _NP_TAIL_WORDS stored the ASCII spelling. The
+    tail-strip loop therefore never matched, the contraction was treated as the
+    count's noun, and the rule hard-blocked the whole publish step:
+
+        copy gate blocked instagram ('webcams', live=True): NUMBER_NOUN_AGREEMENT:
+        The count '4' is followed by the singular noun 'don't'; use a plural
+        form (e.g. 'don'ts').
+
+    A contraction is never a plural noun, whichever apostrophe spells it.
+    """
+    curly = "I compared 4 Webcams so you don\u2019t have to."
+    straight = "I compared 4 Webcams so you don't have to."
+    assert copyguard._number_agreement_issues(curly) == []
+    assert copyguard._number_agreement_issues(straight) == []
+
+
+def test_number_agreement_still_flags_with_curly_apostrophes():
+    """Folding the apostrophe must not blunt the real 'We compared 4 Tv' net."""
+    issues = copyguard._number_agreement_issues(
+        "We compared 4 Tv so you don\u2019t have to guess."
+    )
+    assert any(i["rule"] == "NUMBER_NOUN_AGREEMENT" for i in issues)
+    assert any("Tv" in i["context"] for i in issues)
+
+
+def test_number_agreement_ignores_contractions_as_nouns():
+    """No contraction can be a plural noun, even mid-phrase."""
+    for contraction in ("don\u2019t", "doesn\u2019t", "isn\u2019t", "won\u2019t",
+                        "can\u2019t", "didn\u2019t", "hasn\u2019t", "wouldn\u2019t"):
+        text = f"We compared 4 Webcams so you {contraction} have to guess."
+        assert copyguard._number_agreement_issues(text) == [], contraction
+
+
+def test_gate_copy_block_mode_does_not_block_curly_contraction(monkeypatch):
+    """End-to-end through the gate: the exact live caption must survive."""
+    monkeypatch.setattr(copyguard, "_Availability", type("_Av", (), {
+        "available": staticmethod(lambda: False)}))
+    res = gate_copy("I compared 4 Webcams so you don\u2019t have to.",
+                    "social:instagram", mode="block")
+    assert res.blocking == []
+
+
 def test_number_agreement_is_blocking():
     issues = copyguard._number_agreement_issues("We compared 4 Monitor.")
     assert issues and is_blocking(issues[0]) is True

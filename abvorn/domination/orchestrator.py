@@ -346,13 +346,24 @@ class DominationOrchestrator:
             )
             posted = [r for r in publish_results if r.get("status") == "posted"]
             exported = [r for r in publish_results if r.get("status") == "exported"]
+            blocked = [r for r in publish_results if r.get("status") == "blocked"]
+            failed = [r for r in publish_results if r.get("status") == "failed"]
             steps["publish"] = {
                 "status": "ok",
                 "posted": len(posted),
                 "exported": len(exported),
+                "blocked": len(blocked),
+                "failed": len(failed),
                 "results": publish_results,
             }
-            logger.info(f"[{cycle_id}] Published: {len(posted)} posted, {len(exported)} exported")
+            logger.info(
+                f"[{cycle_id}] Published: {len(posted)} posted, {len(exported)} exported"
+            )
+            for r in blocked:
+                logger.warning(
+                    f"[{cycle_id}] {r.get('platform')} blocked by copy gate, "
+                    f"other platforms unaffected: {r.get('detail', '')[:200]}"
+                )
         except Exception as e:
             logger.error(f"[{cycle_id}] Publish failed: {e}")
             steps["publish"] = {"status": "failed", "error": str(e)}

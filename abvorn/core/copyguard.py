@@ -138,14 +138,24 @@ def _number_agreement_issues(text: str) -> list[dict]:
         if count < 2:
             continue
         tokens = m.group(3).split()
-        while tokens and tokens[-1].lower().strip(".,!?;:") in _NP_TAIL_WORDS:
-            tokens.pop()
+        folded = [_fold(w) for w in tokens]
+        while folded:
+            tail = _strip_edge(folded[-1])
+            # Fold first, then compare, so a curly "don't" matches the ASCII
+            # entry. Treat contractions as non-nouns outright: "don't" is never
+            # the thing being counted, and it must not be pluralized to
+            # "don'ts" (that was the false positive that blocked Instagram).
+            if tail in _NP_TAIL_WORDS or "n't" in tail or tail.startswith("'"):
+                tokens.pop()
+                folded.pop()
+                continue
+            break
         if not tokens:
             continue
-        last = tokens[-1].strip(".,!?;:")
-        if last.endswith(("s", "x", "z", "ch", "sh")):
+        last = _strip_edge(tokens[-1])
+        if _fold(last).endswith(("s", "x", "z", "ch", "sh")):
             continue
-        if last.lower() in _PLURAL_NOUN_WITHOUT_S:
+        if _fold(last) in _PLURAL_NOUN_WITHOUT_S:
             continue
         issues.append({
             "rule": "NUMBER_NOUN_AGREEMENT",
@@ -161,7 +171,30 @@ def _number_agreement_issues(text: str) -> list[dict]:
     return issues
 
 
-# Negation cues for _in_negated_clause. Split in two because the contraction
+# Typographic punctuation the generators emit against the ASCII spelling used
+# in the lookup tables below. Every hook template writes a curly apostrophe
+# ("so you don't have to"), so without folding, the "don't" tail word never
+# matched and the contraction was read as the count's noun, which hard-blocked
+# the whole Instagram publish step on 2026-10-05.
+#
+# The keys are \u escapes on purpose: literal curly quotes in source are exactly
+# what got double-encoded through the Windows ANSI codepage in this repo, and a
+# mojibake key silently stops folding. An escape sequence survives any
+# read/write path and produces the same characters at runtime.
+_PUNCT_FOLD = str.maketrans({
+    "\u2018": "'", "\u2019": "'", "\u201a": "'", "\u201b": "'",
+    "\u201c": '"', "\u201d": '"',
+    "\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-", "\u2014": "-",
+})
+
+
+def _fold(token: str) -> str:
+    """Lowercase a token and flatten typographic punctuation to ASCII."""
+    return str(token or "").translate(_PUNCT_FOLD).lower()
+
+
+def _strip_edge(token: str) -> str:
+    return str(token or "").strip(".,!?;:")
 # forms end in "n't" and so never have a word boundary before the "n".
 _NEGATION_WORD_RE = re.compile(
     r"(?<![A-Za-z])(?:no|not|never|without|neither|nor|cannot|unable)"

@@ -165,13 +165,69 @@ def test_env_replaces_defaults_and_omission_unconstrains(budget_file, monkeypatc
 def test_one_post_per_window_not_one_per_day(budget_file, monkeypatch):
     """Inside the same window the second attempt is refused; a different window
     later in the day is allowed. This is what spreads three posts across the
-    day instead of clumping them in one burst."""
+    day instead of clumping them in one burst.
+
+    Uses injected clocks throughout. The previous version made a single bare
+    ``check_and_consume()`` call and asserted it was refused, which only held
+    while the wall clock happened to sit outside every window — it failed on
+    2026-10-05 at 09:42 New York time, mid-window, and never exercised the
+    one-per-window rule it is named for.
+    """
     monkeypatch.setenv("ABVORN_SOCIAL_WINDOWS", social_budget.LINKEDIN_PRESET_WINDOWS)
     monkeypatch.setenv("ABVORN_SOCIAL_DAILY_LIMIT", "3")
 
-    ok, reason = social_budget.check_and_consume("linkedin")
-    assert ok is False, "must respect the clock, not the default wall time"
-    assert "outside posting windows" in reason or "posting window" in reason
+    morning = _utc(2026, 10, 3, 7, 0)      # 09:00 Paris, EU morning window
+    assert social_budget.check_and_consume_at("linkedin", now=morning)[0] is True
+
+    # Still inside that window: refused, even though the day's allowance is 3.
+    allowed, reason = social_budget.check_and_consume_at(
+        "linkedin", now=_utc(2026, 10, 3, 7, 30)
+    )
+    assert allowed is False
+    assert "posting window" in reason
+
+    # A different window later the same day is allowed: not one post per day.
+    assert social_budget.check_and_consume_at(
+        "linkedin", now=_utc(2026, 10, 3, 13, 30)
+    )[0] is True
+    assert social_budget.used_today("linkedin", now=_utc(2026, 10, 3, 13, 30)) == 2
+
+
+def test_instagram_has_its_own_preset_windows(budget_file, monkeypatch):
+    """Instagram must be schedulable on peak hours like LinkedIn, not left
+    unconstrained. It had no preset at all, so it would have posted at 00:07 UTC
+    (the exact bug the LinkedIn windows were built to fix)."""
+    monkeypatch.setenv("ABVORN_SOCIAL_WINDOWS", social_budget.INSTAGRAM_PRESET_WINDOWS)
+    specs = social_budget.windows("instagram")
+    assert len(specs) == 3
+    for spec in specs:
+        assert social_budget._parse_window(spec) is not None, spec
+    # 12:00 UTC = 14:00 Paris and 08:00 New York: outside all three.
+    assert social_budget.windows_open("instagram", _utc(2026, 10, 3, 12, 0)) is False
+    # US morning window.
+    assert social_budget.windows_open("instagram", _utc(2026, 10, 3, 13, 30)) is True
+    # US evening window.
+    assert social_budget.windows_open("instagram", _utc(2026, 10, 3, 23, 30)) is True
+
+
+def test_combined_preset_covers_both_platforms(budget_file, monkeypatch):
+    monkeypatch.setenv("ABVORN_SOCIAL_WINDOWS", social_budget.SOCIAL_PRESET_WINDOWS)
+    assert len(social_budget.windows("instagram")) == 3
+    assert len(social_budget.windows("linkedin")) == 3
+    # An unmentioned platform stays unconstrained.
+    assert social_budget.windows("telegram") == ()
+
+
+def test_instagram_and_linkin_allowances_are_independent(budget_file, monkeypatch):
+    """A shared daily limit must not let one platform spend another's budget."""
+    monkeypatch.setenv("ABVORN_SOCIAL_WINDOWS", social_budget.SOCIAL_PRESET_WINDOWS)
+    monkeypatch.setenv("ABVORN_SOCIAL_DAILY_LIMIT", "1")
+    moment = _utc(2026, 10, 3, 13, 30)  # inside both US-morning windows
+    assert social_budget.check_and_consume_at("instagram", now=moment)[0] is True
+    assert social_budget.check_and_consume_at("linkedin", now=moment)[0] is True
+    assert social_budget.can_attempt("instagram", moment) is False
+    assert social_budget.can_attempt("linkedin", moment) is False
+    assert social_budget.can_attempt("x", moment) is True
 
 
 def test_three_windows_allow_three_posts(budget_file, monkeypatch):
@@ -188,7 +244,7 @@ def test_three_windows_allow_three_posts(budget_file, monkeypatch):
         allowed, reason = social_budget.check_and_consume_at(platform="linkedin", now=moment)
         assert allowed is True, f"{moment}: {reason}"
 
-    assert social_budget.used_today("linkedin") == 3
+    assert social_budget.used_today("linkedin", now=slots[-1]) == 3
     # A fourth post has no window left, and neither does re-using a spent one.
     allowed, reason = social_budget.check_and_consume_at(
         platform="linkedin", now=_utc(2026, 10, 3, 13, 45)
@@ -217,7 +273,7 @@ def test_refund_releases_the_window(budget_file, monkeypatch):
     assert social_budget.check_and_consume_at("linkedin", now=moment)[0] is True
     assert social_budget.open_windows("linkedin", now=moment) == []
 
-    social_budget.refund("linkedin")
+    social_budget.refund("linkedin", now=moment)
     assert social_budget.open_windows("linkedin", now=moment) == [
         "Europe/Paris:0830-1030"
     ]
@@ -312,7 +368,7 @@ def test_status_reports_spent_windows(budget_file, monkeypatch):
     monkeypatch.setenv("ABVORN_SOCIAL_WINDOWS", social_budget.LINKEDIN_PRESET_WINDOWS)
     monkeypatch.setenv("ABVORN_SOCIAL_DAILY_LIMIT", "3")
     social_budget.check_and_consume_at("linkedin", now=_utc(2026, 10, 3, 7, 0))
-    snap = social_budget.status()
+    snap = social_budget.status(now=_utc(2026, 10, 3, 7, 0))
     assert snap["used"]["linkedin"] == 1
     assert snap["windows"]["linkedin"] == ["Europe/Paris:0830-1030"]
 

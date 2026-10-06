@@ -161,3 +161,164 @@ async def test_act_engage_no_mentions(ambassador):
 def test_get_platform_wisdom(ambassador):
     wisdom = ambassador._get_platform_wisdom("x")
     assert isinstance(wisdom, str)
+
+
+# ---------------------------------------------------------------------------
+# Promotion cooldown: the same article/product must not be re-announced on
+# every cycle that re-surfaces the same content.
+# ---------------------------------------------------------------------------
+
+
+class _MetaState:
+    """Minimal state double backed by a real dict, so set_meta/get_meta round
+    trips like production instead of MagicMock's sticky return_value."""
+
+    def __init__(self, initial=None):
+        self.meta = dict(initial or {})
+
+    def get_meta(self, key, default=None):
+        return self.meta.get(key, default)
+
+    def set_meta(self, key, value):
+        self.meta[key] = value
+
+
+def test_cooldown_key_prefers_the_article_over_the_product():
+    """Two promotions of the same article collide even if the product list
+    underneath rotates — otherwise the rotation defeats the cooldown."""
+    from abvorn.agents.ambassador import _promotion_key
+
+    a = _promotion_key("https://abvorn.com/reviews/tvs/", "tvs", "tv",
+                       [{"asin": "B0AAA", "name": "TV A"}])
+    b = _promotion_key("https://abvorn.com/reviews/tvs/", "tvs", "tv",
+                       [{"asin": "B0BBB", "name": "TV B"}])
+    assert a == b
+    assert a.startswith("article:")
+
+
+def test_cooldown_key_distinguishes_different_articles():
+    from abvorn.agents.ambassador import _promotion_key
+
+    a = _promotion_key("https://abvorn.com/reviews/tvs/", "tvs", "tv", [])
+    b = _promotion_key("https://abvorn.com/reviews/mice/", "mice", "mice", [])
+    assert a != b
+
+
+def test_cooldown_key_normalises_case_and_trailing_slash():
+    from abvorn.agents.ambassador import _promotion_key
+
+    a = _promotion_key("https://abvorn.com/reviews/TVs", "tvs", "tv", [])
+    b = _promotion_key("https://abvorn.com/reviews/tvs/", "tvs", "tv", [])
+    assert a == b
+
+
+def test_cooldown_key_falls_back_to_product_asin():
+    """With no article identity the ASIN is the strongest available signal."""
+    from abvorn.agents.ambassador import _product_key_from_products
+
+    assert _product_key_from_products([{"asin": "b0abc123"}]) == "asin:B0ABC123"
+    # First identifiable ASIN wins regardless of list order noise.
+    assert _product_key_from_products([{"asin": ""}, {"asin": "B0ABC123"}]) == "asin:B0ABC123"
+
+
+def test_cooldown_handles_naive_and_malformed_timestamps():
+    """Stored timestamps may be naive or garbage; neither may raise TypeError
+    when compared against an aware now."""
+    from abvorn.agents.ambassador import _cooldown_active, _utcnow
+
+    recent_naive = _utcnow().replace(tzinfo=None).isoformat()  # naive, just now
+    state = _MetaState({
+        "ambassador_recent_promotions": [
+            {"key": "article:a", "ts": recent_naive},       # naive, recent
+            {"key": "article:b", "ts": "not-a-timestamp"},  # malformed
+        ]
+    })
+    # Naive recent entry -> cooldown active; malformed entry ignored.
+    assert _cooldown_active(state, "article:a") is True
+    assert _cooldown_active(state, "article:b") is False
+    # Garbage timestamp got pruned from storage.
+    stored = state.get_meta("ambassador_recent_promotions", [])
+    assert all(isinstance(i, dict) and i.get("key") != "article:b" for i in stored)
+    # The active, well-formed entry survives the prune.
+    assert any(i.get("key") == "article:a" for i in stored)
+
+
+def test_record_promotion_replaces_same_key_and_expires_old():
+    from abvorn.agents.ambassador import _record_promotion
+
+    state = _MetaState({
+        "ambassador_recent_promotions": [
+            {"key": "article:a", "ts": "2020-01-01T00:00:00+00:00"},  # expired
+        ]
+    })
+    _record_promotion(state, "article:b")
+    keys = [i["key"] for i in state.get_meta("ambassador_recent_promotions", [])]
+    assert keys == ["article:b"]
+
+
+@pytest.mark.asyncio
+async def test_repeat_promotion_is_suppressed_within_cooldown(ambassador, state, social, monkeypatch):
+    """The same article promoted twice in a row must only post once."""
+    from abvorn.agents.ambassador import _promotion_key
+
+    real_state = _MetaState()
+    ambassador.state = real_state
+    social.post.return_value = {"status": "posted", "platform": "x"}
+    # Always allow the publish window so we exercise the cooldown, not the gate.
+    monkeypatch.setattr("abvorn.agents.ambassador.can_attempt", lambda p: True)
+
+    url = "https://abvorn.com/reviews/tvs/"
+    key = _promotion_key(url, "tvs", "tv", [])
+
+    first = await ambassador._promote_niche("tv", url=url, title="Best TVs", slug="tvs")
+    assert first["action"] == "promote"
+    posted_first = sum(
+        1 for r in first["results"] if r.get("status") == "posted"
+    )
+    assert posted_first >= 1
+    # The cooldown is now armed for this article.
+    assert key in [i["key"] for i in real_state.get_meta("ambassador_recent_promotions", [])]
+
+    social.post.reset_mock()
+    second = await ambassador._promote_niche("tv", url=url, title="Best TVs", slug="tvs")
+    assert second["action"] == "promote_skipped"
+    assert second["reason"] == "promotion_cooldown"
+    # Nothing was posted on the suppressed run.
+    social.post.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_failed_promotion_does_not_arm_the_cooldown(ambassador, state, social, monkeypatch):
+    """A failed post must stay retryable; only a genuine 'posted' result arms
+    the cooldown."""
+    real_state = _MetaState()
+    ambassador.state = real_state
+    social.post.return_value = {"status": "failed", "platform": "x", "error": "boom"}
+    monkeypatch.setattr("abvorn.agents.ambassador.can_attempt", lambda p: True)
+
+    url = "https://abvorn.com/reviews/tvs/"
+    first = await ambassador._promote_niche("tv", url=url, title="Best TVs", slug="tvs")
+    assert first["action"] == "promote"
+    # Nothing recorded because nothing posted.
+    assert real_state.get_meta("ambassador_recent_promotions", []) == []
+
+    # A retry is allowed (not cooldown-skipped).
+    second = await ambassador._promote_niche("tv", url=url, title="Best TVs", slug="tvs")
+    assert second["action"] == "promote"
+
+
+@pytest.mark.asyncio
+async def test_different_articles_are_both_promoted(ambassador, state, social, monkeypatch):
+    """The cooldown is per-article, not global: promoting article B after
+    article A must not be suppressed."""
+    real_state = _MetaState()
+    ambassador.state = real_state
+    social.post.return_value = {"status": "posted", "platform": "x"}
+    monkeypatch.setattr("abvorn.agents.ambassador.can_attempt", lambda p: True)
+
+    a = await ambassador._promote_niche("tv", url="https://abvorn.com/reviews/tvs/",
+                                        title="Best TVs", slug="tvs")
+    b = await ambassador._promote_niche("mice", url="https://abvorn.com/reviews/mice/",
+                                        title="Best Mice", slug="mice")
+    assert a["action"] == "promote"
+    assert b["action"] == "promote"
