@@ -159,6 +159,44 @@ class DominationOrchestrator:
             return self._prefer_new_niche(unposted)
         return self._rotate_target(entries)
 
+    def _pad_instagram_stock(self, target: dict,
+                             media_by_platform: dict[str, list[str]]) -> list[str]:
+        """Top up an Instagram deck that composed fewer than two images.
+
+        The publisher refuses a carousel with a single slide, and a product
+        whose catalogue entry carries no image URL composes no card at all — a
+        one-product niche would reach it with only the CTA slide and never
+        post. Stock photos are the fallback the no-products path already uses,
+        so the deck always reaches the publisher with the slides it needs.
+        Returns the images added, in deck order.
+        """
+        current = media_by_platform.get("instagram") or []
+        need = 2 - len(current)
+        if need <= 0:
+            return []
+        niche = target.get("niche", "")
+        added: list[str] = []
+        try:
+            images = self.pexels.asset_for_niche(niche, count=need) or []
+            for image in images:
+                if len(added) >= need:
+                    break
+                src = image.get("src") if isinstance(image, dict) else None
+                if not src:
+                    continue
+                path = self.pexels.download_image(src, niche=niche)
+                if path:
+                    added.append(path)
+        except Exception as e:
+            logger.warning(f"Stock top-up failed (non-fatal): {e}")
+            return []
+        if added:
+            media_by_platform["instagram"] = list(current) + added
+            logger.info(
+                f"Stock top-up: added {len(added)} image(s) to the Instagram deck"
+            )
+        return added
+
     def run_cycle(self, niche: str | None = None,
                   platforms: list[str] | None = None) -> dict:
         """Run one domination cycle: parse → generate → fetch → filter → publish.
@@ -264,6 +302,7 @@ class DominationOrchestrator:
         # when they exist, Pexels stock as the fallback for when no products resolve.
         media_by_platform: dict[str, list[str]] = {}
         media_paths: list[str] = []
+        stock_padded: list[str] = []
         image_platforms = [p for p in scripts if p in {"instagram", "telegram", "linkedin", "x", "pinterest", "facebook"}]
         needs_media = bool(image_platforms)
         try:
@@ -278,10 +317,12 @@ class DominationOrchestrator:
                         platform=p,
                     )
                     media_by_platform[p] = paths
+                stock_padded = self._pad_instagram_stock(target, media_by_platform)
                 media_paths = media_by_platform.get("instagram", [])
                 steps["assets"] = {
                     "status": "ok",
                     "source": "review_product_photos",
+                    "stock_padded": len(stock_padded),
                     "platforms": {p: len(v) for p, v in media_by_platform.items()},
                 }
                 logger.info(f"[{cycle_id}] Product media composed: {media_by_platform.keys()}")
@@ -312,18 +353,25 @@ class DominationOrchestrator:
 
         # 4. Cinematic Filter — brand overlay only on Pexels stock (product cards are final)
         asset_source = steps.get("assets", {}).get("source", "")
+        padded = set(stock_padded)
         if asset_source == "pexels_stock" and media_paths:
+            overlay_indexes = list(range(len(media_paths)))
+        elif padded:
+            overlay_indexes = [i for i, p in enumerate(media_paths) if p in padded]
+        else:
+            overlay_indexes = []
+        if overlay_indexes:
             try:
-                for i, path in enumerate(media_paths):
+                for i in overlay_indexes:
                     branded = self.cinematic.apply_brand_overlay(
-                        path,
+                        media_paths[i],
                         text=target["title"][:80],
                         niche=target["niche"],
                     )
                     if branded:
                         media_paths[i] = branded
-                steps["cinematic"] = {"status": "ok", "assets_processed": len(media_paths)}
-                logger.info(f"[{cycle_id}] Cinematic: {len(media_paths)} processed")
+                steps["cinematic"] = {"status": "ok", "assets_processed": len(overlay_indexes)}
+                logger.info(f"[{cycle_id}] Cinematic: {len(overlay_indexes)} processed")
             except Exception as e:
                 logger.warning(f"[{cycle_id}] Cinematic filter failed (non-fatal): {e}")
                 steps["cinematic"] = {"status": "failed", "error": str(e)}

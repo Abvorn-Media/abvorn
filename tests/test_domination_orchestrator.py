@@ -52,6 +52,25 @@ class _NoopAssets:
         return []
 
 
+class _StockAssets:
+    """Pexels stand-in that always serves a downloadable stock image."""
+
+    def __init__(self, tmp_path):
+        self._dir = Path(tmp_path)
+        self.requests = 0
+
+    def asset_for_niche(self, niche, count=1):
+        self.requests += 1
+        return [{"src": f"https://example.invalid/{niche}-{i}.jpg"}
+                for i in range(count)]
+
+    def download_image(self, url, niche=""):
+        from PIL import Image
+        path = self._dir / f"stock_{abs(hash(url))}.jpg"
+        Image.new("RGB", (1200, 1600), (70, 70, 70)).save(path)
+        return str(path)
+
+
 class _NoopCinematic:
     def apply_brand_overlay(self, *a, **k):
         return None
@@ -461,3 +480,88 @@ def test_cycle_does_not_record_export_as_posted(learn_db):
     assert result["steps"]["learning"]["status"] == "skipped"
     assert orch.learner.posted_urls() == set()
     assert orch.learner.niche_post_times() == {}
+
+
+def test_cycle_pads_instagram_deck_when_product_photos_are_missing(
+        learn_db, tmp_path, monkeypatch):
+    """A product with no image URL composes no card, so a one-product niche
+    reaches the publisher holding only the CTA slide — and the carousel guard
+    refuses a single-slide deck. That is the live wireless-earbuds failure of
+    2026-10-06: the slot was refunded and nothing was posted."""
+    from abvorn.domination import product_assets as pa
+
+    monkeypatch.setattr(pa, "load_products_for_niche", lambda slug: [{
+        "name": "Bose QuietComfort Ultra Earbuds",
+        "price": "$299",
+        "role": "Overall Winner",
+        "index": 0,
+        "image": "",
+    }])
+
+    orch = _make_orchestrator(_entries(), learn_db)
+    orch.pexels = _StockAssets(tmp_path)
+    orch.publisher = _FakePublisher()
+
+    result = orch.run_cycle(platforms=["instagram"])
+
+    media = orch.publisher.last_media_by_platform
+    assert media, "publisher got no per-platform media"
+    assert len(media["instagram"]) >= 2, media["instagram"]
+    assert result["steps"]["assets"]["stock_padded"] >= 1
+    assert result["steps"]["assets"]["source"] == "review_product_photos"
+
+
+def test_cycle_does_not_pad_a_deck_that_already_has_two_slides(
+        learn_db, tmp_path, monkeypatch):
+    """When the product photo resolves, card + CTA already fill the deck, so
+    the stock top-up must not fire at all."""
+    from abvorn.domination import instagram_cards as igc
+    from abvorn.domination import product_assets as pa
+    from PIL import Image
+
+    src = tmp_path / "src.jpg"
+    Image.new("RGB", (1200, 1200), (30, 60, 200)).save(src)
+    monkeypatch.setattr(igc, "_download_image", lambda p: str(src))
+    monkeypatch.setattr(pa, "load_products_for_niche", lambda slug: [{
+        "name": "Dell XPS 13",
+        "price": "$1,099",
+        "role": "Overall Winner",
+        "index": 0,
+        "image": "https://example.invalid/xps.jpg",
+    }])
+
+    orch = _make_orchestrator(_entries(), learn_db)
+    stock = _StockAssets(tmp_path)
+    orch.pexels = stock
+    orch.publisher = _FakePublisher()
+
+    result = orch.run_cycle(platforms=["instagram"])
+
+    assert len(orch.publisher.last_media_by_platform["instagram"]) >= 2
+    assert result["steps"]["assets"]["stock_padded"] == 0
+    assert stock.requests == 0, "stock top-up fired on a full deck"
+
+
+def test_cycle_leaves_deck_short_when_stock_is_unavailable(
+        learn_db, monkeypatch):
+    """With no photo and no stock to fall back on the deck stays short and the
+    publisher refuses it — the slot is refunded rather than posting one slide."""
+    from abvorn.domination import product_assets as pa
+
+    monkeypatch.setattr(pa, "load_products_for_niche", lambda slug: [{
+        "name": "Bose QuietComfort Ultra Earbuds",
+        "price": "$299",
+        "role": "Overall Winner",
+        "index": 0,
+        "image": "",
+    }])
+
+    orch = _make_orchestrator(_entries(), learn_db)
+    orch.pexels = _NoopAssets()
+    orch.publisher = _FakePublisher()
+
+    result = orch.run_cycle(platforms=["instagram"])
+
+    media = orch.publisher.last_media_by_platform
+    assert len(media["instagram"]) < 2, media["instagram"]
+    assert result["steps"]["assets"]["stock_padded"] == 0
