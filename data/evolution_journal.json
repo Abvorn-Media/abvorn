@@ -584,7 +584,106 @@
       "narrative": "Drive action 'generate_content': Top 3 Wireless Earbuds of 2024: Sound, Comfort, and Value Compared",
       "graph_nodes": 2877,
       "graph_edges": 4791
+    },
+    {
+      "timestamp": "2026-10-07T06:00:05.900560",
+      "generation": 2,
+      "drive_score": 0.0,
+      "action": "insight",
+      "narrative": "Search Console insight — Top performing content: https://abvorn-media.github.io/abvorn/; Highest CTR: 0.00% for https://abvorn-media.github.io",
+      "graph_nodes": 2917,
+      "graph_edges": 4870
+    },
+    {
+      "timestamp": "2026-10-07T05:00:13.488367",
+      "generation": 1,
+      "drive_score": 0.0,
+      "action": "reflection",
+      "narrative": "Reflection — Create compelling, keyword‑rich titles and meta descriptions",
+      "graph_nodes": 2917,
+      "graph_edges": 4870
+    },
+    {
+      "timestamp": "2026-10-07T05:00:08.901113",
+      "generation": 2,
+      "drive_score": 0.0,
+      "action": "insight",
+      "narrative": "Search Console insight — Top performing content: https://abvorn-media.github.io/abvorn/; Highest CTR: 0.00% for https://abvorn-media.github.io",
+      "graph_nodes": 2917,
+      "graph_edges": 4870
+    },
+    {
+      "timestamp": "2026-10-07T03:50:06.974246+00:00",
+      "generation": 2,
+      "drive_score": 0.2075,
+      "action": "generate_content",
+      "narrative": "Drive action 'generate_content': Top 3 Gaming Mice for 2024: Performance, Comfort, and Value",
+      "graph_nodes": 2917,
+      "graph_edges": 4870
+    },
+    {
+      "timestamp": "2026-10-06T21:50:08.123629+00:00",
+      "generation": 2,
+      "drive_score": 0.2075,
+      "action": "generate_content",
+      "narrative": "Drive action 'generate_content': Top 3 Wireless Headphones for 2024: Sound, Comfort, and Battery Life Reviewed",
+      "graph_nodes": 2917,
+      "graph_edges": 4870
+    },
+    {
+      "timestamp": "2026-10-06T18:42:34.240158",
+      "generation": 2,
+      "drive_score": 0.0,
+      "action": "insight",
+      "narrative": "Search Console insight — Top performing content: https://abvorn-media.github.io/abvorn/; Highest CTR: 0.00% for https://abvorn-media.github.io",
+      "graph_nodes": 2917,
+      "graph_edges": 4870
+    },
+    {
+      "timestamp": "2026-10-06T15:50:08.515982+00:00",
+      "generation": 2,
+      "drive_score": 0.2075,
+      "action": "generate_content",
+      "narrative": "Drive action 'generate_content': Top 3 Smart Home Devices to Transform Your Living Space",
+      "graph_nodes": 2917,
+      "graph_edges": 4870
+    },
+    {
+      "timestamp": "2026-10-06T09:50:18.990895+00:00",
+      "generation": 2,
+      "drive_score": 0.2075,
+      "action": "generate_content",
+      "narrative": "Drive action 'generate_content': Top 3 Webcams for 2024: Crisp Video, Low‑Light Mastery, and Stream‑Ready Features",
+      "graph_nodes": 2917,
+      "graph_edges": 4870
+    },
+    {
+      "timestamp": "2026-10-06T06:00:07.830648",
+      "generation": 2,
+      "drive_score": 0.0,
+      "action": "insight",
+      "narrative": "Search Console insight — Top performing content: https://abvorn-media.github.io/abvorn/; Highest CTR: 0.00% for https://abvorn-media.github.io",
+      "graph_nodes": 2917,
+      "graph_edges": 4870
+    },
+    {
+      "timestamp": "2026-10-06T05:00:11.769393",
+      "generation": 1,
+      "drive_score": 0.0,
+      "action": "reflection",
+      "narrative": "Reflection — Add more high‑quality, keyword‑rich content to increase opportunities",
+      "graph_nodes": 2917,
+      "graph_edges": 4870
+    },
+    {
+      "timestamp": "2026-10-05T05:00:11.695148",
+      "generation": 1,
+      "drive_score": 0.0,
+      "action": "reflection",
+      "narrative": "Reflection — Focus on optimizing title and meta description for click‑through",
+      "graph_nodes": 2917,
+      "graph_edges": 4870
     }
   ],
-  "last_update": "2026-10-04T05:00:08.002971"
+  "last_update": "2026-10-07T06:00:05.900560"
 }
