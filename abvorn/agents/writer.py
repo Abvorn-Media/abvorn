@@ -119,6 +119,8 @@ AI-SEO RULES (make content extractable so AI answers/LLMs can cite it):
 - Back claims with specific numbers and spec details; add dates to any statistics or price claims
 - Always state when prices were checked (e.g., "Prices checked [today's date]")
 - Include a short FAQ section with natural-language questions and 2-3 sentence answers
+- Include a Methodology section explaining evaluation criteria and scoring
+- For EACH product provide detailed analysis with Pros and Cons including rationale
 """
     amazon_tag = _amazon_tag()
     if brain_context:
