@@ -6,6 +6,7 @@ Adding a new platform:
   3. Done. No other file changes needed.
 """
 
+from urllib.parse import urlparse, urlunparse
 import os
 import re
 from . import registry
@@ -45,18 +46,54 @@ def _extract_headings(html_text: str) -> list[str]:
     return re.findall(r'<h2>(.*?)</h2>', html_text, re.IGNORECASE)
 
 
+def _canonicalize_url(value: str) -> str:
+    """Rewrite GitHub Pages hosts to the canonical abvorn.com host.
+
+    GitHub Pages project sites live at ``<user>.github.io/<repo>/...`` but the
+    real site is served at the apex domain, so the repo path segment is
+    stripped as well as the host. E.g.
+    ``https://Abvorn-Media.github.io/abvorn/reviews/foo/`` becomes
+    ``https://abvorn.com/reviews/foo/``.
+    """
+    try:
+        parts = urlparse(value)
+    except ValueError:
+        return value
+    if not parts.netloc.endswith("github.io"):
+        return value
+    had_trailing = parts.path.endswith("/")
+    segments = [s for s in parts.path.split("/") if s]
+    if segments:
+        try:
+            from ..core.secrets import load_secrets
+            repo = str(load_secrets().get("GITHUB_REPO", "") or "")
+            repo_name = repo.split("/")[-1] if repo else ""
+        except Exception:
+            repo_name = ""
+        if repo_name and segments[0] == repo_name:
+            segments = segments[1:]
+    new_path = "/" + "/".join(segments) if segments else "/"
+    if had_trailing and not new_path.endswith("/"):
+        new_path += "/"
+    return urlunparse(("https", "abvorn.com", new_path, parts.params, parts.query, parts.fragment))
+
+
 def resolve_url(anchor: dict) -> str:
     """Resolve a canonical shareable URL for anchor content.
 
     Priority: explicit url/link/permalink on the content; else site + slug
     (site deploy layout); else site + /reviews/<niche>/ (the canonical path
     the daemon deploys per niche); else empty string when nothing is known.
+    GitHub Pages URLs are rewritten to the canonical abvorn.com domain so
+    social posts never link through github.io.
     """
     for key in ("url", "link", "permalink"):
         value = str(anchor.get(key, "") or "").strip()
         if value:
-            return value
+            return _canonicalize_url(value)
     site = os.environ.get("SITE_URL", "https://abvorn.com").rstrip("/")
+    if "github.io" in site:
+        site = "https://abvorn.com"
     slug = str(anchor.get("slug", "") or "").strip("/")
     if slug:
         return f"{site}/{slug}"
@@ -236,12 +273,7 @@ def telegram_adapter(anchor: dict) -> dict:
     text = str(title)
     if description:
         text = f"{text}\n\n{description}"
-    url = str(anchor.get("url") or anchor.get("link") or anchor.get("permalink") or "").strip()
-    if not url:
-        site = os.environ.get("SITE_URL", "").rstrip("/")
-        slug = str(anchor.get("slug", "")).strip("/")
-        if site and slug:
-            url = f"{site}/{slug}"
+    url = resolve_url(anchor)
     if url:
         text = f"{text}\n\n{url}"
     return {"text": fit_text(text, 4000)}

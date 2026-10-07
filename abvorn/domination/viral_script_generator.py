@@ -225,6 +225,11 @@ class ViralScriptGenerator:
         niche = post.get("niche", "product")
         summary = post.get("summary", "")
         url = post.get("url", "")
+        try:
+            from ..platform.adapters import _canonicalize_url
+            url = _canonicalize_url(str(url or ""))
+        except Exception:
+            pass
         hooks = post.get("hooks", {}).get(platform, [])
         products = products or []
 

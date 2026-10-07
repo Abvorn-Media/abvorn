@@ -414,6 +414,11 @@ class SocialAmbassador(AgentBase):
             # still produced a post linking nowhere. A bare URL in commentary is
             # linkified by LinkedIn, so the article is reachable on every path.
             url = str(item.get("url") or "").strip()
+            try:
+                from ..platform.adapters import _canonicalize_url
+                url = _canonicalize_url(url)
+            except Exception:
+                pass
             if url and url not in post_text:
                 post_text = f"{post_text.rstrip()}\n\n{url}"
                 logger.info(f"[Ambassador] appended article link {url!r}")

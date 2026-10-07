@@ -80,8 +80,11 @@ class DominationOrchestrator:
             slug = str(target.get("niche") or "")
         slug = (slug or "").strip().strip("/")
         if not slug:
-            return str(target.get("url") or "")
+            from ..platform.adapters import _canonicalize_url
+            return _canonicalize_url(str(target.get("url") or ""))
         site = os.environ.get("SITE_URL", "https://abvorn.com").rstrip("/")
+        if "github.io" in site:
+            site = "https://abvorn.com"
         return f"{site}/reviews/{slug}/"
 
     def _source_url(self, target: dict) -> str:

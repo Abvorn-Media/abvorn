@@ -1,4 +1,4 @@
-import json, logging, re, html, time
+import json, logging, re, html, time, os
 from pathlib import Path
 
 logger = logging.getLogger("abvorn.deploy")
@@ -85,7 +85,10 @@ class GitHubDeployer:
         body_class = f' class="dna-{dna_value}"' if dna_value else ""
         brand_style = f"--primary:{primary_color};--secondary:{secondary_color};\n{dna_css}" if dna_css else f"--primary:{primary_color};--secondary:{secondary_color};"
 
-        seo_tags = f'<link rel="canonical" href="https://{self.repo.split("/")[0]}.github.io/{self.repo.split("/")[1]}/{safe_slug}/">'
+        _site = os.environ.get("SITE_URL", "https://abvorn.com").rstrip("/")
+        if "github.io" in _site:
+            _site = "https://abvorn.com"
+        seo_tags = f'<link rel="canonical" href="{_site}/{safe_slug}/">'
 
         full_html = f"""<!DOCTYPE html>
 <html lang="en">
