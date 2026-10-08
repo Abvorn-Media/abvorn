@@ -644,6 +644,18 @@ class DeployAgent(AgentBase):
                     all_categories=all_slugs,
                     article_filename=_article_filename(post_title_state, taken),
                 ) or ""
+        # Only rebuild nav/hubs when a page actually shipped. A refused deploy
+        # (daily per-niche cap, product gate, relevance) leaves the posts list
+        # untouched, so repushing index.html + every category page is churn with
+        # no content change — a loopy trigger would otherwise keep forcing 4
+        # near-identical index commits per refused cycle (the flood's commit
+        # shape: one article + index + robot-vacuums/tv/laptops pages).
+        if not deployed_path:
+            logger.warning(
+                "[DeployAgent] Refusing site rebuild for %s: no article page "
+                "was written (cap/product/relevance gate).", niche,
+            )
+            return ""
         self.site_deployer.deploy_root_index(
             niches=all_niches_data,
             posts=all_posts,

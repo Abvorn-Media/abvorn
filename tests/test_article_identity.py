@@ -388,6 +388,37 @@ def test_deploy_content_cap_can_be_raised_by_env(tmp_path, monkeypatch):
     assert ok == "reviews/tv/2026-tv-buying-guide.html"
 
 
+def test_deploy_agent_skips_site_rebuild_when_deploy_refused(tmp_path):
+    """A refused deploy must not force index/hub re-pushes.
+
+    The flood's commit shape is one article + index.html +
+    robot-vacuums/tv/laptops pages per cycle. Without this gate, a loopy
+    trigger that hits the daily cap would still repush every index page with
+    identical content each refused cycle (churn commits, quota burn on the
+    GitHub API). When ``deploy_content`` returns "" the whole site rebuild is
+    skipped.
+    """
+    state = _state(tmp_path)
+    # One page already recorded today -> the cap (default 1) refuses the next.
+    state.add_post("tv", "Best 2026 TV Buying Guide", "best-2026-tv-buying-guide.html")
+    sd = SiteDeployer(_deployer(), state)
+    agent = DeployAgent.__new__(DeployAgent)
+    agent.state = state
+    agent.deployer = _deployer()
+    agent.site_deployer = sd
+    bus = MagicMock()
+    buffer = {}
+    bus.publish.side_effect = lambda t, m: buffer.update({t: m})
+    agent.bus = bus
+    asyncio.run(agent.act("deploy:tv"))
+
+    msg = buffer.get("content.published", {})
+    assert "path" not in msg and "filename" not in msg
+    # The site rebuild writes every index page through deploy_html; a refused
+    # deploy must leave all of them untouched.
+    assert sd.deployer.deploy_html.call_count == 0
+
+
 def test_index_html_is_never_reported_as_an_article(tmp_path):
     """A niche index is not a review page, so it must not become a filename.
 
