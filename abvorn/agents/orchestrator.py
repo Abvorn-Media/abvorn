@@ -32,21 +32,19 @@ def _slugify_article_title(title: str, max_len: int = 60) -> str:
 def _article_filename(post_title: str, taken: set) -> str:
     """Pick the article's own filename inside ``reviews/<niche>/``.
 
-    Every article used to ship as ``index.html``: each new post overwrote the
-    previous one, nothing downstream could address a specific article, and the
-    post row could never carry a filename - ``_record_published_filename`` skips
-    index.html on purpose, because a category page is not a review. ``taken``
-    holds the filenames already recorded for this niche, so a repeated title
-    gets a numbered variant instead of silently clobbering a live page.
+    A title always resolves to the same canonical file: ``{slug}.html``. The
+    old code minted a numbered variant (``-2.html`` … ``-99.html`` then a
+    timestamped file) whenever the filename was already recorded for the niche,
+    so every re-deploy of the same buying guide spawned a brand-new near-
+    identical page — that is the robot-vacuums flood (857 single-file commits,
+    ``best-robot-vacuums-expert-review-90.html`` et al.). Volume is bounded by
+    the daily per-niche publish cap in ``deploy_content``; here the slug is the
+    identity, so the same review always refreshes its canonical URL instead of
+    spawning siblings. ``taken`` is kept for call-site compatibility but is no
+    longer consulted.
     """
     slug = _slugify_article_title(post_title) or "article"
-    if f"{slug}.html" not in taken:
-        return f"{slug}.html"
-    for n in range(2, 100):
-        candidate = f"{slug}-{n}.html"
-        if candidate not in taken:
-            return candidate
-    return f"{slug}-{datetime.now().strftime('%Y%m%d%H%M%S')}.html"
+    return f"{slug}.html"
 
 # Centralized affiliate tag: AMAZON_TAG secret, falling back to the real tag.
 def _amazon_tag() -> str:
@@ -406,6 +404,29 @@ class SiteDeployer:
             logger.error(f"[SiteDeployer] Category hub failed: {e}")
             return ""
 
+    def _published_today(self, niche: str, today: str) -> int:
+        """How many distinct article pages this niche shipped on ``today``.
+
+        Counts post rows created today that carry a non-empty, non-index
+        filename — a row only ever gets a filename after its article page
+        shipped (add_post is called at publish time with the filename, and
+        ``update_post_filename`` stamps it onto the newest empty-filename row).
+        Distinct filenames, so at cap N the same canonical URL can still be
+        refreshed N times without minting extra quota for identical slugs.
+        """
+        try:
+            rows = self.state.get_posts_for_niche(niche) or []
+        except Exception as e:
+            logger.warning(f"[SiteDeployer] could not read posts for {niche!r}: {e}")
+            return 0
+        pages = set()
+        for p in rows:
+            filename = (p.get("filename") or "").strip()
+            created = (p.get("created_at") or "")
+            if filename and filename != "index.html" and created.startswith(today):
+                pages.add(filename)
+        return len(pages)
+
     def deploy_content(self, niche: str, content: dict, all_categories: list = None,
                        article_filename: str = None,
                        require_products: bool = False) -> str:
@@ -436,6 +457,25 @@ class SiteDeployer:
             from src.deployment import niche_relevance
             today = datetime.now().strftime("%Y-%m-%d")
             products = content.get("products") or []
+            # Daily per-niche publish cap: a niche may mint at most N article
+            # pages per day (default 1). This is the single choke point
+            # every publish path funnels through (the daemon's run_full_cycle
+            # and DeployAgent._deploy_site), so a loopy trigger cannot keep
+            # forging near-identical review URLs all day. Applies only to real
+            # article files — hub/index.html writes (article_filename=None)
+            # are page rebuilds, not new reviews, so they are never capped.
+            cap = int(os.environ.get("ABVORN_MAX_NICHE_PUBLISHES_PER_DAY", "1") or "1")
+            if (article_filename and cap > 0 and self.state
+                    and self._published_today(niche, today) >= cap):
+                logger.warning(
+                    "[SiteDeployer] Refusing to publish %s: niche %s already "
+                    "published %d article page(s) today (cap %d). Keeping the "
+                    "live page instead of minting another near-identical "
+                    "review URL.",
+                    article_filename, niche,
+                    self._published_today(niche, today), cap,
+                )
+                return ""
             if require_products and not products:
                 logger.warning(
                     "[SiteDeployer] Refusing to publish %s: a fresh article "

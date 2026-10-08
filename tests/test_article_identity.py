@@ -286,25 +286,37 @@ def test_slugify_article_title_is_ascii_and_word_bounded():
     assert not long.endswith("-")
 
 
-def test_article_filename_never_collides_with_a_live_article():
-    """A repeated title must not overwrite the earlier post's live page."""
-    taken = {"best-2026-tv-buying-guide.html"}
+def test_article_filename_is_canonical_reuse():
+    """A repeated title resolves to the same canonical file.
+
+    The old dedupe minted ``-2.html`` … ``-99.html`` then a timestamped file
+    whenever the slug was already recorded for the niche. That is exactly the
+    robot-vacuums flood (``best-robot-vacuums-expert-review-90.html``). The slug
+    is the identity: the same review always refreshes its canonical URL instead
+    of spawning siblings, and volume is bounded by the daily publish cap.
+    ``taken`` is still accepted for call-site compatibility but never consulted.
+    """
+    taken = {"best-2026-tv-buying-guide.html", "best-2026-tv-buying-guide-2.html"}
     assert _article_filename("Best 2026 TV Buying Guide", set()) == (
         "best-2026-tv-buying-guide.html"
     )
     assert _article_filename("Best 2026 TV Buying Guide", taken) == (
-        "best-2026-tv-buying-guide-2.html"
+        "best-2026-tv-buying-guide.html"
+    )
+    assert _article_filename("Best 2026 TV Buying Guide", taken) == (
+        "best-2026-tv-buying-guide.html"
     )
     assert _article_filename("Best 2026 TV Buying Guide", taken | {
-        "best-2026-tv-buying-guide-2.html"}) == "best-2026-tv-buying-guide-3.html"
+        "best-2026-tv-buying-guide-99.html"}) == "best-2026-tv-buying-guide.html"
 
 
-def test_repeated_title_does_not_overwrite_the_live_article(tmp_path):
-    """The second tv post with an identical title must get its own page.
+def test_repeated_title_same_day_is_refused_by_cap(tmp_path):
+    """The cap, not the dedupe, bounds volume: no second page per day.
 
-    ``_article_filename`` is fed the filenames already recorded in the niche.
-    Removing that dedupe lets the second deploy overwrite the first post's live
-    page, which is the clobbering bug the uniqueness check exists to prevent.
+    The second same-day deploy of an identical title used to mint ``-2.html``
+    (then ``-3.html``, then timestamped files) - the flood. Now the daily
+    per-niche cap refuses it outright, so the first page stays live and no
+    near-identical second URL ships.
     """
     state = _state(tmp_path)
     state.add_post("tv", "Best 2026 TV Buying Guide", "")
@@ -323,9 +335,57 @@ def test_repeated_title_does_not_overwrite_the_live_article(tmp_path):
         "article_html": "<p>guide again</p>",
         "products": [REAL_PRODUCT],
     }, agent=agent)
-    assert second["filename"] == "best-2026-tv-buying-guide-2.html", (
-        "the second deploy clobbered the first article's live page"
+    assert "filename" not in second, "same-day repeat minted a second page"
+    assert second.get("path", "") == ""
+    # The first post still owns the canonical filename; nothing was clobbered.
+    recorded = {p["filename"] for p in state.get_posts_for_niche("tv")}
+    assert recorded == {"", "best-2026-tv-buying-guide.html"}
+
+
+def test_deploy_content_refuses_second_page_same_day(tmp_path):
+    """The daily per-niche cap is the flood gate: one article page per niche/day."""
+    state = _state(tmp_path)
+    # One page already recorded today (created_at defaults to now).
+    state.add_post("tv", "Best 2026 TV Buying Guide", "best-2026-tv-buying-guide.html")
+    sd = SiteDeployer(_deployer(), state)
+    refused = sd.deploy_content(
+        "tv",
+        {"post_title": "2026 Robot Vacuum Roundup", "article_html": "<p>g</p>",
+         "products": [REAL_PRODUCT]},
+        all_categories=["tv"],
+        article_filename="2026-robot-vacuum-roundup.html",
     )
+    assert refused == ""
+
+
+def test_deploy_content_allows_first_page_of_day(tmp_path):
+    """Before any page ships today the cap is not hit, so the first writes."""
+    state = _state(tmp_path)
+    sd = SiteDeployer(_deployer(), state)
+    ok = sd.deploy_content(
+        "tv",
+        {"post_title": "2026 TV Buying Guide", "article_html": "<p>g</p>",
+         "products": [REAL_PRODUCT]},
+        all_categories=["tv"],
+        article_filename="2026-tv-buying-guide.html",
+    )
+    assert ok == "reviews/tv/2026-tv-buying-guide.html"
+
+
+def test_deploy_content_cap_can_be_raised_by_env(tmp_path, monkeypatch):
+    """ABVORN_MAX_NICHE_PUBLISHES_PER_DAY raises the daily limit."""
+    monkeypatch.setenv("ABVORN_MAX_NICHE_PUBLISHES_PER_DAY", "2")
+    state = _state(tmp_path)
+    state.add_post("tv", "A TV Guide", "a-tv-guide.html")
+    sd = SiteDeployer(_deployer(), state)
+    ok = sd.deploy_content(
+        "tv",
+        {"post_title": "2026 TV Buying Guide", "article_html": "<p>g</p>",
+         "products": [REAL_PRODUCT]},
+        all_categories=["tv"],
+        article_filename="2026-tv-buying-guide.html",
+    )
+    assert ok == "reviews/tv/2026-tv-buying-guide.html"
 
 
 def test_index_html_is_never_reported_as_an_article(tmp_path):

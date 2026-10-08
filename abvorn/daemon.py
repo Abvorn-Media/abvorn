@@ -336,24 +336,36 @@ class AbvornDaemon:
             ), self.state)
             all_niches = self.state.get_all_niches()
             all_slugs = [n["slug"] for n in all_niches]
-            site_dep.deploy_content(site_cat, content, all_categories=all_slugs,
-                                    article_filename=f"{article_slug}.html")
-            self.state.add_post(site_cat, content.get("post_title", niche),
-                                f"{article_slug}.html",
-                                product_name=content.get("product_name", ""),
-                                angle="buying guide", quality_score=quality_from_opportunity(opp),
-                                image=product_card_image(content))
-            all_posts = []
-            for s in all_slugs:
-                all_posts.extend(self.state.get_posts_for_niche(s))
-            site_dep.deploy_root_index(niches=all_niches, posts=all_posts)
-            for slug in all_slugs:
-                niche_posts = [p for p in all_posts if p.get("niche_slug") == slug]
-                site_dep.deploy_category_page(slug, posts=niche_posts, all_categories=all_slugs)
-            if site_cat_created:
-                hub_posts = [p for p in all_posts if p.get("niche_slug") == site_cat]
-                site_dep.deploy_category_hub(site_cat, posts=hub_posts, all_categories=all_slugs)
-            logger.info(f"Deployed {niche} to site under category {site_cat}")
+            deployed_path = site_dep.deploy_content(
+                site_cat, content, all_categories=all_slugs,
+                article_filename=f"{article_slug}.html",
+            )
+            # Only record the post row when the page actually shipped. A
+            # refused deploy (daily per-niche cap, product gate, relevance)
+            # must not mint a state post that claims a live article: the row
+            # would count against today's cap and linger as a phantom.
+            if deployed_path:
+                self.state.add_post(site_cat, content.get("post_title", niche),
+                                    f"{article_slug}.html",
+                                    product_name=content.get("product_name", ""),
+                                    angle="buying guide", quality_score=quality_from_opportunity(opp),
+                                    image=product_card_image(content))
+                all_posts = []
+                for s in all_slugs:
+                    all_posts.extend(self.state.get_posts_for_niche(s))
+                site_dep.deploy_root_index(niches=all_niches, posts=all_posts)
+                for slug in all_slugs:
+                    niche_posts = [p for p in all_posts if p.get("niche_slug") == slug]
+                    site_dep.deploy_category_page(slug, posts=niche_posts, all_categories=all_slugs)
+                if site_cat_created:
+                    hub_posts = [p for p in all_posts if p.get("niche_slug") == site_cat]
+                    site_dep.deploy_category_hub(site_cat, posts=hub_posts, all_categories=all_slugs)
+                logger.info(f"Deployed {niche} to site under category {site_cat}")
+            else:
+                logger.warning(
+                    f"Deploy refused for {niche}: no article page written — "
+                    "keeping the currently published page (no post row created)."
+                )
         except Exception as e:
             logger.warning(f"Site deploy failed (non-fatal): {e}")
 
