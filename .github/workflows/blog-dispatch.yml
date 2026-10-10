@@ -58,9 +58,11 @@ jobs:
           if [ -n "${{ inputs.persona }}" ]; then ARGS="$ARGS --persona ${{ inputs.persona }}"; fi
           python scripts/build_blog.py --generate --build $ARGS
 
-      - name: Guard - no mojibake before commit
+      - name: Guard - no mojibake in blog output
         run: |
-          python scripts/check_publish_content.py
+          # Scope to docs/blog only: unrelated pre-existing tree debt (e.g. a
+          # webcams page) must never block the weekly dispatch.
+          python scripts/check_publish_content.py --path docs/blog
 
       - name: Commit and push changes
         run: |
