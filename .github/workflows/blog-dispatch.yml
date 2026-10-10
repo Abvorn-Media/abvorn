@@ -10,6 +10,14 @@ on:
         description: "Persona id (empty = next unused topic)"
         required: false
         type: string
+      mode:
+        description: "generate (default) or build (images + render only)"
+        required: false
+        type: choice
+        default: generate
+        options:
+          - generate
+          - build
 
 permissions:
   contents: write
@@ -55,8 +63,13 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
         run: |
           ARGS=""
+          if [ "${{ inputs.mode }}" = "build" ]; then
+            ARGS="--build"
+          else
+            ARGS="--generate --build"
+          fi
           if [ -n "${{ inputs.persona }}" ]; then ARGS="$ARGS --persona ${{ inputs.persona }}"; fi
-          python scripts/build_blog.py --generate --build $ARGS
+          python scripts/build_blog.py $ARGS
 
       - name: Guard - no mojibake in blog output
         run: |
