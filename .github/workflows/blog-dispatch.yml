@@ -58,7 +58,7 @@ jobs:
           if [ -n "${{ inputs.persona }}" ]; then ARGS="$ARGS --persona ${{ inputs.persona }}"; fi
           python scripts/build_blog.py --generate --build $ARGS
 
-      - name: Guard: no mojibake before commit
+      - name: Guard - no mojibake before commit
         run: |
           python scripts/check_publish_content.py
 
