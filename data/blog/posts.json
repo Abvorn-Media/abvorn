@@ -477,8 +477,50 @@
     "cross_sell_name": "Wireless Earbuds",
     "cross_sell_blurb": "When navigating sensory-overload zones, consider audio devices that offer active noise isolation without the feeling of total digital disconnection.",
     "published": "2026-10-10",
-    "hero": null,
-    "images": [],
+    "hero": {
+      "file": "assets/blog/the-loose-plan-a-restful-three-day-city-rhythm/hero.jpg",
+      "query": "closed cafe door with morning light reflecting on wet pavement",
+      "alt": "A moody night scene of a cobblestone street reflecting warm and cool lights.",
+      "caption": "",
+      "photo_id": 35409291,
+      "photographer": "Alexander Popadin",
+      "photographer_url": "https://www.pexels.com/@irrabagon",
+      "pexels_url": "https://www.pexels.com/photo/cobblestone-street-illuminated-by-night-lights-35409291/",
+      "width": 6240,
+      "height": 4160,
+      "source": "Pexels",
+      "fetched": "2026-10-10T15:53:34"
+    },
+    "images": [
+      {
+        "file": "assets/blog/the-loose-plan-a-restful-three-day-city-rhythm/01.jpg",
+        "query": "single coffee cup and open notebook on a rustic wooden table",
+        "alt": "A calming scene of a latte with art in a blue cup beside a notebook and pen on a wooden table.",
+        "caption": "A calming scene of a latte with art in a blue cup beside a notebook and pen on a wooden table.",
+        "photo_id": 414551,
+        "photographer": "Pixabay",
+        "photographer_url": "https://www.pexels.com/@pixabay",
+        "pexels_url": "https://www.pexels.com/photo/coffee-on-saucer-beside-the-notebook-414551/",
+        "width": 7952,
+        "height": 5304,
+        "source": "Pexels",
+        "fetched": "2026-10-10T15:53:35"
+      },
+      {
+        "file": "assets/blog/the-loose-plan-a-restful-three-day-city-rhythm/02.jpg",
+        "query": "blurry city street movement at dusk with warm streetlights",
+        "alt": "Abstract black and white image of a blurry road at night with streetlights.",
+        "caption": "Abstract black and white image of a blurry road at night with streetlights.",
+        "photo_id": 8702470,
+        "photographer": "Khoa Võ",
+        "photographer_url": "https://www.pexels.com/@khoa-vo-2347168",
+        "pexels_url": "https://www.pexels.com/photo/blurry-picture-of-an-alley-in-city-at-night-8702470/",
+        "width": 6240,
+        "height": 4160,
+        "source": "Pexels",
+        "fetched": "2026-10-10T15:53:36"
+      }
+    ],
     "products": []
   }
 }
