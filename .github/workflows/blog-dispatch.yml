@@ -58,6 +58,8 @@ jobs:
           GLM_KEYS: ${{ secrets.GLM_KEYS }}
           CEREBRAS_KEY: ${{ secrets.CEREBRAS_KEY }}
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
+          OPENWEB_NINJA_KEY: ${{ secrets.OPENWEB_NINJA_KEY }}
+          TAVILY_KEY: ${{ secrets.TAVILY_KEY }}
           AMAZON_TAG: ${{ secrets.AMAZON_TAG }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
