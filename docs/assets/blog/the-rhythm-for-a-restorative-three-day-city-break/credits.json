@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "file": "assets/blog/the-rhythm-for-a-restorative-three-day-city-break/hero.jpg",
+    "query": "man sitting on park bench reading book in afternoon sun",
+    "alt": "A young man enjoys reading on a bench in a Granada park, surrounded by lush greenery and sunlight.",
+    "caption": "",
+    "photo_id": 38176740,
+    "photographer": "Ramon Karolan",
+    "photographer_url": "https://www.pexels.com/@ramonkaphotography",
+    "pexels_url": "https://www.pexels.com/photo/young-man-reading-in-granada-park-38176740/",
+    "width": 7728,
+    "height": 5152,
+    "source": "Pexels",
+    "fetched": "2026-10-16T11:57:13"
+  },
+  "01": {
+    "file": "assets/blog/the-rhythm-for-a-restorative-three-day-city-break/01.jpg",
+    "query": "open map on wooden table with coffee cup",
+    "alt": "A top-down view of a rustic workspace featuring a map, compass, and a cup of coffee.",
+    "caption": "A top-down view of a rustic workspace featuring a map, compass, and a cup of coffee.",
+    "photo_id": 4641192,
+    "photographer": "ArtHouse Studio",
+    "photographer_url": "https://www.pexels.com/@arthousestudio",
+    "pexels_url": "https://www.pexels.com/photo/map-cup-and-compass-on-table-4641192/",
+    "width": 7952,
+    "height": 5280,
+    "source": "Pexels",
+    "fetched": "2026-10-16T11:57:16"
+  },
+  "02": {
+    "file": "assets/blog/the-rhythm-for-a-restorative-three-day-city-break/02.jpg",
+    "query": "quiet street with bakery in morning light",
+    "alt": "Picturesque street view of historic Dordrecht, Netherlands with classic architecture and morning sun.",
+    "caption": "Picturesque street view of historic Dordrecht, Netherlands with classic architecture and morning sun.",
+    "photo_id": 35743925,
+    "photographer": "Ruben Boekeloo",
+    "photographer_url": "https://www.pexels.com/@ruben-boekeloo-521336009",
+    "pexels_url": "https://www.pexels.com/photo/charming-dordrecht-street-in-morning-light-35743925/",
+    "width": 8976,
+    "height": 5954,
+    "source": "Pexels",
+    "fetched": "2026-10-16T11:57:18"
+  }
+}
