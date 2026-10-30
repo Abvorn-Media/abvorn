@@ -521,7 +521,22 @@
         "fetched": "2026-10-10T15:53:36"
       }
     ],
-    "products": []
+    "products": [],
+    "cross_sell_product": {
+      "name": "JBL Vibe Beam - True Wireless Earbuds - Black",
+      "price": "$29.95",
+      "original_price": "$49.95",
+      "rating": "4.2",
+      "ratings_count": 41299,
+      "image": "https://m.media-amazon.com/images/I/41+1Csr1pSL._AC_UY654_FMwebp_QL65_.jpg",
+      "url": "https://www.amazon.com/dp/B0BQPNMXQV",
+      "asin": "B0BQPNMXQV",
+      "description": "JBL Vibe Beam - True Wireless Earbuds - Black",
+      "features": [],
+      "is_best_seller": false,
+      "is_amazon_choice": false,
+      "sales_volume": "10K+ bought in past month"
+    }
   },
   "the-rhythm-for-a-restorative-three-day-city-break": {
     "slug": "the-rhythm-for-a-restorative-three-day-city-break",
@@ -642,7 +657,22 @@
         "fetched": "2026-10-16T11:57:18"
       }
     ],
-    "products": []
+    "products": [],
+    "cross_sell_product": {
+      "name": "JBL Vibe Beam - True Wireless Earbuds - Black",
+      "price": "$29.95",
+      "original_price": "$49.95",
+      "rating": "4.2",
+      "ratings_count": 41299,
+      "image": "https://m.media-amazon.com/images/I/41+1Csr1pSL._AC_UY654_FMwebp_QL65_.jpg",
+      "url": "https://www.amazon.com/dp/B0BQPNMXQV",
+      "asin": "B0BQPNMXQV",
+      "description": "JBL Vibe Beam - True Wireless Earbuds - Black",
+      "features": [],
+      "is_best_seller": false,
+      "is_amazon_choice": false,
+      "sales_volume": "10K+ bought in past month"
+    }
   },
   "how-to-plan-a-three-day-city-break-that-rests-you": {
     "slug": "how-to-plan-a-three-day-city-break-that-rests-you",
@@ -758,6 +788,147 @@
         "fetched": "2026-10-23T12:12:58"
       }
     ],
-    "products": []
+    "products": [],
+    "cross_sell_product": {
+      "name": "JBL Vibe Beam - True Wireless Earbuds - Black",
+      "price": "$29.95",
+      "original_price": "$49.95",
+      "rating": "4.2",
+      "ratings_count": 41299,
+      "image": "https://m.media-amazon.com/images/I/41+1Csr1pSL._AC_UY654_FMwebp_QL65_.jpg",
+      "url": "https://www.amazon.com/dp/B0BQPNMXQV",
+      "asin": "B0BQPNMXQV",
+      "description": "JBL Vibe Beam - True Wireless Earbuds - Black",
+      "features": [],
+      "is_best_seller": false,
+      "is_amazon_choice": false,
+      "sales_volume": "10K+ bought in past month"
+    }
+  },
+  "the-three-day-city-break-rhythm-that-banks-energy": {
+    "slug": "the-three-day-city-break-rhythm-that-banks-energy",
+    "title": "The Three-Day City Break Rhythm That Banks Energy",
+    "dek": "A simple structure to keep short trips feeling restorative instead of exhausting.",
+    "meta_description": "Avoid the post-trip crash by using an anchor-loose rhythm for city breaks. Structured planning that leaves room for chance and rest.",
+    "persona_id": "weekend-escaper",
+    "persona": "The Weekend Escaper",
+    "category": "travel",
+    "intro": "<p>You have travelled four hours to stand in queue for a slice that tastes like cardboard. By day two, you are checking maps in tiny, stressed bites. You arrive home with a full gallery but an empty tank. The problem is not the city; it is the absence of a container for your time.</p>",
+    "sections": [
+      {
+        "heading": "The Trap of Over-Planning",
+        "html": "<p>Short trips feel urgent. You want to see everything, so you fill every hour. This creates a feedback loop where you plan to avoid being lost, but the sheer density of appointments makes you feel lost in logis</p><p>tics. When one thing runs late, the day collapses. You spend the evening in a café, not relaxing, but recalculating. The goal is to stop treating the trip as a checklist and start treating it as a space.</p>",
+        "note": "A full itinerary is a cage. Leave white space on the calendar so the day can breathe."
+      },
+      {
+        "heading": "Set One Anchor, No More",
+        "html": "<p>Each day needs a single non-negotiable. This is your anchor: a museum you have waited a year to visit, a specific park bench, or a long lunch. Choose it because it aligns with your mood for the day. Not because it is famous.</p><p><strong>Once this is booked or marked, stop.</strong> Do not book a second anchor. Two anchors create a corridor you must walk through. One anchor is a pin that holds the sheet. It gives you a destination without a route. You can wander to it, take a detour, or even decide it is not the right fit when you arrive. The anchor organizes the day without owning it.</p>",
+        "note": "If the anchor feels like a job, swap it. The trip serves you, not the other way around."
+      },
+      {
+        "heading": "Loose Ends and Loose Legs",
+        "html": "<p>With the morning or afternoon anchored, leave the rest deliberately empty. This is where the trip becomes yours. Walk down the street that looked interesting. Sit on a step and watch the light change. Eat the food that smells good from the corner shop, not the one with the long queue.</p><p><ul><li>Let boredom decide your next step.</li><li>Follow the sound of music or the smell of baking.</li><li>Choose the longer route home if it looks prettier.</li></ul>The variety of small, unplanned moments is what builds the neural map of a place. A spreadsheet of venues never does.</p>",
+        "note": "Boredom is a feature, not a bug. It is the pause that allows observation."
+      },
+      {
+        "heading": "The Rest Hour",
+        "html": "<p>Tourism is physically demanding. You are walking more, carrying bags, and adjusting to new light and food. Your body will ask for a full stop, usually around midday or late afternoon. Do not fight this. Do not rush to the next sight to 'make up' for the rest.</p><p>Book or find a quiet hour. A hotel room with the curtains drawn. A tea room with a soft armchair. A bench in a shadowed park. Sit still for an hour. Let your eyes rest. Let your digestion settle. This thirty-to-sixty-minute window resets your nervous system. You will return to the anchor or the loose parts with fresh eyes and clear legs.</p>",
+        "note": "Rest is not wasted time. It is the processing stage of the experience."
+      },
+      {
+        "heading": "Farewell Rituals",
+        "html": "<p>The end of a short trip often feels abrupt. You pick up your case and leave, feeling a sudden jolt. Instead, create a small closing ritual. Revisit the specific coffee maker from your morning ritual. Walk the route you took on day one, but in reverse. Notice how the light is different.</p><p>This small act of returning helps you file the memories. It turns a sequence of events into a complete story. You are not chasing the last sight. You are gathering the feel of the place. When you step into transport, you are doing so with a sense of completion, not loss.</p>",
+        "note": "Ending a trip well is as important as starting it. Give it a period, not a dash."
+      }
+    ],
+    "pull_quote": "A full itinerary is a cage; leave white space on the calendar so the day can breathe.",
+    "faqs": [
+      {
+        "question": "Does this work for solo travellers?",
+        "answer": "Yes, often better. Solo travellers have no social pressure to fill every minute. The loose time is where you can buy a book, sit alone, or simply watch the city without the need to perform an experience for others."
+      },
+      {
+        "question": "What if I am in a city I have visited before?",
+        "answer": "Use the anchor to explore a different quarter. Do not repeat the same anchor. The loose time allows you to re-visit old favourites or find new corners that you missed the first time. Treat it as a chance to deepen the map, not redraw it."
+      }
+    ],
+    "tags": [
+      "short breaks",
+      "city breaks",
+      "travel planning",
+      "mindful travel"
+    ],
+    "image_queries": [
+      "open notebook on wooden cafe table with coffee and passport",
+      "silhouette of person sitting on bench in park with autumn trees",
+      "close up of hand holding city map in crooked fingers",
+      "hotel room window with rain on glass and city lights at dusk",
+      "worn leather shoe standing on old cobblestone street",
+      "steaming cup of tea on small tray on hotel bed"
+    ],
+    "cross_sell_niche": "wireless-earbuds",
+    "cross_sell_name": "Wireless Earbuds",
+    "cross_sell_blurb": "Consider choosing pairs with low latency and clear multi-device switching for spontaneous listening.",
+    "published": "2026-10-30",
+    "hero": {
+      "file": "assets/blog/the-three-day-city-break-rhythm-that-banks-energy/hero.jpg",
+      "query": "open notebook on wooden cafe table with coffee and passport",
+      "alt": "A detailed latte art design in a blue cup next to a notebook and pen on a wooden table.",
+      "caption": "",
+      "photo_id": 531770,
+      "photographer": "Pixabay",
+      "photographer_url": "https://www.pexels.com/@pixabay",
+      "pexels_url": "https://www.pexels.com/photo/coffee-latte-beside-spring-notebook-531770/",
+      "width": 7952,
+      "height": 5304,
+      "source": "Pexels",
+      "fetched": "2026-10-30T13:40:11"
+    },
+    "images": [
+      {
+        "file": "assets/blog/the-three-day-city-break-rhythm-that-banks-energy/01.jpg",
+        "query": "silhouette of person sitting on bench in park with autumn trees",
+        "alt": "A serene scene of a lone person sitting under autumn trees in a quiet park.",
+        "caption": "A serene scene of a lone person sitting under autumn trees in a quiet park.",
+        "photo_id": 14262336,
+        "photographer": "Imad Clicks",
+        "photographer_url": "https://www.pexels.com/@imadclicks",
+        "pexels_url": "https://www.pexels.com/photo/person-sitting-at-a-park-under-the-trees-14262336/",
+        "width": 9135,
+        "height": 6090,
+        "source": "Pexels",
+        "fetched": "2026-10-30T13:40:13"
+      },
+      {
+        "file": "assets/blog/the-three-day-city-break-rhythm-that-banks-energy/02.jpg",
+        "query": "close up of hand holding city map in crooked fingers",
+        "alt": "Close-up of a blue toy airplane held over a colorful map with blurred background.",
+        "caption": "Close-up of a blue toy airplane held over a colorful map with blurred background.",
+        "photo_id": 8083418,
+        "photographer": "RDNE Stock project",
+        "photographer_url": "https://www.pexels.com/@rdne",
+        "pexels_url": "https://www.pexels.com/photo/shallow-focus-photo-of-a-blue-miniature-airplane-8083418/",
+        "width": 6720,
+        "height": 4480,
+        "source": "Pexels",
+        "fetched": "2026-10-30T13:40:14"
+      }
+    ],
+    "products": [],
+    "cross_sell_product": {
+      "name": "JBL Vibe Beam - True Wireless Earbuds - Black",
+      "price": "$29.95",
+      "original_price": "$49.95",
+      "rating": "4.2",
+      "ratings_count": 41299,
+      "image": "https://m.media-amazon.com/images/I/41+1Csr1pSL._AC_UY654_FMwebp_QL65_.jpg",
+      "url": "https://www.amazon.com/dp/B0BQPNMXQV",
+      "asin": "B0BQPNMXQV",
+      "description": "JBL Vibe Beam - True Wireless Earbuds - Black",
+      "features": [],
+      "is_best_seller": false,
+      "is_amazon_choice": false,
+      "sales_volume": "10K+ bought in past month"
+    }
   }
 }

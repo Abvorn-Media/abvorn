@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "file": "assets/blog/the-three-day-city-break-rhythm-that-banks-energy/hero.jpg",
+    "query": "open notebook on wooden cafe table with coffee and passport",
+    "alt": "A detailed latte art design in a blue cup next to a notebook and pen on a wooden table.",
+    "caption": "",
+    "photo_id": 531770,
+    "photographer": "Pixabay",
+    "photographer_url": "https://www.pexels.com/@pixabay",
+    "pexels_url": "https://www.pexels.com/photo/coffee-latte-beside-spring-notebook-531770/",
+    "width": 7952,
+    "height": 5304,
+    "source": "Pexels",
+    "fetched": "2026-10-30T13:40:11"
+  },
+  "01": {
+    "file": "assets/blog/the-three-day-city-break-rhythm-that-banks-energy/01.jpg",
+    "query": "silhouette of person sitting on bench in park with autumn trees",
+    "alt": "A serene scene of a lone person sitting under autumn trees in a quiet park.",
+    "caption": "A serene scene of a lone person sitting under autumn trees in a quiet park.",
+    "photo_id": 14262336,
+    "photographer": "Imad Clicks",
+    "photographer_url": "https://www.pexels.com/@imadclicks",
+    "pexels_url": "https://www.pexels.com/photo/person-sitting-at-a-park-under-the-trees-14262336/",
+    "width": 9135,
+    "height": 6090,
+    "source": "Pexels",
+    "fetched": "2026-10-30T13:40:13"
+  },
+  "02": {
+    "file": "assets/blog/the-three-day-city-break-rhythm-that-banks-energy/02.jpg",
+    "query": "close up of hand holding city map in crooked fingers",
+    "alt": "Close-up of a blue toy airplane held over a colorful map with blurred background.",
+    "caption": "Close-up of a blue toy airplane held over a colorful map with blurred background.",
+    "photo_id": 8083418,
+    "photographer": "RDNE Stock project",
+    "photographer_url": "https://www.pexels.com/@rdne",
+    "pexels_url": "https://www.pexels.com/photo/shallow-focus-photo-of-a-blue-miniature-airplane-8083418/",
+    "width": 6720,
+    "height": 4480,
+    "source": "Pexels",
+    "fetched": "2026-10-30T13:40:14"
+  }
+}
