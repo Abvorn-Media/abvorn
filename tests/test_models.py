@@ -250,3 +250,144 @@ def test_ask_prefers_least_used_verified_provider():
     assert result == "fresh-model"
     assert light.total_calls == 1
     assert heavy.total_calls == 0
+
+
+# --- JSON recovery -----------------------------------------------------------
+# Models return 200s with fenced/preambled JSON, and Groq returns a 400 when its
+# json_object validator dislikes the output. Both used to throw away a paid
+# completion ("Draft JSON parse failed") and ban the only working provider.
+
+def test_parse_json_accepts_plain_fenced_and_preambled():
+    from abvorn.core.models import parse_json
+    assert parse_json('{"a": 1}') == {"a": 1}
+    assert parse_json('```json\n{"a": 1}\n```') == {"a": 1}
+    assert parse_json('```\n{"a": 1}\n```') == {"a": 1}
+    assert parse_json('Here is the JSON:\n{"a": 1}\nHope that helps.') == {"a": 1}
+    assert parse_json('["one", "two"]') == ["one", "two"]
+    assert parse_json('{"a": ') is None
+    assert parse_json("not json at all") is None
+    assert parse_json("") is None
+    assert parse_json(None) is None
+
+
+def test_parse_json_passes_dicts_through():
+    from abvorn.core.models import parse_json
+    payload = {"already": "parsed"}
+    assert parse_json(payload) is payload
+
+
+def test_providers_sharing_a_key_share_one_lock():
+    """Groq's model aliases share one account/rate-limit bucket. Concurrent
+    calls with the same key get 403 'Forbidden' from Groq's abuse protection,
+    so they must be serialized even across different agent threads."""
+    from abvorn.core.models import ModelRouter
+
+    router = ModelRouter({"GROQ_KEY": "sk-groq", "OPENAI_KEY": "sk-openai"})
+    by_name = {p.name: p for p in router.providers}
+    groq = by_name["groq"]
+    assert groq._key_lock is by_name["groq-oss-20"]._key_lock
+    assert groq._key_lock is by_name["groq-qwen-27"]._key_lock
+    assert groq._key_lock is not by_name["openai"]._key_lock
+
+
+def test_same_key_calls_never_overlap():
+    import threading
+    from abvorn.core.models import AIProvider
+
+    lock = threading.RLock()
+    a = AIProvider("a", "shared-key", "http://fake", "m", min_gap=0, key_lock=lock)
+    b = AIProvider("b", "shared-key", "http://fake", "m", min_gap=0, key_lock=lock)
+
+    active = 0
+    peak = 0
+    guard = threading.Lock()
+
+    def fake_create(**kwargs):
+        nonlocal active, peak
+        with guard:
+            active += 1
+            peak = max(peak, active)
+        time.sleep(0.05)
+        with guard:
+            active -= 1
+        return MagicMock(
+            choices=[MagicMock(message=MagicMock(content="ok"))],
+            usage=MagicMock(total_tokens=1),
+        )
+
+    for p in (a, b):
+        p.client = MagicMock()
+        p.client.chat.completions.create.side_effect = fake_create
+
+    threads = [threading.Thread(target=lambda p=p: p.call([{"role": "user", "content": "hi"}])) for p in (a, b)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert peak == 1
+
+
+def test_forbidden_ban_escalates_instead_of_jumping_to_twelve_hours():
+    """A 403 is ambiguous (revoked key vs Groq abuse protection). A flat 12h
+    ban took the only working provider offline for a transient block; the ban
+    must start short and grow only while the block persists."""
+    from abvorn.core.models import AIProvider
+    p = AIProvider("groq", "sk-test-key", model="openai/gpt-oss-120b")
+    err = RuntimeError("Error code: 403 - {'error': {'message': 'Forbidden'}}")
+
+    bans = []
+    for _ in range(4):
+        p._banned_until = 0
+        p.mark_error(err)
+        bans.append(round(p._banned_until - time.time()))
+
+    assert 55 <= bans[0] <= 61          # first 403: one minute
+    assert bans[1] > bans[0]            # then escalate
+    assert all(b <= 6 * 3600 + 2 for b in bans)
+    assert p._forbidden_streak == 4
+
+    # A success resets the streak so a later transient 403 is cheap again.
+    resp = MagicMock(
+        usage=MagicMock(total_tokens=1),
+        choices=[MagicMock(message=MagicMock(content="ok"))],
+    )
+    p._record_success(resp, time.time())
+    assert p._forbidden_streak == 0
+
+
+def test_json_validation_error_is_not_a_ban():
+    """A 400 caused by malformed model JSON is a prompt problem, not provider
+    death: banning it removed Groq - the only working provider - from the pool
+    and left the daemon looping on 'All providers banned'."""
+    from abvorn.core.models import AIProvider
+    p = AIProvider("groq", "sk-test-key", model="gpt-4o")
+    p.mark_error(RuntimeError(
+        "Error code: 400 - {'error': {'message': 'Failed to generate JSON. "
+        "Please adjust your prompt.'}}"
+    ))
+    assert p.available
+    assert p.failures == 1
+
+
+def test_json_mode_400_retries_as_plain_text():
+    from abvorn.core.models import AIProvider
+    import openai
+    p = AIProvider("groq", "sk-test-key", model="openai/gpt-oss-120b")
+    p.client = MagicMock()
+    bad = openai.BadRequestError(
+        "Error code: 400 - Failed to generate JSON",
+        response=MagicMock(status_code=400),
+        body={},
+    )
+    p.client.chat.completions.create.side_effect = [
+        bad,
+        MagicMock(
+            choices=[MagicMock(message=MagicMock(content='```json\n{"ok": true}\n```'))],
+            usage=MagicMock(total_tokens=7),
+        ),
+    ]
+    text = p.call([{"role": "user", "content": "hi"}], json_mode=True)
+    from abvorn.core.models import parse_json
+    assert parse_json(text) == {"ok": True}
+    # second attempt must drop response_format so the provider will answer
+    assert "response_format" not in p.client.chat.completions.create.call_args.kwargs

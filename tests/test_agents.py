@@ -151,6 +151,56 @@ def test_content_agent_decide_waits_when_niche_missing():
     assert asyncio.run(run()) == "wait"
 
 
+def test_research_agent_does_not_republish_the_same_niche_every_poll():
+    """A niche stuck below 3 posts used to be researched on every single poll
+    (~11s), republishing content.researched each time and driving ContentAgent
+    into a re-draft loop that burned provider quota with nothing published."""
+    import asyncio
+    from abvorn.agents import orchestrator
+
+    class State:
+        def get_all_niches(self):
+            return [{"slug": "robot-vacuums", "total_posts": 0}]
+
+    agent = orchestrator.ResearchAgent(AgentBus(":memory:"), state=State(), router=object())
+
+    async def run():
+        first = await agent.perceive()
+        await agent.act("research:robot-vacuums")  # sets the cooldown
+        second = await agent.perceive()
+        return first, second
+
+    first, second = asyncio.run(run())
+    assert [n["slug"] for n in first["under_researched"]] == ["robot-vacuums"]
+    assert second["under_researched"] == []
+
+
+def test_content_agent_backs_off_after_a_failed_generation():
+    """A failing niche must not be re-drafted on every poll: one attempt per
+    failure-cooldown window, and other niches still get their turn."""
+    import asyncio
+    from abvorn.agents.orchestrator import ContentAgent, GENERATE_FAILURE_COOLDOWN
+
+    bus = AgentBus(":memory:")
+    agent = ContentAgent(bus, state=None, router=None, pipeline=None)
+    bus.publish("content.researched", {"niche": "webcams", "products": [], "count": 0})
+
+    async def run():
+        first = await agent.decide(await agent.perceive())
+        agent._last_failed["webcams"] = time.time()
+        second = await agent.decide(await agent.perceive())
+        # A different niche is still eligible while webcams cools down.
+        bus.publish("content.researched", {"niche": "audio", "products": [], "count": 0})
+        third = await agent.decide(await agent.perceive())
+        return first, second, third
+
+    first, second, third = asyncio.run(run())
+    assert first == "generate:webcams"
+    assert second == "wait"
+    assert third == "generate:audio"
+    assert GENERATE_FAILURE_COOLDOWN > 0
+
+
 def test_research_agent_offloads_blocking_research(monkeypatch):
     from abvorn.agents.orchestrator import ResearchAgent
 

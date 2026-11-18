@@ -1,6 +1,8 @@
 import json, os, logging
 from datetime import date
 
+from abvorn.core.models import parse_json
+
 logger = logging.getLogger("abvorn.writer")
 
 # Centralized affiliate tag: AMAZON_TAG secret, falling back to the real
@@ -94,11 +96,42 @@ Return JSON:
     return {"selected_angle": "problem_solution", "outline": ["H2: Introduction", "H2: Product Review"], "primary_keyword": f"best {niche}"}
 
 
+def _outline_lines(outline: dict) -> str:
+    """Render outline entries as text for the draft prompt.
+
+    Models sometimes ignore the schema and return a list of objects
+    ({"heading": ..., "description": ...}) instead of strings. A bare
+    "\\n".join() on that raises "sequence item 0: expected str instance, dict
+    found", which used to kill the whole ContentAgent cycle. Flatten both
+    shapes instead.
+    """
+    lines = []
+    for item in (outline or {}).get("outline") or []:
+        if isinstance(item, str):
+            lines.append(item)
+        elif isinstance(item, dict):
+            head = item.get("heading") or item.get("title") or item.get("h2") or ""
+            detail = item.get("description") or item.get("explanation") or ""
+            line = " — ".join(str(p) for p in (head, detail) if p)
+            if line:
+                lines.append(line)
+        elif item is not None:
+            lines.append(str(item))
+    return "\n".join(lines)
+
+
+def _parse_draft(result):
+    """Parse a draft completion; None means the model output is unusable."""
+    if not isinstance(result, str):
+        return result
+    return parse_json(result)
+
+
 def write_draft(niche: str, products: list, outline: dict, persona: dict,
                 research_data: list, router, brain_context: dict = None) -> dict:
     """DRAFT stage: write full article from outline + research."""
     product_json = json.dumps(products, indent=2)[:2000]
-    outline_sections = "\n".join(outline.get("outline", []))
+    outline_sections = _outline_lines(outline)
     persona_context = ""
     if persona:
         persona_context = f"""
@@ -191,10 +224,31 @@ Return JSON:
     }}
 }}"""
     result = router.ask(prompt, json_mode=True)
-    if isinstance(result, str):
-        try:
-            return json.loads(result)
-        except json.JSONDecodeError:
-            logger.error("Draft JSON parse failed")
-            return None
-    return result
+    parsed = _parse_draft(result)
+    if parsed is None and isinstance(result, str):
+        # The long-article prompt regularly produces a response that is cut off
+        # mid-string (tails end inside <table> markup or a tag attribute), so
+        # no amount of fence/brace stripping can recover it. Retry once with a
+        # deliberately compact output contract instead of discarding the whole
+        # stage after paying for one generation.
+        head = result[:120].encode("unicode_escape").decode("ascii")
+        tail = result[-120:].encode("unicode_escape").decode("ascii")
+        logger.warning(
+            "Draft JSON incomplete (%d chars) head=%r tail=%r; retrying with a compact draft",
+            len(result), head, tail,
+        )
+        compact_prompt = prompt.replace(
+            '"Full article body HTML (1000-2000 words)"',
+            '"Full article body HTML (600-900 words, plain semantic tags only)"',
+        ) + (
+            "\n\nOUTPUT CONTRACT (overrides the earlier table requirement): "
+            "your previous response was cut off before the JSON closed. Write a "
+            "SHORTER article: 600-900 words using only <h2>, <h3>, <p>, <ul>, "
+            "<li>, <strong> and <a>. No <table>, no inline style attributes, no "
+            "prose outside the JSON object. Close every string and the final }."
+        )
+        result = router.ask(compact_prompt, json_mode=True)
+        parsed = _parse_draft(result)
+        if parsed is None:
+            logger.error("Draft JSON parse failed again after the compact retry")
+    return parsed

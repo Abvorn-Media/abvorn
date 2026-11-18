@@ -1,4 +1,4 @@
-import asyncio, logging, os, re
+import asyncio, logging, os, re, time
 from datetime import datetime
 from .base import AgentBase
 from ..agents.researcher import research_niche
@@ -6,6 +6,14 @@ from ..core.models import ModelRouter
 from ..core import bus_progress
 
 logger = logging.getLogger("abvorn.orchestrator")
+
+# Pacing for the autonomous research/content loop. Agents poll every few
+# seconds, so without these the first under-researched niche is re-researched
+# and re-drafted on every single poll (~11s), burning provider quota forever
+# and flooding the log with "ContentAgent Cycle N failed".
+RESEARCH_COOLDOWN = float(os.environ.get("ABVORN_RESEARCH_COOLDOWN", 15 * 60))
+GENERATE_COOLDOWN = float(os.environ.get("ABVORN_GENERATE_COOLDOWN", 5 * 60))
+GENERATE_FAILURE_COOLDOWN = float(os.environ.get("ABVORN_GENERATE_FAILURE_COOLDOWN", 15 * 60))
 
 # Monotonic "highest content.drafted id already deployed" marker. See
 # abvorn/core/bus_progress.py for why this is a position and not a set.
@@ -96,11 +104,21 @@ class ResearchAgent(AgentBase):
     def __init__(self, bus, state, router: ModelRouter, brain=None, will=None, drive=None):
         super().__init__("ResearchAgent", bus, state, brain, will, drive)
         self.router = router
+        self._researched_at: dict[str, float] = {}
 
     async def perceive(self):
         queue = self.state.get_all_niches() if self.state else []
         low_posts = [n for n in queue if n["total_posts"] < 3]
-        return {"under_researched": low_posts[:1]}
+        now = time.time()
+        # Skip niches researched recently: a niche that still shows <3 posts
+        # (research failed, or content generation keeps failing) would otherwise
+        # be picked again on the very next poll, republishing content.researched
+        # every ~11s and driving ContentAgent into an endless re-draft loop.
+        due = [
+            n for n in low_posts
+            if now - self._researched_at.get(n["slug"], 0.0) >= RESEARCH_COOLDOWN
+        ]
+        return {"under_researched": due[:1]}
 
     async def decide(self, perception):
         if perception.get("under_researched"):
@@ -114,6 +132,9 @@ class ResearchAgent(AgentBase):
     async def act(self, decision):
         if decision.startswith("research:"):
             niche = decision.split(":", 1)[1]
+            # Record the attempt before the work so a slow/crashing research
+            # call cannot be re-entered by the next poll.
+            self._researched_at[niche] = time.time()
             logger.info(f"[ResearchAgent] Researching niche: {niche}")
             products = await asyncio.to_thread(research_niche, niche, self.router)
             if products:
@@ -140,17 +161,33 @@ class ContentAgent(AgentBase):
         super().__init__("ContentAgent", bus, state, brain, will, drive)
         self.router = router
         self.pipeline = pipeline
+        self._last_generated: dict[str, float] = {}
+        self._last_failed: dict[str, float] = {}
 
     async def perceive(self):
         return {"events": self.bus.get_recent_events("content.researched")}
 
+    def _cooling_down(self, niche: str, now: float) -> bool:
+        """True when this niche should not be drafted again yet."""
+        if now - self._last_failed.get(niche, 0.0) < GENERATE_FAILURE_COOLDOWN:
+            return True
+        return now - self._last_generated.get(niche, 0.0) < GENERATE_COOLDOWN
+
     async def decide(self, perception):
-        if perception.get("events"):
-            last = max(perception["events"], key=lambda e: e["created_at"])
+        events = perception.get("events") or []
+        now = time.time()
+        # Newest first: the freshest research event wins, but a niche that is
+        # cooling down (already drafted, or recently failed) is skipped instead
+        # of being retried on every poll. Before this, a single unpublishable
+        # niche produced a full draft attempt every ~11s, one failure log per
+        # attempt, and no post.
+        for last in sorted(events, key=lambda e: e["created_at"], reverse=True):
             envelope = last.get("message", {}) if isinstance(last.get("message"), dict) else last
             niche = envelope.get("niche") or ""
             if not niche:
-                return "wait"
+                continue
+            if self._cooling_down(niche, now):
+                continue
             if not self.soul_check("generate_content", {"niche": niche}):
                 logger.info(f"[ContentAgent] Soul blocked content for {niche}")
                 return "wait"
@@ -168,6 +205,7 @@ class ContentAgent(AgentBase):
                 persona={},
             )
             if result:
+                self._last_generated[niche] = time.time()
                 self.bus.publish("content.drafted", {"niche": niche, "result": result})
                 if self.state:
                     from src.deployment import product_card_image
@@ -175,6 +213,7 @@ class ContentAgent(AgentBase):
                                         quality_score=result.get("quality_score", 0),
                                         image=product_card_image(result))
                 return {"niche": niche, "title": result.get("post_title", "")}
+            self._last_failed[niche] = time.time()
             return {"niche": niche, "error": "pipeline returned None"}
 
     async def reflect(self, outcome):

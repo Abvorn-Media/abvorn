@@ -458,7 +458,7 @@ def gate_copy(text: str, label: str, *, mode: str = "report") -> GateResult:
     return GateResult(ok=True, blocking=[], issues=issues)
 
 
-def ensure_server(max_wait: float = 60.0) -> bool:
+def ensure_server(max_wait: float = 200.0) -> bool:
     """Start the self-hosted LanguageTool server if it is not already running."""
     if _Availability.available():
         return True

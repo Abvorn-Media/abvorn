@@ -5,6 +5,19 @@ from contextlib import contextmanager
 
 logger = logging.getLogger("abvorn.state")
 
+def maturity_for(total_posts: int, avg_quality: float) -> str:
+    """Map a niche's post count and quality onto its maturity label."""
+    if total_posts >= 10 and avg_quality >= 7.5:
+        return "evergreen"
+    if total_posts >= 7:
+        return "thriving"
+    if total_posts >= 4:
+        return "growing"
+    if total_posts >= 2:
+        return "sprout"
+    return "seed"
+
+
 def _rows(cursor) -> list:
     """Build dicts keyed by the query's own column names.
 
@@ -221,11 +234,7 @@ class AbvornState:
             """, (views, users, round(score, 1), slug))
 
     def update_niche_maturity(self, slug: str, total_posts: int, avg_quality: float):
-        maturity = "seed"
-        if total_posts >= 10 and avg_quality >= 7.5: maturity = "evergreen"
-        elif total_posts >= 7: maturity = "thriving"
-        elif total_posts >= 4: maturity = "growing"
-        elif total_posts >= 2: maturity = "sprout"
+        maturity = maturity_for(total_posts, avg_quality)
         with self._cursor() as c:
             c.execute("""
                 UPDATE niches SET total_posts=?, avg_quality=?, maturity=?, last_post_at=?
@@ -242,6 +251,23 @@ class AbvornState:
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (niche_slug, title, filename, product_name, angle,
                   quality_score, persona_id, image or "", datetime.now().isoformat()))
+            # Keep the denormalised niche counters honest. Nothing in production
+            # ever called update_niche_maturity(), so niches.total_posts stayed
+            # 0 forever: ResearchAgent.perceive() saw every niche as
+            # under-researched and re-researched the same one every ~11s,
+            # republishing content.researched and making ContentAgent re-draft
+            # it in a loop that burned provider quota with no published result.
+            c.execute(
+                "SELECT COUNT(*), COALESCE(AVG(quality_score), 0) FROM posts WHERE niche_slug=?",
+                (niche_slug,),
+            )
+            total, avg_quality = c.fetchone()
+            c.execute(
+                "UPDATE niches SET total_posts=?, avg_quality=?, maturity=?, last_post_at=? "
+                "WHERE slug=?",
+                (total, round(avg_quality, 1), maturity_for(total, avg_quality),
+                 datetime.now().isoformat(), niche_slug),
+            )
 
     def get_posts_for_niche(self, niche_slug: str) -> list:
         with self._cursor() as c:

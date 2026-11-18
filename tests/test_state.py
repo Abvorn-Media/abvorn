@@ -186,6 +186,37 @@ def test_product_card_image_reads_products_not_top_level(tmp_path):
     assert product_card_image({"products": [{"name": "x"}]}) == ""
 
 
+def test_add_post_keeps_niche_counters_current(tmp_path):
+    """niches.total_posts must track the posts table.
+
+    Nothing in production called update_niche_maturity(), so total_posts stayed
+    at 0 forever and ResearchAgent re-researched the same niche every ~11s,
+    republishing content.researched and driving ContentAgent into an endless
+    re-draft loop.
+    """
+    db = tmp_path / "counters.db"
+    state = AbvornState(db)
+    state.upsert_niche("tv", "TV", "Electronics")
+    assert state.get_niche("tv")["total_posts"] == 0
+
+    state.add_post("tv", "First", "first.html", quality_score=8.0)
+    niche = state.get_niche("tv")
+    assert niche["total_posts"] == 1
+    assert niche["avg_quality"] == 8.0
+    assert niche["maturity"] == "seed"
+    assert niche["last_post_at"]
+
+    state.add_post("tv", "Second", "second.html", quality_score=6.0)
+    niche = state.get_niche("tv")
+    assert niche["total_posts"] == 2
+    assert niche["avg_quality"] == 7.0
+    assert niche["maturity"] == "sprout"
+
+    # A post for a niche row that does not exist must not raise.
+    state.add_post("orphan", "No niche row", "orphan.html")
+    state.close()
+
+
 def test_add_post_persists_product_card_image(tmp_path):
     """End-to-end: the resolved product photo must survive into posts.image."""
     from src.deployment import product_card_image

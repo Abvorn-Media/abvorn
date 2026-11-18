@@ -17,14 +17,62 @@ TIER_FOR_TASK = {
     "polish": "strong",
 }
 
+
+def parse_json(text):
+    """Best-effort JSON parser for model output.
+
+    Callers used to do a bare ``json.loads()`` and discard the whole completion
+    when it failed ("Draft JSON parse failed" / "Polish JSON parse failed").
+    Models routinely wrap otherwise-valid JSON in a markdown fence or pad it
+    with a sentence of preamble, so strip those before giving up.
+    """
+    if isinstance(text, (dict, list)):
+        return text
+    if not isinstance(text, str) or not text.strip():
+        return None
+    stripped = text.strip()
+    candidates = [stripped]
+    fenced = re.search(r"```(?:json)?\s*(.+?)\s*```", stripped, re.S)
+    if fenced:
+        candidates.append(fenced.group(1).strip())
+    for opener, closer in (("{", "}"), ("[", "]")):
+        start, end = stripped.find(opener), stripped.rfind(closer)
+        if start != -1 and end > start:
+            candidates.append(stripped[start:end + 1])
+    for candidate in candidates:
+        try:
+            return json.loads(candidate)
+        except (json.JSONDecodeError, ValueError):
+            continue
+    return None
+
+
+def is_json_validation_error(exc: Exception) -> bool:
+    """True for a 400 that means "the model's JSON was malformed".
+
+    Groq rejects gpt-oss output that its json_object validator cannot parse
+    with a 400 ("Failed to generate JSON" / "Failed to validate JSON"). That is
+    a prompt/output problem, not a provider-health problem: banning the
+    provider for it removed the only working provider from the pool and left
+    the daemon looping on "All providers banned".
+    """
+    msg = str(exc).lower()
+    return "error code: 400" in msg and "json" in msg
+
 class AIProvider:
     def __init__(self, name: str, api_key: str, base_url: str = None, model: str = None, timeout: float = None,
-                 tier: str = "standard", native_gemini: bool = False, min_gap: float = 2.0):
+                 tier: str = "standard", native_gemini: bool = False, min_gap: float = 2.0,
+                 key_lock=None):
         self.name = name
         self.tier = tier
         self.model = model or "gpt-4o"
         self.native_gemini = native_gemini
         self.api_key = api_key
+        # Providers that share one API key must not hit the API concurrently:
+        # Groq answers 403 "Forbidden" to simultaneous requests from the same
+        # key (its abuse protection), which used to look like a dead key and
+        # take every Groq model out of the pool at once.
+        self._key_lock = key_lock if key_lock is not None else threading.RLock()
         import httpx
         to = httpx.Timeout(timeout if timeout else 60.0, connect=timeout if timeout else 10.0)
         http_client = httpx.Client(timeout=to)
@@ -42,6 +90,9 @@ class AIProvider:
         self._min_gap = min_gap
         self._day_key = time.strftime("%Y-%m-%d")
         self._day_tokens = 0
+        # Consecutive 403s. 403 is ambiguous (revoked key vs. Groq's abuse
+        # protection), so the ban escalates instead of jumping straight to 12h.
+        self._forbidden_streak = 0
 
     def _tick_day(self):
         """Reset the per-day token counter when UTC date rolls over (groq's
@@ -89,8 +140,24 @@ class AIProvider:
                 code = int(m.group(1))
                 break
         msg = str(exc).lower()
-        if code in (401, 402, 403):
+        if code in (401, 402):
+            # Bad key / unpaid account: not recovering in seconds.
             duration = 12 * 3600
+        elif code == 403:
+            # Groq answers 403 "Forbidden" both for a blocked/revoked key and
+            # for its abuse protection when several models sharing one key are
+            # called at once (the old probe() did exactly that). A flat 12h ban
+            # sidelined the only working provider for a transient block, so
+            # start short and escalate only while the block keeps persisting.
+            self._forbidden_streak += 1
+            duration = min(60 * (2 ** (self._forbidden_streak - 1)), 6 * 3600)
+        elif code in (404, 410):
+            # Model name retired / endpoint gone. Retrying it every 60s just
+            # burns a slot and floods the log (34 x 404 for one dead model).
+            duration = 12 * 3600
+        elif is_json_validation_error(exc):
+            # Prompt/output problem, not provider health: do not ban.
+            duration = 0
         elif code == 429:
             if "tokens per day" in msg or "per day (tpd)" in msg or "tpud" in msg or "tokens per month" in msg:
                 # Daily/monthly token quota exhausted — not going to recover in
@@ -104,11 +171,30 @@ class AIProvider:
                 duration = 3600
         else:
             duration = 60
-        self.ban(duration)
-        logger.warning(f"{self.name}: marked error {code}, banned {duration}s: {str(exc)[:80]}")
+        if duration:
+            self.ban(duration)
+            logger.warning(f"{self.name}: marked error {code}, banned {duration}s: {str(exc)[:80]}")
+        else:
+            self.failures += 1
+            logger.warning(
+                f"{self.name}: JSON mode rejected (error {code}), not banning — "
+                f"caller will fall back to plain text: {str(exc)[:80]}"
+            )
+
+    def _record_success(self, resp, start: float):
+        """Update counters for a successful completion and return its text."""
+        elapsed = time.time() - start
+        self.total_calls += 1
+        self.total_tokens += resp.usage.total_tokens if resp.usage else 0
+        self._register_tokens(resp.usage.total_tokens if resp.usage else 0)
+        self.total_time += elapsed
+        self.verified = True
+        self.last_ok = time.time()
+        self._forbidden_streak = 0
+        return resp.choices[0].message.content
 
     def call(self, messages: list, json_mode: bool = False) -> str:
-        with self._lock:
+        with self._key_lock, self._lock:
             self._throttle()
             start = time.time()
             if self.native_gemini:
@@ -120,16 +206,25 @@ class AIProvider:
                 resp = self.client.chat.completions.create(
                     model=self.model, messages=messages, response_format=fmt
                 )
-                elapsed = time.time() - start
-                self.total_calls += 1
-                self.total_tokens += resp.usage.total_tokens if resp.usage else 0
-                self._register_tokens(resp.usage.total_tokens if resp.usage else 0)
-                self.total_time += elapsed
-                self.verified = True
-                self.last_ok = time.time()
-                return resp.choices[0].message.content
+                return self._record_success(resp, start)
             except Exception as e:
                 logger.warning(f"{self.name} failed: {str(e)[:80]}")
+                if not (json_mode and is_json_validation_error(e)):
+                    raise
+            # The provider refused the structured-output contract but may still
+            # produce good JSON as plain text. Retry once without
+            # response_format; callers parse with parse_json(), which tolerates
+            # fences and preamble. Still raise if that fails too, so the router
+            # can move on to the next provider.
+            try:
+                resp = self.client.chat.completions.create(
+                    model=self.model, messages=messages
+                )
+                text = self._record_success(resp, start)
+                logger.info(f"{self.name}: recovered JSON-mode rejection via plain-text retry")
+                return text
+            except Exception as e:
+                logger.warning(f"{self.name} failed (plain-text retry): {str(e)[:80]}")
                 raise
 
     def _call_gemini_native(self, messages: list, start: float) -> str:
@@ -175,7 +270,7 @@ class AIProvider:
         last_error = None
         for attempt in range(max_retries + 1):
             try:
-                with self._lock:
+                with self._key_lock, self._lock:
                     start = time.time()
                     fmt = {"type": "json_object"} if json_mode else None
                     if self.client is None:
@@ -220,7 +315,6 @@ class ModelRouter:
             ("groq", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "openai/gpt-oss-120b", "strong"),
             ("groq-oss-20", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "openai/gpt-oss-20b", "strong"),
             ("groq-qwen-27", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "qwen/qwen3.8-27b", "strong"),
-            ("groq-qwen-36", secrets.get("GROQ_KEY"), "https://api.groq.com/openai/v1", "qwen/qwen3.6-27b", "fast"),
             ("glm", secrets.get("GLM_KEYS"), "https://open.bigmodel.cn/api/paas/v4/", "glm-4-flash", "fast"),
             ("gemini", secrets.get("GEMINI_KEY"), "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-3.6-flash", "fast"),
             ("openai", secrets.get("OPENAI_KEY"), None, "gpt-4o", "strong"),
@@ -229,10 +323,17 @@ class ModelRouter:
             ("nim-default", secrets.get("NVIDIA_KEY"), "https://integrate.api.nvidia.com/v1", "nvidia/nemotron-3.5-lightning-30b-a3b", "strong"),
             ("nim-fast", secrets.get("NVIDIA_KEY"), "https://integrate.api.nvidia.com/v1", "openai/gpt-oss-20b", "fast"),
         ]
+        key_locks: dict = {}
         for name, key, url, model, tier in configs:
             if key and "YOUR_" not in key:
                 is_gemini = (name == "gemini")
-                self.providers.append(AIProvider(name, key, url, model, timeout=timeout, tier=tier, native_gemini=is_gemini))
+                # Same key = one lock. Groq's three model aliases and the three
+                # NVIDIA aliases each share a single account/rate-limit bucket.
+                lock = key_locks.setdefault(key, threading.RLock())
+                self.providers.append(AIProvider(
+                    name, key, url, model, timeout=timeout, tier=tier,
+                    native_gemini=is_gemini, key_lock=lock,
+                ))
 
     # When every provider is exhausted, only wait if the soonest recovery is
     # close enough that retrying in-place will likely succeed (transient
@@ -310,13 +411,25 @@ class ModelRouter:
 
     def probe(self):
         """Fire-and-forget health probe: mark verified-working providers and
-        ban dead ones so ask() prefers whichever providers actually respond."""
-        def _check(p):
-            try:
-                p.call([{"role": "user", "content": "Reply with the single word: probe"}])
-            except Exception as e:
-                p.mark_error(e)
-        threads = [threading.Thread(target=_check, args=(p,), daemon=True) for p in self.providers]
+        ban dead ones so ask() prefers whichever providers actually respond.
+
+        Providers that share one API key are probed sequentially. Firing the
+        three Groq models at once tripped Groq's abuse protection: it answered
+        403 "Forbidden" to every one of them, which the router read as an auth
+        failure and banned the working key for 12 hours - leaving the daemon
+        with no usable provider at all.
+        """
+        def _check(group):
+            for p in group:
+                try:
+                    p.call([{"role": "user", "content": "Reply with the single word: probe"}])
+                except Exception as e:
+                    p.mark_error(e)
+
+        groups: dict = {}
+        for p in self.providers:
+            groups.setdefault(p.api_key, []).append(p)
+        threads = [threading.Thread(target=_check, args=(g,), daemon=True) for g in groups.values()]
         for t in threads:
             t.start()
 

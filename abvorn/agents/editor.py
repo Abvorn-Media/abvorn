@@ -1,6 +1,26 @@
 import json, re, logging
 
+from abvorn.core.models import parse_json
+
 logger = logging.getLogger("abvorn.editor")
+
+
+def _guidance_texts(items, limit: int = 2) -> list:
+    """Pull .text out of brain guidance rows, tolerating the stored shape.
+
+    Brain rows are JSON blobs; ``text`` can arrive as a dict/None, and joining
+    that raises "sequence item 0: expected str instance, dict found".
+    """
+    texts = []
+    for item in (items or [])[:limit]:
+        if not isinstance(item, dict):
+            continue
+        value = item.get("text")
+        if isinstance(value, str) and value.strip():
+            texts.append(value[:300])
+        elif isinstance(value, dict):
+            texts.append(json.dumps(value)[:300])
+    return texts
 
 
 def fact_check(draft: dict, research_data: list, router, brain_context: dict = None) -> dict:
@@ -13,8 +33,9 @@ def fact_check(draft: dict, research_data: list, router, brain_context: dict = N
     if brain_context:
         psych_triggers = brain_context.get("psychology_triggers", [])
         if psych_triggers:
-            texts = [c["text"][:300] for c in psych_triggers[:2]]
-            brain_guidance = "\nPSYCHOLOGY GUIDANCE:\n" + "\n---\n".join(texts) + "\n\nCheck if the article properly leverages these psychological principles."
+            texts = _guidance_texts(psych_triggers)
+            if texts:
+                brain_guidance = "\nPSYCHOLOGY GUIDANCE:\n" + "\n---\n".join(texts) + "\n\nCheck if the article properly leverages these psychological principles."
 
     prompt = f"""Fact-check this article against the research data.
 
@@ -46,11 +67,11 @@ Return JSON with:
 }}"""
     result = router.ask(prompt, json_mode=True)
     if isinstance(result, str):
-        try:
-            return json.loads(result)
-        except json.JSONDecodeError:
+        parsed = parse_json(result)
+        if parsed is None:
             logger.warning("Fact-check JSON parse failed, assuming passed")
             return {"passed": True, "issues": []}
+        return parsed if isinstance(parsed, dict) else {"passed": True, "issues": []}
     return result or {"passed": True, "issues": []}
 
 
@@ -66,8 +87,9 @@ def polish(draft: dict, fact_check_result: dict, persona: dict, router, brain_co
     if brain_context:
         copy_principles = brain_context.get("copywriting_principles", [])
         if copy_principles:
-            texts = [c["text"][:300] for c in copy_principles[:2]]
-            brain_guidance = "\nCOPYWRITING GUIDANCE:\n" + "\n---\n".join(texts) + "\n\nApply these principles during polish."
+            texts = _guidance_texts(copy_principles)
+            if texts:
+                brain_guidance = "\nCOPYWRITING GUIDANCE:\n" + "\n---\n".join(texts) + "\n\nApply these principles during polish."
 
     prompt = f"""Polish this buying guide for conversion. Your reader is "{persona_name}".
 
@@ -78,7 +100,7 @@ ARTICLE: {article[:2000]}
 REQUIRED IMPROVEMENTS:
 1. Ensure the emotional arc: problem → trust → solution → proof → action
 2. Make sure every paragraph advances the reader toward a decision
-3. Verify affiliate links are contextual (not突兀)
+3. Verify affiliate links are contextual (not abrupt or tacked on)
 4. Ensure scannability: short paragraphs, clear headings
 5. Check reading level matches the persona
 
@@ -103,12 +125,13 @@ Return JSON:
 }}"""
     result = router.ask(prompt, json_mode=True)
     if isinstance(result, str):
-        try:
-            result = json.loads(result)
-        except json.JSONDecodeError:
+        parsed = parse_json(result)
+        if parsed is None:
             logger.error("Polish JSON parse failed")
-            return None
-    if result:
+            result = None
+        else:
+            result = parsed
+    if isinstance(result, dict) and result:
         return result
     return {
         "revised_intro": intro,

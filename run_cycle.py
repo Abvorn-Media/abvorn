@@ -2575,6 +2575,32 @@ document.addEventListener('DOMContentLoaded', function() {{
 
 
 # ─── AI Research (skip DDGS, use AI knowledge directly) ──────────────────
+def _research_fallback(niche):
+    """Last-resort product research when the Amazon scrape is unavailable.
+
+    Keep only products with an ASIN or a photo. The LLM fallback otherwise
+    invents plausible-sounding models with neither, which is how placeholder
+    cards (no image, '?tag=' search link instead of a product page) shipped.
+    """
+    try:
+        from abvorn.agents.researcher import research_niche
+        products = research_niche(niche) or []
+    except Exception as e:
+        logger.warning(f"Research fallback failed for {niche}: {e}")
+        return []
+    buyable = [
+        p for p in products
+        if isinstance(p, dict)
+        and str(p.get("name") or "").strip()
+        and (str(p.get("asin") or "").strip() or str(p.get("image") or "").strip())
+    ]
+    if len(buyable) != len(products):
+        logger.warning(
+            f"Research fallback dropped {len(products) - len(buyable)} unbuyable products for {niche}"
+        )
+    return buyable
+
+
 def research_products(niche):
     cache = _own_load_cache()
     keyword = f"best {niche}"
@@ -2584,10 +2610,20 @@ def research_products(niche):
         if cached:
             print(f"  Cached products for {niche}: {len(cached)}")
             return cached
+
+    def _fallback():
+        products = _research_fallback(niche)
+        if products:
+            cache[cache_key] = products
+            _own_save_cache(cache)
+            _own_track_usage(1)
+            print(f"  Fallback products for {niche}: {[p.get('name', '?') for p in products]}")
+        return products
+
     secrets = get_secrets()
     api_key = secrets.get("OPENWEB_NINJA_KEY", "")
     if not api_key:
-        return None
+        return _fallback()
     try:
         response = http_requests.get(
             "https://api.openwebninja.com/realtime-amazon-data/search",
@@ -2627,7 +2663,9 @@ def research_products(niche):
             logger.warning(f"Open Web Ninja returned {response.status_code}")
     except Exception as e:
         logger.warning(f"Open Web Ninja API error: {e}")
-    return None
+    # An outage must degrade to the real provider chain, not return None (which
+    # main() turned into sys.exit(1) and left the content cycle broken).
+    return _fallback()
 
 
 # ─── Content generation ─────────────────────────────────────────────────
@@ -3574,8 +3612,10 @@ def main(forced_niche=None, force=False, batch_mode=False):
     print(f"\n--- RESEARCH: {niche_slug} ---")
     products = research_products(niche_slug)
     if not products:
-        print("ERROR: No products found")
-        sys.exit(1)
+        # An outage (or a niche with no buyable products) is a skip, not a
+        # failed cycle: sys.exit(1) here made every scheduler run look broken.
+        print("SKIP: No products found")
+        return {"status": "skipped", "niche": niche_slug, "reason": "no_products"}
     print(f"Found {len(products)} products: {[p.get('name','?') for p in products]}")
 
     try:

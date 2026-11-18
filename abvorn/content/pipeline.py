@@ -88,13 +88,19 @@ class ContentPipeline:
         # Stage 4: FACT-CHECK
         logger.info(f"[PIPELINE] FACT-CHECK: {niche}")
         fc_result = fact_check(draft, products, router, brain_context=brain_context)
+        if not isinstance(fc_result, dict):
+            fc_result = {}
         if fc_result and not fc_result.get("passed") and fc_result.get("issues"):
             for issue in fc_result["issues"][:3]:
                 logger.warning(f"  Fact-check issue [{issue.get('severity','low')}]: {issue.get('claim','')[:80]}")
 
         # Stage 5: POLISH
         logger.info(f"[PIPELINE] POLISH: {niche}")
-        polished = polish(draft, fc_result or {}, persona or {}, router, brain_context=brain_context)
+        # polish() may return None (unparseable model output); every line below
+        # calls .get() on it, which used to crash the cycle with
+        # "'NoneType' object has no attribute 'get'" right after the draft and
+        # fact-check had already been paid for.
+        polished = polish(draft, fc_result, persona or {}, router, brain_context=brain_context) or {}
 
         # Combine results
         final_intro = polished.get("revised_intro") or fc_result.get("revised_intro") or draft.get("intro", "")

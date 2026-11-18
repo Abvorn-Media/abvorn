@@ -79,7 +79,10 @@ class AgentBase(ABC):
                 self.bus.publish("system.heartbeat", {"agent": self.name, "cycle": self.cycle_count})
                 return {"decision": decision, "outcome": outcome}
             except Exception as e:
-                logger.error(f"[{self.name}] Cycle {self.cycle_count} failed: {e}")
+                # exception(), not error(): a bare message meant the daemon log
+                # had no tracebacks at all across 150k records, so every cycle
+                # failure was undiagnosable from the log alone.
+                logger.exception(f"[{self.name}] Cycle {self.cycle_count} failed: {e}")
                 self.bus.publish("system.error", {"agent": self.name, "error": str(e)})
                 if self.drive and self.drive.should_retry(attempt, str(e)):
                     self.drive.log_outcome(f"cycle_{self.cycle_count}", succeeded=False, note=str(e)[:100])
