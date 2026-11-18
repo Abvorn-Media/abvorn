@@ -95,4 +95,33 @@ def test_false_claim_repair_yields_clean_prose():
         )
 
 
+def test_extended_rewrite_covers_scraped_sales_and_testing_phrases():
+    """The live corpus carries figure/test phrasings beyond the curated list.
+
+    These are the shapes that survived a plain REWRITES pass on the 623 legacy
+    pages; rewrite_page() must clear them without touching honest disclaimers.
+    """
+    from abvorn.core.copyguard import _fabricated_claim_issues
+    from scripts.repair_false_claims import rewrite_page
+
+    cases = [
+        "<li><strong>Sales:</strong> 6K+ units sold</li>",
+        "<li>Sales: 6,000+ units sold in the last month</li>",
+        "<li><strong>Sales:</strong> 10\u202fK+ bought past month</li>",
+        "<li>Monthly sales: 10,000+ units</li>",
+        "<p>Over 10,000 units sold in the last month prove its popularity.</p>",
+        "<p>300k+ units sold.</p>",
+        "<p><strong>Independent lab testing</strong> confirms sensor accuracy.</p>",
+        "<p>We have tested, analyzed, and compared the top-rated options.</p>",
+        "<p>Each product went through a standardized test bench.</p>",
+    ]
+    for src in cases:
+        out = rewrite_page(src)
+        assert not _fabricated_claim_issues(out), f"{src!r} still flagged: {out!r}"
+
+    # A negated disclosure is honest copy and must survive verbatim.
+    disclaimer = "<p>No hands-on lab testing was performed.</p>"
+    assert rewrite_page(disclaimer) == disclaimer
+
+
 # def test_repair_leaves_negated_disclaimers_alone():

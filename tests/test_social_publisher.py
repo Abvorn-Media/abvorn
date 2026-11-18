@@ -256,8 +256,12 @@ def test_publish_all_routes_per_platform_media(publisher, monkeypatch, tmp_path)
     Image.new("RGB", (1080, 1350), (4, 5, 6)).save(tg)
 
     monkeypatch.setattr("abvorn.domination.social_publisher.EXPORT_DIR", tmp_path / "exports")
+    # This test is about media routing, not copy checking. Use real prose:
+    # "ig"/"tg" are flagged by LanguageTool when the copy gate is armed, so the
+    # test silently passed only while the gate happened to be failing open.
     results = publisher.publish_all(
-        {"instagram": {"text": "ig"}, "telegram": {"text": "tg"}},
+        {"instagram": {"text": "Best laptops compared."},
+         "telegram": {"text": "Compare the best laptops."}},
         "laptops",
         media_by_platform={"instagram": [str(ig)], "telegram": [str(tg)]},
     )

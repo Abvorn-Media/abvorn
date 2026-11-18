@@ -21,12 +21,13 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from abvorn.core.copyguard import (
-    _PAGE_BLOCKING_RULES,
-    _FABRICATED_CLAIM_RES,
-    check_text,
-    enabled,
-    html_to_text,
+from abvorn.core.copyguard import (
+    _PAGE_BLOCKING_RULES,
+    _FABRICATED_CLAIM_RES,
+    _in_negated_clause,
+    check_text,
+    enabled,
+    html_to_text,
 )
 
 # Curated rewrites. Order matters: longer phrases first so "we've tested and
@@ -83,11 +84,11 @@ REWRITES = [
      "recent strong sales"),
     (re.compile(
         r"<td>\s*\d[\d.,]*[kK]?\+?\s+units?\s+(?:sold\s+)?bought[^<]*?</td>", re.I),
-     "<td>ΓÇö</td>"),
+     "<td>—</td>"),
     (re.compile(
         r"<td>\s*\d[\d.,]*[kK]?\+?\s+(?:units?|bought)\s+"
         r"(?:in\s+)?(?:the\s+)?(?:past\s+month|monthly)[^<]*?</td>", re.I),
-     "<td>ΓÇö</td>"),
+     "<td>—</td>"),
     (re.compile(
         r"\d[\d.,]*[kK]?\+?\s+units?\s+(?:sold|bought)\s+last\s+month", re.I),
      "strong recent sales"),
@@ -149,10 +150,52 @@ DETECT = list(_FABRICATED_CLAIM_RES) + [
 ]
 
 
-def rewrite_page(text: str) -> str:
-    out = text
-    for pat, repl in REWRITES:
-        out = pat.sub(repl, out)
+# Phrasings the curated REWRITES above do not cover. They are applied with a
+# negation check so honest disclaimers ("No hands-on lab testing was performed")
+# are left intact -- rewriting those would delete the disclosure the copyguard
+# rule was designed to preserve.
+_CONTEXT_REWRITES = [
+    (re.compile(r"\blab(?:oratory)? testing\b", re.I), "spec review"),
+    (re.compile(r"\btest bench(?:es)?\b", re.I), "review process"),
+    (re.compile(r"\bwe\s+have\s+tested\b", re.I), "we have compared"),
+    # Figures split into markup by the LLM ("<em>10,000</em> units sold ...").
+    (re.compile(
+        r"<(?:em|strong)>\s*\d[\d.,\u00a0\u202f]*\+?\s*k?\+?\s*</(?:em|strong)>"
+        r"\s*(?:units?|bought|purchased)\b"
+        r"(?:\s+(?:sold|bought|purchased))?"
+        r"(?:\s+(?:in\s+)?(?:the\s+)?(?:past|last)\s+month|\s+recently)?",
+        re.I), "strong ongoing sales"),
+    # Clean up prose left behind when a figure was replaced mid-sentence.
+    (re.compile(r"\bunit sold strong ongoing sales\b", re.I),
+     "unit has strong ongoing sales"),
+    (re.compile(
+        r"\bstrong ongoing sales\s+(?:were|was|is|are)\s+"
+        r"(?:bought|sold)\s+in\s+(?:the\s+)?past\s+month(?:\s+alone)?",
+        re.I), "strong ongoing sales"),
+    # Any scraped sales figure with an explicit unit count. The narrow
+    # no-break spaces (U+202F) and comma groupings come straight from the
+    # Amazon scrape transcriptions; match them as digit separators.
+    (re.compile(
+        r"\b(?:over\s+|more than\s+|with more than\s+)?"
+        r"\d[\d.,\u00a0\u202f]*\+?\s*k?\+?\s*"
+        r"(?:units?|bought|purchased)\b"
+        r"(?:\s+(?:sold|bought|purchased))?"
+        r"(?:\s+(?:in\s+)?(?:the\s+)?(?:past|last)\s+month"
+        r"|\s+month[-\u2011]ago"
+        r"|\s+in\s+the\s+first\s+week\s+after\s+launch)?",
+        re.I), "strong ongoing sales"),
+]
+
+
+def rewrite_page(text: str) -> str:
+    out = text
+    for pat, repl in REWRITES:
+        out = pat.sub(repl, out)
+    for pat, repl in _CONTEXT_REWRITES:
+        out = pat.sub(
+            lambda m: repl if not _in_negated_clause(out, m.start()) else m.group(0),
+            out,
+        )
     return out
 
 

@@ -1,5 +1,33 @@
 import pytest
+import abvorn.agents.researcher as researcher
 from abvorn.agents.researcher import research_niche
+
+
+@pytest.fixture
+def no_live_sources(monkeypatch):
+    """Take every non-LLM research source offline.
+
+    research_niche() tries Amazon first, then Tavily, then DDGS. Without this
+    fixture the "all lookups fail" tests actually hit the live Amazon catalog,
+    get five real TVs back and never exercise the fail-closed path they pin.
+    """
+    class EmptyAmazon:
+        def search_products(self, niche):
+            return []
+
+    class OfflineTavily:
+        available = False
+
+    class OfflineDDGS:
+        def __enter__(self):
+            raise RuntimeError("search offline")
+        def __exit__(self, *args):
+            return False
+
+    monkeypatch.setattr(researcher, "_get_amazon", lambda: EmptyAmazon())
+    monkeypatch.setattr(researcher, "_get_tavily", lambda: OfflineTavily())
+    monkeypatch.setattr(researcher, "DDGS", OfflineDDGS)
+
 
 def test_research_returns_products():
     """RESEARCH stage should return a list of dicts with required keys."""
@@ -15,7 +43,7 @@ def test_research_returns_products():
     assert "features" in p
 
 
-def test_research_returns_empty_when_every_lookup_fails():
+def test_research_returns_empty_when_every_lookup_fails(no_live_sources):
     """A dead search provider and a dead LLM used to yield a fabricated
     "Top <niche> Pick" that was then published as a real product (invented
     7.0 scores, a ?tag=... search link, no ASIN). Failing closed lets the
@@ -27,7 +55,7 @@ def test_research_returns_empty_when_every_lookup_fails():
     assert research_niche("tv", DeadRouter()) == []
 
 
-def test_research_never_invents_a_placeholder_product():
+def test_research_never_invents_a_placeholder_product(no_live_sources):
     """Whatever the providers return, no product may be a 'Top <niche> Pick'
     stub or lack an identifier we can link to."""
     class EmptyRouter:
