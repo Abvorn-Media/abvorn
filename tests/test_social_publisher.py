@@ -227,6 +227,14 @@ def test_export_includes_media_files(publisher, tmp_path, monkeypatch):
     img = tmp_path / "share.jpg"
     Image.new("RGB", (1200, 627), (30, 60, 200)).save(img)
 
+    # Force the gate OFF explicitly. This test is about the gate-off export
+    # path, but ABVORN_SOCIAL_PUBLISH=0 does NOT disable publishing while the
+    # data/social_publish.enabled marker exists, and LinkedIn is now in the
+    # allow-list — so without this patch the copy gate runs in block mode and
+    # flags the literal "url" key from the script repr as a misspelling.
+    monkeypatch.setattr(
+        "abvorn.core.social_gate.require_social_publishing", lambda state=None: False
+    )
     monkeypatch.setattr("abvorn.domination.social_publisher.EXPORT_DIR", tmp_path / "exports")
     result = publisher.publish(
         {"post": "Best laptops compared.", "url": "https://abvorn.com/reviews/laptops/"},
@@ -247,7 +255,12 @@ def test_export_includes_media_files(publisher, tmp_path, monkeypatch):
 
 def test_publish_all_routes_per_platform_media(publisher, monkeypatch, tmp_path):
     """media_by_platform must route each platform its own photo set."""
-    monkeypatch.setenv("ABVORN_SOCIAL_PUBLISH", "0")
+    # Force the gate OFF. ABVORN_SOCIAL_PUBLISH=0 is only an *enable* override
+    # and cannot beat the data/social_publish.enabled marker, so the gate stays
+    # ON and these drafts would hit the block-mode copy gate instead of export.
+    monkeypatch.setattr(
+        "abvorn.core.social_gate.require_social_publishing", lambda state=None: False
+    )
     from PIL import Image
 
     ig = tmp_path / "ig.jpg"

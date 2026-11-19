@@ -1,4 +1,6 @@
-x
-pinterest
-medium
+telegram
+linkedin
 instagram
+pinterest
+x
+medium
