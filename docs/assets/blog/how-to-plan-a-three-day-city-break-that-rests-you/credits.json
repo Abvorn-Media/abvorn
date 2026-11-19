@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "file": "assets/blog/how-to-plan-a-three-day-city-break-that-rests-you/hero.jpg",
+    "query": "coffee cup and map on a wooden table by a window",
+    "alt": "A top-down view of a rustic workspace featuring a map, compass, and a cup of coffee.",
+    "caption": "",
+    "photo_id": 4641192,
+    "photographer": "ArtHouse Studio",
+    "photographer_url": "https://www.pexels.com/@arthousestudio",
+    "pexels_url": "https://www.pexels.com/photo/map-cup-and-compass-on-table-4641192/",
+    "width": 7952,
+    "height": 5280,
+    "source": "Pexels",
+    "fetched": "2026-10-23T12:12:56"
+  },
+  "01": {
+    "file": "assets/blog/how-to-plan-a-three-day-city-break-that-rests-you/01.jpg",
+    "query": "person sitting on a park bench reading a book in afternoon light",
+    "alt": "A woman sitting on a park bench, looking up contemplatively with a book in hand.",
+    "caption": "A woman sitting on a park bench, looking up contemplatively with a book in hand.",
+    "photo_id": 9784071,
+    "photographer": "Mikhail Nilov",
+    "photographer_url": "https://www.pexels.com/@mikhail-nilov",
+    "pexels_url": "https://www.pexels.com/photo/beautiful-brunette-woman-looking-up-in-park-9784071/",
+    "width": 7952,
+    "height": 5304,
+    "source": "Pexels",
+    "fetched": "2026-10-23T12:12:57"
+  },
+  "02": {
+    "file": "assets/blog/how-to-plan-a-three-day-city-break-that-rests-you/02.jpg",
+    "query": "empty city street with long shadows at dusk",
+    "alt": "Empty city street at dusk, tall buildings reflecting soft evening light, creating a serene urban scene.",
+    "caption": "Empty city street at dusk, tall buildings reflecting soft evening light, creating a serene urban scene.",
+    "photo_id": 35014741,
+    "photographer": "Max W",
+    "photographer_url": "https://www.pexels.com/@max-w-1673439416",
+    "pexels_url": "https://www.pexels.com/photo/modern-city-street-at-dusk-with-reflections-35014741/",
+    "width": 7728,
+    "height": 5152,
+    "source": "Pexels",
+    "fetched": "2026-10-23T12:12:58"
+  }
+}

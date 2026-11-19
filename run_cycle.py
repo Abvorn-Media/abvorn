@@ -2574,29 +2574,39 @@ document.addEventListener('DOMContentLoaded', function() {{
 
 
 
-# ─── AI Research (skip DDGS, use AI knowledge directly) ──────────────────
+# ─── AI Research (Open Web Ninja primary, shared-provider fallback) ──────
 def _research_fallback(niche):
-    """Last-resort product research when the Amazon scrape is unavailable.
+    """Buyable products when Open Web Ninja is missing/rate-limited/empty.
 
-    Keep only products with an ASIN or a photo. The LLM fallback otherwise
-    invents plausible-sounding models with neither, which is how placeholder
-    cards (no image, '?tag=' search link instead of a product page) shipped.
+    Delegates to the shared research chain (Amazon catalog -> Tavily -> DDGS ->
+    LLM) but keeps only products the publish boundary would accept: a payload
+    of ASIN-less, photo-less stubs is exactly the tv-hub placeholder
+    regression, so anything ``_product_is_placeholder`` flags is dropped here.
+    An empty list is a clean skip, never a fabricated page.
     """
     try:
         from abvorn.agents.researcher import research_niche
-        products = research_niche(niche) or []
     except Exception as e:
-        logger.warning(f"Research fallback failed for {niche}: {e}")
+        logger.warning(f"Research fallback unavailable: {e}")
         return []
-    buyable = [
-        p for p in products
-        if isinstance(p, dict)
-        and str(p.get("name") or "").strip()
-        and (str(p.get("asin") or "").strip() or str(p.get("image") or "").strip())
-    ]
-    if len(buyable) != len(products):
+    try:
+        candidates = research_niche(niche) or []
+    except Exception as e:
+        logger.warning(f"Research fallback failed for '{niche}': {e}")
+        return []
+    try:
+        from abvorn.agents.orchestrator import _product_is_placeholder
+        buyable = [p for p in candidates if not _product_is_placeholder(p)]
+    except Exception:
+        buyable = [
+            p for p in candidates
+            if str(p.get("asin") or "").strip() and str(p.get("image") or "").strip()
+        ]
+    if candidates and not buyable:
         logger.warning(
-            f"Research fallback dropped {len(products) - len(buyable)} unbuyable products for {niche}"
+            f"Research fallback for '{niche}' returned {len(candidates)} "
+            "unbuyable (placeholder) products; discarding instead of shipping "
+            "a product-less page"
         )
     return buyable
 
@@ -2611,61 +2621,60 @@ def research_products(niche):
             print(f"  Cached products for {niche}: {len(cached)}")
             return cached
 
-    def _fallback():
-        products = _research_fallback(niche)
-        if products:
-            cache[cache_key] = products
-            _own_save_cache(cache)
-            _own_track_usage(1)
-            print(f"  Fallback products for {niche}: {[p.get('name', '?') for p in products]}")
-        return products
-
+    result = []
     secrets = get_secrets()
     api_key = secrets.get("OPENWEB_NINJA_KEY", "")
-    if not api_key:
-        return _fallback()
-    try:
-        response = http_requests.get(
-            "https://api.openwebninja.com/realtime-amazon-data/search",
-            params={"query": niche.replace("-", " "), "page": 1},
-            headers={"X-API-Key": api_key},
-            timeout=15
-        )
-        if response.status_code == 200:
-            data = response.json()
-            products = data.get("data", {}).get("products", [])
-            if products:
-                result = []
-                for p in products[:5]:
-                    result.append({
-                        "name": p.get("product_title", "").split(",")[0].strip(),
-                        "price": p.get("product_price", ""),
-                        "original_price": p.get("product_original_price", ""),
-                        "rating": p.get("product_star_rating", ""),
-                        "ratings_count": p.get("product_num_ratings", 0),
-                        "image": p.get("product_photo", ""),
-                        "url": p.get("product_url", ""),
-                        "asin": p.get("asin", ""),
-                        "description": p.get("product_title", ""),
-                        "features": [],
-                        "is_best_seller": p.get("is_best_seller", False),
-                        "is_amazon_choice": p.get("is_amazon_choice", False),
-                        "sales_volume": p.get("sales_volume", ""),
-                    })
-                cache[cache_key] = result
-                _own_save_cache(cache)
-                _own_track_usage(1)
-                print(f"  Real products from Amazon API: {[p['name'] for p in result]}")
-                return result
+    if api_key:
+        try:
+            response = http_requests.get(
+                "https://api.openwebninja.com/realtime-amazon-data/search",
+                params={"query": niche.replace("-", " "), "page": 1},
+                headers={"X-API-Key": api_key},
+                timeout=15
+            )
+            if response.status_code == 200:
+                data = response.json()
+                products = data.get("data", {}).get("products", [])
+                if products:
+                    for p in products[:5]:
+                        result.append({
+                            "name": p.get("product_title", "").split(",")[0].strip(),
+                            "price": p.get("product_price", ""),
+                            "original_price": p.get("product_original_price", ""),
+                            "rating": p.get("product_star_rating", ""),
+                            "ratings_count": p.get("product_num_ratings", 0),
+                            "image": p.get("product_photo", ""),
+                            "url": p.get("product_url", ""),
+                            "asin": p.get("asin", ""),
+                            "description": p.get("product_title", ""),
+                            "features": [],
+                            "is_best_seller": p.get("is_best_seller", False),
+                            "is_amazon_choice": p.get("is_amazon_choice", False),
+                            "sales_volume": p.get("sales_volume", ""),
+                        })
+                    cache[cache_key] = result
+                    _own_save_cache(cache)
+                    _own_track_usage(1)
+                    print(f"  Real products from Amazon API: {[p['name'] for p in result]}")
+                    return result
+                else:
+                    logger.warning(f"Open Web Ninja returned no products for {niche}")
             else:
-                logger.warning(f"Open Web Ninja returned no products for {niche}")
-        else:
-            logger.warning(f"Open Web Ninja returned {response.status_code}")
-    except Exception as e:
-        logger.warning(f"Open Web Ninja API error: {e}")
-    # An outage must degrade to the real provider chain, not return None (which
-    # main() turned into sys.exit(1) and left the content cycle broken).
-    return _fallback()
+                logger.warning(f"Open Web Ninja returned {response.status_code}")
+        except Exception as e:
+            logger.warning(f"Open Web Ninja API error: {e}")
+    else:
+        logger.warning("Open Web Ninja key not configured")
+
+    # Open Web Ninja unavailable (missing key / 429 / empty / error): fall back
+    # to the shared multi-provider chain so a transient rate limit degrades to
+    # a real page or a clean skip instead of a hard cycle failure.
+    fallback = _research_fallback(niche)
+    if fallback:
+        cache[cache_key] = fallback
+        _own_save_cache(cache)
+        print(f"  Fallback research products for {niche}: {[p.get('name', '?') for p in fallback]}")
+    return fallback
 
 
 # ─── Content generation ─────────────────────────────────────────────────
@@ -3612,9 +3621,11 @@ def main(forced_niche=None, force=False, batch_mode=False):
     print(f"\n--- RESEARCH: {niche_slug} ---")
     products = research_products(niche_slug)
     if not products:
-        # An outage (or a niche with no buyable products) is a skip, not a
-        # failed cycle: sys.exit(1) here made every scheduler run look broken.
-        print("SKIP: No products found")
+        # No buyable products after every provider (Open Web Ninja + fallbacks)
+        # came up empty. Skip this cycle instead of exiting non-zero: a
+        # transient provider outage must not fail the scheduled job (and spam
+        # alerts) when the right behavior is to try again on the next run.
+        print(f"SKIP: no buyable products for {niche_slug}; skipping this cycle")
         return {"status": "skipped", "niche": niche_slug, "reason": "no_products"}
     print(f"Found {len(products)} products: {[p.get('name','?') for p in products]}")
 
