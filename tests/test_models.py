@@ -152,6 +152,47 @@ def test_mark_error_ban_durations():
     assert p._banned_until - time.time() <= 120
 
 
+def test_transport_error_ban_escalates_for_unreachable_endpoint():
+    """A permanently unreachable endpoint must not be retried every 60s forever.
+
+    The daemon's gemini/openai endpoints time out on every call. With a flat
+    60s ban each attempt burned ~30s, and when the healthy providers were
+    briefly banned too the router reported "All AI providers exhausted" and
+    the content pipeline returned None.
+    """
+    from abvorn.core.models import AIProvider
+
+    first = AIProvider("dead-first", "sk-test-key", model="gpt-4o")
+    first.mark_error(RuntimeError("Request timed out."))
+    assert 0 < first._banned_until - time.time() <= 120
+
+    second = AIProvider("dead-second", "sk-test-key", model="gpt-4o")
+    for _ in range(2):
+        second.mark_error(RuntimeError("Request timed out."))
+    assert second._banned_until - time.time() > 10 * 60
+
+    third = AIProvider("dead-third", "sk-test-key", model="gpt-4o")
+    for _ in range(3):
+        third.mark_error(RuntimeError("<urlopen error [WinError 10060] A connection attempt failed>"))
+    assert third._banned_until - time.time() > 6 * 3600
+
+
+def test_transport_ban_streak_resets_after_success():
+    """A single network blip must not permanently sideline a healthy provider."""
+    from abvorn.core.models import AIProvider
+
+    p = AIProvider("flaky", "sk-test-key", model="gpt-4o")
+    p.mark_error(RuntimeError("Request timed out."))
+    assert p._banned_until - time.time() <= 120
+
+    p._record_success(
+        MagicMock(choices=[MagicMock(message=MagicMock(content="ok"))], usage=MagicMock(total_tokens=1)),
+        time.time(),
+    )
+    p.mark_error(RuntimeError("Request timed out."))
+    assert p._banned_until - time.time() <= 120
+
+
 def test_probe_marks_dead_provider():
     from abvorn.core.models import ModelRouter, AIProvider
     router = ModelRouter.__new__(ModelRouter)

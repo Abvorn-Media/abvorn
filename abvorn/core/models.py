@@ -59,6 +59,21 @@ def is_json_validation_error(exc: Exception) -> bool:
     msg = str(exc).lower()
     return "error code: 400" in msg and "json" in msg
 
+
+def is_transport_error(msg: str) -> bool:
+    """True for DNS/connect/timeout failures — the endpoint cannot be reached.
+
+    These carry no HTTP status code, so mark_error() used to file them under
+    "anything else is transient" (60s) and retry forever. A genuinely dead
+    endpoint (blocked DNS, firewalled port) never recovers on that timescale.
+    """
+    return any(marker in msg for marker in (
+        "timed out", "timeout", "connection", "connecterror", "connecttimeout",
+        "unreachable", "max retries", "name or service not known",
+        "network is unreachable", "tunnel connection failed",
+    ))
+
+
 class AIProvider:
     def __init__(self, name: str, api_key: str, base_url: str = None, model: str = None, timeout: float = None,
                  tier: str = "standard", native_gemini: bool = False, min_gap: float = 2.0,
@@ -93,6 +108,10 @@ class AIProvider:
         # Consecutive 403s. 403 is ambiguous (revoked key vs. Groq's abuse
         # protection), so the ban escalates instead of jumping straight to 12h.
         self._forbidden_streak = 0
+        # Consecutive transport failures (timeout / DNS / connection refused).
+        # A dead endpoint never recovers in 60s; escalate so it stops being
+        # retried on every cycle. Reset to 0 on any successful call.
+        self._transport_streak = 0
 
     def _tick_day(self):
         """Reset the per-day token counter when UTC date rolls over (groq's
@@ -169,6 +188,13 @@ class AIProvider:
                 duration = 60
             else:
                 duration = 3600
+        elif code is None and is_transport_error(msg):
+            # No HTTP status means the endpoint itself is unreachable. Give a
+            # one-off blip a short ban, but sideline a permanently dead host
+            # (blocked DNS, firewall) for hours so ask() stops burning 30s
+            # timeouts on it and exhausting the whole router.
+            self._transport_streak += 1
+            duration = min(60 * (30 ** (self._transport_streak - 1)), 12 * 3600)
         else:
             duration = 60
         if duration:
@@ -191,6 +217,7 @@ class AIProvider:
         self.verified = True
         self.last_ok = time.time()
         self._forbidden_streak = 0
+        self._transport_streak = 0
         return resp.choices[0].message.content
 
     def call(self, messages: list, json_mode: bool = False) -> str:
@@ -259,6 +286,7 @@ class AIProvider:
             self.total_time += elapsed
             self.verified = True
             self.last_ok = time.time()
+            self._transport_streak = 0
             return text
         except urllib.error.HTTPError as e:
             body = e.read().decode()[:200]
