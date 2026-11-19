@@ -110,7 +110,15 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "chore: content cycle $(date -u +'%Y-%m-%d %H:%M UTC')"
-            git push
+            # Rebase onto concurrent daemon/CI commits before pushing.
+            for attempt in 1 2 3; do
+              if git pull --rebase origin main && git push; then
+                break
+              fi
+              echo "push attempt $attempt failed; rebasing and retrying" >&2
+              if [ "$attempt" -eq 3 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
           fi
 
       - name: Notify failure on Telegram

@@ -21,6 +21,9 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          # Full history required by the rebase retry in the commit step.
+          fetch-depth: 0
 
       - name: Install PDF render system libs
         run: |
@@ -42,7 +45,15 @@ jobs:
             echo "No PDFs to commit"
           else
             git commit -m "chore: generate review PDFs"
-            git push
+            # Rebase onto concurrent daemon/CI commits before pushing.
+            for attempt in 1 2 3; do
+              if git pull --rebase origin main && git push; then
+                break
+              fi
+              echo "push attempt $attempt failed; rebasing and retrying" >&2
+              if [ "$attempt" -eq 3 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
           fi
 
       - name: Notify failure on Telegram

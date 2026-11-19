@@ -12,7 +12,9 @@ permissions:
   contents: write
 
 concurrency:
-  group: journal-sync-lock
+  # Must match the content/dispatch cycles: a separate lock let this job push
+  # while Blog Dispatch was mid-run, rejecting its push as non-fast-forward.
+  group: content-cycle-lock
   cancel-in-progress: false
 
 jobs:

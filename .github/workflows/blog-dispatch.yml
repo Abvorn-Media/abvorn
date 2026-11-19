@@ -90,7 +90,17 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "chore: blog dispatch $(date -u +'%Y-%m-%d %H:%M UTC')"
-            git push
+            # The daemon advances main through the API while this job runs.
+            # Rebase onto the new head and retry instead of losing the post to
+            # a non-fast-forward rejection.
+            for attempt in 1 2 3; do
+              if git pull --rebase origin main && git push; then
+                break
+              fi
+              echo "push attempt $attempt failed; rebasing and retrying" >&2
+              if [ "$attempt" -eq 3 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
           fi
 
       - name: Notify failure on Telegram
