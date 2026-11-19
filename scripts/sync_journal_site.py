@@ -54,21 +54,97 @@ def _git(cmd: list, repo_dir: Path, check: bool = True) -> subprocess.CompletedP
         raise
 
 
-def main() -> int:
+def mirror_journal(tracked: Path, runtime_copy: Path) -> bool:
+    """Copy the tracked journal into the runtime dir unless they are the same
+    file — the local task points both env vars at one checkout, and copy2 onto
+    itself raises WinError 32."""
+    if not tracked.exists() or tracked.resolve() == runtime_copy.resolve():
+        return False
+    try:
+        shutil.copy2(tracked, runtime_copy)
+        logger.info("mirrored journal -> %s", runtime_copy)
+        return True
+    except Exception as e:
+        logger.warning("journal mirror failed: %s", e)
+        return False
+
+
+def changed_journal_paths(repo_dir: Path) -> list[str]:
+    """The two files this job owns that actually changed, as repo-relative paths."""
+    changed = _git(["status", "--porcelain"], repo_dir).stdout
+    lines = changed.splitlines()
+    paths = []
+    if any("evolution_journal.json" in line for line in lines):
+        paths.append("data/evolution_journal.json")
+    if any("docs/journal/index.html" in line for line in lines):
+        paths.append("docs/journal/index.html")
+    return paths
+
+
+def publish_via_api(repo_dir: Path, changed: list[str], message: str, secrets: dict = None) -> bool:
+    """Commit the changed journal files through the GitHub API.
+
+    git-over-HTTPS to github.com times out on the local Windows host (while
+    api.github.com works), so the Task Scheduler mirror clone can no longer
+    push. GitHubDeployer._commit_file re-reads the branch head on every attempt,
+    which also survives concurrent CI/deploy commits.
+    """
+    if secrets is None:
+        from abvorn.core.secrets import load_secrets
+
+        secrets = load_secrets()
+    token = secrets.get("GITHUB_TOKEN", "")
+    repo_name = secrets.get("GITHUB_REPO", "Abvorn-Media/abvorn")
+    if not token:
+        logger.error("journal API publish needs GITHUB_TOKEN")
+        return False
+    try:
+        from github import Github
+
+        from abvorn.deploy.github import GitHubDeployer
+
+        repo = Github(token).get_repo(repo_name)
+        deployer = GitHubDeployer(token=token, repo=repo_name)
+        for rel in changed:
+            path = repo_dir / rel
+            deployer._commit_file(repo, rel, path.read_text(encoding="utf-8"), message)
+        logger.info("published %d journal file(s) via GitHub API", len(changed))
+        return True
+    except Exception as e:
+        logger.error("journal API publish failed: %s", e)
+        return False
+
+
+def prepare_repo(repo_dir: Path, publish_api: bool = False) -> bool:
+    """Put the build source at a clean origin/main snapshot.
+
+    CI/VPS use git, where egress works. The local Windows host cannot reach
+    github.com over git HTTPS (the mirror push timed out after 300s), so API
+    mode builds from the current local checkout instead of fetching.
+    """
+    if publish_api:
+        logger.info("API publish mode: building from local checkout (no git fetch/reset)")
+        return True
+    try:
+        _git(["fetch", "origin"], repo_dir)
+        _git(["reset", "--hard", "origin/main"], repo_dir)
+        _git(["clean", "-fd", "docs/journal", "data/evolution_journal.json"], repo_dir, check=False)
+    except Exception as e:
+        logger.error("repo reset failed: %s", e)
+        return False
+    return True
+
+
+def main(argv: list[str] = None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    publish_api = "--publish-api" in argv
+
     # Repo must exist and be on main (deploy source of truth).
     if not (REPO_DIR / ".git").exists():
         logger.error("repo-src missing: %s", REPO_DIR)
         return 1
 
-    # Base the commit on the current origin/main. The runtime-sync timer
-    # hard-resets repo-src to origin/main every ~10 min, so regenerate on a
-    # clean tree each run instead of rebasing onto local work.
-    try:
-        _git(["fetch", "origin"], REPO_DIR)
-        _git(["reset", "--hard", "origin/main"], REPO_DIR)
-        _git(["clean", "-fd", "docs/journal", "data/evolution_journal.json"], REPO_DIR, check=False)
-    except Exception as e:
-        logger.error("repo reset failed: %s", e)
+    if not prepare_repo(REPO_DIR, publish_api=publish_api):
         return 1
 
     # Refresh neural-memory graph stats from the repo on disk so the journal
@@ -115,14 +191,7 @@ def main() -> int:
 
     # Mirror the tracked journal into the runtime data dir so the live poll
     # and the built page read the same entries.
-    tracked = REPO_DIR / "data" / "evolution_journal.json"
-    runtime_copy = RUNTIME_DATA / "evolution_journal.json"
-    if tracked.exists():
-        try:
-            shutil.copy2(tracked, runtime_copy)
-            logger.info("mirrored journal -> %s", runtime_copy)
-        except Exception as e:
-            logger.warning("journal mirror failed: %s", e)
+    mirror_journal(REPO_DIR / "data" / "evolution_journal.json", RUNTIME_DATA / "evolution_journal.json")
 
     # Rebuild the journal page from the refreshed snapshot.
     try:
@@ -138,19 +207,26 @@ def main() -> int:
         return 1
 
     # Nothing to publish when the harvest + rebuild changed nothing.
-    changed = _git(["status", "--porcelain"], REPO_DIR).stdout
-    touched = [l for l in changed.splitlines() if "evolution_journal.json" in l
-               or "docs/journal/index.html" in l]
-
-    if not touched:
+    changed_paths = changed_journal_paths(REPO_DIR)
+    if not changed_paths:
         logger.info("no journal changes to publish")
         return 0
+
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    commit_message = f"journal: sync live evolution entries ({stamp})"
+
+    # Local host cannot reach github.com over git HTTPS. Publish through the
+    # API instead; CI keeps using the git path below (it has working git egress).
+    if publish_api:
+        if publish_via_api(REPO_DIR, changed_paths, commit_message):
+            logger.info("pushed journal sync to origin/main via API")
+            return 0
+        return 1
 
     # Commit + push (one retry against a concurrent push from CI).
     try:
         _git(["add", "data/evolution_journal.json", "docs/journal/index.html"], REPO_DIR)
-        stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-        _git(["commit", "-m", f"journal: sync live evolution entries ({stamp})"], REPO_DIR)
+        _git(["commit", "-m", commit_message], REPO_DIR)
         for attempt in range(2):
             try:
                 _git(["push", "origin", "main"], REPO_DIR)
