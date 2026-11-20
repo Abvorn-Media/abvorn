@@ -22,12 +22,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from abvorn.core.copyguard import (
-    _PAGE_BLOCKING_RULES,
     _FABRICATED_CLAIM_RES,
     _in_negated_clause,
-    check_text,
-    enabled,
-    html_to_text,
 )
 
 # Curated rewrites. Order matters: longer phrases first so "we've tested and

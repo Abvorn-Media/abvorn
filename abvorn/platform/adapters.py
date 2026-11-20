@@ -260,7 +260,6 @@ def medium_adapter(anchor: dict) -> str:
                                       "min_gap_hours": 12, "max_per_day": 2, "cadence": "daily"})
 def telegram_adapter(anchor: dict) -> dict:
     """Convert anchor into a Telegram channel post."""
-    import os
     title = anchor.get("post_title", anchor.get("title", "New guide from Abvorn"))
     description = _honest_text(
         fit_text(
