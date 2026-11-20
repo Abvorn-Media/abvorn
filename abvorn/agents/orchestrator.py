@@ -237,9 +237,10 @@ class SiteDeployer:
     mirrors how run_cycle.write_files overlays freshly-written articles.
     """
 
-    def __init__(self, deployer, state):
+    def __init__(self, deployer, state, docs_dir="docs"):
         self.deployer = deployer
         self.state = state
+        self.docs_dir = docs_dir
         self._last_content = None   # content dict deployed this cycle, for overlay
         self._last_niche = None
 
@@ -275,9 +276,9 @@ class SiteDeployer:
         above - which is how the robot-vacuum "hotel booking" rows stayed on
         the live homepage after their pages were deleted.
         """
-        from src.deployment import scan_published_reviews, _overlay_review
+        from src.deployment import scan_published_reviews, _overlay_review, page_has_products
         today = datetime.now().strftime("%Y-%m-%d")
-        reviews = scan_published_reviews("docs")
+        reviews = scan_published_reviews(self.docs_dir)
         seen = {(r["slug"], r["title"]): i for i, r in enumerate(reviews)}
         seen_by_rel = {(r.get("rel") or ""): i for i, r in enumerate(reviews)}
         if self._last_content and self._last_niche:
@@ -328,6 +329,25 @@ class SiteDeployer:
                         continue
                 except Exception as e:
                     logger.warning(f"[SiteDeployer] Could not verify {rel} (fail-open): {e}")
+            # A state row can outlive its article page. scan_published_reviews()
+            # already drops pages with no real product (page_has_products), but
+            # this fallback only checked file_exists(). Product-less shells -- the
+            # two TV "first-time buyer" pages, with no ASIN/product card/Amazon
+            # image -- therefore still got cards with image="", which rendered the
+            # generic niche artwork instead of a real product photo. Apply the
+            # same product gate here. A page not yet mirrored into docs/ fails
+            # open: the remote file_exists gate above already confirmed it exists.
+            local_page = os.path.join(self.docs_dir, "reviews", slug, filename.lstrip("/"))
+            if os.path.isfile(local_page):
+                try:
+                    with open(local_page, encoding="utf-8", errors="replace") as fh:
+                        has_products = page_has_products(fh.read())
+                except OSError:
+                    has_products = True
+                if not has_products:
+                    logger.info("[SiteDeployer] Skipping card %r: page has no products", title)
+                    seen[(slug, title)] = len(reviews)
+                    continue
             quality = p.get("quality_score")
             # Match the scanned card by page path before appending. The state
             # row's title often differs from the page's own <h1>, so the

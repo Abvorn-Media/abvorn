@@ -48,6 +48,49 @@ def test_reviews_gates_phantom_post_cards():
     assert "Budget 55-inch TV Guide" in titles, "existing index card must be kept"
 
 
+def test_reviews_skips_productless_state_pages(tmp_path):
+    """A state row whose article page exists but carries no product must not
+    render a card. scan_published_reviews() drops product-less pages, but the
+    state-post fallback used to pass them through on file_exists() alone. The
+    two TV 'first-time buyer' shells (no ASIN / product card / Amazon image)
+    then got imageless cards showing the generic niche artwork.
+    """
+    class EverythingExists:
+        def file_exists(self, rel):
+            return True
+
+    docs = tmp_path / "docs"
+    page_dir = docs / "reviews" / "tv"
+    page_dir.mkdir(parents=True)
+    (page_dir / "thin.html").write_text(
+        "<html><body><h1>Thin TV Guide</h1><p>No products here.</p></body></html>",
+        encoding="utf-8",
+    )
+    real_image = "https://m.media-amazon.com/images/I/81TESTIMAGE._AC_SL1500_.jpg"
+    (page_dir / "real.html").write_text(
+        '<html><body><h1>Real TV Guide</h1>'
+        '<aside class="hero-pick"><div class="hero-pick__media">'
+        f'<img src="{real_image}" alt="TV"></div></aside>'
+        '<a href="https://www.amazon.com/dp/B0TEST1234?tag=abvorn-20">Buy</a>'
+        "</body></html>",
+        encoding="utf-8",
+    )
+
+    sd = SiteDeployer(EverythingExists(), None, docs_dir=str(docs))
+    posts = [
+        {"niche_slug": "tv", "title": "Thin TV Guide", "filename": "thin.html",
+         "quality_score": 9.4},
+        {"niche_slug": "tv", "title": "Real TV Guide", "filename": "real.html",
+         "quality_score": 9.0},
+    ]
+    reviews = sd._reviews(["tv"], posts)
+    titles = [r["title"] for r in reviews]
+    assert "Thin TV Guide" not in titles, "product-less page must not render a card"
+    assert "Real TV Guide" in titles, "real published review must still render"
+    card = next(r for r in reviews if r["title"] == "Real TV Guide")
+    assert card["image"] == real_image, "card must use the product photo, not niche artwork"
+
+
 def test_deploy_content_injects_ai_seo_dates_before_publish():
     """The daemon published pages straight from build_article_page, skipping the
     post-build AI-SEO injector that run_cycle.write_files() runs.
