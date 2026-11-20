@@ -692,7 +692,43 @@
       "narrative": "Drive score 0.350 — action 'optimize_conversion': Optimization requested",
       "graph_nodes": 0,
       "graph_edges": 0
+    },
+    {
+      "timestamp": "2026-11-20T08:27:24.881721",
+      "generation": 1,
+      "drive_score": 0.0,
+      "action": "insight",
+      "narrative": "Search Console insight — Top performing content: https://abvorn-media.github.io/abvorn/; Highest CTR: 0.00% for https://abvorn-media.github.io",
+      "graph_nodes": 3399,
+      "graph_edges": 5421
+    },
+    {
+      "timestamp": "2026-11-19T08:18:47.694555",
+      "generation": 1,
+      "drive_score": 0.0,
+      "action": "insight",
+      "narrative": "Search Console insight — Top performing content: https://abvorn-media.github.io/abvorn/; Highest CTR: 0.00% for https://abvorn-media.github.io",
+      "graph_nodes": 3399,
+      "graph_edges": 5421
+    },
+    {
+      "timestamp": "2026-11-18T07:49:06.602830",
+      "generation": 1,
+      "drive_score": 0.0,
+      "action": "insight",
+      "narrative": "Search Console insight — Top performing content: https://abvorn-media.github.io/abvorn/; Highest CTR: 0.00% for https://abvorn-media.github.io",
+      "graph_nodes": 3399,
+      "graph_edges": 5421
+    },
+    {
+      "timestamp": "2026-11-17T07:37:48.117364",
+      "generation": 1,
+      "drive_score": 0.0,
+      "action": "insight",
+      "narrative": "Search Console insight — Top performing content: https://abvorn-media.github.io/abvorn/; Highest CTR: 0.00% for https://abvorn-media.github.io",
+      "graph_nodes": 3399,
+      "graph_edges": 5421
     }
   ],
-  "last_update": "2026-10-28T12:25:35.238355"
+  "last_update": "2026-11-20T08:27:24.881721"
 }
