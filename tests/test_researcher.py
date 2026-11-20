@@ -29,11 +29,20 @@ def no_live_sources(monkeypatch):
     monkeypatch.setattr(researcher, "DDGS", OfflineDDGS)
 
 
-def test_research_returns_products():
-    """RESEARCH stage should return a list of dicts with required keys."""
+def test_research_returns_products(no_live_sources):
+    """RESEARCH stage should return a list of dicts with required keys.
+
+    The fake product carries an image because research now fails closed on
+    unpictured output - the same LLM shape that used to render as a blue
+    category-fallback card on the homepage.
+    """
     class FakeRouter:
         def ask(self, prompt, **kw):
-            return '[{"name": "Test Product", "price": "$49.99", "rating": "4.5/5", "features": ["Feature A"], "summary": "Great product"}]'
+            return (
+                '[{"name": "Test Product", "price": "$49.99", "rating": "4.5/5", '
+                '"features": ["Feature A"], "summary": "Great product", '
+                '"image": "https://m.media-amazon.com/images/I/71abc._AC_SL1500_.jpg"}]'
+            )
     products = research_niche("test_niche", FakeRouter())
     assert isinstance(products, list)
     assert len(products) > 0

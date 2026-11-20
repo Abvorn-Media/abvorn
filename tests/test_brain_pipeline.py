@@ -25,8 +25,19 @@ def test_knowledge_augmented_pipeline():
                 "socials": {"x": "tweet", "linkedin": "post"}
             })
 
+    # This test is about brain context reaching the pipeline, not about research
+    # providers. Inject a pictured product so the stage chain actually runs
+    # without depending on rate-limited Amazon/Tavily lookups.
+    pictured = {
+        "name": "Orion 65-inch OLED TV",
+        "asin": "B0TEST1234",
+        "image": "https://m.media-amazon.com/images/I/71abc._AC_SL1500_.jpg",
+        "url": "https://www.amazon.com/dp/B0TEST1234",
+        "price": "$999",
+    }
     pipeline = ContentPipeline()
     pipeline.brain = retriever
-    result = pipeline.run("test_niche", FakeRouter(), persona={})
+    result = pipeline.run("test_niche", FakeRouter(), persona={},
+                          existing_products=[pictured])
     assert result is not None
     assert "post_title" in result

@@ -4,6 +4,18 @@ from datetime import date
 import pytest
 from abvorn.content.pipeline import ContentPipeline
 
+# Pipeline stage tests exercise outline/draft/fact-check/polish, not the research
+# providers. Inject a pictured product so research_niche is skipped entirely:
+# live Amazon/Tavily are rate-limited in CI, and research now (correctly) drops
+# unpictured LLM output rather than shipping the blue category-fallback card.
+PICTURED_PRODUCT = {
+    "name": "Orion 65-inch OLED TV",
+    "asin": "B0TEST1234",
+    "image": "https://m.media-amazon.com/images/I/71abc._AC_SL1500_.jpg",
+    "url": "https://www.amazon.com/dp/B0TEST1234",
+    "price": "$999",
+}
+
 
 class _PromptCaptureRouter:
     """Router that records every prompt sent to it."""
@@ -30,7 +42,8 @@ def test_prompts_anchor_generated_copy_to_current_year():
     a stale year (a 'Best X 2025' guide published in 2026)."""
     router = _PromptCaptureRouter()
     pipeline = ContentPipeline()
-    pipeline.run("test_niche", router, persona={})
+    pipeline.run("test_niche", router, persona={},
+                 existing_products=[PICTURED_PRODUCT])
 
     combined = "\n".join(router.prompts)
     today = date.today()
@@ -56,7 +69,8 @@ def test_pipeline_full_run():
             })
 
     pipeline = ContentPipeline()
-    result = pipeline.run("test_niche", FakeRouter(), persona={})
+    result = pipeline.run("test_niche", FakeRouter(), persona={},
+                          existing_products=[PICTURED_PRODUCT])
     assert result is not None
     assert "post_title" in result
     assert "article_html" in result
@@ -94,7 +108,8 @@ def test_pipeline_survives_polish_returning_none(monkeypatch):
         "tags": ["test"],
         "socials": {"x": "tweet"},
     })
-    result = ContentPipeline().run("test_niche", router, persona={})
+    result = ContentPipeline().run("test_niche", router, persona={},
+                                   existing_products=[PICTURED_PRODUCT])
 
     assert result is not None
     assert result["intro"] == "<p>Test intro</p>"
@@ -146,7 +161,8 @@ def test_pipeline_tolerates_outline_entries_as_dicts():
         "tags": ["test"],
         "socials": {"x": "tweet"},
     })
-    result = ContentPipeline().run("test_niche", router, persona={})
+    result = ContentPipeline().run("test_niche", router, persona={},
+                                   existing_products=[PICTURED_PRODUCT])
 
     assert result is not None
     draft_prompts = [p for p in router.prompts if "OUTLINE TO FOLLOW" in p]

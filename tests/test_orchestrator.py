@@ -313,13 +313,15 @@ def test_product_placeholder_detection():
     stub = {"name": "Top tv Pick", "price": "Check Price",
             "url": "?tag=viraltestco-20"}
     real = {"name": "Roku 40-inch Select Series",
-            "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}
+            "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20",
+            "image": "https://m.media-amazon.com/images/I/71abc._AC_SL1500_.jpg"}
     assert _product_is_placeholder(stub) is True
     assert _product_is_placeholder(real) is False
     assert _product_is_placeholder({"name": "", "url": ""}) is True
     # ASIN in the name is enough even when the link form differs.
     assert _product_is_placeholder(
-        {"name": "Roku 40 B0F1GF1KFC", "url": "https://www.amazon.com/s?k=roku"}
+        {"name": "Roku 40 B0F1GF1KFC", "url": "https://www.amazon.com/s?k=roku",
+         "image": "https://m.media-amazon.com/images/I/71abc._AC_SL1500_.jpg"}
     ) is False
     assert _products_are_placeholder([stub]) is True
     assert _products_are_placeholder([stub, real]) is False
@@ -376,7 +378,8 @@ def test_productless_payload_never_becomes_the_hub_mirror():
         {"post_title": "2026 TV Buying Guide",
          "article_html": "<p>guide</p>",
          "products": [{"name": "Roku 40-inch Select Series",
-                       "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}]},
+                       "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20",
+                        "image": "https://m.media-amazon.com/images/I/71abc._AC_SL1500_.jpg"}]},
         all_categories=["tv"],
     )
     assert ok == "reviews/tv/index.html"
@@ -392,7 +395,8 @@ def test_deploy_content_allows_real_products():
         {"post_title": "2026 TV Buying Guide",
          "article_html": "<p>guide</p>",
          "products": [{"name": "Roku 40-inch Select Series",
-                       "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}]},
+                       "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20",
+                        "image": "https://m.media-amazon.com/images/I/71abc._AC_SL1500_.jpg"}]},
         all_categories=["tv"],
     )
     assert ok == "reviews/tv/index.html"
@@ -414,7 +418,8 @@ def test_deploy_content_refuses_off_topic_title():
         {"post_title": "Solar Panels Buying Guide for First-Time Buyers",
          "article_html": "<p>guide</p>",
          "products": [{"name": "Lenovo ThinkPad X1 Carbon",
-                       "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}]},
+                       "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20",
+                        "image": "https://m.media-amazon.com/images/I/71abc._AC_SL1500_.jpg"}]},
         all_categories=["laptops"],
     )
     assert ok == ""
@@ -435,7 +440,8 @@ def test_deploy_content_allows_on_topic_title_despite_no_slug_word():
         {"post_title": "First-Time Buyer Guide: Echo Show 5 Review & Best Deal",
          "article_html": "<p>guide</p>",
          "products": [{"name": "Echo Show 5",
-                       "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20"}]},
+                       "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20",
+                        "image": "https://m.media-amazon.com/images/I/71abc._AC_SL1500_.jpg"}]},
         all_categories=["smart-home"],
     )
     assert ok == "reviews/smart-home/index.html"
@@ -500,7 +506,8 @@ def test_product_without_asin_and_image_is_placeholder():
         "image": "",
         "description": "Ultra-high-definition 4K OLED with quantum HDR 400.",
     }) is True
-    # A scraped product is fine with either signal present.
+    # A photo is mandatory. An ASIN on its still ships an imageless card: the
+    # homepage falls back to the flat blue tv.jpg when products[].image is "".
     assert _product_is_placeholder({
         "name": "Sony Bravia XR90A9 65\" OLED TV",
         "image": "https://m.media-amazon.com/images/I/71abc._AC_SL1500_.jpg",
@@ -509,7 +516,7 @@ def test_product_without_asin_and_image_is_placeholder():
         "name": "Sony Bravia XR90A9 65\" OLED TV",
         "asin": "B0CX23V2ZK",
         "image": "",
-    }) is False
+    }) is True
 
 
 def test_deploy_content_refuses_unpictured_llm_products():
@@ -556,6 +563,26 @@ def test_deploy_content_require_products_blocks_productless_fresh_article():
                         "article_html": "<p>x</p>"},
             all_categories=["laptops"],
         ) == "reviews/laptops/index.html"
+
+
+def test_fresh_payload_with_empty_products_is_refused_without_opt_in():
+    """The daemon's ContentPipeline payload carries a ``products`` key.
+
+    It did not pass ``require_products=True``, so a failed research run (empty
+    products) still shipped an imageless page whose card fell back to tv.jpg.
+    Any payload that declares products must carry at least one; the state
+    redeploy path omits the key entirely and keeps working.
+    """
+    deployer = _deployer()
+    sd = SiteDeployer(deployer, None)
+    assert sd.deploy_content(
+        "tv",
+        {"post_title": "2026 TV Buying Guide", "article_html": "<p>guide</p>",
+         "products": []},
+        all_categories=["tv"],
+    ) == ""
+    deployer.deploy_html.assert_not_called()
+
 
 def test_overlay_never_blanks_out_a_published_snippet(monkeypatch, tmp_path):
     """The newest article must not lose its description to the overlay.
@@ -650,3 +677,34 @@ def test_state_post_merges_into_scanned_card_instead_of_duplicating(monkeypatch)
     assert out[0]["score"] == 9.2
     assert out[0]["image"] == "https://example.com/p.jpg"
     assert out[0]["product_name"] == "Insignia 50 inch"
+
+
+def test_two_state_posts_for_one_page_produce_one_card(monkeypatch):
+    """Two state rows sharing a filename must render one homepage card.
+
+    Posts #351/#356 both point at insignia-55-inch-...html but carry different
+    titles, so the (slug, title) dedup missed them and the Computing & Monitors
+    rail showed the same blue fallback twice. The page path is the card's
+    identity; a second row for it may only enrich the existing card.
+    """
+    monkeypatch.setattr("src.deployment.scan_published_reviews", lambda *a, **k: [])
+
+    class Deployer:
+        def file_exists(self, rel):
+            return True
+
+    sd = SiteDeployer(Deployer(), None)
+    posts = [
+        {"niche_slug": "tv", "title": "Insignia 55 F50 Smart TV Buyer Guide",
+         "filename": "insignia-55.html", "created_at": "2026-11-16T07:37:55",
+         "image": ""},
+        {"niche_slug": "tv", "title": "Insignia 55-inch F50 First-Time Buyer Guide",
+         "filename": "insignia-55.html", "created_at": "2026-11-17T07:37:55",
+         "image": "https://example.com/insignia.jpg"},
+    ]
+
+    out = sd._reviews(["tv"], posts)
+
+    assert len(out) == 1, "duplicate state rows minted two cards for one page"
+    assert out[0]["rel"] == "/reviews/tv/insignia-55.html"
+    assert out[0]["image"] == "https://example.com/insignia.jpg"

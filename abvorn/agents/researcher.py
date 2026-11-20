@@ -25,6 +25,18 @@ def _get_amazon() -> AmazonCatalogClient:
         return AmazonCatalogClient()
 
 
+def _with_photo(products) -> list:
+    """Keep only products that can render a real card image.
+
+    A product with an empty ``image`` makes product_card_image() return "" and
+    the homepage falls back to the flat category artwork (the blue tv.jpg).
+    Applied at every source boundary because Amazon and Tavily both return
+    early from research_niche.
+    """
+    return [p for p in (products or []) if isinstance(p, dict)
+            and str(p.get("image") or "").strip()]
+
+
 def research_niche(niche: str, router=None) -> list:
     """RESEARCH stage: search web for real products in this niche.
 
@@ -47,7 +59,7 @@ def research_niche(niche: str, router=None) -> list:
 
     # 0. Real Amazon catalog: the only source that yields buyable products.
     try:
-        products = _get_amazon().search_products(niche)
+        products = _with_photo(_get_amazon().search_products(niche))
         if products:
             return products
     except Exception as e:
@@ -58,7 +70,7 @@ def research_niche(niche: str, router=None) -> list:
     if tavily.available:
         try:
             logger.info(f"Tavily research for '{niche}'")
-            products = tavily.extract_products(niche, router)
+            products = _with_photo(tavily.extract_products(niche, router))
             if products:
                 logger.info(f"Tavily found {len(products)} products for '{niche}'")
                 return products
@@ -116,6 +128,13 @@ Return a JSON array. Each product must have:
             parsed = _parse_json(result)
             if isinstance(parsed, list):
                 products = parsed
+
+    # Research fails closed at the source: a product with no photo becomes an
+    # imageless card, because product_card_image() reads products[].image and
+    # the homepage falls back to the flat category artwork (the blue tv.jpg)
+    # when it is empty. Tavily and the LLM-knowledge prompts never ask for a
+    # photo, so their results are dropped here rather than shipped as pages.
+    products = _with_photo(products)
 
     # 3. Nothing found. Return empty instead of fabricating a placeholder.
     # A "Top <niche> Pick" stub used to be injected here and then published as

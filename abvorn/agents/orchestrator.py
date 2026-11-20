@@ -87,11 +87,15 @@ def _product_is_placeholder(product: dict) -> bool:
     name = str(product.get("name") or "").strip()
     if not name:
         return True
+    # A product with no photo renders an imageless card however real its ASIN
+    # is: product_card_image() reads products[].image, and an empty value makes
+    # the homepage fall back to the flat category artwork (the blue tv.jpg).
+    # Require the photo before trusting any other buyability signal.
+    if not str(product.get("image") or "").strip():
+        return True
     blob = f"{name} {product.get('url', '')} {product.get('asin', '')}"
     if _ASIN_RE.search(blob or ""):
         return False
-    if not str(product.get("image") or "").strip():
-        return True
     return bool(_PLACEHOLDER_NAME_RE.match(name))
 
 
@@ -347,7 +351,7 @@ class SiteDeployer:
                 "name": self._niche_name(slug),
                 "title": title,
                 "updated": (p.get("created_at") or "")[:10] or today,
-                "rel": f"/reviews/{slug}/{filename}",
+                "rel": rel,
                 "snippet": "",
                 "image": p.get("image") or "",
                 "score": quality if quality else None,
@@ -356,6 +360,11 @@ class SiteDeployer:
                 "product_name": p.get("product_name", ""),
             })
             seen[(slug, title)] = len(reviews) - 1
+            # The page path, not the title, is a card's identity. Recording it
+            # here makes a second state row for the same filename merge into
+            # this card instead of appending a duplicate (the two Insignia TV
+            # rows both rendered the blue fallback on the homepage).
+            seen_by_rel[rel] = len(reviews) - 1
         return reviews
 
     def _niche_reviews(self, niche: str, posts: list) -> list:
@@ -484,11 +493,13 @@ class SiteDeployer:
         ``_reviews()`` could not verify a page existed for a post it had no
         filename for.
 
-        require_products stays opt-in because the state-redeploy path
-        (DeployAgent._deploy_site) rebuilds from state post metadata, which
-        carries no products key at all. The fresh-publish path opts in - a
-        payload with no products renders a product-less page whose cards all
-        fall back to the generic category graphic instead of a product photo.
+        require_products stays explicit, but a payload that declares a
+        ``products`` key is treated as a fresh publish and must carry at least
+        one product. The state-redeploy path (DeployAgent._deploy_site) rebuilds
+        from state post metadata, which omits the key entirely, so it keeps
+        working. A payload with no products renders a product-less page whose
+        cards all fall back to the generic category graphic instead of a
+        product photo.
         """
         try:
             all_categories = all_categories or []
@@ -515,7 +526,12 @@ class SiteDeployer:
                     self._published_today(niche, today), cap,
                 )
                 return ""
-            if require_products and not products:
+            # Any payload that declares a products key is a fresh publish and
+            # must carry at least one. The daemon's ContentPipeline payload has
+            # that key but did not pass require_products, so an empty research
+            # result still shipped an imageless page with blue fallback cards.
+            # The state-redeploy path omits the key entirely and keeps working.
+            if (require_products or "products" in content) and not products:
                 logger.warning(
                     "[SiteDeployer] Refusing to publish %s: a fresh article "
                     "payload carried no products at all, which renders a "

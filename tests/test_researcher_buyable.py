@@ -1,10 +1,11 @@
-"""Regression tests: research_niche must produce BUYABLE products.
+"""Regression tests: research_niche must produce BUYABLE, PHOTOGRAPHED products.
 
-Every product research_niche returns has to survive
-``_products_are_placeholder()``, or the deploy boundary refuses the page and
-the niche never publishes. The tv niche sat refused with "1 product(s) and
-none carry an ASIN" while Tavily was happily returning plausible TVs — because
-the Tavily and LLM-knowledge prompts never ask for an ASIN or a photo.
+Unpictured products are dropped inside research_niche itself (every source has
+an early return), and the deploy boundary still refuses anything that survives
+with no photo. The tv niche sat refused with "1 product(s) and none carry an
+ASIN" while Tavily was happily returning plausible TVs — because the Tavily and
+LLM-knowledge prompts never ask for an ASIN or a photo. Those results used to
+reach the pipeline and render as blue fallback cards on the homepage.
 """
 
 import json
@@ -86,15 +87,14 @@ def no_ddgs(monkeypatch):
 
 # --- the regression itself -------------------------------------------------
 
-def test_tavily_products_alone_are_refused_at_deploy(monkeypatch, no_ddgs):
-    """Documents the failure mode: Tavily output is never publishable."""
+def test_tavily_products_alone_are_dropped_by_research(monkeypatch, no_ddgs):
+    """Tavily output is never publishable, so research must not return it."""
     monkeypatch.setattr(researcher, "_get_amazon", lambda: FakeAmazon([]))
     monkeypatch.setattr(researcher, "_get_tavily", lambda: FakeTavily())
 
     products = research_niche("tv", FakeRouter())
 
-    assert products, "expected Tavily to return something"
-    assert _products_are_placeholder(products) is True
+    assert products == [], "unpictured Tavily products reached the pipeline"
 
 
 def test_research_prefers_amazon_over_tavily(monkeypatch, no_ddgs):
@@ -130,8 +130,8 @@ def test_amazon_survives_a_dead_tavily_and_router(monkeypatch, no_ddgs):
     assert _products_are_placeholder(products) is False
 
 
-def test_amazon_failure_falls_through_to_llm(monkeypatch, no_ddgs):
-    """A broken Amazon client must not take research down with it."""
+def test_amazon_failure_fails_closed_when_fallback_is_unbuyable(monkeypatch, no_ddgs):
+    """A broken Amazon client must not crash research, nor ship fake products."""
     class ExplodingAmazon:
         def search_products(self, niche, **kw):
             raise RuntimeError("amazon 500")
@@ -141,7 +141,32 @@ def test_amazon_failure_falls_through_to_llm(monkeypatch, no_ddgs):
 
     products = research_niche("tv", FakeRouter())
 
-    assert products, "should still fall back to Tavily"
+    assert products == [], "Tavily/LLM fallbacks are unpictured and must fail closed"
+
+
+@pytest.mark.parametrize("payload,expected", [
+    # No ASIN and no photo: the pure-LLM shape that shipped the blue tv card.
+    (json.dumps([{"name": "Sony Bravia XR90A9 65-inch OLED", "price": "$1299"}]), 0),
+    # An ASIN without a photo still renders an imageless card.
+    (json.dumps([{"name": "Roku 55 Smart TV", "asin": "B0C1TV55IN", "image": ""}]), 0),
+    # A real photo is enough for the card; the deploy gate handles buyability.
+    (json.dumps([{"name": "Roku 55 Smart TV",
+                  "image": "https://m.media-amazon.com/i/x.jpg"}]), 1),
+])
+def test_research_requires_a_photo_before_returning_products(
+        monkeypatch, no_ddgs, payload, expected):
+    class PayloadTavily:
+        available = True
+
+        def extract_products(self, niche, router=None):
+            return json.loads(payload)
+
+    monkeypatch.setattr(researcher, "_get_amazon", lambda: FakeAmazon([]))
+    monkeypatch.setattr(researcher, "_get_tavily", lambda: PayloadTavily())
+
+    products = research_niche("tv", FakeRouter(payload))
+
+    assert len(products) == expected
 
 
 # --- the Amazon client itself ---------------------------------------------

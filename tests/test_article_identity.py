@@ -36,6 +36,8 @@ from abvorn.domination import product_assets as pa
 REAL_PRODUCT = {
     "name": 'Sony Bravia 9 II 65" OLED TV',
     "url": "https://www.amazon.com/dp/B0F1GF1KFC?tag=viraltestco-20",
+    # A real AmazonCatalogClient scrape always carries the product photo too.
+    "image": "https://m.media-amazon.com/images/I/71abc._AC_SL1500_.jpg",
 }
 
 
