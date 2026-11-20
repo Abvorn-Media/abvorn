@@ -333,7 +333,7 @@ def _slugify_title(s):
 # ── Category navigation (mega-menu + footer) ────────────────────────────
 STATIC_CATEGORY_MAP = {
     "Audio": ["wireless-earbuds", "wireless-headphones"],
-    "Computing & Monitors": ["4k-monitors", "laptops"],
+    "Computing & Monitors": ["4k-monitors", "laptops", "tv"],
     "Fitness & Health": ["fitness-trackers"],
     "Gaming": ["gaming-mice", "mechanical-keyboards"],
     "Home & Lifestyle": ["smart-home", "streaming-devices"],
