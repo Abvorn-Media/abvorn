@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "file": "assets/blog/the-3-day-city-break-rhythm-that-stops-burnout/hero.jpg",
+    "query": "small hotel room window overlooking a street at dusk",
+    "alt": "A cozy bedroom with sunlight filtering through curtains, creating a warm atmosphere.",
+    "caption": "",
+    "photo_id": 2346090,
+    "photographer": "Tobi",
+    "photographer_url": "https://www.pexels.com/@pripicart",
+    "pexels_url": "https://www.pexels.com/photo/bedroom-with-sunlight-through-the-window-2346090/",
+    "width": 6406,
+    "height": 4271,
+    "source": "Pexels",
+    "fetched": "2026-11-20T15:51:09"
+  },
+  "01": {
+    "file": "assets/blog/the-3-day-city-break-rhythm-that-stops-burnout/01.jpg",
+    "query": "paper map folded on a wooden cafe table",
+    "alt": "Composition of black and white photos and old travel log placed with vintage island map and obsolete photo camera on narrow wooden table",
+    "caption": "Composition of black and white photos and old travel log placed with vintage island map and obsolete photo camera on narrow wooden table",
+    "photo_id": 4338093,
+    "photographer": "ArtHouse Studio",
+    "photographer_url": "https://www.pexels.com/@arthousestudio",
+    "pexels_url": "https://www.pexels.com/photo/photos-and-journal-with-map-and-camera-on-wooden-table-4338093/",
+    "width": 7952,
+    "height": 5304,
+    "source": "Pexels",
+    "fetched": "2026-11-20T15:51:11"
+  },
+  "02": {
+    "file": "assets/blog/the-3-day-city-break-rhythm-that-stops-burnout/02.jpg",
+    "query": "single pair of comfortable walking shoes on a suitcase",
+    "alt": "Close-up of black sneakers on urban pavement in New Delhi, India.",
+    "caption": "Close-up of black sneakers on urban pavement in New Delhi, India.",
+    "photo_id": 1124466,
+    "photographer": "Aman Jakhar",
+    "photographer_url": "https://www.pexels.com/@amanjakhar",
+    "pexels_url": "https://www.pexels.com/photo/macro-photography-of-pair-of-black-and-white-nike-running-shoes-1124466/",
+    "width": 6000,
+    "height": 4000,
+    "source": "Pexels",
+    "fetched": "2026-11-20T15:51:11"
+  }
+}
