@@ -23,29 +23,57 @@ INGESTION_LOG = DATA_DIR / "gsc_ingestion_log.jsonl"
 JOURNAL_FILE = DATA_DIR / "ab_journal_entries.jsonl"
 
 
-def category_evidence(data_dir=None) -> Dict[str, Dict[str, int]]:
-    """Search Console demand per site category from top-performing URLs.
+def _rollup_items(
+    items: List[Dict[str, Any]],
+    totals: Dict[str, Dict[str, int]],
+    per_url: Dict[str, Dict[str, Dict[str, int]]],
+) -> None:
+    """Track per-URL demand maxima, then fold them into per-segment totals.
 
-    Each item's /reviews/<segment>/ path is rolled up into {segment:
-    {impressions, clicks}}. Empty when the file is missing/unreadable or the
-    site is too young to have rows — that is a valid state, not an error.
+    Search Console emits one row per query, so a page must contribute its max
+    impressions/clicks once rather than a sum of its query rows. Recomputing
+    totals from all accumulated maxima lets callers merge several source files
+    without double counting a URL present in more than one of them.
     """
-    base = Path(data_dir) if data_dir else DATA_DIR
-    try:
-        payload = json.loads((base / "gsc_top_performing.json").read_text(encoding="utf-8"))
-    except Exception:
-        return {}
-    evidence: Dict[str, Dict[str, int]] = {}
-    for it in payload.get("items", []) if isinstance(payload, dict) else []:
-        url = (it or {}).get("url") or ""
+    for it in items if isinstance(items, list) else []:
+        it = it or {}
+        url = it.get("url") or it.get("page") or ""
         m = re.search(r"/reviews/([a-z0-9-]+)/", url)
         if not m:
             continue
         seg = m.group(1)
-        ev = evidence.setdefault(seg, {"impressions": 0, "clicks": 0})
-        ev["impressions"] += int(it.get("impressions") or 0)
-        ev["clicks"] += int(it.get("clicks") or 0)
-    return evidence
+        best = per_url.setdefault(url, {}).setdefault(
+            seg, {"impressions": 0, "clicks": 0}
+        )
+        best["impressions"] = max(best["impressions"], int(it.get("impressions") or 0))
+        best["clicks"] = max(best["clicks"], int(it.get("clicks") or 0))
+
+    totals.clear()
+    for by_segment in per_url.values():
+        for seg, best in by_segment.items():
+            ev = totals.setdefault(seg, {"impressions": 0, "clicks": 0})
+            ev["impressions"] += best["impressions"]
+            ev["clicks"] += best["clicks"]
+
+
+def category_evidence(data_dir=None) -> Dict[str, Dict[str, int]]:
+    """Search Console demand per site category from top and growth URLs.
+
+    Each item's /reviews/<segment>/ path is rolled up into {segment:
+    {impressions, clicks}}. Empty when both files are missing/unreadable or
+    the site is too young to have rows — that is a valid state, not an error.
+    """
+    base = Path(data_dir) if data_dir else DATA_DIR
+    totals: Dict[str, Dict[str, int]] = {}
+    per_url: Dict[str, Dict[str, Dict[str, int]]] = {}
+    for filename in ("gsc_top_performing.json", "gsc_growth_opportunity.json"):
+        try:
+            payload = json.loads((base / filename).read_text(encoding="utf-8"))
+        except Exception:
+            payload = {}
+        items = payload.get("items", []) if isinstance(payload, dict) else []
+        _rollup_items(items, totals, per_url)
+    return totals
 
 
 class GSCIngestor:

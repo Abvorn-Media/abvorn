@@ -10,6 +10,7 @@ supports OAuth client-secrets auth, not service accounts, so it is not used.
 
 import logging
 import os
+import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -23,6 +24,32 @@ logger = logging.getLogger(__name__)
 GSC_SCOPES = ["https://www.googleapis.com/auth/webmasters.readonly"]
 
 DEFAULT_CREDENTIALS_PATH = "gsc-credentials.json"
+
+CANONICAL_HOST = "abvorn.com"
+PROPERTY_OVERRIDE_ENV = "ABVORN_GSC_PROPERTY"
+
+
+def _property_host(url: str) -> str:
+    """Return a normalized host marker for a Search Console property id.
+
+    Domain properties (``sc-domain:abvorn.com``) carry the host in the path,
+    URL-prefix properties in the netloc. Only the canonical forms reduce to the
+    bare host: ``www.`` is deliberately preserved, and non-https schemes keep a
+    scheme marker, so both register as host mismatches in ``_is_canonical_property``.
+    """
+    parsed = urllib.parse.urlsplit(url)
+    if parsed.scheme == "sc-domain":
+        host = parsed.netloc or parsed.path
+    else:
+        host = parsed.netloc
+        if host and parsed.scheme != "https":
+            return f"{parsed.scheme}:{host.strip('/')}".lower()
+    return host.strip("/").lower()
+
+
+def _is_canonical_property(url: str) -> bool:
+    """True when a property targets exactly the canonical abvorn.com host."""
+    return _property_host(url) == CANONICAL_HOST
 
 
 def _apply_system_proxy():
@@ -79,20 +106,75 @@ class GSCClient:
             self.property_url = None
 
     def _pick_property(self) -> Optional[str]:
-        """Return the first available Search Console property URL."""
+        """Return the preferred Search Console property URL, if one is available."""
         try:
             result = self._service.sites().list().execute()
         except Exception as e:
             logger.error("Failed to list Search Console properties: %s", e)
             return None
+
         entries = result.get("siteEntry", [])
-        for entry in entries:
-            url = entry.get("siteUrl", "")
-            # Only usable properties (not pending) qualify.
-            permission = entry.get("permissionLevel", "")
-            if url and permission not in ("siteUnverifiedUser",):
-                return url
-        return entries[0]["siteUrl"] if entries else None
+        listed = [
+            entry.get("siteUrl", "") for entry in entries if entry.get("siteUrl", "")
+        ]
+        # Only usable properties (not pending) qualify for the preference list.
+        verified = [
+            entry.get("siteUrl", "")
+            for entry in entries
+            if entry.get("siteUrl", "")
+            and entry.get("permissionLevel", "") != "siteUnverifiedUser"
+        ]
+
+        selected = None
+        override = os.environ.get(PROPERTY_OVERRIDE_ENV)
+        if override:
+            if override in verified:
+                selected = override
+            elif override in listed:
+                # A listed-but-unverified property is not usable either. Keep the
+                # warning distinct from the missing-property case for diagnosis.
+                # Only the env var *name* is logged, never its value.
+                logger.warning(
+                    "GSC property override (%s) names a listed but unverified or "
+                    "inaccessible property; falling back to canonical property selection",
+                    PROPERTY_OVERRIDE_ENV,
+                )
+            else:
+                # A property this account cannot see is never silently queried.
+                logger.warning(
+                    "GSC property override (%s) is not available to this service account; "
+                    "falling back to canonical property selection",
+                    PROPERTY_OVERRIDE_ENV,
+                )
+
+        if selected is None:
+            domain_property = f"sc-domain:{CANONICAL_HOST}"
+            if domain_property in verified:
+                selected = domain_property
+            else:
+                selected = next(
+                    (
+                        url for url in verified
+                        if url.startswith("https://") and _is_canonical_property(url)
+                    ),
+                    None,
+                )
+
+        if selected is None:
+            # Preserve the legacy fallback: first verified entry, else first listed.
+            selected = verified[0] if verified else (listed[0] if listed else None)
+
+        if not selected:
+            return None
+
+        logger.info("GSC property selected: %s", selected)
+        if not _is_canonical_property(selected):
+            logger.warning(
+                "GSC host mismatch: selected property %s is not canonical (%s)",
+                selected,
+                CANONICAL_HOST,
+            )
+        return selected
 
     def fetch_performance(
         self, days: int = 7, dimensions: Optional[List[str]] = None, limit: int = 1000
@@ -175,6 +257,7 @@ class GSCClient:
             results.append({
                 "query": keys[0] if keys else "",
                 "page": keys[1] if len(keys) > 1 else "",
+                "url": keys[1] if len(keys) > 1 else "",
                 "impressions": int(row.get("impressions", 0)),
                 "clicks": int(row.get("clicks", 0)),
                 "ctr": float(row.get("ctr", 0)),

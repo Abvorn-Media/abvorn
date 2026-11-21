@@ -3423,6 +3423,78 @@ Sitemap: https://abvorn.com/sitemap.xml
 """
 
 
+def _item_date(item, newest=""):
+    """Best-known date for a metadata item; both legacy keys are accepted."""
+    return item.get("updated") or item.get("date") or newest or ""
+
+
+def _page_title(path, fallback):
+    """Human-readable title from a page's og:title or <title> tag."""
+    try:
+        html = Path(path).read_text(encoding="utf-8")
+    except OSError:
+        return fallback
+    match = re.search(
+        r'<meta[^>]+property=["\']og:title["\'][^>]+content=["\']([^"\']+)["\']',
+        html, re.I,
+    )
+    if not match:
+        match = re.search(r"<title[^>]*>(.*?)</title>", html, re.I | re.S)
+    if not match:
+        return fallback
+    return html_mod.unescape(re.sub(r"<[^>]+>", "", match.group(1))).strip() or fallback
+
+
+def _discover_extra_urls(docs_dir):
+    """Sorted (title, path) pairs for published blog posts and comparisons."""
+    docs_dir = Path(docs_dir)
+    extras = []
+    blog_dir = docs_dir / "blog"
+    if blog_dir.is_dir():
+        for post_dir in sorted(blog_dir.iterdir()):
+            index = post_dir / "index.html"
+            if post_dir.is_dir() and index.is_file():
+                extras.append((_page_title(index, post_dir.name),
+                               f"blog/{post_dir.name}/"))
+    comparisons_dir = docs_dir / "comparisons"
+    if comparisons_dir.is_dir():
+        for page in sorted(comparisons_dir.glob("*.html")):
+            extras.append((_page_title(page, page.stem),
+                           f"comparisons/{page.name}"))
+    return sorted(extras)
+
+
+def _url_inventory(docs_dir, items, category_pairs):
+    """One ordered (section, title, path, date) inventory of every indexed URL.
+
+    Core pages, categories, reviews, blog posts and comparison pages are all
+    collected here, so every metadata artifact is built from the same source
+    and a later write cannot drop a whole section. Pages without a date of
+    their own inherit the newest known review date.
+    """
+    newest = max((_item_date(it) for it in items), default="") or ""
+    inventory = []
+    for title, path in (
+        ("Home", ""),
+        ("All Reviews", "reviews/"),
+        ("Categories", "categories/"),
+        ("How We Test", "how-we-test/"),
+        ("About", "about.html"),
+        ("Privacy Policy", "privacy.html"),
+        ("Journal", "journal/"),
+    ):
+        inventory.append(("core", title, path, newest))
+    for label, slug in category_pairs:
+        inventory.append(("categories", label, f"categories/{slug}/", newest))
+    for it in items:
+        inventory.append(("reviews", it.get("title", "Review"),
+                          it["slug"].lstrip("/"), _item_date(it, newest)))
+    for title, path in _discover_extra_urls(docs_dir):
+        section = "blog" if path.startswith("blog/") else "comparisons"
+        inventory.append((section, title, path, newest))
+    return inventory
+
+
 def write_site_metadata(docs_dir, items, categories=None):
     """Write robots.txt, llms.txt, feed.xml and sitemap.xml into the site root.
 
@@ -3455,56 +3527,59 @@ def write_site_metadata(docs_dir, items, categories=None):
         category_pairs = [(label, _category_slug(label)) for label in _eff_map.keys() if label]
     seen = set()
     category_pairs = [p for p in category_pairs if not (p[1] in seen or seen.add(p[1]))]
-    category_slugs = [s for _, s in category_pairs]
+    # Every artifact below is built from this one inventory (core, categories,
+    # reviews, blog, comparisons), so no later write can erase a section.
+    inventory = _url_inventory(docs_dir, items, category_pairs)
 
-    # Core non-review pages (always emitted) so llms.txt / sitemap cover the
-    # whole site, not just product reviews.
-    core_pages = [
-        ("Home", ""),
-        ("All Reviews", "reviews/"),
-        ("Categories", "categories/"),
-        ("How We Test", "how-we-test/"),
-        ("About", "about.html"),
-        ("Privacy Policy", "privacy.html"),
-        ("Journal", "journal/"),
-    ]
+    def _section(section):
+        return [row for row in inventory if row[0] == section]
 
+    def _doc_url(path):
+        return f"{SITE_BASE}/{path}"
+
+    def _section_lines(section):
+        return "\n".join(f"- {title} — {_doc_url(path)}"
+                         for _, title, path, _ in _section(section))
+
+    generated = datetime.now().date().isoformat()
     latest = "\n".join(
-        f"- {it.get('title', 'Review')} — {SITE_BASE}/{it['slug'].lstrip('/')}"
-        for it in items[:50]
+        f"- {title} — {_doc_url(path)}"
+        for _, title, path, _ in
+        sorted(_section("reviews"), key=lambda row: row[3], reverse=True)[:50]
     )
     category_lines = (
-        "## Categories\n"
-        + "\n".join(f"- {label} — {SITE_BASE}/categories/{slug}/"
-                    for label, slug in category_pairs)
-        + "\n"
-    ) if category_pairs else ""
+        "## Categories\n" + _section_lines("categories") + "\n"
+    ) if _section("categories") else ""
 
     llms_sections = [
         "# Abvorn\n\n"
+        f"Generated: {generated}\n\n"
         "> Independent product reviews and buying guides. We research before we recommend "
             "— verdicts are based on real specs, real prices, and verified owner feedback, not spec sheets.\n",
-        "## Core pages\n"
-        + "\n".join(f"- {title} — {SITE_BASE}/{path}" for title, path in core_pages),
+        "## Core pages\n" + _section_lines("core"),
         category_lines,
         "## Latest reviews\n" + latest,
     ]
+    for section, heading in (("blog", "Blog"), ("comparisons", "Comparisons")):
+        lines = _section_lines(section)
+        if lines:
+            llms_sections.append(f"## {heading}\n" + lines)
     llms_txt = "\n\n".join(part for part in llms_sections if part) + "\n"
     write_checked(docs_dir / "llms.txt", llms_txt, "llms.txt")
 
     # llms-full.txt — the full, agent-citable index (every review, not a short list).
     llms_full_sections = [
         "# Abvorn Full Index\n\n"
+        f"Generated: {generated}\n\n"
         "> Machine-readable index of every page on Abvorn for AI agents (llmstxt.org).\n",
-        "## Core pages\n"
-        + "\n".join(f"- {title} — {SITE_BASE}/{path}" for title, path in core_pages),
+        "## Core pages\n" + _section_lines("core"),
         category_lines,
-        "## All reviews\n"
-        + "\n".join(
-            f"- {it.get('title', 'Review')} — {SITE_BASE}/{it['slug'].lstrip('/')}"
-            for it in items
-        ),
+        "## All reviews\n" + _section_lines("reviews"),
     ]
+    for section, heading in (("blog", "Blog"), ("comparisons", "Comparisons")):
+        lines = _section_lines(section)
+        if lines:
+            llms_full_sections.append(f"## {heading}\n" + lines)
     llms_full = "\n\n".join(part for part in llms_full_sections if part) + "\n"
     write_checked(docs_dir / "llms-full.txt", llms_full, "llms-full.txt")
 
@@ -3521,32 +3596,27 @@ def write_site_metadata(docs_dir, items, categories=None):
             html_mod.escape(str(s or ""), quote=True)
             .replace("&#x27;", "&apos;")
         )
-    for it in items:
-        rss_xml += f'<item><title>{_xml_escape(it["title"])}</title><link>https://abvorn.com/{_xml_escape(it["slug"])}</link><guid>https://abvorn.com/{_xml_escape(it["slug"])}</guid><pubDate>{_rfc822(it["date"])}</pubDate></item>'
+    # The feed stays review-only: blog and comparison pages have no RSS items.
+    for _, title, path, date in _section("reviews"):
+        url = _doc_url(path)
+        rss_xml += f'<item><title>{_xml_escape(title)}</title><link>{_xml_escape(url)}</link><guid>{_xml_escape(url)}</guid><pubDate>{_rfc822(date)}</pubDate></item>'
     rss_xml += '</channel></rss>'
     write_checked(docs_dir / "feed.xml", rss_xml, "feed.xml")
 
-    # Sitemap covers the whole site (review pages + core pages) with <lastmod>
-    # freshness signals. lastmod for reviews uses best-known date; core pages
-    # fall back to the most recent review date.
-    newest = max((it.get("date", "") for it in items), default="") or ""
-    def _lastmod(it):
-        return f"<lastmod>{it.get('date', '')}</lastmod>" if it.get("date") else (f"<lastmod>{newest}</lastmod>" if newest else "")
-    core_urls = []
-    for title, path in core_pages:
-        if path.endswith(".html") or path.endswith("/"):
-            loc = f"{SITE_BASE}/{path}".rstrip("/") or SITE_BASE
-            core_urls.append(f"<url><loc>{_xml_escape(loc)}</loc>{_lastmod({})}</url>")
-    category_urls = [
-        f'<url><loc>{_xml_escape(f"{SITE_BASE}/categories/{s}/")}</loc>{_lastmod({})}</url>'
-        for s in category_slugs
-    ]
+    # Sitemap covers all five inventory sections with each page's own <lastmod>;
+    # pages without one inherit the newest known date from the inventory.
+    def _sitemap_loc(section, path):
+        if section == "core":
+            return f"{SITE_BASE}/{path}".rstrip("/") or SITE_BASE
+        return _doc_url(path)
+
+    sitemap_lines = []
+    for section, _, path, date in inventory:
+        lastmod = f"<lastmod>{_xml_escape(date)}</lastmod>" if date else ""
+        loc = _xml_escape(_sitemap_loc(section, path))
+        sitemap_lines.append(f"<url><loc>{loc}</loc>{lastmod}</url>")
     sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    sitemap += f'<url><loc>{_xml_escape(SITE_BASE)}</loc>{_lastmod({})}</url>\n'
-    sitemap += "\n".join(core_urls + category_urls) + "\n" if (core_urls or category_urls) else ""
-    for it in items:
-        item_loc = f'{SITE_BASE}/{it["slug"]}'
-        sitemap += f'<url><loc>{_xml_escape(item_loc)}</loc>{_lastmod(it)}</url>\n'
+    sitemap += "\n".join(sitemap_lines) + "\n"
     sitemap += '</urlset>'
     write_checked(docs_dir / "sitemap.xml", sitemap, "sitemap.xml")
 
@@ -3741,15 +3811,35 @@ footer a{{color:#aaa;text-decoration:none}}
     write_checked(method_dir / "index.html", build_methodology_page(all_slugs, form_url), "methodology page")
     print("  Written: docs/how-we-test/index.html")
 
-    # Write robots.txt, llms.txt, RSS feed and sitemap
+    # Write robots.txt, llms.txt, RSS feed and sitemap with real page dates.
+    # `reviews` is the scan_published_reviews("docs") result, so its `updated`
+    # value is preferred whenever all_posts carries no date of its own.
+    _updates_by_slug = {}
+    for r in reviews:
+        upd = r.get("updated") or ""
+        if not upd:
+            continue
+        for key in (r.get("rel", ""), f"reviews/{r.get('slug', '')}"):
+            key = key.strip("/")
+            if key:
+                _updates_by_slug.setdefault(key, upd)
     items = []
     for p in all_posts:
         title = p.get("title", "")
-        slug_path = p.get("slug", "")
-        if not slug_path.endswith("/"):
+        # Resolve the date from the original slug: a dated article keeps its
+        # own path and its own `updated`, while the synthetic reviews/<slug>
+        # key below is only a fallback for hub pages (it holds one article's
+        # date, not a date shared by every article in the niche).
+        source_slug = p.get("slug", "")
+        slug_path = source_slug
+        if not slug_path.endswith("/") and not slug_path.endswith(".html"):
             slug_path = slug_path.rsplit("/", 1)[0] + "/"
+        _real_date = (p.get("updated") or p.get("date")
+                      or _updates_by_slug.get(source_slug.strip("/"), "")
+                      or _updates_by_slug.get(slug_path.strip("/"), ""))
         items.append({"title": title, "slug": slug_path,
-                      "date": datetime.date.today().isoformat()})
+                      "updated": p.get("updated", "") or _real_date,
+                      "date": _real_date or datetime.now().date().isoformat()})
     write_site_metadata(docs, items)
 
 

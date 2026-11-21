@@ -3339,13 +3339,27 @@ def write_files(niche_slug, articles, state, pexels_key="", amazon_tag="", form_
     _wc(method_dir / "index.html", build_methodology_page(all_slugs, form_url), "methodology page")
     print("  Written: docs/how-we-test/index.html")
 
-    # Write robots.txt, llms.txt, RSS feed and sitemap
+    # Write robots.txt, llms.txt, RSS feed and sitemap with real page dates.
+    # `reviews` is the scan_published_reviews("docs") result, so its `updated`
+    # value is preferred whenever all_posts carries no date of its own.
+    _updates_by_slug = {}
+    for r in reviews:
+        upd = r.get("updated") or ""
+        if not upd:
+            continue
+        for key in (r.get("rel", ""), f"reviews/{r.get('slug', '')}"):
+            key = key.strip("/")
+            if key:
+                _updates_by_slug.setdefault(key, upd)
     items = []
     for p in all_posts:
         title = p.get("title", "")
         slug_path = p.get("slug", "")
+        _real_date = (p.get("updated") or p.get("date")
+                      or _updates_by_slug.get(slug_path.strip("/"), ""))
         items.append({"title": title, "slug": slug_path,
-                      "date": datetime.now().date().isoformat()})
+                      "updated": p.get("updated", ""),
+                      "date": _real_date or datetime.now().date().isoformat()})
     from src.deployment import write_site_metadata
     write_site_metadata(docs, items)
 
