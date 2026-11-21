@@ -728,7 +728,16 @@
       "narrative": "Search Console insight — Top performing content: https://abvorn-media.github.io/abvorn/; Highest CTR: 0.00% for https://abvorn-media.github.io",
       "graph_nodes": 3399,
       "graph_edges": 5421
+    },
+    {
+      "timestamp": "2026-11-21T08:30:58.403809",
+      "generation": 1,
+      "drive_score": 0.0,
+      "action": "insight",
+      "narrative": "Search Console insight — Top performing content: https://abvorn-media.github.io/abvorn/; Highest CTR: 0.00% for https://abvorn-media.github.io",
+      "graph_nodes": 3401,
+      "graph_edges": 5409
     }
   ],
-  "last_update": "2026-11-20T08:27:24.881721"
+  "last_update": "2026-11-21T08:30:58.403809"
 }
