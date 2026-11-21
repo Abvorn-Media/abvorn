@@ -627,6 +627,31 @@ def test_fresh_payload_with_empty_products_is_refused_without_opt_in():
     deployer.deploy_html.assert_not_called()
 
 
+def test_overlay_without_product_image_is_skipped(monkeypatch):
+    """A fresh product-less article must not become a hub card with generic art.
+
+    _reviews() overlays _last_content unconditionally. When the article ships
+    with no products, _overlay_review() returns image="", so review_card()
+    substitutes assets/hero/<niche>.jpg -- the "random TV image" that appeared
+    on the Samsung M70H card on /tv/ and the homepage. scan_published_reviews()
+    and the state-post path both gate on products; the overlay path must too.
+    """
+    monkeypatch.setattr("src.deployment.scan_published_reviews", lambda *a, **k: [])
+
+    sd = SiteDeployer(_deployer(), None)
+    sd._last_content = {
+        "post_title": "First-Time Buyer's Guide: Samsung 65-inch M70H Mini-LED 4K TV",
+        "intro": "<p>Been burned by a bad TV purchase? You're not alone.</p>",
+        "meta_description": "",
+        "article_html": "<p>This guide shows why the Samsung M70H eliminates that risk.</p>",
+        "products": [],
+    }
+    sd._last_niche = "tv"
+
+    out = sd._reviews(["tv"], [])
+    assert out == [], "product-less overlay must not render a card with generic hero art"
+
+
 def test_overlay_never_blanks_out_a_published_snippet(monkeypatch, tmp_path):
     """The newest article must not lose its description to the overlay.
 
@@ -665,7 +690,9 @@ def test_overlay_never_blanks_out_a_published_snippet(monkeypatch, tmp_path):
         "intro": "<p>Looking for the best TV in 2026?</p>",
         "meta_description": "",
         "article_html": "<p>Looking for the best TV in 2026?</p>",
-        "products": [],
+        # Product-ful so the overlay path is exercised; a product-less overlay
+        # is now skipped outright by test_overlay_without_product_image_is_skipped.
+        "products": [{"name": "LG C3", "image": "https://example.com/lg-c3.jpg"}],
     }
     sd._last_niche = "tv"
 

@@ -284,19 +284,30 @@ class SiteDeployer:
         if self._last_content and self._last_niche:
             entry = _overlay_review(self._last_content, self._last_niche,
                                     self._niche_name(self._last_niche), today)
-            key = (entry["slug"], entry["title"])
-            if key in seen:
-                # Keep the published page's snippet when the overlay has none.
-                # A freshly generated article whose intro and meta description
-                # are both unusable (an opening question, say) produces an empty
-                # overlay snippet, and blindly replacing the scanned entry
-                # shipped the newest review as a card with no description at
-                # all -- even though the page on disk already had good copy.
-                if not (entry.get("snippet") or "").strip():
-                    entry["snippet"] = reviews[seen[key]].get("snippet") or ""
-                reviews[seen[key]] = entry
+            # A freshly generated article with no real product has no official
+            # product photo. Its overlay carries image="", which review_card()
+            # replaces with the generic assets/hero/<niche>.jpg artwork -- the
+            # "random TV image" that shipped on the Samsung M70H card. The
+            # on-disk scan and the state-post path below both gate on products;
+            # the overlay path must too. A product-less shell is not a review
+            # card, so skip it entirely instead of overlaying a real one.
+            if not entry.get("image"):
+                logger.info("[SiteDeployer] Skipping overlay card %r: no product image",
+                            entry.get("title"))
             else:
-                reviews.append(entry)
+                key = (entry["slug"], entry["title"])
+                if key in seen:
+                    # Keep the published page's snippet when the overlay has none.
+                    # A freshly generated article whose intro and meta description
+                    # are both unusable (an opening question, say) produces an empty
+                    # overlay snippet, and blindly replacing the scanned entry
+                    # shipped the newest review as a card with no description at
+                    # all -- even though the page on disk already had good copy.
+                    if not (entry.get("snippet") or "").strip():
+                        entry["snippet"] = reviews[seen[key]].get("snippet") or ""
+                    reviews[seen[key]] = entry
+                else:
+                    reviews.append(entry)
         for p in (posts or []):
             slug = p.get("niche_slug") or p.get("slug") or p.get("niche") or default_niche
             title = p.get("title") or p.get("post_title") or ""
