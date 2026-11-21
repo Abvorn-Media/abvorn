@@ -1,5 +1,4 @@
 """Tests for the content review gate and capability-aware routing."""
-import os
 import pytest
 from unittest.mock import MagicMock
 from pathlib import Path
@@ -30,8 +29,8 @@ def test_review_gate_off_by_default():
     assert is_content_review_enabled() is False
 
 
-def test_review_gate_env_var_enables():
-    os.environ["ABVORN_CONTENT_REVIEW"] = "1"
+def test_review_gate_env_var_enables(monkeypatch):
+    monkeypatch.setenv("ABVORN_CONTENT_REVIEW", "1")
     from abvorn.core.review_gate import is_content_review_enabled
     assert is_content_review_enabled() is True
 
@@ -65,7 +64,7 @@ def test_write_gated_publishes_when_off(tmp_path, monkeypatch):
 
 def test_write_gated_stages_when_on(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    os.environ["ABVORN_CONTENT_REVIEW"] = "1"
+    monkeypatch.setenv("ABVORN_CONTENT_REVIEW", "1")
     from abvorn.core.review_gate import write_gated, list_staged
     target = Path("docs/reviews/niche/index.html")
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -80,7 +79,7 @@ def test_write_gated_stages_when_on(tmp_path, monkeypatch):
 
 def test_approve_staged_promotes(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    os.environ["ABVORN_CONTENT_REVIEW"] = "1"
+    monkeypatch.setenv("ABVORN_CONTENT_REVIEW", "1")
     from abvorn.core.review_gate import write_gated, approve_staged
     target = Path("docs/reviews/niche/index.html")
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -93,7 +92,7 @@ def test_approve_staged_promotes(tmp_path, monkeypatch):
 
 def test_reject_staged_removes(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    os.environ["ABVORN_CONTENT_REVIEW"] = "1"
+    monkeypatch.setenv("ABVORN_CONTENT_REVIEW", "1")
     from abvorn.core.review_gate import write_gated, reject_staged
     target = Path("docs/reviews/niche/index.html")
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -103,8 +102,8 @@ def test_reject_staged_removes(tmp_path, monkeypatch):
     assert not target.exists()
 
 
-def test_review_status_report():
-    os.environ["ABVORN_CONTENT_REVIEW"] = "1"
+def test_review_status_report(monkeypatch):
+    monkeypatch.setenv("ABVORN_CONTENT_REVIEW", "1")
     from abvorn.core.review_gate import review_status
     status = review_status()
     assert status["gate_on"] is True
@@ -118,7 +117,7 @@ def test_write_checked_respects_gate(tmp_path, monkeypatch):
     target.parent.mkdir(parents=True, exist_ok=True)
     write_checked(target, "<p>direct</p>", "check")
     assert target.exists()
-    os.environ["ABVORN_CONTENT_REVIEW"] = "1"
+    monkeypatch.setenv("ABVORN_CONTENT_REVIEW", "1")
     target2 = Path("docs/check2.html")
     write_checked(target2, "<p>gated</p>", "check2")
     assert not target2.exists()

@@ -106,6 +106,7 @@ data/ab_journal_entries.jsonl
 data/gsc_ingestion_log.jsonl
 data/gsc_latest_summary.json
 data/gsc_top_performing.json
+data/gsc_growth_opportunity.json
 data/openweb_usage.json
 var/patches*/
 var/og_logo_background.png

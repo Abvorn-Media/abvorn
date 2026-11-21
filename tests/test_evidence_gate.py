@@ -51,6 +51,24 @@ def test_satisfies_evidence_gsc_demand_rescues(tmp_path):
     assert satisfies_evidence(opp, min_score=0.5, data_dir=data_dir)
 
 
+def test_satisfies_evidence_growth_file_rescues(tmp_path):
+    """High-impression growth rows alone satisfy the demand evidence gate."""
+    (tmp_path / "gsc_growth_opportunity.json").write_text(
+        json.dumps({
+            "type": "gsc_insight",
+            "subtype": "growth_opportunity",
+            "items": [{
+                "url": "https://abvorn.com/reviews/webcams/best-webcam-2026.html",
+                "query": "best webcam",
+                "impressions": 1200, "clicks": 0, "ctr": 0.001, "position": 9,
+            }],
+        }),
+        encoding="utf-8",
+    )
+    opp = {"score": 0.3, "category": "webcams"}
+    assert satisfies_evidence(opp, min_score=0.5, data_dir=str(tmp_path))
+
+
 def test_satisfies_evidence_unrelated_category_not_rescued(tmp_path):
     data_dir = _write_gsc(tmp_path, [{
         "url": "https://abvorn.com/reviews/tv/best-tv-2026.html",
