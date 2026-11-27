@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "file": "assets/blog/the-rhythm-of-rest-a-three-day-city-break-guide/hero.jpg",
+    "query": "sunlit cafe table with open notebook",
+    "alt": "Enjoy a serene morning coffee at a seaside café in Toulon, France.",
+    "caption": "",
+    "photo_id": 33168973,
+    "photographer": "Jean-Philippe Canto",
+    "photographer_url": "https://www.pexels.com/@jean-philippe-canto-410167111",
+    "pexels_url": "https://www.pexels.com/photo/relaxing-morning-coffee-by-the-mediterranean-33168973/",
+    "width": 7804,
+    "height": 5205,
+    "source": "Pexels",
+    "fetched": "2026-11-27T17:04:11"
+  },
+  "01": {
+    "file": "assets/blog/the-rhythm-of-rest-a-three-day-city-break-guide/01.jpg",
+    "query": "quiet park bench at morning mist",
+    "alt": "Black and white image of a foggy morning with bare trees and empty benches at Cove Island Park, Stamford.",
+    "caption": "Black and white image of a foggy morning with bare trees and empty benches at Cove Island Park, Stamford.",
+    "photo_id": 29171676,
+    "photographer": "David Kanigan",
+    "photographer_url": "https://www.pexels.com/@david-kanigan-239927285",
+    "pexels_url": "https://www.pexels.com/photo/foggy-autumn-morning-at-cove-island-park-29171676/",
+    "width": 8713,
+    "height": 5464,
+    "source": "Pexels",
+    "fetched": "2026-11-27T17:04:12"
+  },
+  "02": {
+    "file": "assets/blog/the-rhythm-of-rest-a-three-day-city-break-guide/02.jpg",
+    "query": "blurry city street at dusk with long exposure",
+    "alt": "Abstract long exposure of dynamic light trails in an urban night scene.",
+    "caption": "Abstract long exposure of dynamic light trails in an urban night scene.",
+    "photo_id": 30506567,
+    "photographer": "Ramon Karolan",
+    "photographer_url": "https://www.pexels.com/@ramonkaphotography",
+    "pexels_url": "https://www.pexels.com/photo/dynamic-city-light-trails-at-night-30506567/",
+    "width": 7360,
+    "height": 4912,
+    "source": "Pexels",
+    "fetched": "2026-11-27T17:04:13"
+  }
+}
