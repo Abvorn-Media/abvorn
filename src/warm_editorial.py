@@ -368,6 +368,7 @@ WARM_PRODUCT_GRID_CSS = """
 .warm-product-card:hover .warm-product-card__media img{transform:scale(1.04)}
 .warm-product-card__name{font-size:var(--text-base);line-height:1.35;color:#0a0a0a;margin-bottom:2px;font-family:var(--font-display);font-weight:600}
 .warm-product-card__price{color:#996015;font-weight:800;font-size:1.05rem;margin-bottom:0}
+.warm-product-card__summary{font-size:0.85rem;color:#5a5146;margin-bottom:6px}
 .warm-product-card .cta-row{margin-top:auto;flex-wrap:wrap}
 .warm-product-card .cta-row .btn{flex:1 1 auto;justify-content:center;white-space:nowrap;padding:0.6em 0.9em;font-size:0.8rem}
 """
@@ -464,10 +465,17 @@ def warm_product_card_html(product, affiliate_url="", base="", overall="", label
             'font-size:.8rem;text-align:center;padding:20px">Product</span></div>'
         )
     compare_href = f"{base}/compare.html?{_compare_qs(product, overall, label)}"
+    # data-description stays for the PDF renderer; the visible paragraph is
+    # what readers see. f1d98bd0e dropped both the paragraph and its CSS.
+    summary_html = (
+        f'<p class="warm-product-card__summary">{html_mod.escape(summary)}</p>'
+        if summary.strip() else ""
+    )
     return f"""<div class="warm-product-card" data-description="{html_mod.escape(summary)}">
 {media}
 <h3 class="warm-product-card__name">{html_mod.escape(name)}</h3>
 <div class="warm-product-card__price">{html_mod.escape(str(price))}</div>
+{summary_html}
 <div class="cta-row">
 <a class="btn btn--accent" href="{affiliate_url}" target="_blank" rel="sponsored" data-track="value">Check Price on Amazon &rarr;</a>
 <a class="btn btn--ghost" href="{compare_href}" data-track="compare">Compare &oplus;</a>

@@ -576,8 +576,11 @@ def _refine(soup, art):
             s["class"] = "faq-q"
         for a in d.select(".faq-answer"):
             a["class"] = (a.get("class") or []) + ["faq-a"]
-    # Product cards hide their blurb in data-description; surface it for print.
+    # Older cards hid their blurb in data-description; surface it for print.
+    # Newer cards render the summary themselves -- do not print it twice.
     for card in art.select(".warm-product-card[data-description]"):
+        if card.select_one("p.warm-product-card__summary"):
+            continue
         desc = (card.get("data-description") or "").strip()
         if not desc:
             continue
