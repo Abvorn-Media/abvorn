@@ -1,4 +1,6 @@
-from src.review_pdf import _render_rps
+from bs4 import BeautifulSoup
+
+from src.review_pdf import _refine, _render_rps
 
 
 def test_render_rps_tolerates_missing_price():
@@ -15,3 +17,20 @@ def test_render_rps_escapes_prices():
     html = _render_rps(primary, [primary, alt])
     assert "$199.99" in html
     assert "<A>" not in html
+
+
+def test_refine_does_not_duplicate_a_visible_product_summary():
+    """Print used to re-add the blurb that web cards stopped rendering; once
+    the paragraph is restored it must not be emitted twice in the PDF.
+    """
+    desc = "Sharp 1080p video with a privacy cover."
+    html = (
+        '<html><body><article><div class="warm-product-card" '
+        f'data-description="{desc}">'
+        '<div class="warm-product-card__price">$19.99</div>'
+        f'<p class="warm-product-card__summary">{desc}</p>'
+        '</div></article></body></html>'
+    )
+    soup = BeautifulSoup(html, "html.parser")
+    art = _refine(soup, soup.select_one("article"))
+    assert len(art.select(".warm-product-card__summary")) == 1
