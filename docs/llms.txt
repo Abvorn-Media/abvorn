@@ -1,6 +1,6 @@
 # Abvorn
 
-Generated: 2026-11-21
+Generated: 2026-11-28
 
 > Independent product reviews and buying guides. We research before we recommend — verdicts are based on real specs, real prices, and verified owner feedback, not spec sheets.
 
@@ -24,6 +24,13 @@ Generated: 2026-11-21
 
 
 ## Latest reviews
+- 2026 Buying Guide for 4K Monitors – Best Picks for Gaming, Work & Creativity — https://abvorn.com/reviews/4k-monitors/2026-buying-guide-for-4k-monitors-best-picks-for-gaming.html
+- 2026 Fitness Tracker Buying Guide – Best Picks Under $100 — https://abvorn.com/reviews/fitness-trackers/2026-fitness-tracker-buying-guide-best-picks-under-100.html
+- Best Mechanical Keyboards Buying Guide 2026 – Top Picks & Tips — https://abvorn.com/reviews/mechanical-keyboards/best-mechanical-keyboards-buying-guide-2026-top-picks-tips.html
+- 2026 Smart‑Home Buying Guide: Echo Shows, Govee Lamp & More — https://abvorn.com/reviews/smart-home/2026-smarthome-buying-guide-echo-shows-govee-lamp-more.html
+- Best Streaming Sticks 2026: Roku HD, Roku Plus, Fire TV 4K – Buying Guide — https://abvorn.com/reviews/streaming-devices/best-streaming-sticks-2026-roku-hd-roku-plus-fire-tv-4k.html
+- 2026 Wireless Headphones Buying Guide – Best Picks & Tips — https://abvorn.com/reviews/wireless-headphones/2026-wireless-headphones-buying-guide-best-picks-tips.html
+- Best Smart Home 2026: The Ultimate Buying Guide — https://abvorn.com/reviews/smart-home/
 - 2026 Buying Guide: Best 15.6" Laptops for Business and Students — https://abvorn.com/reviews/laptops/2026-buying-guide-best-15-6-laptops-for-business-and.html
 - Best Robot Vacuum & Mop Buying Guide 2026 – Reviews, Specs & Deals — https://abvorn.com/reviews/robot-vacuums/best-robot-vacuum-mop-buying-guide-2026-reviews-specs-deals.html
 - 2026 Webcam Buying Guide: Resolution, Price & Performance — https://abvorn.com/reviews/webcams/2026-webcam-buying-guide-resolution-price-performance.html
@@ -67,13 +74,6 @@ Generated: 2026-11-21
 - Best Wireless Headphones 2026: Your Complete Buying Guide — https://abvorn.com/reviews/wireless-headphones/best-wireless-headphones-2026-your-complete-buying-guide-2026-10-31.html
 - Best Fitness Trackers 2026 — https://abvorn.com/reviews/fitness-trackers/best-fitness-trackers-2026-2026-10-30.html
 - Robot Vacuum Mop Buying Guide 2026: Roomba & Shark Compared — https://abvorn.com/reviews/robot-vacuums/robot-vacuum-mop-buying-guide-2026-roomba-shark-compared.html
-- Best Webcams 2026: Top 1080p Picks for Streaming & Meetings — https://abvorn.com/reviews/webcams/best-webcams-2026-top-1080p-picks-for-streaming-meetings-2026-10-30.html
-- Best Mechanical Keyboards 2026: Top Picks for Gaming, Typing, and Wireless — https://abvorn.com/reviews/mechanical-keyboards/best-mechanical-keyboards-2026-top-picks-for-gaming-typing-and-wireless-2026-10-29.html
-- Best Streaming Devices 2026: Roku Stick HD, Roku Stick Plus, and Fire TV Stick 4K Select Compared — https://abvorn.com/reviews/streaming-devices/best-streaming-devices-2026-roku-stick-hd-roku-stick-plus-and-fire-tv-stick-4k-select-compared-2026-10-29.html
-- Best Wireless Earbuds 2026 — https://abvorn.com/reviews/wireless-earbuds/best-wireless-earbuds-2026-2026-10-29.html
-- Best 4K Monitors 2026 — https://abvorn.com/reviews/4k-monitors/best-4k-monitors-2026-2026-10-28.html
-- Best Laptops 2026: Comprehensive Buying Guide & Product Comparison — https://abvorn.com/reviews/laptops/best-laptops-2026-comprehensive-buying-guide-product-comparison-2026-10-28.html
-- Robot Vacuum Buying Guide 2026: Roomba vs Shark Compared — https://abvorn.com/reviews/robot-vacuums/robot-vacuum-buying-guide-2026-roomba-vs-shark-compared.html
 
 ## Blog
 - Creating a Work Corner in a Shared Room at Home — https://abvorn.com/blog/creating-a-work-corner-in-a-shared-room-at-home/
@@ -83,6 +83,7 @@ Generated: 2026-11-21
 - The 3-Day City Break Rhythm That Stops Burnout — https://abvorn.com/blog/the-3-day-city-break-rhythm-that-stops-burnout/
 - The Loose Plan: A Restful Three-Day City Rhythm — https://abvorn.com/blog/the-loose-plan-a-restful-three-day-city-rhythm/
 - The Rhythm for a Restorative Three-Day City Break — https://abvorn.com/blog/the-rhythm-for-a-restorative-three-day-city-break/
+- The Rhythm of Rest: A Three-Day City Break Guide — https://abvorn.com/blog/the-rhythm-of-rest-a-three-day-city-break-guide/
 - The Three-Day City Break Rhythm That Banks Energy — https://abvorn.com/blog/the-three-day-city-break-rhythm-that-banks-energy/
 
 ## Comparisons
